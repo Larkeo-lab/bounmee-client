@@ -1,0 +1,9 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: smart-odsc-admin
+    restart: always
+    ports:
+      - "4173:4173"
