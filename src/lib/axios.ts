@@ -1,12 +1,12 @@
 import axios from "axios"
 
 // Define API base URLs
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000"
-export const WORKFLOW_API_BASE_URL = import.meta.env.VITE_WORKFLOW_API_BASE_URL || "https://api.odsc.gov.la"
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080"
+export const WORKFLOW_API_BASE_URL = import.meta.env.VITE_WORKFLOW_API_BASE_URL || "http://localhost:8080"
 
 // Shared interceptors
 const addAuthToken = (config: any) => {
-    const token: any = localStorage.getItem('authOdsc')
+    const token: any = localStorage.getItem('authPOS')
     const _token = JSON.parse(token)
     if (_token) {
         config.headers.Authorization = `Bearer ${_token.accessToken}`

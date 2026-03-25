@@ -48,17 +48,15 @@
   },
   "pageNotFound": {
     "error": "ERROR",
-    "description": "Smart ODSC - One Door Service Center",
+    "description": "Dee POS - Dee POS ",
     "goBack": "Go Back"
   },
   "sidebar": {
-    "title": "Smart ODSC",
+    "title": "Dee POS",
     "groups": {
-      "overview": "Overview",
-      "management": "Management",
-      "supportView": "Support",
-      "manageaccount": "Manage Account",
-      "system": "System"
+      "system": "System",
+      "menu": "Menu",
+      "setting": "Settings"
     },
     "menu": {
       "dashboard": "Dashboard",
@@ -99,7 +97,18 @@
       "callQueue": "Call Queue",
       "bookQueue": "Book Queue",
       "statisticAll": "Statistic All",
-      "resetQueue": "Reset Daily Queue"
+      "resetQueue": "Reset Daily Queue",
+      "pos": "POS POS",
+      "statisticsReport": "Statistics Report",
+      "setting": "Settings",
+      "language": "Language",
+      "order": "Order List",
+      "manageProduct": "Product Management",
+      "manageCategory": "Category Management",
+      "manageBank": "Bank Management",
+      "manageEmployee": "Employee Management",
+      "managePrinter": "Printer Management",
+      "manageProfile": "Profile Management"
     }
   },
   "queue": {

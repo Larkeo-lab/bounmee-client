@@ -76,10 +76,10 @@ docker-compose up -d --build
 
 ```bash
 # Build the image
-docker build -t smart-odsc-admin .
+docker build -t dee-pos-admin .
 
 # Run the container
-docker run -p 8080:80 --name smart-odsc-admin smart-odsc-admin
+docker run -p 8080:80 --name dee-pos-admin dee-pos-admin
 ```
 
 ### Useful Docker Commands

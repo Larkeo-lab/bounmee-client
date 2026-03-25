@@ -1,80 +1,43 @@
 const API_VERSION = "/api/v1";
+
 export const API_ENDPOINTS = {
-  USER: {
-    KYC: `${API_VERSION}/user/kyc`,
-  },
-  MASTER_DATA: {
-    NEWS: `${API_VERSION}/master-data/news`,
-    FAQ: `${API_VERSION}/master-data/faq`,
-    THEME: `${API_VERSION}/master-data/theme`,
-    FEEDBACK: `${API_VERSION}/master-data/feedback`,
-    BANNER: `${API_VERSION}/master-data/banner`,
-    // ຄູ່ມືການນຳໃຊ້ (ຖ້າ backend ໃຊ້ master-data ປ່ຽນເປັນ master-data/manual)
-    MANUAL: `${API_VERSION}/master-data/manual`,
-    GOVERNMENT_SERVICE: `${API_VERSION}/master-data/government-service`,
-    ORGANIZATION: `${API_VERSION}/master-data/organizations`,
-    NOTIFICATIONS: `${API_VERSION}/master-data/notifications`,
-  },
-  SERVICES: {
-    LIST: `${API_VERSION}/core/services`,
+  AUTH: {
+    LOGIN: `${API_VERSION}/auth/login-store`,
+    LOGIN_USER: `${API_VERSION}/auth/login`,
   },
   STORAGE: {
     IMAGE: `${API_VERSION}/storage/image/upload`,
     FILE: `${API_VERSION}/storage/upload-stream`,
     DELETE_IMAGE: `${API_VERSION}/storage/image`,
+    VIEW_IMAGE: (size: string, filename: string) =>
+      `${API_VERSION}/storage/view-image/${size}/${filename}`,
   },
-  QUEUES: {
-    LIST: `${API_VERSION}/core/queues`,
-    DETAIL: (id: string) => `${API_VERSION}/core/queues/${id}`,
-    UPDATE: (id: string) => `${API_VERSION}/core/queues/${id}`,
-    RESET: `${API_VERSION}/core/queues/reset`,
+  BANK: {
+    LIST: `${API_VERSION}/bank`,
+    DETAIL: (id: string) => `${API_VERSION}/bank/${id}`,
   },
-  SERVICE_CENTER: {
-    LIST: `${API_VERSION}/master-data/service-center`,
+  CATEGORY: {
+    LIST: `${API_VERSION}/category`,
+    DETAIL: (id: string) => `${API_VERSION}/category/${id}`,
+  },
+  PRODUCT: {
+    LIST: `${API_VERSION}/product`,
+    DETAIL: (id: string) => `${API_VERSION}/product/${id}`,
+  },
+  ORDER: {
+    CREATE: `${API_VERSION}/order`,
+    LIST: `${API_VERSION}/order`,
+    DETAIL: (id: string) => `${API_VERSION}/order/${id}`,
+  },
+  STORE: {
+    LIST: `${API_VERSION}/store`,
+    DETAIL: (id: string) => `${API_VERSION}/store/${id}`,
+  },
+  EMPLOYEE: {
+    LIST: `${API_VERSION}/employee`,
+    DETAIL: (id: string) => `${API_VERSION}/employee/${id}`,
   },
   SOCKET: {
     LISTEN: `${API_VERSION}/socket`,
   },
 };
-
-// const CORE_URL = "http://localhost:8084";
-// const MASTER_DATA_URL = "http://localhost:8083";
-// const ROLE_URL = "http://localhost:8082";
-
-// const API_VERSION = "/api/v1";
-// export const API_ENDPOINTS = {
-//   USER: {
-//     KYC: `${API_VERSION}/user/kyc`,
-//   },
-//   MASTER_DATA: {
-//     NEWS: `${API_VERSION}/master-data/news`,
-//     FAQ: `${API_VERSION}/master-data/faq`,
-//     THEME: `${API_VERSION}/master-data/theme`,
-//     FEEDBACK: `${API_VERSION}/master-data/feedback`,
-//     BANNER: `${API_VERSION}/master-data/banner`,
-//     // ຄູ່ມືການນຳໃຊ້ (ຖ້າ backend ໃຊ້ master-data ປ່ຽນເປັນ master-data/manual)
-//     MANUAL: `${API_VERSION}/master-data/manual`,
-//     GOVERNMENT_SERVICE: `${API_VERSION}/master-data/government-service`,
-//     ORGANIZATION: `${API_VERSION}/master-data/organizations`,
-//     NOTIFICATIONS: `${API_VERSION}/master-data/notifications`,
-//   },
-//   SERVICES: {
-//     LIST: `${API_VERSION}/core/services`,
-//   },
-//   STORAGE: {
-//     IMAGE: `${API_VERSION}/storage/image/upload`,
-//     FILE: `${API_VERSION}/storage/upload-stream`,
-//     DELETE_IMAGE: `${API_VERSION}/storage/image`,
-//   },
-//   QUEUES: {
-//     LIST: `${CORE_URL}${API_VERSION}/queues`,
-//     DETAIL: (id: string) => `${CORE_URL}${API_VERSION}/queues/${id}`,
-//     UPDATE: (id: string) => `${CORE_URL}${API_VERSION}/queues/${id}`,
-//   },
-//   SERVICE_CENTER: {
-//     LIST: `${MASTER_DATA_URL}${API_VERSION}/service-center`,
-//   },
-//   ROLE: {
-//     LIST: `${ROLE_URL}${API_VERSION}/role`,
-//   },
-// };

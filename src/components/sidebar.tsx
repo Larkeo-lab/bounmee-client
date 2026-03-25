@@ -9,12 +9,10 @@ import clsx from "clsx";
 import { useAuth } from "@/routes/AuthContext";
 import { Modal, ModalContent, ModalBody, ModalFooter } from "@heroui/react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useGET } from "@/hooks/useApi";
-import { API_ENDPOINTS } from "@/config/api";
-import { today, getLocalTimeZone } from "@internationalized/date";
 
 // Icons import
 import {
+  ShoppingCart,
   LayoutDashboard,
   Menu,
   X,
@@ -24,13 +22,16 @@ import {
   ChevronRight,
   TriangleAlert,
   CornerDownRight,
+  Settings,
+  Receipt,
 } from "lucide-react";
 
-
-import smartOcsLogo from "/assets/logo.png";
+import deePosLogo from "/assets/logo.png";
 const bgLineName = "/line-nam-bg.png";
 
 import versionApp from "../../package.json";
+import { getDisplayImageUrl } from "@/lib/utils";
+
 
 interface SidebarProps {
   isOpen: boolean;
@@ -52,79 +53,48 @@ interface MenuGroup {
 
 const sidebarGroups: MenuGroup[] = [
   {
-    titleKey: "ເມນູ",
+    titleKey: "sidebar.groups.menu",
     items: [
       {
-        labelKey: "ໜ້າລາຍງານລວມ",
+        labelKey: "sidebar.menu.pos",
+        href: "/main",
+        icon: ShoppingCart,
+      },
+      {
+        labelKey: "sidebar.menu.statisticsReport",
         href: "/dashboard",
         icon: LayoutDashboard,
+      },
+      {
+        labelKey: "sidebar.menu.order",
+        href: "/order",
+        icon: Receipt,
+      },
+    ],
+  },
+  {
+    titleKey: "sidebar.groups.setting",
+    items: [
+      {
+        labelKey: "sidebar.menu.setting",
+        href: "/settings",
+        icon: Settings,
       },
     ],
   },
 ];
 
-
 export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
   const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout, isTokenExpired } = useAuth();
+  const { logout, isTokenExpired, user } = useAuth();
   const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set());
   const [isDesktopExpanded, setIsDesktopExpanded] = useState(true);
 
   // Session Expiry States
   const [isExpModalOpen, setIsExpModalOpen] = useState(false);
   const [countdown, setCountdown] = useState(20);
-
-  // Fetch real-time queue data for badge
-  const todayDate = today(getLocalTimeZone()).toString();
-  const authDataJson = JSON.parse(localStorage.getItem("authOdsc") || "{}");
-  const { data: qData } = useGET(
-    API_ENDPOINTS.QUEUES.LIST,
-    ["queues", "sidebar-badge", todayDate],
-    {
-      startDate: todayDate,
-      endDate: todayDate,
-      isActive: true,
-      serviceCenterId: authDataJson?.officerProfile?.serviceCenterId,
-    },
-  );
-
-  const waitingCount =
-    (qData as any)?.data?.filter((q: any) => q.status === "WAITING")?.length ||
-    0;
-
-  // Dynamically update sidebar groups with real counts
-  const dynamicSidebarGroups = React.useMemo(() => {
-    return sidebarGroups.map((group) => ({
-      ...group,
-      items: group.items.map((item) => {
-        // Update Call Queue badge if it matches the menu item
-        if (item.labelKey === "sidebar.menu.callQueue") {
-          return {
-            ...item,
-            badge: waitingCount > 0 ? waitingCount : undefined,
-          };
-        }
-        // Update children recursively if needed
-        if (item.children) {
-          return {
-            ...item,
-            children: item.children.map((child) => {
-              if (child.labelKey === "sidebar.menu.callQueue") {
-                return {
-                  ...child,
-                  badge: waitingCount > 0 ? waitingCount : undefined,
-                };
-              }
-              return child;
-            }),
-          };
-        }
-        return item;
-      }),
-    }));
-  }, [waitingCount]);
 
   // Countdown logic for expiration modal
   useEffect(() => {
@@ -148,7 +118,7 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
   // Function to handle menu click with session validation
   const handleMenuClick = (e: React.MouseEvent | React.KeyboardEvent) => {
     // 1. Check if auth data exists in localStorage
-    const authData = localStorage.getItem("authOdsc");
+    const authData = localStorage.getItem("authPOS");
     if (!authData) {
       e.preventDefault();
       logout();
@@ -229,7 +199,7 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
               )}
               onClick={(e) => {
                 handleMenuClick(e);
-                if (!isTokenExpired() && localStorage.getItem("authOdsc")) {
+                if (!isTokenExpired() && localStorage.getItem("authPOS")) {
                   if (!isDesktopExpanded && window.innerWidth >= 768) {
                     setIsDesktopExpanded(true); // Auto expand if clicking parent while collapsed
                   }
@@ -409,18 +379,26 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
           >
             <div
               className={clsx(
-                "flex items-center gap-2",
+                "flex items-center gap-2 flex-grow min-w-0 overflow-x-auto scrollbar-hide",
                 !isDesktopExpanded && "hidden",
               )}
             >
               <Image
-                src={smartOcsLogo}
-                alt="One Door Service Logo"
-                radius="lg"
-                className="w-13"
+                src={
+                  getDisplayImageUrl(user?.user?.store?.logoUrl) || deePosLogo
+                }
+                fallbackSrc={deePosLogo}
+                alt={user?.user?.store?.name || "Store Logo"}
+                radius="full"
+                className="w-12 h-12 aspect-square object-cover border-2 border-white/20"
               />
               <span className="font-bold text-lg whitespace-nowrap">
-                {t("sidebar.title")}
+                {(() => {
+                  const name = user?.user?.store?.name || t("sidebar.title");
+                  return name.length >= 14
+                    ? `${name.substring(0, 14)}...`
+                    : name;
+                })()}
               </span>
             </div>
 
@@ -445,7 +423,7 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
 
           {/* Navigation */}
           <nav className="py-2 px-3 mt-0 flex-grow overflow-y-auto scrollbar-hide">
-            {dynamicSidebarGroups.map((group) => (
+            {sidebarGroups.map((group) => (
               <div key={group.titleKey} className="space-y-1 mb-6">
                 <p
                   className={clsx(
@@ -464,17 +442,17 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
             ))}
           </nav>
 
-          <div className="p-4 mt-auto">
+          <div className="p-4 mt-auto border-t border-info/10">
             <p
               className={clsx(
-                "text-[11px] flex justify-center items-center text-gray-300",
+                "text-[11px] flex justify-center items-center text-gray-400 font-medium",
                 !isDesktopExpanded && "md:hidden",
               )}
             >
               <span>{t("auth.lastUpdated")}</span>&nbsp;v{versionApp.version}
             </p>
             {!isDesktopExpanded && (
-              <p className="hidden md:flex text-[10px] justify-center items-center text-gray-300 w-full text-center">
+              <p className="hidden md:flex text-[10px] justify-center items-center text-gray-400 font-medium w-full text-center">
                 v{versionApp.version}
               </p>
             )}

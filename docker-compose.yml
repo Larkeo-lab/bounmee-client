@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: smart-odsc-admin
+    container_name: dee-pos-admin
     restart: always
     ports:
       - "4173:4173"

@@ -48,16 +48,18 @@
   },
   "pageNotFound": {
     "error": "ຜິດພາດ",
-    "description": "Smart ODSC - ການບໍລິການຜ່ານປະຕູດຽວ",
+    "description": "Dee POS - ການບໍລິການຜ່ານປະຕູດຽວ",
     "goBack": "ກັບຄືນ"
   },
   "sidebar": {
-    "title": "Smart ODSC",
+    "title": "Dee POS",
     "groups": {
       "overview": "ພາບລວມ",
       "management": "ການຈັດການ",
       "supportView": "ສະນັບສະໜູນ",
-      "system": "ລະບົບ"
+      "system": "ລະບົບ",
+      "menu": "ເມນູ",
+      "setting": "ຕັ້ງຄ່າ"
     },
     "menu": {
       "dashboard": "ສະຖິຕິລວມ",
@@ -98,7 +100,18 @@
       "callQueue": "ເອີ້ນຄິວ",
       "bookQueue": "ຈອງຄິວ",
       "statisticAll": "ສະຖິຕິ ທັງຫມົດ",
-      "resetQueue": "ຣີເຊັດຄິວປະຈຳວັນ"
+      "resetQueue": "ຣີເຊັດຄິວປະຈຳວັນ",
+      "pos": "ໜ້າຂາຍ (POS)",
+      "statisticsReport": "ລາຍງານສະຖິຕິ",
+      "setting": "ຕັ້ງຄ່າ",
+      "language": "ປ່ຽນພາສາ",
+      "order": "ລາຍການສັ່ງຊື້",
+      "manageProduct": "ຈັດການສິນຄ້າ",
+      "manageCategory": "ຈັດການປະເພດສິນຄ້າ",
+      "manageBank": "ຈັດການທະນາຄານ",
+      "manageEmployee": "ຈັດການພະນັກງານ",
+      "managePrinter": "ຈັດການປິນເຕີ",
+      "manageProfile": "ຈັດການໂປຟາຍ"
     }
   },
   "queue": {

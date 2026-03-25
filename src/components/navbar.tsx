@@ -12,12 +12,9 @@ import {
 import { siteConfig } from "@/config/site";
 import LanguageSwitch from "./common/language-switch";
 import ProfileDropdown from "./profile-dropdown";
-import NotificationDropdown from "./notification-dropdown";
 import { SearchIcon, GithubIcon } from "@/components/icons";
 
-
 export const Navbar = () => {
-
   const searchInput = (
     <Input
       aria-label="Search"
@@ -40,16 +37,15 @@ export const Navbar = () => {
   );
 
   return (
-    <HeroUINavbar maxWidth="full" position="sticky" className="py-0 border-b border-b-default-200" >
-
+    <HeroUINavbar
+      maxWidth="full"
+      position="sticky"
+      className="py-0 border-b border-b-default-200"
+    >
       <NavbarContent
         className="hidden sm:flex basis-1/5 sm:basis-full"
         justify="end"
       >
-        <NavbarItem className="hidden sm:flex mr-4">
-          <NotificationDropdown />
-        </NavbarItem>
-        <LanguageSwitch />
         <NavbarItem className="flex items-center ml-4">
           <ProfileDropdown />
         </NavbarItem>
@@ -83,8 +79,6 @@ export const Navbar = () => {
           ))}
         </div>
       </NavbarMenu>
-
-
     </HeroUINavbar>
   );
 };

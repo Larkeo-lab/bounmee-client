@@ -14,61 +14,58 @@ export interface CustomTableProps {
   emptyContent?: React.ReactNode;
 }
 
-// ສ່ວນລວມຂອງ Response ທີ່ມາຈາກ API
+// API Response structure
 export interface AuthResponse {
   code: string;
   message: string;
   data: AuthData;
 }
 
-// ຂໍ້ມູນຫຼັກໃນສ່ວນຂອງ Data
+// Data returned after successful login
 export interface AuthData {
-  id: string;
-  firstName: string;
-  lastName: string;
-  phoneNumber: string;
-  email: string;
-  userName: string;
-  userType: "OFFICER" | "CITIZEN"; // ສາມາດເພີ່ມ type ອື່ນໆໄດ້ຖ້າມີ
-  gender: "MALE" | "FEMALE" | "OTHER";
-  profileImage: string;
-  userStatus: "ACTIVE" | "INACTIVE";
-  lastLogin: string; // ຫຼື Date
-  loginAttempts: number;
-  dateOfBirth: string;
-  createdAt: string;
-  updatedAt: string;
-  createdBy: string;
-  updatedBy: string;
-  citizenProfile: null | any; // ປ່ຽນ any ເປັນ interface ຖ້າມີຂໍ້ມູນ
-  officerProfile: OfficerProfile;
+  user: User;
   accessToken: string;
   refreshToken: string;
 }
 
-// ຂໍ້ມູນສະເພາະຂອງພະນັກງານ (Officer)
-export interface OfficerProfile {
+export type Role = "SUPER_ADMIN" | "STORE_ADMIN" | "EMPLOYEE";
+export type Language = "LA" | "EN";
+
+// User model matching Prisma schema
+export interface User {
   id: string;
-  roleId: string;
-  userId: string;
-  officerNo: string;
-  position: string;
-  village: string;
-  districtId: string;
-  provinceId: string;
+  email: string | null;
+  phone: string | null;
+  role: Role;
+  isActive: boolean;
+  userName: string | null;
+  storeId: string | null;
+  employeeId: string | null;
+  language: Language | null;
   createdAt: string;
   updatedAt: string;
-  organizations: Organization[];
-  serviceCenterId: string;
+  store?: Store | null;
+  employee?: Employee | null;
 }
 
-// ຂໍ້ມູນກະຊວງທີ່ພະນັກງານສັງກັດ
-export interface Organization {
+// Store model matching Prisma schema
+export interface Store {
   id: string;
-  officerId: string;
-  organizationId: string;
+  name: string;
+  address: string | null;
+  logoUrl: string | null;
+  isActive: boolean;
   createdAt: string;
   updatedAt: string;
-  createdBy: string;
-  updatedBy: string;
+}
+
+// Employee model matching Prisma schema
+export interface Employee {
+  id: string;
+  name: string;
+  logoUrl: string | null;
+  isActive: boolean;
+  storeId: string;
+  createdAt: string;
+  updatedAt: string;
 }

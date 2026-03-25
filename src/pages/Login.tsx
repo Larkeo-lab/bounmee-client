@@ -2,8 +2,9 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 
 // Components
-import { Button, Form, Image, Input } from "@heroui/react";
+import { Button, Form, Image, Input, Card, CardBody, Divider } from "@heroui/react";
 import { EyeFilledIcon, EyeSlashFilledIcon } from "@/components/icons";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/routes";
 
 // Version number
@@ -19,6 +20,7 @@ import {
   trackLogin,
   trackPageView,
 } from "@/lib/analytics";
+import { Lock, User } from "lucide-react";
 
 export default function Login() {
   const [isVisible, setIsVisible] = React.useState(false);
@@ -26,10 +28,11 @@ export default function Login() {
 
   const { login } = useAuth();
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
   // Track page view with Google Analytics
   React.useEffect(() => {
-    trackPageView("/admin/login", "Admin Login Page");
+    trackPageView("/login", "POS Login Page");
   }, []);
 
   const toggleVisibility = () => setIsVisible(!isVisible);
@@ -39,7 +42,7 @@ export default function Login() {
     e.preventDefault();
     setIsLoading(true);
 
-    trackButtonClick("admin-login-button", "Admin Login Button");
+    trackButtonClick("login-button", "POS Login Button");
 
     try {
       const data = Object.fromEntries(
@@ -56,9 +59,10 @@ export default function Login() {
       };
 
       trackLogin("username", username);
-      trackFormSubmit("admin-login", true);
+      trackFormSubmit("pos-login", true);
 
       await login(userData);
+      navigate("/main");
     } catch (err: any) {
       showErrorToast(err, "", "danger");
     } finally {
@@ -67,115 +71,175 @@ export default function Login() {
   };
 
   return (
-    <React.Fragment>
-      <div className="flex flex-col lg:flex-row w-full min-h-screen">
-        {/* Login Form Section */}
-        <div className="relative w-full lg:w-1/2 flex items-center justify-center p-6 md:p-8 lg:p-16 bg-gray-50 dark:bg-gray-900">
-          <div className="absolute top-4 right-4">
-            <LanguageSwitch />
+    <div className="flex flex-col lg:flex-row w-full min-h-screen bg-background text-foreground">
+      {/* Brand Section (LHS/Top) */}
+      <div 
+        className="w-full lg:w-[60%] relative flex flex-col items-center justify-center p-8 overflow-hidden bg-primary"
+        style={{
+          backgroundImage: `url(${bgLineName})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+        {/* Overlay for better text readability */}
+        <div className="absolute inset-0 bg-primary/80 backdrop-blur-[2px] z-0" />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary via-transparent to-black/30 z-0" />
+
+        <div className="relative z-10 flex flex-col items-center text-center text-white space-y-6">
+          <div className="p-4 bg-white rounded-[2.5rem] shadow-2xl animate-float">
+            <Image
+              src={oneDoorLogo}
+              alt="Dee POS Logo"
+              className="w-40 sm:w-56"
+            />
           </div>
-          <div className="w-full max-w-sm md:max-w-md lg:max-w-lg p-6 md:p-14">
-            <div className="text-center mb-8 text-primary">
-              <h2 className="text-3xl font-bold">{t("auth.welcomeMessage")}</h2>
-              <p className="text-sm sm:text-base lg:text-lg font-semibold">
-                {t("auth.loginSubtitle")}
-              </p>
+          <div className="space-y-4">
+            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-black tracking-tight drop-shadow-lg uppercase italic">
+              Dee POS
+            </h1>
+            <p className="text-xl sm:text-2xl font-light opacity-90 max-w-lg mx-auto">
+              ລະບົບຈັດການການຂາຍອັດສະລິຍະ 
+              <span className="block text-sm mt-2 opacity-70">Smart POS Management System</span>
+            </p>
+          </div>
+          
+          <div className="pt-8 grid grid-cols-2 gap-4 w-full max-w-md">
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20">
+              <p className="text-2xl font-bold">100%</p>
+              <p className="text-xs opacity-70">Security</p>
             </div>
-
-            <Form
-              onSubmit={onSubmit}
-              className="flex flex-col space-y-4 p-4 w-full"
-            >
-              <Input
-                type="text"
-                label={t("auth.username")}
-                labelPlacement="outside"
-                name="username"
-                placeholder={t("auth.usernameePlaceholder")}
-                variant="bordered"
-                className="w-full"
-                size="lg"
-                validate={(value) => {
-                  if (!value) {
-                    return t("auth.invalidCredentials");
-                  }
-                  return true;
-                }}
-              />
-
-              <Input
-                label={t("auth.password")}
-                labelPlacement="outside"
-                name="password"
-                placeholder={t("auth.passwordPlaceholder")}
-                variant="bordered"
-                className="w-full"
-                size="lg"
-                validate={(value) => {
-                  if (!value) {
-                    return t("auth.invalidCredentials");
-                  }
-                  return true;
-                }}
-                endContent={
-                  <button
-                    className="focus:outline-none cursor-pointer"
-                    type="button"
-                    onClick={toggleVisibility}
-                  >
-                    {isVisible ? (
-                      <EyeSlashFilledIcon className="text-2xl text-default-400 pointer-events-none" />
-                    ) : (
-                      <EyeFilledIcon className="text-2xl text-default-400 pointer-events-none" />
-                    )}
-                  </button>
-                }
-                type={isVisible ? "text" : "password"}
-              />
-
-              <Button
-                type="submit"
-                color="primary"
-                size="md"
-                className="w-full mt-4 h-12"
-                isLoading={isLoading}
-              >
-                {isLoading ? t("auth.loggingIn") : t("auth.loginButton")}
-              </Button>
-            </Form>
-
-            <div className="mt-6 text-center">
-              <p className="text-xs mt-2">
-                {t("auth.lastUpdated")}: {version.version}
-              </p>
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20">
+              <p className="text-2xl font-bold">Fast</p>
+              <p className="text-xs opacity-70">Transactions</p>
             </div>
           </div>
         </div>
 
-        {/* Brand Section */}
-        <div
-          style={{
-            backgroundImage: `url(${bgLineName})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
-          className="w-full relative bg-primary text-white lg:w-1/2 flex items-center justify-center p-8 lg:p-12"
-        >
-          <div className="absolute inset-0 bg-gradient-to-b from-primary/90 via-primary/50 to-transparent z-0 h-1/2" />
+        {/* Decorative elements */}
+        <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-white/10 rounded-full blur-3xl" />
+        <div className="absolute -top-20 -right-20 w-80 h-80 bg-primary-400/20 rounded-full blur-3xl" />
+      </div>
 
-          <div className="flex flex-col justify-center items-center max-w-md">
-            <Image
-              src={oneDoorLogo}
-              alt="Smart ODSC"
-              className=" w-56 mb-4 rounded-full"
-            />
-            <h1 className="text-3xl text-center sm:text2xl lg:text-4xl font-extrabold">
-              ລະບົບ ການບໍລິການຜ່ານປະຕູດຽວ
-            </h1>
-            <p className=" opacity-80 mt-1">ກະຊວງ ພາຍໃນ</p>
+      {/* Login Section (RHS/Bottom) */}
+      <div className="relative w-full lg:w-[40%] flex items-center justify-center p-6 md:p-12 bg-gray-50 dark:bg-gray-950">
+        <div className="absolute top-6 right-6">
+          <LanguageSwitch />
+        </div>
+
+        <div className="w-full max-w-md space-y-8">
+          <div className="text-center lg:text-left space-y-2">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
+              {t("auth.login")}
+            </h2>
+            <p className="text-gray-500 dark:text-gray-400">
+              {t("auth.loginSubtitle")}
+            </p>
+          </div>
+
+          <Card className="border-none bg-white/70 dark:bg-white/5 backdrop-blur-xl shadow-2xl">
+            <CardBody className="p-8">
+              <Form
+                onSubmit={onSubmit}
+                className="flex flex-col gap-6"
+              >
+                <Input
+                  type="text"
+                  label={t("auth.username")}
+                  labelPlacement="outside"
+                  name="username"
+                  placeholder={t("auth.usernameePlaceholder")}
+                  variant="bordered"
+                  className="w-full"
+                  size="lg"
+                  startContent={<User className="text-default-400" size={20} />}
+                  classNames={{
+                    label: "font-semibold text-gray-700 dark:text-gray-300",
+                    inputWrapper: "h-14 border-2 border-default-200 hover:border-primary transition-colors",
+                  }}
+                  validate={(value) => {
+                    if (!value) return t("auth.missingCredentials");
+                    return true;
+                  }}
+                />
+
+                <Input
+                  label={t("auth.password")}
+                  labelPlacement="outside"
+                  name="password"
+                  placeholder={t("auth.passwordPlaceholder")}
+                  variant="bordered"
+                  className="w-full"
+                  size="lg"
+                  startContent={<Lock className="text-default-400" size={20} />}
+                  classNames={{
+                    label: "font-semibold text-gray-700 dark:text-gray-300",
+                    inputWrapper: "h-14 border-2 border-default-200 hover:border-primary transition-colors",
+                  }}
+                  validate={(value) => {
+                    if (!value) return t("auth.missingCredentials");
+                    return true;
+                  }}
+                  endContent={
+                    <button
+                      className="focus:outline-none cursor-pointer"
+                      type="button"
+                      onClick={toggleVisibility}
+                    >
+                      {isVisible ? (
+                        <EyeSlashFilledIcon className="text-2xl text-default-400" />
+                      ) : (
+                        <EyeFilledIcon className="text-2xl text-default-400" />
+                      )}
+                    </button>
+                  }
+                  type={isVisible ? "text" : "password"}
+                />
+
+                <div className="flex items-center justify-between px-1">
+                  <label className="flex items-center gap-2 text-sm text-gray-500 cursor-pointer">
+                    <input type="checkbox" className="rounded border-gray-300 text-primary focus:ring-primary" />
+                    <span>Remember me</span>
+                  </label>
+                  <Button variant="light" size="sm" color="primary" className="font-semibold p-0 h-auto">
+                    {t("auth.forgotPassword")}?
+                  </Button>
+                </div>
+
+                <Button
+                  type="submit"
+                  color="primary"
+                  size="lg"
+                  className="w-full h-14 font-bold text-lg shadow-lg shadow-primary/30"
+                  isLoading={isLoading}
+                >
+                  {isLoading ? t("auth.loggingIn") : t("auth.loginButton")}
+                </Button>
+              </Form>
+            </CardBody>
+          </Card>
+
+          <div className="text-center space-y-4">
+            <p className="text-sm text-gray-500">
+              Don't have an account? <Button variant="light" color="primary" className="p-0 h-auto font-bold">{t("auth.register")}</Button>
+            </p>
+            <Divider className="my-8" />
+            <p className="text-[10px] text-gray-400 font-mono uppercase tracking-[0.2em]">
+              Dee POS System &bull; Version {version.version}
+            </p>
           </div>
         </div>
       </div>
-    </React.Fragment>
+
+      <style>{`
+        @keyframes float {
+          0% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
+          100% { transform: translateY(0px); }
+        }
+        .animate-float {
+          animation: float 6s ease-in-out infinite;
+        }
+      `}</style>
+    </div>
   );
 }

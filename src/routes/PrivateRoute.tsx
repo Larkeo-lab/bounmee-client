@@ -19,7 +19,7 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({
   // Check token expiration
   const isExpired = React.useMemo(() => {
     try {
-      const userDataStr = localStorage.getItem('authOdsc')
+      const userDataStr = localStorage.getItem('authPOS')
       if (!userDataStr) return true
 
       const userData = JSON.parse(userDataStr)

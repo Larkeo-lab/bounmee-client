@@ -7,7 +7,7 @@ export const useSocketNotification = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  const authDataJson = JSON.parse(localStorage.getItem("authOdsc") || "{}");
+  const authDataJson = JSON.parse(localStorage.getItem("authPOS") || "{}");
 
   useEffect(() => {
     const serviceCenterId = authDataJson?.officerProfile?.serviceCenterId;

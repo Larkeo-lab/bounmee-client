@@ -34,7 +34,7 @@ export default {
       themes: {
         light: {
           colors: {
-            primary: "#3554a1",
+            primary: "#00008B",
             info: "#425fae",
             secondary: "#8b3d8f",
             success: "#6dc1c9",
