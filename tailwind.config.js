@@ -11,6 +11,9 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        lao: ["Nuanta", "sans-serif"],
+      },
       colors: {
         brand: {
           DEFAULT: "#0ea5e9",

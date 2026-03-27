@@ -182,6 +182,7 @@ export default function OrderPage() {
               ແບ່ງຕາມການຊຳລະ
             </p>
             <ScrollShadow
+              isEnabled={false}
               size={20}
               className="max-h-[140px] overflow-y-auto pr-2 -mr-2"
             >
@@ -189,7 +190,7 @@ export default function OrderPage() {
                 <div className="flex justify-between items-center text-sm">
                   <span className="flex items-center gap-2 font-medium">
                     <div className="w-2 h-2 rounded-full bg-success"></div>
-                    ເງິນສົດ (Cash)
+                    ເງິນສົດ
                   </span>
                   <span className="font-bold">
                     {formatNumber(totalCash)} ກີບ
@@ -201,32 +202,38 @@ export default function OrderPage() {
                     <div className="flex justify-between items-center text-sm font-bold text-primary">
                       <span className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
-                        ເງິນໂອນລວມ (Total Transfer)
+                        ເງິນໂອນລວມ
                       </span>
                       <span>{formatNumber(totalTransfer)} ກີບ</span>
                     </div>
                     <div className="pl-4 space-y-1 mt-1 border-l-2 border-primary/20 ml-1">
-                      {transfersByBank.map((bank: { name: string; logoUrl?: string; total: number }) => (
-                        <div
-                          key={bank.name}
-                          className="flex justify-between items-center text-[12px] text-default-500"
-                        >
-                          <span className="flex items-center gap-2">
-                            {bank.logoUrl ? (
-                              <Image
-                                src={getDisplayImageUrl(bank.logoUrl)}
-                                className="w-3 h-3 rounded-full object-cover grayscale-[0.5]"
-                              />
-                            ) : (
-                              <div className="w-1.5 h-1.5 rounded-full bg-default-400"></div>
-                            )}
-                            {bank.name}
-                          </span>
-                          <span className="font-medium">
-                            {formatNumber(bank.total)} ກີບ
-                          </span>
-                        </div>
-                      ))}
+                      {transfersByBank.map(
+                        (bank: {
+                          name: string;
+                          logoUrl?: string;
+                          total: number;
+                        }) => (
+                          <div
+                            key={bank.name}
+                            className="flex justify-between items-center text-[12px] text-default-500"
+                          >
+                            <span className="flex items-center gap-2">
+                              {bank.logoUrl ? (
+                                <Image
+                                  src={getDisplayImageUrl(bank.logoUrl)}
+                                  className="w-3 h-3 rounded-full object-cover grayscale-[0.5]"
+                                />
+                              ) : (
+                                <div className="w-1.5 h-1.5 rounded-full bg-default-400"></div>
+                              )}
+                              {bank.name}
+                            </span>
+                            <span className="font-medium">
+                              {formatNumber(bank.total)} ກີບ
+                            </span>
+                          </div>
+                        ),
+                      )}
                     </div>
                   </>
                 )}

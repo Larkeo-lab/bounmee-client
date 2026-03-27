@@ -40,4 +40,7 @@ export const API_ENDPOINTS = {
   SOCKET: {
     LISTEN: `${API_VERSION}/socket`,
   },
+  DASHBOARD: {
+    GET: `${API_VERSION}/dashboard`,
+  },
 };
