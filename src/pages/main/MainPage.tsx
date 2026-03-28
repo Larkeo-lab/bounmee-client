@@ -33,6 +33,7 @@ import { useGetCategories, Category } from "@/services/category/useCategory";
 import { useGetProducts, Product } from "@/services/product/useProduct";
 import { getDisplayImageUrl } from "@/lib/utils";
 import { socket } from "@/lib/socket";
+import { formatNumber } from "@/utils/numberFormat";
 
 export default function MainPage() {
   const { user } = useAuth();
@@ -228,7 +229,7 @@ export default function MainPage() {
                   </b>
                   <div className="flex justify-between items-center w-full">
                     <p className="text-primary font-black text-sm lg:text-base">
-                      {product.price.toLocaleString()}{" "}
+                      {formatNumber(product.price)}{" "}
                       <span className="text-[9px] lg:text-[10px] font-medium text-default-400">
                         ກີບ
                       </span>
@@ -291,7 +292,7 @@ export default function MainPage() {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-primary font-bold text-[12px] lg:text-sm">
-                      {(item.price * item.quantity).toLocaleString()}
+                      {formatNumber(item.price * item.quantity)} ກີບ
                     </span>
                     <div className="flex ml-4 items-center gap-1.5 lg:gap-2 bg-default-100 rounded-lg p-0.5">
                       <Button
