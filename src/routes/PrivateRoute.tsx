@@ -2,19 +2,22 @@ import React, { useEffect } from 'react'
 import { Navigate } from 'react-router-dom'
 import DefaultLayout from '@/layouts/DefaultLayout'
 import { useAuth, checkTokenExpired } from './AuthContext'
+import { Role } from '@/types'
 
 interface PrivateRouteProps {
   children: React.ReactNode
   redirectTo?: string
   requiresLayout?: boolean
+  allowedRoles?: Role[]
 }
 
 const PrivateRoute: React.FC<PrivateRouteProps> = ({
   children,
   redirectTo = '/',
-  requiresLayout = true
+  requiresLayout = true,
+  allowedRoles
 }) => {
-  const { isAuthenticated, logout, loading } = useAuth()
+  const { isAuthenticated, user, logout, loading } = useAuth()
 
   // Check token expiration
   const isExpired = React.useMemo(() => {
@@ -51,6 +54,11 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({
   // If user is not authenticated or token is expired, redirect to login
   if (!isAuthenticated || isExpired) {
     return <Navigate to={redirectTo} replace />
+  }
+
+  // Role-based access check
+  if (allowedRoles && user && !allowedRoles.includes(user.user?.role)) {
+    return <Navigate to="/main" replace />
   }
 
   // If user is authenticated and token is valid, render the private route

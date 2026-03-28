@@ -1,5 +1,6 @@
 import React from "react";
 import { RouteObject } from "react-router-dom";
+import { Role } from "@/types";
 
 // Import page components
 import LoginPage from "@/pages/Login";
@@ -23,6 +24,7 @@ export interface AppRoute {
   element: React.ReactNode;
   isPrivate: boolean;
   requiresLayout?: boolean;
+  allowedRoles?: Role[];
 }
 
 // Define all application routes
@@ -43,6 +45,7 @@ export const appRoutes: AppRoute[] = [
     element: <Dashboard />,
     isPrivate: true,
     requiresLayout: true,
+    allowedRoles: ["SUPER_ADMIN", "STORE_ADMIN"],
   },
   {
     path: "/settings",
@@ -67,12 +70,14 @@ export const appRoutes: AppRoute[] = [
     element: <BankPage />,
     isPrivate: true,
     requiresLayout: true,
+    allowedRoles: ["SUPER_ADMIN", "STORE_ADMIN"],
   },
   {
     path: "/settings/employee",
     element: <EmployeePage />,
     isPrivate: true,
     requiresLayout: true,
+    allowedRoles: ["SUPER_ADMIN", "STORE_ADMIN"],
   },
   {
     path: "/settings/profile",
@@ -101,7 +106,10 @@ export const generateRoutes = (
   return appRoutes.map((route) => ({
     path: route.path,
     element: route.isPrivate ? (
-      <PrivateRoute requiresLayout={route.requiresLayout}>
+      <PrivateRoute
+        requiresLayout={route.requiresLayout}
+        allowedRoles={route.allowedRoles}
+      >
         {route.element}
       </PrivateRoute>
     ) : (
