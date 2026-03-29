@@ -22,6 +22,7 @@ export const API_ENDPOINTS = {
   },
   PRODUCT: {
     LIST: `${API_VERSION}/product`,
+    BARCODE: (barcode: string) => `${API_VERSION}/product/barcode/${barcode}`,
     DETAIL: (id: string) => `${API_VERSION}/product/${id}`,
   },
   ORDER: {

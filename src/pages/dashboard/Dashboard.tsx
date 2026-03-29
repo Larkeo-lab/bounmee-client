@@ -249,6 +249,9 @@ export default function Dashboard() {
                   case "1month":
                     start = dayjs().subtract(1, "month").format("YYYY-MM-DD");
                     break;
+                  case "1year":
+                    start = dayjs().subtract(1, "year").format("YYYY-MM-DD");
+                    break;
                 }
 
                 const [sy, sm, sd] = start.split("-").map(Number);
@@ -272,6 +275,7 @@ export default function Dashboard() {
               <DropdownItem key="3days">3 ມື້ຜ່ານມາ</DropdownItem>
               <DropdownItem key="7days">7 ມື້ຜ່ານມາ</DropdownItem>
               <DropdownItem key="1month">1 ເດືອນຜ່ານມາ</DropdownItem>
+              <DropdownItem key="1year">1 ປີຜ່ານມາ</DropdownItem>
             </DropdownMenu>
           </Dropdown>
           <Button

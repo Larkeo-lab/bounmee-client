@@ -68,8 +68,6 @@ export default function PaymentModal({
   );
   const moneyRates = moneyRateResponse?.data || [];
 
-  console.log("moneyRates", moneyRates);
-
   const handleKeypadPress = (val: string) => {
     setReceivedAmount((prev) => {
       if (prev === "0") return val;
@@ -117,13 +115,24 @@ export default function PaymentModal({
       onPaymentSuccess();
       clearReceived();
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Payment failed:", error);
-      toast.error("ການຊຳລະເງິນຫຼົ້ມເຫຼວ ກະລຸນາລອງໃໝ່");
+      const errorData = error?.response?.data;
+
+      if (errorData?.errorCode === "POS-9004") {
+        const stockInfo = errorData.errors;
+        toast.error(
+          `ສິນຄ້າ "${stockInfo.productName}" ບໍ່ພໍ! (ມີ: ${stockInfo.availableStock}, ຕ້ອງການ: ${stockInfo.requested})`,
+          {
+            duration: 5000,
+            icon: "⚠️",
+          },
+        );
+      } else {
+        toast.error(errorData?.message || "ການຊຳລະເງິນຫຼົ້ມເຫຼວ ກະລຸນາລອງໃໝ່");
+      }
     }
   };
-
-  console.log("banks", banks);
 
   return (
     <Modal

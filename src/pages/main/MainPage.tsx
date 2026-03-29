@@ -31,7 +31,11 @@ import { useCart } from "@/provider";
 import PaymentModal from "@/components/main/payment-modal";
 import { useAuth } from "@/routes/AuthContext";
 import { useGetCategories, Category } from "@/services/category/useCategory";
-import { useGetProducts, Product } from "@/services/product/useProduct";
+import {
+  useGetProducts,
+  Product,
+  getProductByBarcode,
+} from "@/services/product/useProduct";
 import { getDisplayImageUrl } from "@/lib/utils";
 import { socket } from "@/lib/socket";
 import { formatNumber } from "@/utils/numberFormat";
@@ -72,7 +76,7 @@ export default function MainPage() {
 
     const onConnect = () => {
       console.log("Connected to scanning socket");
-      socket.emit("join-store", user.user.storeId);
+      socket.emit("JOIN:STORE", user.user.storeId);
     };
 
     const onScanned = (product: Product) => {
@@ -80,8 +84,8 @@ export default function MainPage() {
       addToCart(product);
     };
 
-    socket.on("connect", onConnect);
-    socket.on("product:scanned", onScanned);
+    socket.on("SETUP", onConnect);
+    socket.on("PRODUCT:SCANNED", onScanned);
 
     // If already connected, join room manually
     if (socket.connected) {
@@ -89,8 +93,8 @@ export default function MainPage() {
     }
 
     return () => {
-      socket.off("connect", onConnect);
-      socket.off("product:scanned", onScanned);
+      socket.off("SETUP", onConnect);
+      socket.off("PRODUCT:SCANNED", onScanned);
     };
   }, [user?.user?.storeId, addToCart]);
 
@@ -109,6 +113,23 @@ export default function MainPage() {
   );
 
   const products = productResponse?.data || [];
+
+  const handleBarcodeSearch = async (barcode: string) => {
+    if (!barcode || !user?.user?.storeId) return;
+
+    try {
+      // First, try to find an exact match for the barcode
+      const product = await getProductByBarcode(barcode, user.user.storeId);
+      if (product) {
+        addToCart(product);
+        setSearchQuery("");
+        setDebouncedSearch("");
+      }
+    } catch (error) {
+      // If no exact match (or error), fallback to normal filtering
+      setDebouncedSearch(barcode);
+    }
+  };
 
   const categories = [
     { id: "all", label: "ທັງໝົດ" },
@@ -140,7 +161,7 @@ export default function MainPage() {
               onValueChange={setSearchQuery}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
-                  setDebouncedSearch(searchQuery);
+                  handleBarcodeSearch(searchQuery);
                 }
               }}
               variant="bordered"
@@ -190,7 +211,7 @@ export default function MainPage() {
               description="ລອງຄົ້ນຫາດ້ວຍຄຳສັບອື່ນ ຫຼື ປ່ຽນໝວດໝູ່"
             />
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 lg:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5 2xl:grid-cols-6 gap-3 lg:gap-4">
               {products.map((product) => (
                 <Card
                   isPressable

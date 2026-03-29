@@ -4,7 +4,7 @@ import { I18nProvider } from "@react-aria/i18n";
 import { HeroUIProvider } from "@heroui/system";
 import { useHref, useNavigate } from "react-router-dom";
 import { AuthProvider } from "@/routes";
-import { Toaster } from "react-hot-toast";
+import { toast, Toaster } from "react-hot-toast";
 
 declare module "@react-types/shared" {
   interface RouterConfig {
@@ -19,6 +19,7 @@ export interface CartItem {
   price: number;
   quantity: number;
   image: string | null;
+  stockQty: number;
 }
 
 interface CartContextType {
@@ -71,12 +72,22 @@ export function Provider({ children }: { children: React.ReactNode }) {
     setCart((prev) => {
       const existing = prev.find((item) => item.id === product.id);
       if (existing) {
+        if (product.stockQty !== undefined && existing.quantity + 1 > product.stockQty) {
+          toast.error(`ສິນຄ້າ "${product.name}" ມີໃນສາງພຽງ ${product.stockQty} ລາຍການ`);
+          return prev;
+        }
         return prev.map((item) =>
           item.id === product.id
             ? { ...item, quantity: item.quantity + 1 }
             : item,
         );
       }
+
+      if (product.stockQty <= 0) {
+        toast.error(`ສິນຄ້າ "${product.name}" ໝົດແລ້ວ!`);
+        return prev;
+      }
+
       return [
         ...prev,
         {
@@ -85,6 +96,7 @@ export function Provider({ children }: { children: React.ReactNode }) {
           price: product.price,
           image: product.image,
           quantity: 1,
+          stockQty: product.stockQty,
         },
       ];
     });
@@ -98,8 +110,12 @@ export function Provider({ children }: { children: React.ReactNode }) {
     setCart((prev) =>
       prev.map((item) => {
         if (item.id === id) {
-          const newQty = Math.max(1, item.quantity + delta);
-          return { ...item, quantity: newQty };
+          const newQty = item.quantity + delta;
+          if (item.stockQty !== undefined && newQty > item.stockQty) {
+            toast.error(`ສິນຄ້າ "${item.name}" ມີໃນສາງພຽງ ${item.stockQty} ລາຍການ`);
+            return item;
+          }
+          return { ...item, quantity: Math.max(1, newQty) };
         }
         return item;
       }),
@@ -116,9 +132,16 @@ export function Provider({ children }: { children: React.ReactNode }) {
     const newQty = parseInt(value);
     if (isNaN(newQty)) return;
     setCart((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, quantity: Math.max(1, newQty) } : item,
-      ),
+      prev.map((item) => {
+        if (item.id === id) {
+          if (item.stockQty !== undefined && newQty > item.stockQty) {
+            toast.error(`ສິນຄ້າ "${item.name}" ມີໃນສາງພຽງ ${item.stockQty} ລາຍການ`);
+            return { ...item, quantity: item.stockQty };
+          }
+          return { ...item, quantity: Math.max(1, newQty) };
+        }
+        return item;
+      }),
     );
   };
 

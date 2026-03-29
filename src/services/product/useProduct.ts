@@ -66,6 +66,19 @@ export const useGetProducts = (
   });
 };
 
+export const getProductByBarcode = async (
+  barcode: string,
+  storeId: string,
+): Promise<Product> => {
+  const response = await axiosInstance.get(
+    API_ENDPOINTS.PRODUCT.BARCODE(barcode),
+    {
+      params: { storeId },
+    },
+  );
+  return response.data.data;
+};
+
 export const createProduct = async (data: CreateProductInput) => {
   const response = await axiosInstance.post(API_ENDPOINTS.PRODUCT.LIST, data);
   return response.data;
