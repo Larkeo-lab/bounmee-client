@@ -421,7 +421,7 @@ export default function OrderPage() {
                   {getPaymentMethodLabel(item.paymentMethod)}
                 </Chip>
               </TableCell>
-              <TableCell className="font-bold text-lg">
+              <TableCell className="font-bold text-lg whitespace-nowrap">
                 {formatNumber(item.totalAmount)} ກີບ
               </TableCell>
               <TableCell>

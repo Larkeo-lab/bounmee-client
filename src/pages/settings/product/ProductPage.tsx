@@ -272,7 +272,7 @@ export default function ProductPage() {
         );
       case "price":
         return (
-          <p className="text-bold text-small">
+          <p className="text-bold text-small whitespace-nowrap">
             {formatNumber(product.price)} LAK
           </p>
         );

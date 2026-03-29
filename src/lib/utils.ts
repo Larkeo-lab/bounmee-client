@@ -34,5 +34,13 @@ export const getDisplayImageUrl = (image: string | null | undefined) => {
   ) {
     return image;
   }
+
+  const storageType = import.meta.env.VITE_STORAGE_TYPE;
+  const s3PublicUrl = import.meta.env.VITE_S3_PUBLIC_URL;
+
+  if (storageType === "S3" && s3PublicUrl) {
+    return `${s3PublicUrl}/original/${image}`;
+  }
+
   return `${API_BASE_URL}${API_ENDPOINTS.STORAGE.VIEW_IMAGE("original", image)}`;
 };

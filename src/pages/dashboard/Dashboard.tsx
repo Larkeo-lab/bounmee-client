@@ -588,13 +588,13 @@ export default function Dashboard() {
                   <TableCell className="text-center">
                     {product.description ? product.description : "-"}
                   </TableCell>
-                  <TableCell className="text-right font-medium">
+                  <TableCell className="text-right font-medium whitespace-nowrap">
                     {product.qty > 0
                       ? formatNumber(product.totalSales / product.qty)
                       : 0}{" "}
                     ກີບ
                   </TableCell>
-                  <TableCell className="text-right font-bold text-primary">
+                  <TableCell className="text-right font-bold text-primary whitespace-nowrap">
                     {formatNumber(product.totalSales)} ກີບ
                   </TableCell>
                 </TableRow>

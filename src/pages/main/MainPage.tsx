@@ -239,7 +239,7 @@ export default function MainPage() {
                       {product.name}
                     </b>
                     <div className="flex justify-between items-center w-full">
-                      <p className="text-primary font-black text-sm lg:text-base">
+                      <p className="text-primary font-black text-sm lg:text-base whitespace-nowrap">
                         {formatNumber(product.price)}{" "}
                         <span className="text-[9px] lg:text-[10px] font-medium text-default-400">
                           ກີບ
