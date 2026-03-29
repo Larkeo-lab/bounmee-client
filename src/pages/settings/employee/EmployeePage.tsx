@@ -45,6 +45,7 @@ import {
 import { useUploadImage } from "@/services/storage";
 import { getDisplayImageUrl } from "@/lib/utils";
 import { useGetStoreDetail } from "@/services/store/useStore";
+import EmptyState from "@/components/common/empty-state";
 
 export default function EmployeePage() {
   const { user } = useAuth();
@@ -450,7 +451,7 @@ export default function EmployeePage() {
           <TableColumn>ບົດບາດ</TableColumn>
           <TableColumn className="text-center">ຈັດການ</TableColumn>
         </TableHeader>
-        <TableBody isLoading={isLoading} emptyContent={"ບໍ່ມີຂໍ້ມູນໃຫ້ສະແດງ"}>
+        <TableBody isLoading={isLoading} emptyContent={<EmptyState />}>
           {items.map((item) => (
             <TableRow key={item.id}>
               <TableCell>

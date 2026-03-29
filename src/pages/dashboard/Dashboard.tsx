@@ -54,6 +54,7 @@ import { formatNumber } from "@/utils/numberFormat";
 import { format } from "date-fns";
 import { useAuth } from "@/routes";
 import { useDashboard } from "@/services/dashboard/useDashboard";
+import EmptyState from "@/components/common/empty-state";
 
 interface DateRange {
   start: any;
@@ -555,7 +556,7 @@ export default function Dashboard() {
               <TableColumn className="text-right">ລາຄາ</TableColumn>
               <TableColumn className="text-right">ຍອດຂາຍລວມ</TableColumn>
             </TableHeader>
-            <TableBody emptyContent="ບໍ່ມີຂໍ້ມູນ">
+            <TableBody emptyContent={<EmptyState />}>
               {(dashboard?.topSellingProducts || []).map((product, index) => (
                 <TableRow
                   key={index}
@@ -581,7 +582,7 @@ export default function Dashboard() {
                       variant="flat"
                       className="font-bold"
                     >
-                      {product.qty} ຈານ
+                      {product.qty}
                     </Chip>
                   </TableCell>
                   <TableCell className="text-center">

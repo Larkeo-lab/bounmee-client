@@ -12,6 +12,7 @@ import BankPage from "@/pages/settings/bank/BankPage";
 import EmployeePage from "@/pages/settings/employee/EmployeePage";
 import ProfilePage from "@/pages/settings/profile/ProfilePage";
 import SettingsPage from "@/pages/settings/SettingsPage";
+import MoneyRatePage from "@/pages/settings/moneyRate/MoneyRatePage";
 import OrderPage from "@/pages/order/OrderPage";
 
 // Import route components
@@ -75,6 +76,13 @@ export const appRoutes: AppRoute[] = [
   {
     path: "/settings/employee",
     element: <EmployeePage />,
+    isPrivate: true,
+    requiresLayout: true,
+    allowedRoles: ["SUPER_ADMIN", "STORE_ADMIN"],
+  },
+  {
+    path: "/settings/money-rate",
+    element: <MoneyRatePage />,
     isPrivate: true,
     requiresLayout: true,
     allowedRoles: ["SUPER_ADMIN", "STORE_ADMIN"],

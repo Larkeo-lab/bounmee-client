@@ -55,6 +55,7 @@ import {
 import { useGetCategories, Category } from "@/services/category/useCategory";
 import { useUploadImage } from "@/services/storage";
 import { formatNumber, parseNumber } from "@/utils/numberFormat";
+import EmptyState from "@/components/common/empty-state";
 
 export default function ProductPage() {
   const { user } = useAuth();
@@ -625,7 +626,14 @@ export default function ProductPage() {
           items={items}
           loadingContent={<Spinner label="ກຳລັງໂຫຼດຂໍ້ມູນ..." />}
           isLoading={isLoading}
-          emptyContent={!isLoading && "ບໍ່ພົບຂໍ້ມູນສິນຄ້າ"}
+          emptyContent={
+            !isLoading && (
+              <EmptyState
+                message="ບໍ່ພົບຂໍ້ມູນສິນຄ້າ"
+                description="ລອງຄົ້ນຫາດ້ວຍຄຳສັບອື່ນ ຫຼື ປ່ຽນໝວດໝູ່"
+              />
+            )
+          }
         >
           {(item) => (
             <TableRow

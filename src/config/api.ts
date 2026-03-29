@@ -43,4 +43,8 @@ export const API_ENDPOINTS = {
   DASHBOARD: {
     GET: `${API_VERSION}/dashboard`,
   },
+  MONEY_RATE: {
+    LIST: `${API_VERSION}/money-rate`,
+    DETAIL: (id: string) => `${API_VERSION}/money-rate/${id}`,
+  },
 };

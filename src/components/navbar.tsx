@@ -10,7 +10,6 @@ import {
   NavbarMenuItem,
 } from "@heroui/navbar";
 import { siteConfig } from "@/config/site";
-import LanguageSwitch from "./common/language-switch";
 import ProfileDropdown from "./profile-dropdown";
 import { SearchIcon, GithubIcon } from "@/components/icons";
 

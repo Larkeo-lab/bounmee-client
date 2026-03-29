@@ -20,8 +20,8 @@ import {
 import { useAuth } from "@/routes/AuthContext";
 import { useGetBanks, Bank } from "@/services/bank/useBank";
 import { useCreateOrder, OrderItemInput } from "@/services/order/useOrder";
-import { API_BASE_URL } from "@/lib/axios";
 import toast from "react-hot-toast";
+import { useGetMoneyRates } from "@/services/moneyRate/useMoneyRate";
 import { getDisplayImageUrl } from "@/lib/utils";
 
 interface CartItem {
@@ -61,6 +61,14 @@ export default function PaymentModal({
     isOpen ? user?.user?.storeId : "",
   );
   const banks = bankResponse?.data || [];
+  // get money rate
+
+  const { data: moneyRateResponse } = useGetMoneyRates(
+    isOpen ? user?.user?.storeId : "",
+  );
+  const moneyRates = moneyRateResponse?.data || [];
+
+  console.log("moneyRates", moneyRates);
 
   const handleKeypadPress = (val: string) => {
     setReceivedAmount((prev) => {
@@ -74,7 +82,11 @@ export default function PaymentModal({
     setReceivedAmount((prev) => (prev.length > 1 ? prev.slice(0, -1) : "0"));
   };
 
-  const change = Math.max(0, Number(receivedAmount) - total);
+  const currentRate = moneyRates.find((r: any) => r.name === currency);
+  const rateValue = currentRate ? Number(currentRate.rateBuy) : 1;
+  const receivedAmountInLAK = Number(receivedAmount) * rateValue;
+
+  const change = Math.max(0, receivedAmountInLAK - total);
 
   const handleConfirm = async (onClose: () => void) => {
     if (!user?.user?.storeId || !user?.user?.id) {
@@ -92,7 +104,7 @@ export default function PaymentModal({
 
       await createOrderMutation.mutateAsync({
         totalAmount: Number(total),
-        receivedAmount: Number(receivedAmount),
+        receivedAmount: Number(receivedAmountInLAK),
         change: Number(change),
         paymentMethod: paymentMethod,
         storeId: user.user.storeId,
@@ -109,12 +121,6 @@ export default function PaymentModal({
       console.error("Payment failed:", error);
       toast.error("ການຊຳລະເງິນຫຼົ້ມເຫຼວ ກະລຸນາລອງໃໝ່");
     }
-  };
-
-  const getImageUrl = (url: string | null) => {
-    if (!url) return "/assets/logo.png";
-    if (url.startsWith("http")) return url;
-    return `${API_BASE_URL}/api/v1/storage/view-image/${url}`;
   };
 
   console.log("banks", banks);
@@ -188,7 +194,10 @@ export default function PaymentModal({
                               ເລືອກສະກຸນເງິນ
                             </p>
                             <div className="grid grid-cols-3 gap-2">
-                              {["LAK", "THB", "USD"].map((curr) => (
+                              {[
+                                "LAK",
+                                ...moneyRates.map((r: any) => r.name),
+                              ].map((curr) => (
                                 <Button
                                   key={curr}
                                   variant={currency === curr ? "solid" : "flat"}
@@ -208,12 +217,19 @@ export default function PaymentModal({
                             <p className="text-primary text-sm mb-1 font-semibold uppercase">
                               ຈຳນວນເງິນທີ່ຮັບມາ
                             </p>
-                            <p className="text-3xl font-black text-primary-600">
-                              {Number(receivedAmount).toLocaleString()}{" "}
-                              <span className="text-lg font-normal">
-                                {currency}
-                              </span>
-                            </p>
+                            <div className="flex flex-col">
+                              <p className="text-3xl font-black text-primary-600">
+                                {Number(receivedAmount).toLocaleString()}{" "}
+                                <span className="text-lg font-normal">
+                                  {currency}
+                                </span>
+                              </p>
+                              {currency !== "LAK" && (
+                                <p className="text-sm font-bold text-primary/60">
+                                  ≈ {receivedAmountInLAK.toLocaleString()} ກີບ
+                                </p>
+                              )}
+                            </div>
                           </div>
 
                           <div className="p-4 bg-success/10 rounded-2xl border border-success/20">
@@ -293,8 +309,8 @@ export default function PaymentModal({
                           variant="solid"
                           className="h-16 text-2xl font-black rounded-xl mb-1 shadow-lg shadow-primary/20"
                           onPress={() => {
-                            setReceivedAmount(total.toString());
                             setCurrency("LAK");
+                            setReceivedAmount(total.toString());
                           }}
                         >
                           ເຕັ້ມຈຳນວນ
@@ -372,7 +388,7 @@ export default function PaymentModal({
                 isLoading={createOrderMutation.isPending}
                 isDisabled={
                   paymentMethod === "CASH"
-                    ? Number(receivedAmount) < total
+                    ? receivedAmountInLAK < total
                     : !selectedBank
                 }
               >

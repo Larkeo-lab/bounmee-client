@@ -25,6 +25,7 @@ import {
   Trash2,
   Barcode,
 } from "lucide-react";
+import EmptyState from "@/components/common/empty-state";
 
 import { useCart } from "@/provider";
 import PaymentModal from "@/components/main/payment-modal";
@@ -96,7 +97,11 @@ export default function MainPage() {
   const { data: categoryResponse } = useGetCategories(
     user?.user?.storeId || "",
   );
-  const { data: productResponse, refetch: refetchProducts } = useGetProducts(
+  const {
+    data: productResponse,
+    refetch: refetchProducts,
+    isPending: isLoadingProducts,
+  } = useGetProducts(
     user?.user?.storeId || "",
     selectedCategory === "all" ? undefined : selectedCategory,
     true,
@@ -179,66 +184,73 @@ export default function MainPage() {
 
         {/* Product Grid */}
         <ScrollShadow size={0} className="flex-grow p-1 mt-4">
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 lg:gap-4">
-            {products.map((product) => (
-              <Card
-                isPressable
-                key={product.id}
-                onPress={() => addToCart(product)}
-                className="group relative border-none bg-white/70 dark:bg-gray-800/70 backdrop-blur-md hover:shadow-2xl hover:-translate-y-2 transition-all duration-300"
-              >
-                <CardBody className="p-0 relative overflow-hidden h-[130px] sm:h-[150px] lg:h-[160px]">
-                  {/* Stock Indicator Badge */}
-                  <div className="absolute top-2 right-2 z-20">
-                    <div
-                      className={clsx(
-                        "px-2 py-0.5 lg:py-1 rounded-full text-[9px] lg:text-[10px] font-bold text-white shadow-lg backdrop-blur-md",
-                        product.stockQty > 10
-                          ? "bg-green-500/80"
-                          : product.stockQty > 0
-                            ? "bg-orange-500/80"
-                            : "bg-red-500/80",
-                      )}
-                    >
-                      {product.stockQty > 0
-                        ? `ຍັງເຫຼືອ: ${product.stockQty}`
-                        : "ໝົດແລ້ວ"}
+          {!isLoadingProducts && products.length === 0 ? (
+            <EmptyState
+              message="ບໍ່ພົບລາຍການສິນຄ້າ"
+              description="ລອງຄົ້ນຫາດ້ວຍຄຳສັບອື່ນ ຫຼື ປ່ຽນໝວດໝູ່"
+            />
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 lg:gap-4">
+              {products.map((product) => (
+                <Card
+                  isPressable
+                  key={product.id}
+                  onPress={() => addToCart(product)}
+                  className="group relative border-none bg-white/70 dark:bg-gray-800/70 backdrop-blur-md hover:shadow-2xl hover:-translate-y-2 transition-all duration-300"
+                >
+                  <CardBody className="p-0 relative overflow-hidden h-[130px] sm:h-[150px] lg:h-[160px]">
+                    {/* Stock Indicator Badge */}
+                    <div className="absolute top-2 right-2 z-20">
+                      <div
+                        className={clsx(
+                          "px-2 py-0.5 lg:py-1 rounded-full text-[9px] lg:text-[10px] font-bold text-white shadow-lg backdrop-blur-md",
+                          product.stockQty > 10
+                            ? "bg-green-500/80"
+                            : product.stockQty > 0
+                              ? "bg-orange-500/80"
+                              : "bg-red-500/80",
+                        )}
+                      >
+                        {product.stockQty > 0
+                          ? `ຍັງເຫຼືອ: ${product.stockQty}`
+                          : "ໝົດແລ້ວ"}
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Hover Overlay with Add Icon */}
-                  <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 flex items-center justify-center">
-                    <div className="bg-white/90 text-primary rounded-full p-2 lg:p-3 shadow-xl transform scale-50 group-hover:scale-100 transition-transform duration-300">
-                      <Plus size={20} strokeWidth={3} />
+                    {/* Hover Overlay with Add Icon */}
+                    <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 flex items-center justify-center">
+                      <div className="bg-white/90 text-primary rounded-full p-2 lg:p-3 shadow-xl transform scale-50 group-hover:scale-100 transition-transform duration-300">
+                        <Plus size={20} strokeWidth={3} />
+                      </div>
                     </div>
-                  </div>
 
-                  <Image
-                    shadow="none"
-                    radius="none"
-                    width="100%"
-                    alt={product.name}
-                    className="w-full object-cover h-full group-hover:scale-110 transition-transform duration-500"
-                    src={getDisplayImageUrl(product.image)}
-                  />
-                </CardBody>
+                    <Image
+                      shadow="none"
+                      radius="none"
+                      width="100%"
+                      alt={product.name}
+                      className="w-full object-cover h-full group-hover:scale-110 transition-transform duration-500"
+                      src={getDisplayImageUrl(product.image)}
+                    />
+                  </CardBody>
 
-                <CardFooter className="flex flex-col items-start gap-1 p-2 lg:p-4 bg-white/40 dark:bg-gray-900/40 backdrop-blur-sm">
-                  <b className="text-[12px] lg:text-small font-bold text-default-700 w-full truncate mb-0.5 group-hover:text-primary transition-colors">
-                    {product.name}
-                  </b>
-                  <div className="flex justify-between items-center w-full">
-                    <p className="text-primary font-black text-sm lg:text-base">
-                      {formatNumber(product.price)}{" "}
-                      <span className="text-[9px] lg:text-[10px] font-medium text-default-400">
-                        ກີບ
-                      </span>
-                    </p>
-                  </div>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
+                  <CardFooter className="flex flex-col items-start gap-1 p-2 lg:p-4 bg-white/40 dark:bg-gray-900/40 backdrop-blur-sm">
+                    <b className="text-[12px] lg:text-small font-bold text-default-700 w-full truncate mb-0.5 group-hover:text-primary transition-colors">
+                      {product.name}
+                    </b>
+                    <div className="flex justify-between items-center w-full">
+                      <p className="text-primary font-black text-sm lg:text-base">
+                        {formatNumber(product.price)}{" "}
+                        <span className="text-[9px] lg:text-[10px] font-medium text-default-400">
+                          ກີບ
+                        </span>
+                      </p>
+                    </div>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          )}
         </ScrollShadow>
       </div>
 

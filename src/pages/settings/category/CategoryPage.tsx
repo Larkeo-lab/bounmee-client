@@ -26,6 +26,7 @@ import {
   useDeleteCategory,
   Category,
 } from "@/services/category/useCategory";
+import EmptyState from "@/components/common/empty-state";
 
 export default function CategoryPage() {
   const { user } = useAuth();
@@ -202,7 +203,7 @@ export default function CategoryPage() {
             </TableHeader>
             <TableBody
               isLoading={isLoading}
-              emptyContent={"ບໍ່ມີຂໍ້ມູນໃຫ້ສະແດງ"}
+              emptyContent={<EmptyState />}
             >
               {items.map((category) => (
                 <TableRow key={category.id}>

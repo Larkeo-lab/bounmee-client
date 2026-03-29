@@ -30,6 +30,7 @@ import {
 } from "@/services/bank/useBank";
 import { useUploadImage } from "@/services/storage";
 import { getDisplayImageUrl } from "@/lib/utils";
+import EmptyState from "@/components/common/empty-state";
 
 export default function BankPage() {
   const { user } = useAuth();
@@ -311,7 +312,7 @@ export default function BankPage() {
         </TableHeader>
         <TableBody
           isLoading={isLoading}
-          emptyContent={"ບໍ່ມີຂໍ້ມູນໃຫ້ສະແດງ"}
+          emptyContent={<EmptyState />}
         >
           {items.map((bank) => (
             <TableRow key={bank.id}>

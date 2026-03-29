@@ -8,6 +8,7 @@ import {
   Users,
   Printer,
   UserCircle,
+  BadgeDollarSign,
   ChevronRight,
 } from "lucide-react";
 
@@ -61,6 +62,13 @@ const settingsItems: SettingItem[] = [
     href: "/settings/profile",
     icon: UserCircle,
     color: "bg-pink-500/10 text-pink-500",
+  },
+  {
+    titleKey: "sidebar.menu.manageMoneyRate",
+    descriptionKey: "settings.description.moneyRate",
+    href: "/settings/money-rate",
+    icon: BadgeDollarSign,
+    color: "bg-cyan-500/10 text-cyan-500",
   },
 ];
 

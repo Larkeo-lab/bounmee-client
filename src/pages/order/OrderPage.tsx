@@ -33,6 +33,7 @@ import { getDisplayImageUrl } from "@/lib/utils";
 import { formatNumber } from "@/utils/numberFormat";
 import GlobalPagination from "@/components/common/globle-pagination";
 import { exportOrdersToExcel } from "@/utils/exportOrder";
+import EmptyState from "@/components/common/empty-state";
 
 export default function OrderPage() {
   const { user } = useAuth();
@@ -41,7 +42,7 @@ export default function OrderPage() {
 
   // Filters
   const [page, setPage] = useState(1);
-  const [limit] = useState(10);
+  const [limit] = useState(20);
   const [startDate, setStartDate] = useState(dayjs().format("YYYY-MM-DD"));
   const [endDate, setEndDate] = useState(dayjs().format("YYYY-MM-DD"));
   const [search, setSearch] = useState("");
@@ -392,7 +393,7 @@ export default function OrderPage() {
         </TableHeader>
         <TableBody
           isLoading={isLoading}
-          emptyContent={"ບໍ່ມີຂໍ້ມູນໃຫ້ສະແດງ"}
+          emptyContent={<EmptyState />}
           items={ordersWithIndex}
         >
           {(item: any) => (

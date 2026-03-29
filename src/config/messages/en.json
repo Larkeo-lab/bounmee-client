@@ -108,7 +108,19 @@
       "manageBank": "Bank Management",
       "manageEmployee": "Employee Management",
       "managePrinter": "Printer Management",
-      "manageProfile": "Profile Management"
+      "manageProfile": "Profile Management",
+      "manageMoneyRate": "Money Rate Management"
+    }
+  },
+  "settings": {
+    "description": {
+      "product": "Manage products and inventory",
+      "category": "Manage product categories",
+      "bank": "Manage bank accounts and accounts receivable",
+      "employee": "Manage employees and permissions",
+      "printer": "Configure printer and bill printing",
+      "profile": "Update personal information and password",
+      "moneyRate": "Manage currency exchange rates"
     }
   },
   "queue": {
