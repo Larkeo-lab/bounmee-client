@@ -40,7 +40,7 @@ import { getDisplayImageUrl } from "@/lib/utils";
 import { socket } from "@/lib/socket";
 import { formatNumber } from "@/utils/numberFormat";
 
-export default function MainPage() {
+export default function ProductOrderPage() {
   const { user } = useAuth();
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const {
@@ -51,7 +51,12 @@ export default function MainPage() {
     setQuantity,
     clearCart,
     subtotal,
+    setActiveTableId,
   } = useCart();
+
+  useEffect(() => {
+    setActiveTableId(null); // Ensure walk-in POS orders use default cart
+  }, [setActiveTableId]);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");

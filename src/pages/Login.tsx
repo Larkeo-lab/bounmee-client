@@ -2,7 +2,15 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 
 // Components
-import { Button, Form, Image, Input, Card, CardBody, Divider } from "@heroui/react";
+import {
+  Button,
+  Form,
+  Image,
+  Input,
+  Card,
+  CardBody,
+  Divider,
+} from "@heroui/react";
 import { EyeFilledIcon, EyeSlashFilledIcon } from "@/components/icons";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/routes";
@@ -61,8 +69,27 @@ export default function Login() {
       trackLogin("username", username);
       trackFormSubmit("pos-login", true);
 
-      await login(userData);
-      navigate("/main");
+      const authData = await login(userData);
+
+      const userRole = authData?.user?.role;
+      const permissions = authData?.user?.employee?.permission?.permissions;
+
+      // Conditional Navigation based on ROLE & PERMISSION
+      if (userRole === "EMPLOYEE" && permissions) {
+        if (permissions["table"]?.includes("view")) {
+          navigate("/tables");
+        } else if (permissions["order"]?.includes("view")) {
+          navigate("/order");
+        } else if (permissions["product"]?.includes("view")) {
+          navigate("/product-order");
+        } else if (permissions["dashboard"]?.includes("view")) {
+          navigate("/dashboard");
+        } else {
+          navigate("/settings/profile"); // Fallback fallback if no module permissions match
+        }
+      } else {
+        navigate("/tables"); // Default for Admin/Store Owner
+      }
     } catch (err: any) {
       showErrorToast(err, "", "danger");
     } finally {
@@ -73,7 +100,7 @@ export default function Login() {
   return (
     <div className="flex flex-col lg:flex-row w-full min-h-screen bg-background text-foreground">
       {/* Brand Section (LHS/Top) */}
-      <div 
+      <div
         className="w-full lg:w-[60%] relative flex flex-col items-center justify-center p-8 overflow-hidden bg-primary"
         style={{
           backgroundImage: `url(${bgLineName})`,
@@ -98,11 +125,13 @@ export default function Login() {
               Dee POS
             </h1>
             <p className="text-xl sm:text-2xl font-light opacity-90 max-w-lg mx-auto">
-              ລະບົບຈັດການການຂາຍອັດສະລິຍະ 
-              <span className="block text-sm mt-2 opacity-70">Smart POS Management System</span>
+              ລະບົບຈັດການການຂາຍອັດສະລິຍະ
+              <span className="block text-sm mt-2 opacity-70">
+                Smart POS Management System
+              </span>
             </p>
           </div>
-          
+
           <div className="pt-8 grid grid-cols-2 gap-4 w-full max-w-md">
             <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20">
               <p className="text-2xl font-bold">100%</p>
@@ -138,10 +167,7 @@ export default function Login() {
 
           <Card className="border-none bg-white/70 dark:bg-white/5 backdrop-blur-xl shadow-2xl">
             <CardBody className="p-8">
-              <Form
-                onSubmit={onSubmit}
-                className="flex flex-col gap-6"
-              >
+              <Form onSubmit={onSubmit} className="flex flex-col gap-6">
                 <Input
                   type="text"
                   label={t("auth.username")}
@@ -154,7 +180,8 @@ export default function Login() {
                   startContent={<User className="text-default-400" size={20} />}
                   classNames={{
                     label: "font-semibold text-gray-700 dark:text-gray-300",
-                    inputWrapper: "h-14 border-2 border-default-200 hover:border-primary transition-colors",
+                    inputWrapper:
+                      "h-14 border-2 border-default-200 hover:border-primary transition-colors",
                   }}
                   validate={(value) => {
                     if (!value) return t("auth.missingCredentials");
@@ -173,7 +200,8 @@ export default function Login() {
                   startContent={<Lock className="text-default-400" size={20} />}
                   classNames={{
                     label: "font-semibold text-gray-700 dark:text-gray-300",
-                    inputWrapper: "h-14 border-2 border-default-200 hover:border-primary transition-colors",
+                    inputWrapper:
+                      "h-14 border-2 border-default-200 hover:border-primary transition-colors",
                   }}
                   validate={(value) => {
                     if (!value) return t("auth.missingCredentials");
@@ -197,10 +225,18 @@ export default function Login() {
 
                 <div className="flex items-center justify-between px-1">
                   <label className="flex items-center gap-2 text-sm text-gray-500 cursor-pointer">
-                    <input type="checkbox" className="rounded border-gray-300 text-primary focus:ring-primary" />
+                    <input
+                      type="checkbox"
+                      className="rounded border-gray-300 text-primary focus:ring-primary"
+                    />
                     <span>Remember me</span>
                   </label>
-                  <Button variant="light" size="sm" color="primary" className="font-semibold p-0 h-auto">
+                  <Button
+                    variant="light"
+                    size="sm"
+                    color="primary"
+                    className="font-semibold p-0 h-auto"
+                  >
                     {t("auth.forgotPassword")}?
                   </Button>
                 </div>
@@ -220,7 +256,14 @@ export default function Login() {
 
           <div className="text-center space-y-4">
             <p className="text-sm text-gray-500">
-              Don't have an account? <Button variant="light" color="primary" className="p-0 h-auto font-bold">{t("auth.register")}</Button>
+              Don't have an account?{" "}
+              <Button
+                variant="light"
+                color="primary"
+                className="p-0 h-auto font-bold"
+              >
+                {t("auth.register")}
+              </Button>
             </p>
             <Divider className="my-8" />
             <p className="text-[10px] text-gray-400 font-mono uppercase tracking-[0.2em]">

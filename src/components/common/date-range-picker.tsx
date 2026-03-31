@@ -17,6 +17,7 @@ interface DateRangePickerComponentProps {
     | "success"
     | "warning"
     | "danger";
+  disabled?: boolean;
 }
 
 export default function DateRangePickerComponent({
@@ -25,6 +26,7 @@ export default function DateRangePickerComponent({
   label,
   className = "max-w-xs",
   color = "default",
+  disabled,
 }: DateRangePickerComponentProps) {
   const handleChange = (dateRange: any) => {
     if (onChange) {
@@ -40,6 +42,7 @@ export default function DateRangePickerComponent({
       color={color}
       value={value}
       onChange={handleChange}
+      isDisabled={disabled}
     />
   );
 }

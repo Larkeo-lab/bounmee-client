@@ -4,8 +4,8 @@ import { Role } from "@/types";
 
 // Import page components
 import LoginPage from "@/pages/Login";
-import MainPage from "@/pages/main/MainPage";
 import PageNotFound from "@/pages/PageNotFound";
+import CustomerMenuPage from "@/pages/customer/CustomerMenuPage";
 import ProductPage from "@/pages/settings/product/ProductPage";
 import CategoryPage from "@/pages/settings/category/CategoryPage";
 import BankPage from "@/pages/settings/bank/BankPage";
@@ -14,11 +14,17 @@ import ProfilePage from "@/pages/settings/profile/ProfilePage";
 import SettingsPage from "@/pages/settings/SettingsPage";
 import MoneyRatePage from "@/pages/settings/moneyRate/MoneyRatePage";
 import OrderPage from "@/pages/order/OrderPage";
+import PermissionSetting from "@/pages/settings/permission-management/PermissionSetting";
+import AddRoleUser from "@/pages/settings/permission-management/AddRoleUser";
 
 // Import route components
 import PublicRoute from "./PublicRoute";
 import PrivateRoute from "./PrivateRoute";
 import Dashboard from "@/pages/dashboard/Dashboard";
+import TablePage from "@/pages/table/TablePage";
+import TableSettingsPage from "@/pages/settings/table/TableSettingsPage";
+import ProductOrderPage from "@/pages/productOrder/ProductOrderPage";
+import OrderingPage from "@/pages/ordering/OrderingPage";
 
 export interface AppRoute {
   path: string;
@@ -26,6 +32,7 @@ export interface AppRoute {
   isPrivate: boolean;
   requiresLayout?: boolean;
   allowedRoles?: Role[];
+  permissionKey?: string;
 }
 
 // Define all application routes
@@ -36,8 +43,13 @@ export const appRoutes: AppRoute[] = [
     isPrivate: false,
   },
   {
-    path: "/main",
-    element: <MainPage />,
+    path: "/menu/:qrCode",
+    element: <CustomerMenuPage />,
+    isPrivate: false,
+  },
+  {
+    path: "/product-order",
+    element: <ProductOrderPage />,
     isPrivate: true,
     requiresLayout: true,
   },
@@ -47,6 +59,7 @@ export const appRoutes: AppRoute[] = [
     isPrivate: true,
     requiresLayout: true,
     allowedRoles: ["SUPER_ADMIN", "STORE_ADMIN"],
+    permissionKey: "dashboard",
   },
   {
     path: "/settings",
@@ -67,11 +80,20 @@ export const appRoutes: AppRoute[] = [
     requiresLayout: true,
   },
   {
+    path: "/settings/table",
+    element: <TableSettingsPage />,
+    isPrivate: true,
+    requiresLayout: true,
+    allowedRoles: ["SUPER_ADMIN", "STORE_ADMIN"],
+    permissionKey: "table_settings",
+  },
+  {
     path: "/settings/bank",
     element: <BankPage />,
     isPrivate: true,
     requiresLayout: true,
     allowedRoles: ["SUPER_ADMIN", "STORE_ADMIN"],
+    permissionKey: "bank",
   },
   {
     path: "/settings/employee",
@@ -79,6 +101,7 @@ export const appRoutes: AppRoute[] = [
     isPrivate: true,
     requiresLayout: true,
     allowedRoles: ["SUPER_ADMIN", "STORE_ADMIN"],
+    permissionKey: "employee",
   },
   {
     path: "/settings/money-rate",
@@ -86,6 +109,7 @@ export const appRoutes: AppRoute[] = [
     isPrivate: true,
     requiresLayout: true,
     allowedRoles: ["SUPER_ADMIN", "STORE_ADMIN"],
+    permissionKey: "moneyRate",
   },
   {
     path: "/settings/profile",
@@ -94,10 +118,47 @@ export const appRoutes: AppRoute[] = [
     requiresLayout: true,
   },
   {
+    path: "/permission-manage",
+    element: <PermissionSetting />,
+    isPrivate: true,
+    requiresLayout: true,
+    allowedRoles: ["SUPER_ADMIN", "STORE_ADMIN"],
+    permissionKey: "employee",
+  },
+  {
+    path: "/permission/add",
+    element: <AddRoleUser />,
+    isPrivate: true,
+    requiresLayout: true,
+    allowedRoles: ["SUPER_ADMIN", "STORE_ADMIN"],
+    permissionKey: "employee",
+  },
+  {
+    path: "/permission/add/:id",
+    element: <AddRoleUser />,
+    isPrivate: true,
+    requiresLayout: true,
+    allowedRoles: ["SUPER_ADMIN", "STORE_ADMIN"],
+    permissionKey: "employee",
+  },
+  {
     path: "/order",
     element: <OrderPage />,
     isPrivate: true,
     requiresLayout: true,
+  },
+  {
+    path: "/tables",
+    element: <TablePage />,
+    isPrivate: true,
+    requiresLayout: true,
+  },
+  {
+    path: "/ordering",
+    element: <OrderingPage />,
+    isPrivate: true,
+    requiresLayout: true,
+    permissionKey: "ordering",
   },
   {
     path: "/*",
@@ -117,6 +178,7 @@ export const generateRoutes = (
       <PrivateRoute
         requiresLayout={route.requiresLayout}
         allowedRoles={route.allowedRoles}
+        permissionKey={route.permissionKey}
       >
         {route.element}
       </PrivateRoute>

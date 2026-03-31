@@ -13,7 +13,7 @@ import i18n from "@/config/i18n";
 interface AuthContextType {
   isAuthenticated: boolean;
   user: any | null;
-  login: (userData: any) => Promise<void>;
+  login: (userData: any) => Promise<AuthData>;
   logout: () => void;
   loading: boolean;
   isTokenExpired: () => boolean;
@@ -147,6 +147,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     // Store token and user data in localStorage
     localStorage.setItem("authPOS", JSON.stringify(response?.data));
+
+    return response?.data;
   };
 
   const logout = () => {

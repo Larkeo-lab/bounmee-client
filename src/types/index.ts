@@ -66,6 +66,26 @@ export interface Employee {
   logoUrl: string | null;
   isActive: boolean;
   storeId: string;
+  permission?: PermissionData | null;
   createdAt: string;
   updatedAt: string;
+}
+export interface PermissionData {
+  id: string;
+  name: string;
+  description: string | null;
+  isActive: boolean;
+  permissions: Record<string, string[]>;
+  createdAt: string;
+  updatedAt: string;
+  updated?: string; // Compatibility with both backend field names
+  _count?: {
+    officerProfiles?: number;
+    employees?: number;
+  };
+}
+
+export interface DateRange {
+  start: string;
+  end: string;
 }

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "@heroui/link";
 import { Button, Image, Tooltip } from "@heroui/react";
 import { useTranslation } from "react-i18next";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, Link as RouterLink } from "react-router-dom";
 import clsx from "clsx";
 import { useAuth } from "@/routes/AuthContext";
 import { Modal, ModalContent, ModalBody, ModalFooter } from "@heroui/react";
@@ -24,6 +24,7 @@ import {
   CornerDownRight,
   Settings,
   Receipt,
+  LayoutGrid,
 } from "lucide-react";
 
 import deePosLogo from "/assets/logo.png";
@@ -31,7 +32,7 @@ const bgLineName = "/line-nam-bg.png";
 
 import versionApp from "../../package.json";
 import { getDisplayImageUrl } from "@/lib/utils";
-
+import { useCart } from "@/provider";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -44,6 +45,7 @@ interface MenuItem {
   icon?: any;
   children?: MenuItem[];
   badge?: number;
+  permissionKey?: string;
 }
 
 interface MenuGroup {
@@ -56,19 +58,34 @@ const sidebarGroups: MenuGroup[] = [
     titleKey: "sidebar.groups.menu",
     items: [
       {
+        labelKey: "sidebar.menu.table",
+        href: "/tables",
+        icon: LayoutGrid,
+        permissionKey: "table",
+      },
+      {
         labelKey: "sidebar.menu.pos",
-        href: "/main",
+        href: "/product-order",
         icon: ShoppingCart,
+        permissionKey: "pos",
       },
       {
         labelKey: "sidebar.menu.statisticsReport",
         href: "/dashboard",
         icon: LayoutDashboard,
+        permissionKey: "dashboard",
       },
       {
         labelKey: "sidebar.menu.order",
         href: "/order",
         icon: Receipt,
+        permissionKey: "order",
+      },
+      {
+        labelKey: "sidebar.menu.ordering",
+        href: "/ordering",
+        icon: Receipt,
+        permissionKey: "ordering",
       },
     ],
   },
@@ -86,11 +103,52 @@ const sidebarGroups: MenuGroup[] = [
 
 export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
   const { t } = useTranslation();
+  const { useMemo } = React;
   const location = useLocation();
   const navigate = useNavigate();
   const { logout, isTokenExpired, user } = useAuth();
+  const { carts, dismissedCarts } = useCart();
   const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set());
   const [isDesktopExpanded, setIsDesktopExpanded] = useState(true);
+
+  // Calculate ordering badge
+  const orderingBadge = useMemo(() => {
+    return Object.entries(carts).filter(([tableId, items]) => {
+      if (tableId === "default") return false;
+      const itemsArr = items as any[];
+      if (itemsArr.length === 0) return false;
+      
+      const lastSeenCount = dismissedCarts[tableId];
+      if (lastSeenCount !== undefined && itemsArr.length <= lastSeenCount) {
+        return false;
+      }
+      return true;
+    }).length;
+  }, [carts, dismissedCarts]);
+
+  // Permission Logic
+  const userRole = user?.user?.role;
+  const userPermissions = user?.user?.employee?.permission?.permissions || {};
+
+  const canAccess = (key?: string) => {
+    if (!key) return true;
+    if (userRole === "SUPER_ADMIN" || userRole === "STORE_ADMIN") return true;
+    const modulePerms = userPermissions[key] as string[] | undefined;
+    if (modulePerms && modulePerms.includes("read")) return true;
+    return false;
+  };
+
+  const filteredGroups = sidebarGroups
+    .map((group) => ({
+      ...group,
+      items: group.items.map((item) => {
+        if (item.href === "/ordering") {
+          return { ...item, badge: orderingBadge };
+        }
+        return item;
+      }).filter((item) => canAccess(item.permissionKey)),
+    }))
+    .filter((group) => group.items.length > 0);
 
   // Session Expiry States
   const [isExpModalOpen, setIsExpModalOpen] = useState(false);
@@ -146,7 +204,7 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
     if (href === "/" && currentPath === "/") {
       return true;
     }
-    if (href !== "/" && currentPath.startsWith(href)) {
+    if (href !== "/" && (currentPath === href || currentPath.startsWith(href + "/"))) {
       return true;
     }
     return false;
@@ -197,14 +255,22 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
                   : "text-white hover:bg-white/10",
                 isChild && "ml-1 md:ml-0",
               )}
-              onClick={(e) => {
-                handleMenuClick(e);
-                if (!isTokenExpired() && localStorage.getItem("authPOS")) {
-                  if (!isDesktopExpanded && window.innerWidth >= 768) {
-                    setIsDesktopExpanded(true); // Auto expand if clicking parent while collapsed
-                  }
-                  toggleSubmenu(item.href);
+              onClick={() => {
+                const authData = localStorage.getItem("authPOS");
+                if (!authData) {
+                  logout();
+                  navigate("/");
+                  return;
                 }
+                if (isTokenExpired()) {
+                  setCountdown(20);
+                  setIsExpModalOpen(true);
+                  return;
+                }
+                if (!isDesktopExpanded && window.innerWidth >= 768) {
+                  setIsDesktopExpanded(true);
+                }
+                toggleSubmenu(item.href);
               }}
             >
               <div className="w-full flex items-center justify-between">
@@ -286,7 +352,8 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
                   : "text-white hover:bg-white/10",
                 isChild && "ml-4 w-auto md:ml-0",
               )}
-              href={item.href}
+              as={RouterLink}
+              to={item.href}
               onClick={(e) => handleMenuClick(e)}
             >
               <div
@@ -342,6 +409,13 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
         <div
           className="fixed inset-0 bg-opacity-50 backdrop-blur-xs z-40 md:hidden"
           onClick={onToggle}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              onToggle();
+            }
+          }}
+          role="button"
+          tabIndex={0}
         />
       )}
 
@@ -423,7 +497,7 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
 
           {/* Navigation */}
           <nav className="py-2 px-3 mt-0 flex-grow overflow-y-auto scrollbar-hide">
-            {sidebarGroups.map((group) => (
+            {filteredGroups.map((group) => (
               <div key={group.titleKey} className="space-y-1 mb-6">
                 <p
                   className={clsx(

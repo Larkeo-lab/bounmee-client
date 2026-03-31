@@ -48,4 +48,21 @@ export const API_ENDPOINTS = {
     LIST: `${API_VERSION}/money-rate`,
     DETAIL: (id: string) => `${API_VERSION}/money-rate/${id}`,
   },
+  PERMISSION: {
+    LIST: `${API_VERSION}/permission`,
+    DETAIL: (id: string) => `${API_VERSION}/permission/${id}`,
+  },
+  ROLE_PERMISSION: {
+    LIST: `${API_VERSION}/permission-role`,
+    DETAIL: (id: string) => `${API_VERSION}/permission-role/${id}`,
+    TOGGLE_STATUS: (id: string) => `${API_VERSION}/permission-role/status/${id}`,
+  },
+  TABLE: {
+    LIST: `${API_VERSION}/table`,
+    DETAIL: (id: string) => `${API_VERSION}/table/${id}`,
+  },
+  ZONE: {
+    LIST: `${API_VERSION}/table/zones`,
+    DETAIL: (id: string) => `${API_VERSION}/table/zones/${id}`,
+  },
 };

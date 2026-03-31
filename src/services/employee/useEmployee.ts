@@ -16,6 +16,8 @@ export interface Employee {
   logoUrl: string | null;
   storeId: string;
   users: User[];
+  permission?: { id: string; name: string } | null;
+  businessType?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -30,6 +32,8 @@ export interface CreateEmployeeInput {
   password?: string;
   role?: "EMPLOYEE";
   language?: "LA" | "EN";
+  permissionId?: string;
+  businessType?: string;
 }
 
 export interface UpdateEmployeeInput {
@@ -42,6 +46,8 @@ export interface UpdateEmployeeInput {
   userName?: string;
   password?: string;
   language?: "LA" | "EN";
+  permissionId?: string;
+  businessType?: string;
 }
 
 export const getEmployees = async (storeId?: string) => {

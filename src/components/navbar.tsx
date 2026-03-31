@@ -11,7 +11,7 @@ import {
 } from "@heroui/navbar";
 import { siteConfig } from "@/config/site";
 import ProfileDropdown from "./profile-dropdown";
-import { SearchIcon, GithubIcon } from "@/components/icons";
+import { SearchIcon } from "@/components/icons";
 
 export const Navbar = () => {
   const searchInput = (
@@ -42,18 +42,12 @@ export const Navbar = () => {
       className="py-0 border-b border-b-default-200"
     >
       <NavbarContent
-        className="hidden sm:flex basis-1/5 sm:basis-full"
+        className="flex basis-1/5 sm:basis-full"
         justify="end"
       >
         <NavbarItem className="flex items-center ml-4">
           <ProfileDropdown />
         </NavbarItem>
-      </NavbarContent>
-
-      <NavbarContent className="sm:hidden basis-1 pl-4" justify="end">
-        <Link isExternal href={siteConfig.links.github}>
-          <GithubIcon className="text-default-500" />
-        </Link>
       </NavbarContent>
 
       <NavbarMenu>

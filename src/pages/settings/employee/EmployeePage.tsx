@@ -32,7 +32,8 @@ import {
   Phone,
   User,
   Lock,
-  Languages,
+  Shield,
+  Store as StoreIcon,
 } from "lucide-react";
 import { useAuth } from "@/routes/AuthContext";
 import {
@@ -45,6 +46,7 @@ import {
 import { useUploadImage } from "@/services/storage";
 import { getDisplayImageUrl } from "@/lib/utils";
 import { useGetStoreDetail } from "@/services/store/useStore";
+import { useGetPermissions } from "@/services/role-permission";
 import EmptyState from "@/components/common/empty-state";
 
 export default function EmployeePage() {
@@ -81,6 +83,8 @@ export default function EmployeePage() {
     userName: "",
     password: "",
     language: "LA" as "LA" | "EN",
+    permissionId: "",
+    businessType: "RETAIL" as "RETAIL" | "RESTAURANT" | "ONLINE" | "CAFE",
   });
 
   const {
@@ -101,6 +105,8 @@ export default function EmployeePage() {
   const updateEmployeeMutation = useUpdateEmployee();
   const deleteEmployeeMutation = useDeleteEmployee(user?.user?.storeId);
   const uploadImageMutation = useUploadImage();
+  const { data: permissionResponse } = useGetPermissions();
+  const permissionsData = permissionResponse?.data || [];
 
   const combinedEmployees = useMemo(() => {
     if (!store?.users) return [];
@@ -118,6 +124,8 @@ export default function EmployeePage() {
           userName: u.userName,
           role: u.role,
           language: u.language,
+          permissionId: emp?.permission?.id || null,
+          businessType: emp?.businessType || null,
           originalEmployee: emp,
         };
       })
@@ -186,6 +194,10 @@ export default function EmployeePage() {
     if (formData.language !== employeeUser?.language)
       updateData.language = formData.language;
     if (formData.password) updateData.password = formData.password;
+    if (formData.permissionId !== selectedEmployee.permissionId)
+      updateData.permissionId = formData.permissionId;
+    if (formData.businessType !== selectedEmployee.businessType)
+      updateData.businessType = formData.businessType;
 
     if (Object.keys(updateData).length <= 2) {
       onClose();
@@ -223,6 +235,8 @@ export default function EmployeePage() {
       userName: "",
       password: "",
       language: "LA",
+      permissionId: "",
+      businessType: "RETAIL",
     });
     setPreviewImage("");
     setSelectedEmployee(null);
@@ -237,6 +251,8 @@ export default function EmployeePage() {
       userName: item.userName || "",
       language: item.language || "LA",
       password: "",
+      permissionId: item.permissionId || "",
+      businessType: item.businessType || "RETAIL",
     });
     setPreviewImage(item.logoUrl || "");
     onUpdateOpen();
@@ -367,19 +383,35 @@ export default function EmployeePage() {
           />
         )}
         <Select
-          label="ພາສາ (Language)"
-          placeholder="ເລືອກພາສາ"
+          label="ສິດທິການເຂົ້າເຖິງ"
+          placeholder="ເລືອກສິດທິການເຂົ້າເຖິງ"
           variant="bordered"
-          labelPlacement="outside"
-          selectedKeys={[formData.language]}
+          selectedKeys={formData.permissionId ? [formData.permissionId] : []}
           onSelectionChange={(keys) => {
-            const val = Array.from(keys)[0] as "LA" | "EN";
-            if (val) setFormData({ ...formData, language: val });
+            const val = Array.from(keys)[0] as string;
+            setFormData({ ...formData, permissionId: val });
           }}
-          startContent={<Languages size={18} className="text-default-400" />}
+          startContent={<Shield size={18} className="text-default-400" />}
         >
-          <SelectItem key="LA">ພາສາລາວ (Lao)</SelectItem>
-          <SelectItem key="EN">English (US)</SelectItem>
+          {permissionsData.map((perm: any) => (
+            <SelectItem key={perm.id}>{perm.name}</SelectItem>
+          ))}
+        </Select>
+        <Select
+          label="ຮູບແບບຮ້ານ (Business Type)"
+          placeholder="ເລືອກຮູບແບບຮ້ານ"
+          variant="bordered"
+          selectedKeys={[formData.businessType]}
+          onSelectionChange={(keys) => {
+            const val = Array.from(keys)[0] as any;
+            if (val) setFormData({ ...formData, businessType: val });
+          }}
+          startContent={<StoreIcon size={18} className="text-default-400" />}
+        >
+          <SelectItem key="RETAIL">ຮ້ານຄ້າທົວໄປ</SelectItem>
+          <SelectItem key="RESTAURANT">ຮ້ານອາຫານ (Restaurant)</SelectItem>
+          <SelectItem key="CAFE">ຮ້ານກາເຟ (Cafe)</SelectItem>
+          <SelectItem key="ONLINE">ອອນໄລນ໌ (Online)</SelectItem>
         </Select>
       </div>
     </div>

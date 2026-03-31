@@ -37,6 +37,7 @@ interface PaymentModalProps {
   onOpenChange: (isOpen: boolean) => void;
   total: number;
   items: CartItem[];
+  tableId?: string | null;
   onPaymentSuccess: () => void;
 }
 
@@ -45,6 +46,7 @@ export default function PaymentModal({
   onOpenChange,
   total,
   items,
+  tableId,
   onPaymentSuccess,
 }: PaymentModalProps) {
   const { user } = useAuth();
@@ -108,6 +110,7 @@ export default function PaymentModal({
         storeId: user.user.storeId,
         employeeId: user.user.employee?.id || null,
         bankId: selectedBank,
+        tableId: tableId,
         items: orderItems,
       });
 

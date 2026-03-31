@@ -20,6 +20,8 @@ export default function ProfileDropdown() {
     logout();
   };
 
+  console.log("userProfile", userProfile);
+
   return (
     <>
       <Dropdown placement="bottom-end">

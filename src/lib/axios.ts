@@ -1,8 +1,16 @@
 import axios from "axios"
 
-// Define API base URLs
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080"
-export const WORKFLOW_API_BASE_URL = import.meta.env.VITE_WORKFLOW_API_BASE_URL || "http://localhost:8080"
+// Define API base URLs with Auto-Host Detection (For Mobile/Local Network access)
+const getBaseUrl = (envUrl: string, defaultPort: string) => {
+    let url = envUrl || `http://localhost:${defaultPort}`;
+    if (typeof window !== "undefined" && url.includes("localhost")) {
+        url = url.replace("localhost", window.location.hostname);
+    }
+    return url;
+};
+
+export const API_BASE_URL = getBaseUrl(import.meta.env.VITE_API_BASE_URL, "8080");
+export const WORKFLOW_API_BASE_URL = getBaseUrl(import.meta.env.VITE_WORKFLOW_API_BASE_URL, "8080");
 
 // Shared interceptors
 const addAuthToken = (config: any) => {

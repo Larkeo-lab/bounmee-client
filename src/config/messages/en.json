@@ -109,7 +109,8 @@
       "manageEmployee": "Employee Management",
       "managePrinter": "Printer Management",
       "manageProfile": "Profile Management",
-      "manageMoneyRate": "Money Rate Management"
+      "manageMoneyRate": "Money Rate Management",
+      "table": "Manage Tables"
     }
   },
   "settings": {
@@ -120,7 +121,8 @@
       "employee": "Manage employees and permissions",
       "printer": "Configure printer and bill printing",
       "profile": "Update personal information and password",
-      "moneyRate": "Manage currency exchange rates"
+      "moneyRate": "Manage currency exchange rates",
+      "table": "Manage Zones and Tables"
     }
   },
   "queue": {

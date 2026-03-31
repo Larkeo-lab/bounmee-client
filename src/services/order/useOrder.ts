@@ -17,6 +17,7 @@ export interface CreateOrderInput {
   storeId: string;
   employeeId: string | null;
   bankId?: string | null;
+  tableId?: string | null;
   items: OrderItemInput[];
 }
 
@@ -49,6 +50,9 @@ export interface Order {
   bank?: {
     name: string;
     logoUrl?: string;
+  };
+  table?: {
+    name: string;
   };
   items: OrderItem[];
   createdAt: string;

@@ -1,8 +1,8 @@
 import { io } from "socket.io-client";
-import { API_ENDPOINTS } from "./api";
+import { API_BASE_URL } from "@/lib/axios";
 
-//const SOCKET_URL = "http://localhost:8086";
-const SOCKET_URL = API_ENDPOINTS.SOCKET.LISTEN;
+// โยง Socket เข้ากับ IP เครื่องที่ตั้ง API ไว้
+const SOCKET_URL = API_BASE_URL;
 
 export const socket = io(SOCKET_URL, {
   autoConnect: false,

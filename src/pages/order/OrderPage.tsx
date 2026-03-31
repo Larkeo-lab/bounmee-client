@@ -121,6 +121,8 @@ export default function OrderPage() {
     }
   };
 
+  console.log("user", user);
+
   return (
     <div className="space-y-8 pb-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-divider pb-6">
@@ -383,6 +385,7 @@ export default function OrderPage() {
           <TableColumn key="no">ລຳດັບ</TableColumn>
           <TableColumn key="orderNumber">ເລກທີບິນ</TableColumn>
           <TableColumn key="itemsCount">ລາຍການ</TableColumn>
+          <TableColumn key="table">ໂຕ໊ະ</TableColumn>
           <TableColumn key="date">ວັນທີ/ເວລາ</TableColumn>
           <TableColumn key="employee">ພະນັກງານ</TableColumn>
           <TableColumn key="payment">ຊຳລະດ້ວຍ</TableColumn>
@@ -406,6 +409,9 @@ export default function OrderPage() {
               </TableCell>
               <TableCell className="font-bold">
                 {item.items.length} ລາຍການ
+              </TableCell>
+              <TableCell className="font-semibold text-primary">
+                {item.table?.name || "-"}
               </TableCell>
               <TableCell>
                 {dayjs(item.createdAt).format("DD/MM/YYYY HH:mm")}
