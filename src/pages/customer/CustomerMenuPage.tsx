@@ -24,6 +24,13 @@ import { socket } from "@/config/socket";
 export default function CustomerMenuPage() {
   const { qrCode } = useParams<{ qrCode: string }>();
   
+  // Force light theme for customer menu
+  useEffect(() => {
+    document.documentElement.classList.remove("dark");
+    document.documentElement.classList.add("light");
+    document.documentElement.style.colorScheme = "light";
+  }, []);
+  
   // 1. Initial Load: Try to get cart and placedOrders from localStorage (Namespaced by qrCode)
   const [cart, setCart] = useState<any[]>(() => {
     try {

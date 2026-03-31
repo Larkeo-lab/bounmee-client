@@ -29,7 +29,7 @@ interface CartContextType {
   subtotal: number;
   activeTableId: string | null;
   setActiveTableId: (id: string | null) => void;
-  dismissedCarts: { [tableId: string]: number };
+  dismissedCarts: { [tableId: string]: { [itemId: string]: number } };
   dismissTable: (tableId: string) => void;
 }
 
@@ -62,22 +62,45 @@ export const Provider: React.FC<{ children: React.ReactNode }> = ({
   }, [carts]);
 
   // Handle dismissed table orders (seen status)
-  const [dismissedCarts, setDismissedCarts] = useState<{ [tableId: string]: number }>(() => {
-    try {
-      const saved = localStorage.getItem("pos_dismissed_carts");
-      return saved ? JSON.parse(saved) : {};
-    } catch {
-      return {};
-    }
-  });
+  const [dismissedCarts, setDismissedCarts] = useState<{
+    [tableId: string]: { [itemId: string]: number };
+  }>({});
 
   useEffect(() => {
     localStorage.setItem("pos_dismissed_carts", JSON.stringify(dismissedCarts));
   }, [dismissedCarts]);
 
+  // If a cart is cleared, reset its dismissal item to ensure new guests are shown
+  useEffect(() => {
+    const hasEmptyCartsToClear = Object.entries(carts).some(
+      ([tableId, items]) =>
+        (!items || items.length === 0) && dismissedCarts[tableId] !== undefined,
+    );
+
+    if (hasEmptyCartsToClear) {
+      setDismissedCarts((prev) => {
+        const next = { ...prev };
+        let changed = false;
+        Object.entries(carts).forEach(([tableId, items]) => {
+          if ((!items || items.length === 0) && next[tableId] !== undefined) {
+            delete next[tableId];
+            changed = true;
+          }
+        });
+        return changed ? next : prev;
+      });
+    }
+  }, [carts]);
+
   const dismissTable = (tableId: string) => {
-    const totalQty = carts[tableId]?.reduce((sum, item) => sum + item.quantity, 0) || 0;
-    setDismissedCarts(prev => ({ ...prev, [tableId]: totalQty }));
+    // Save snapshot of current pending items: { itemId: quantity }
+    const snapshot: { [itemId: string]: number } = {};
+    carts[tableId]
+      ?.filter((i) => i.status === "PENDING")
+      ?.forEach((item) => {
+        snapshot[item.id] = (snapshot[item.id] || 0) + item.quantity;
+      });
+    setDismissedCarts((prev) => ({ ...prev, [tableId]: snapshot }));
   };
 
   // Initialize Socket on POS side
@@ -141,6 +164,14 @@ export const Provider: React.FC<{ children: React.ReactNode }> = ({
                   }
                 });
 
+                // Play notification sound for POS for NEW items
+                const audio = new Audio("/assets/void/notification.mp3");
+                audio
+                  .play()
+                  .catch((e) =>
+                    console.log("Audio play blocked by browser:", e),
+                  );
+
                 // Proactively broadcast after customer submission
                 if (socket.connected) {
                   socket.emit("SYNC_TABLE_CART", {
@@ -149,14 +180,6 @@ export const Provider: React.FC<{ children: React.ReactNode }> = ({
                     cart: newCart,
                   });
                 }
-
-                // Play notification sound for POS
-                const audio = new Audio("/assets/void/notification.mp3");
-                audio
-                  .play()
-                  .catch((e) =>
-                    console.log("Audio play blocked by browser:", e),
-                  );
 
                 return { ...prev, [tableId]: newCart };
               });

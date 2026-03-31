@@ -322,7 +322,7 @@ export default function ProductOrderPage() {
                       size="sm"
                       variant="light"
                       color="danger"
-                      onClick={() => removeFromCart(item.id)}
+                      onClick={() => removeFromCart(item.id, item.status)}
                       className="min-w-5 h-5 w-5 lg:min-w-6 lg:h-6 lg:w-6 opacity-0 group-hover:opacity-100 transition-opacity"
                     >
                       <Trash2 size={12} />
@@ -338,7 +338,7 @@ export default function ProductOrderPage() {
                         size="sm"
                         variant="light"
                         className="min-w-5 h-5 w-5 lg:min-w-6 lg:h-6 lg:w-6"
-                        onClick={() => updateQuantity(item.id, -1)}
+                        onClick={() => updateQuantity(item.id, item.status, -1)}
                       >
                         <Minus size={10} />
                       </Button>
@@ -353,11 +353,11 @@ export default function ProductOrderPage() {
                             // Optionally handle empty string if you want to allow clearing
                             // For now, let's just ignore it or set to 1 if blurred
                           }
-                          setQuantity(item.id, val);
+                          setQuantity(item.id, item.status, val);
                         }}
                         onBlur={() => {
                           if (item.quantity === 0) {
-                            setQuantity(item.id, "1");
+                            setQuantity(item.id, item.status, "1");
                           }
                         }}
                         className="text-[11px] lg:text-xs font-bold w-6 lg:w-8 text-center bg-transparent outline-none focus:ring-1 focus:ring-primary/30 rounded"
@@ -367,7 +367,7 @@ export default function ProductOrderPage() {
                         size="sm"
                         variant="light"
                         className="min-w-5 h-5 w-5 lg:min-w-6 lg:h-6 lg:w-6"
-                        onClick={() => updateQuantity(item.id, 1)}
+                        onClick={() => updateQuantity(item.id, item.status, 1)}
                       >
                         <Plus size={10} />
                       </Button>

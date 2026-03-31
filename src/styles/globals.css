@@ -77,3 +77,34 @@ body {
     display: none !important;
   }
 }
+
+/* Mobile-Specific Style Fixes for iOS & Android */
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  button, input, optgroup, select, textarea {
+    -webkit-appearance: none;
+    appearance: none;
+    border-radius: 0;
+  }
+
+  /* Fix for consistent color rendering on mobile */
+  html {
+    color-scheme: light; /* Force light mode for testing if colors look different */
+  }
+}
+
+/* Scrollbar Hide Helper */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}

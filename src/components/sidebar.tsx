@@ -115,14 +115,18 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
   const orderingBadge = useMemo(() => {
     return Object.entries(carts).filter(([tableId, items]) => {
       if (tableId === "default") return false;
-      const itemsArr = items as any[];
-      if (itemsArr.length === 0) return false;
-      
-      const lastSeenCount = dismissedCarts[tableId];
-      if (lastSeenCount !== undefined && itemsArr.length <= lastSeenCount) {
-        return false;
-      }
-      return true;
+      const snapshot = dismissedCarts[tableId]; // { [itemId]: qty } or undefined
+
+      const pendingItems = (items as any[]).filter(i => i.status === "PENDING");
+      if (pendingItems.length === 0) return false;
+
+      if (!snapshot) return true; // Never dismissed → show
+
+      // Has any item with quantity > snapshot → show
+      return pendingItems.some(item => {
+        const seenQty = (snapshot as any)[item.id] || 0;
+        return item.quantity > seenQty;
+      });
     }).length;
   }, [carts, dismissedCarts]);
 

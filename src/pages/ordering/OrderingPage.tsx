@@ -40,41 +40,66 @@ export default function OrderingPage() {
   const { data: tablesResponse } = useGetTables(storeId);
   const tables = tablesResponse?.data || [];
 
+  console.log("Current Carts:", carts);
+  console.log("Dismissed Carts:", dismissedCarts);
+
   const activeOrders = useMemo(() => {
     return Object.entries(carts)
-      .filter(([tableId, items]) => {
-        if (tableId === "default") return false;
-        
-        const totalQty = items.reduce((sum, item) => sum + item.quantity, 0);
-        if (totalQty === 0) return false;
-
-        const lastSeenQty = dismissedCarts[tableId];
-        if (lastSeenQty !== undefined && totalQty <= lastSeenQty) {
-          return false;
-        }
-        return true;
-      })
       .map(([tableId, items]) => {
+        if (tableId === "default") return null;
         const table = tables.find((t: any) => t.id === tableId);
-        const totalAmount = items.reduce(
+        const snapshot = dismissedCarts[tableId]; // { [itemId]: qty } or undefined
+
+        const pendingItems = items.filter((i) => i.status === "PENDING");
+
+        let displayItems: typeof pendingItems;
+
+        if (!snapshot) {
+          // Never dismissed → show ALL pending items
+          displayItems = pendingItems;
+        } else {
+          // Dismissed → show only items that are NEW or quantity increased
+          displayItems = pendingItems
+            .map((item) => {
+              const seenQty = snapshot[item.id] || 0;
+              const newQty = item.quantity - seenQty;
+              if (newQty <= 0) return null;
+              return { ...item, quantity: newQty };
+            })
+            .filter(Boolean) as typeof pendingItems;
+        }
+
+        if (displayItems.length === 0) return null;
+
+        const totalAmount = displayItems.reduce(
           (sum, item) => sum + item.price * item.quantity,
           0,
         );
-        const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
-
-        const pendingCount = items.filter((i) => i.status === "PENDING").length;
+        const totalItems = displayItems.reduce(
+          (sum, item) => sum + item.quantity,
+          0,
+        );
 
         return {
           tableId,
           tableName: table?.name || "Unknown",
           capacity: table?.capacity,
-          items,
+          items: displayItems,
           totalAmount,
           totalItems,
-          pendingCount,
+          pendingCount: displayItems.length,
         };
       })
-      .sort((a, b) => b.pendingCount - a.pendingCount);
+      .filter(Boolean)
+      .sort((a: any, b: any) => b.pendingCount - a.pendingCount) as Array<{
+      tableId: string;
+      tableName: string;
+      capacity: number;
+      items: any[];
+      totalAmount: number;
+      totalItems: number;
+      pendingCount: number;
+    }>;
   }, [carts, tables, dismissedCarts]);
 
   const handleGoToTable = (tableId: string) => {
@@ -101,7 +126,7 @@ export default function OrderingPage() {
               ລາຍການລວມ
             </span>
             <span className="text-xl font-black text-primary leading-none">
-              {activeOrders.reduce((acc, curr) => acc + curr.totalItems, 0)}
+              {activeOrders.length}
             </span>
           </div>
           <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary border border-primary/20">
@@ -137,8 +162,10 @@ export default function OrderingPage() {
                           {order.tableName}
                         </div>
                         {order.pendingCount > 0 && (
-                          <div className="absolute -top-1.5 -right-1.5 w-6 h-6 bg-warning text-white font-black text-[10px] rounded-full flex items-center justify-center border-2 border-white shadow-lg">
-                            {order.pendingCount}
+                          <div className="absolute -top-1.5 -right-1.5 min-w-6 h-6 px-1 bg-warning text-white font-black text-[10px] rounded-full flex items-center justify-center border-2 border-white shadow-lg">
+                            {order.pendingCount > 99
+                              ? "99+"
+                              : order.pendingCount}
                           </div>
                         )}
                       </div>
@@ -212,31 +239,41 @@ export default function OrderingPage() {
                     {/* Total & Action */}
                     <div className="flex items-center justify-between md:justify-end gap-3 md:min-w-[280px] ml-auto">
                       <div className="text-right">
-                        <p className="text-[10px] text-default-400 font-bold uppercase tracking-widest leading-tight">ຍອດລວມ</p>
+                        <p className="text-[10px] text-default-400 font-bold uppercase tracking-widest leading-tight">
+                          ຍອດລວມ
+                        </p>
                         <p className="text-xl font-bold text-primary tracking-tight leading-tight">
                           {formatNumber(order.totalAmount)}
-                          <span className="text-[10px] ml-1 font-bold opacity-60">ກີບ</span>
+                          <span className="text-[10px] ml-1 font-bold opacity-60">
+                            ກີບ
+                          </span>
                         </p>
                       </div>
 
-                      <Divider orientation="vertical" className="h-8 mx-1 hidden sm:block opacity-30" />
-                      
+                      <Divider
+                        orientation="vertical"
+                        className="h-8 mx-1 hidden sm:block opacity-30"
+                      />
+
                       <div className="flex items-center gap-2">
-                        <Button 
-                          size="sm" 
-                          variant="flat" 
-                          color="danger" 
+                        <Button
+                          size="sm"
+                          variant="flat"
+                          color="danger"
                           className="font-bold text-xs px-4"
                           onClick={(e) => {
-                             e.stopPropagation();
-                             dismissTable(order.tableId);
+                            e.stopPropagation();
+                            dismissTable(order.tableId);
                           }}
                         >
                           ປິດການສະແດງ
                         </Button>
 
                         <div className="w-10 h-10 bg-default-50 rounded-full flex items-center justify-center text-default-300 group-hover:bg-primary group-hover:text-white transition-all duration-300">
-                          <ChevronRight size={20} className="group-hover:translate-x-0.5 transition-transform" />
+                          <ChevronRight
+                            size={20}
+                            className="group-hover:translate-x-0.5 transition-transform"
+                          />
                         </div>
                       </div>
                     </div>
