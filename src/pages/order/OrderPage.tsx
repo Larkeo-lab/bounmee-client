@@ -24,6 +24,8 @@ import {
   DropdownMenu,
   DropdownItem,
   ScrollShadow,
+  Tabs,
+  Tab,
 } from "@heroui/react";
 import { Eye, Receipt, Download, Filter, Search } from "lucide-react";
 import { useAuth } from "@/routes/AuthContext";
@@ -47,6 +49,7 @@ export default function OrderPage() {
   const [endDate, setEndDate] = useState(dayjs().format("YYYY-MM-DD"));
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [selectedSource, setSelectedSource] = useState<string>("ALL");
 
   // Debounce search
   useEffect(() => {
@@ -88,6 +91,15 @@ export default function OrderPage() {
     }));
   }, [orders, page, limit]);
 
+  const filteredOrders = useMemo(() => {
+    if (selectedSource === "ALL") return ordersWithIndex;
+    if (selectedSource === "TABLE")
+      return ordersWithIndex.filter((o: any) => o.tableId || o.table);
+    if (selectedSource === "DIRECT")
+      return ordersWithIndex.filter((o: any) => !o.tableId && !o.table);
+    return ordersWithIndex;
+  }, [ordersWithIndex, selectedSource]);
+
   const summary = orderResponse?.summary;
   const transfersByBank = summary?.transfersByBank || [];
   const totalTransfer = summary?.totalTransfer || 0;
@@ -121,73 +133,72 @@ export default function OrderPage() {
     }
   };
 
-  console.log("user", user);
+  console.log("orders", orders);
 
   return (
-    <div className="space-y-8 pb-8">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-divider pb-6">
+    <div className="space-y-4 pb-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-divider pb-3">
         <div>
-          <h1 className="text-2xl font-bold text-primary flex items-center gap-2">
-            <Receipt size={28} />
+          <h1 className="text-xl font-bold text-primary flex items-center gap-2">
+            <Receipt size={24} />
             ລາຍການການຂາຍ
           </h1>
-          <p className="text-default-500">
+          <p className="text-xs text-default-500">
             ເບິ່ງປະຫວັດການຂາຍ ແລະ ລາຍລະອຽດແຕ່ລະບິນ
           </p>
         </div>
         <Button
           color="primary"
           variant="flat"
-          startContent={<Download size={20} />}
+          size="sm"
+          startContent={<Download size={16} />}
           className="font-bold"
           onPress={() => exportOrdersToExcel(orders)}
         >
           ສົ່ງອອກ (Excel)
         </Button>
       </div>
-      {/* Summary Section */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Box 1: Total Orders */}
         <Card className="border-none shadow-sm bg-blue-500 text-white overflow-hidden relative">
-          <CardBody className="p-6 overflow-hidden">
+          <CardBody className="p-4 overflow-hidden">
             <div className="relative z-10">
-              <p className="text-blue-100 text-sm font-bold uppercase tracking-wider mb-1">
+              <p className="text-blue-100 text-[10px] font-bold uppercase tracking-wider mb-0.5">
                 ຈຳນວນ Order ທັງໝົດ
               </p>
-              <h2 className="text-4xl font-black">{totalOrders} </h2>
+              <h2 className="text-2xl font-black">{totalOrders} </h2>
             </div>
             <Receipt
-              size={120}
-              className="absolute -right-8 -bottom-8 text-white/10 rotate-12 pointer-events-none"
+              size={80}
+              className="absolute -right-4 -bottom-4 text-white/10 rotate-12 pointer-events-none"
             />
           </CardBody>
         </Card>
 
-        {/* Box 2: Total Revenue (on current page) */}
+        {/* Box 2: Total Revenue */}
         <Card className="border-none shadow-sm bg-emerald-500 text-white overflow-hidden relative">
-          <CardBody className="p-6 overflow-hidden">
+          <CardBody className="p-4 overflow-hidden">
             <div className="relative z-10">
-              <p className="text-emerald-100 text-sm font-bold uppercase tracking-wider mb-1">
+              <p className="text-emerald-100 text-[10px] font-bold uppercase tracking-wider mb-0.5">
                 ລາຍຮັບທັງໝົດ
               </p>
-              <h2 className="text-4xl font-black">
+              <h2 className="text-2xl font-black">
                 {formatNumber(totalRevenue)} ກີບ
               </h2>
             </div>
-            <div className="absolute -right-8 -bottom-8 bg-white/10 w-32 h-32 rounded-full blur-2xl pointer-events-none"></div>
           </CardBody>
         </Card>
 
         {/* Box 3: Payment Breakdown */}
         <Card className="border-none shadow-sm bg-white dark:bg-gray-800 overflow-hidden ring-1 ring-divider/50">
-          <CardBody className="p-6">
-            <p className="text-default-400 text-sm font-bold uppercase tracking-wider mb-3">
+          <CardBody className="p-3">
+            <p className="text-default-400 text-[10px] font-bold uppercase tracking-wider mb-2">
               ແບ່ງຕາມການຊຳລະ
             </p>
             <ScrollShadow
               isEnabled={false}
               size={20}
-              className="max-h-[140px] overflow-y-auto pr-2 -mr-2"
+              className="max-h-[60px] overflow-y-auto pr-2 -mr-2"
             >
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-sm">
@@ -245,21 +256,21 @@ export default function OrderPage() {
           </CardBody>
         </Card>
       </div>
-      <div className="flex flex-col lg:flex-row gap-6 items-center justify-between w-full bg-white/50 dark:bg-gray-800/50 p-4 rounded-2xl border border-divider/50">
+      <div className="flex flex-col lg:flex-row gap-4 items-center justify-between w-full bg-white/50 dark:bg-gray-800/50 p-3 rounded-xl border border-divider/50">
         {/* Search on the Left */}
-        <div className="w-full lg:max-w-md">
+        <div className="w-full lg:max-w-xs">
           <Input
             isClearable
             placeholder="ຄົ້ນຫາເລກທີບິນ..."
             value={search}
             onValueChange={setSearch}
-            startContent={<Search size={20} className="text-primary/60" />}
+            startContent={<Search size={18} className="text-primary/60" />}
             variant="flat"
             className="w-full"
-            size="lg"
+            size="sm"
             classNames={{
               inputWrapper:
-                "bg-white dark:bg-gray-900 border-none shadow-sm h-14",
+                "bg-white dark:bg-gray-900 border-none shadow-sm h-10",
             }}
           />
         </div>
@@ -363,6 +374,37 @@ export default function OrderPage() {
           </div>
         </div>
       </div>
+
+      <div className="flex justify-start">
+        <Tabs
+          aria-label="Order Source"
+          color="primary"
+          variant="underlined"
+          selectedKey={selectedSource}
+          onSelectionChange={(key) => setSelectedSource(key as string)}
+          size="sm"
+          classNames={{
+            tabList: "gap-4",
+            cursor: "w-full bg-primary",
+            tabContent: "group-data-[selected=true]:text-primary font-bold text-xs",
+          }}
+        >
+          <Tab
+            key="ALL"
+            title={
+              <div className="flex items-center gap-2">
+                <span>ທັງໝົດ</span>
+                <Chip size="sm" variant="flat" className="h-5">
+                  {totalOrders}
+                </Chip>
+              </div>
+            }
+          />
+          <Tab key="TABLE" title="ມາຈາກໂຕ໊ະ" />
+          <Tab key="DIRECT" title="ມາຈາກໜ້າຮ້ານ" />
+        </Tabs>
+      </div>
+
       <Table
         aria-label="Order history table"
         className="mt-4"
@@ -397,40 +439,40 @@ export default function OrderPage() {
         <TableBody
           isLoading={isLoading}
           emptyContent={<EmptyState />}
-          items={ordersWithIndex}
+          items={filteredOrders}
         >
           {(item: any) => (
-            <TableRow key={item.id}>
-              <TableCell className="font-bold text-primary">
+            <TableRow key={item.id} className="h-10">
+              <TableCell className="font-bold text-primary py-2 text-xs">
                 {item.displayIndex}
               </TableCell>
-              <TableCell className="font-bold text-primary">
+              <TableCell className="font-bold text-primary py-2 text-xs">
                 #{item.orderNumber}
               </TableCell>
-              <TableCell className="font-bold">
+              <TableCell className="font-bold py-2 text-xs">
                 {item.items.length} ລາຍການ
               </TableCell>
-              <TableCell className="font-semibold text-primary">
+              <TableCell className="font-semibold text-primary py-2 text-xs">
                 {item.table?.name || "-"}
               </TableCell>
-              <TableCell>
+              <TableCell className="py-2 text-xs">
                 {dayjs(item.createdAt).format("DD/MM/YYYY HH:mm")}
               </TableCell>
-              <TableCell>{item.employee?.name || "ເຈົ້າຂອງຮ້ານ"}</TableCell>
-              <TableCell>
+              <TableCell className="py-2 text-xs">{item.employee?.name || "ເຈົ້າຂອງຮ້ານ"}</TableCell>
+              <TableCell className="py-2 text-xs">
                 <Chip
                   size="sm"
                   color={getPaymentMethodColor(item.paymentMethod)}
                   variant="flat"
-                  className="font-bold"
+                  className="font-bold h-5 text-[10px]"
                 >
                   {getPaymentMethodLabel(item.paymentMethod)}
                 </Chip>
               </TableCell>
-              <TableCell className="font-bold text-lg whitespace-nowrap">
+              <TableCell className="font-bold text-sm py-2 whitespace-nowrap">
                 {formatNumber(item.totalAmount)} ກີບ
               </TableCell>
-              <TableCell>
+              <TableCell className="py-2 text-xs">
                 <div className="flex items-center justify-center gap-2">
                   <Button
                     isIconOnly

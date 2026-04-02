@@ -26,6 +26,7 @@
 *,
 body {
   font-family: "Nunito", "Nuanta", sans-serif;
+  touch-action: manipulation;
 }
 
 ::--webkit-scrollbar {

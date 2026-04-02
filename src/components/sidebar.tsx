@@ -25,6 +25,7 @@ import {
   Settings,
   Receipt,
   LayoutGrid,
+  History,
 } from "lucide-react";
 
 import deePosLogo from "/assets/logo.png";
@@ -78,7 +79,7 @@ const sidebarGroups: MenuGroup[] = [
       {
         labelKey: "sidebar.menu.order",
         href: "/order",
-        icon: Receipt,
+        icon: History,
         permissionKey: "order",
       },
       {

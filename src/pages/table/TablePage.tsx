@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/routes/AuthContext";
 import { useGetTables, useUpdateTable } from "@/services/table/useTable";
@@ -148,6 +148,22 @@ export default function TablePage() {
       }
     }
   }, [targetTableId, tables, selectedTable]);
+  
+  // Real-time: Auto-open table when customer makes a NEW order
+  useEffect(() => {
+    const handleNewOrder = (data: { tableId: string }) => {
+      console.log("🔔 TablePage auto-opening table:", data.tableId);
+      const found = tables.find((t: any) => t.id === data.tableId);
+      if (found) {
+        setSelectedTable(found);
+      }
+    };
+
+    socket.on("CUSTOMER_ORDER", handleNewOrder);
+    return () => {
+      socket.off("CUSTOMER_ORDER", handleNewOrder);
+    };
+  }, [tables]);
 
   useEffect(() => {
     setSelectedCartItems((prev) =>
@@ -160,6 +176,19 @@ export default function TablePage() {
     const itemStatus = item.status?.toUpperCase() || "PENDING";
     return itemStatus === statusFilter;
   });
+
+  const statusTotals = useMemo(() => {
+    return cart.reduce(
+      (acc, item) => {
+        const s = item.status?.toUpperCase() || "PENDING";
+        if (s !== "CANCEL") {
+          acc[s] = (acc[s] || 0) + item.price * item.quantity;
+        }
+        return acc;
+      },
+      { PENDING: 0, COOKING: 0, SERVED: 0 } as Record<string, number>,
+    );
+  }, [cart]);
 
   const filteredTables = tables.filter(
     (t: any) =>
@@ -770,11 +799,27 @@ export default function TablePage() {
         </div>
 
         <div className="px-2 py-2 lg:px-3 lg:py-2.5 border-t border-divider bg-white mt-auto flex-shrink-0">
-          <div className="flex justify-between items-center font-bold mb-1.5 lg:mb-2">
-            <span className="text-xs lg:text-sm">ທັງໝົດ:</span>
-            <span className="text-primary text-base lg:text-lg">
-              {formatNumber(subtotal)} ກີບ
-            </span>
+          <div className="flex flex-col gap-1 mb-2">
+            <div className="flex justify-between items-center text-[10px] lg:text-xs text-warning-600 font-bold">
+              <span>ລໍຖ້າ:</span>
+              <span>{formatNumber(statusTotals.PENDING)} ກີບ</span>
+            </div>
+            <div className="flex justify-between items-center text-[10px] lg:text-xs text-primary-600 font-bold">
+              <span>ກຳລັງຄົວ:</span>
+              <span>{formatNumber(statusTotals.COOKING)} ກີບ</span>
+            </div>
+            <div className="flex justify-between items-center text-[10px] lg:text-xs text-success-600 font-bold">
+              <span>ເສີບແລ້ວ:</span>
+              <span>{formatNumber(statusTotals.SERVED)} ກີບ</span>
+            </div>
+            <div className="flex justify-between items-center font-black pt-1 border-t border-divider mt-1">
+              <span className="text-xs lg:text-sm text-default-700">ທັງໝົດ:</span>
+              <div className="text-right">
+                <span className="text-primary text-base lg:text-lg">
+                  {formatNumber(subtotal)} ກີບ
+                </span>
+              </div>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-2 lg:gap-3">
