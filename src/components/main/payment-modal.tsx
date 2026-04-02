@@ -38,7 +38,7 @@ interface PaymentModalProps {
   total: number;
   items: CartItem[];
   tableId?: string | null;
-  onPaymentSuccess: () => void;
+  onPaymentSuccess: (order?: any) => void;
 }
 
 export default function PaymentModal({
@@ -102,7 +102,7 @@ export default function PaymentModal({
         subTotal: Number(item.price) * Number(item.quantity),
       }));
 
-      await createOrderMutation.mutateAsync({
+      const result = await createOrderMutation.mutateAsync({
         totalAmount: Number(total),
         receivedAmount: Number(receivedAmountInLAK),
         change: Number(change),
@@ -115,7 +115,7 @@ export default function PaymentModal({
       });
 
       toast.success("ຊຳລະເງິນສຳເລັດແລ້ວ!");
-      onPaymentSuccess();
+      onPaymentSuccess(result?.data);
       clearReceived();
       onClose();
     } catch (error: any) {

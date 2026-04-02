@@ -185,8 +185,8 @@ export const Provider: React.FC<{ children: React.ReactNode }> = ({
               });
 
               const displayTable = tableName
-                ? `ໂຕ໊ະ ${tableName}`
-                : "ໂຕ໊ະຍັງບໍ່ລະບຸ";
+                ? `ໂຕະ ${tableName}`
+                : "ໂຕະຍັງບໍ່ລະບຸ";
               const displayItems = itemCount
                 ? `${itemCount} ລາຍການ`
                 : "ບາງລາຍການ";

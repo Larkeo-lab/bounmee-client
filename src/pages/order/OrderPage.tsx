@@ -158,7 +158,7 @@ export default function OrderPage() {
           ສົ່ງອອກ (Excel)
         </Button>
       </div>
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Box 1: Total Orders */}
         <Card className="border-none shadow-sm bg-blue-500 text-white overflow-hidden relative">
           <CardBody className="p-4 overflow-hidden">
@@ -386,7 +386,8 @@ export default function OrderPage() {
           classNames={{
             tabList: "gap-4",
             cursor: "w-full bg-primary",
-            tabContent: "group-data-[selected=true]:text-primary font-bold text-xs",
+            tabContent:
+              "group-data-[selected=true]:text-primary font-bold text-xs",
           }}
         >
           <Tab
@@ -400,7 +401,7 @@ export default function OrderPage() {
               </div>
             }
           />
-          <Tab key="TABLE" title="ມາຈາກໂຕ໊ະ" />
+          <Tab key="TABLE" title="ມາຈາກໂຕະ" />
           <Tab key="DIRECT" title="ມາຈາກໜ້າຮ້ານ" />
         </Tabs>
       </div>
@@ -427,7 +428,7 @@ export default function OrderPage() {
           <TableColumn key="no">ລຳດັບ</TableColumn>
           <TableColumn key="orderNumber">ເລກທີບິນ</TableColumn>
           <TableColumn key="itemsCount">ລາຍການ</TableColumn>
-          <TableColumn key="table">ໂຕ໊ະ</TableColumn>
+          <TableColumn key="table">ໂຕະ</TableColumn>
           <TableColumn key="date">ວັນທີ/ເວລາ</TableColumn>
           <TableColumn key="employee">ພະນັກງານ</TableColumn>
           <TableColumn key="payment">ຊຳລະດ້ວຍ</TableColumn>
@@ -458,7 +459,9 @@ export default function OrderPage() {
               <TableCell className="py-2 text-xs">
                 {dayjs(item.createdAt).format("DD/MM/YYYY HH:mm")}
               </TableCell>
-              <TableCell className="py-2 text-xs">{item.employee?.name || "ເຈົ້າຂອງຮ້ານ"}</TableCell>
+              <TableCell className="py-2 text-xs">
+                {item.employee?.name || "ເຈົ້າຂອງຮ້ານ"}
+              </TableCell>
               <TableCell className="py-2 text-xs">
                 <Chip
                   size="sm"

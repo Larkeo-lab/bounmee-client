@@ -107,7 +107,7 @@ export default function AddRoleUser() {
     },
     {
       id: "table",
-      name: "ໜ້າລາຍການໂຕ໊ະ (Table Dashboard)",
+      name: "ໜ້າລາຍການໂຕະ (Table Dashboard)",
       permissions: {
         read: false,
         create: false,
@@ -218,7 +218,7 @@ export default function AddRoleUser() {
     },
     {
       id: "table_settings",
-      name: "ຕັ້ງຄ່າໂຕ໊ະ ແລະ ໂຊນ (Table & Zone Settings)",
+      name: "ຕັ້ງຄ່າໂຕະ ແລະ ໂຊນ (Table & Zone Settings)",
       permissions: {
         read: false,
         create: false,

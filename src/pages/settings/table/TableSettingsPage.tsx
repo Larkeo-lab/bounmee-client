@@ -1,6 +1,14 @@
 import { useState, useMemo } from "react";
-import { useCreateTable, useUpdateTable, useDeleteTable } from "@/services/table/useTable";
-import { useCreateZone, useUpdateZone, useDeleteZone } from "@/services/table/useZone";
+import {
+  useCreateTable,
+  useUpdateTable,
+  useDeleteTable,
+} from "@/services/table/useTable";
+import {
+  useCreateZone,
+  useUpdateZone,
+  useDeleteZone,
+} from "@/services/table/useZone";
 import {
   Table,
   TableHeader,
@@ -24,14 +32,7 @@ import {
   Select,
   SelectItem,
 } from "@heroui/react";
-import {
-  Plus,
-  Edit,
-  Trash2,
-  Search,
-  Users,
-  QrCode,
-} from "lucide-react";
+import { Plus, Edit, Trash2, Search, Users, QrCode } from "lucide-react";
 import { useAuth } from "@/routes/AuthContext";
 import { v4 as uuidv4 } from "uuid";
 import { useGetTables } from "@/services/table/useTable";
@@ -39,7 +40,7 @@ import { useGetZones } from "@/services/table/useZone";
 import { toast } from "react-hot-toast";
 
 const columns = [
-  { name: "ຊື່ໂຕ໊ະ", uid: "name", sortable: true },
+  { name: "ຊື່ໂຕະ", uid: "name", sortable: true },
   { name: "ໂຊນ", uid: "zoneId", sortable: true },
   { name: "ຈຳນວນບ່ອນນັ່ງ", uid: "capacity", sortable: true },
   { name: "QR Code", uid: "qrCode" },
@@ -68,16 +69,22 @@ export default function TableSettingsPage() {
   const [isEditing, setIsEditing] = useState(false);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
-  const { mutateAsync: createTable, isPending: isCreatingTable } = useCreateTable();
-  const { mutateAsync: updateTable, isPending: isUpdatingTable } = useUpdateTable();
+  const { mutateAsync: createTable, isPending: isCreatingTable } =
+    useCreateTable();
+  const { mutateAsync: updateTable, isPending: isUpdatingTable } =
+    useUpdateTable();
   const { mutateAsync: deleteTable } = useDeleteTable(storeId);
 
-  const { mutateAsync: createZone, isPending: isCreatingZone } = useCreateZone();
-  const { mutateAsync: updateZone, isPending: isUpdatingZone } = useUpdateZone();
+  const { mutateAsync: createZone, isPending: isCreatingZone } =
+    useCreateZone();
+  const { mutateAsync: updateZone, isPending: isUpdatingZone } =
+    useUpdateZone();
   const { mutateAsync: deleteZone } = useDeleteZone(storeId);
 
-  const { data: tablesResponse, isLoading: isLoadingTables } = useGetTables(storeId);
-  const { data: zonesResponse, isLoading: isLoadingZones } = useGetZones(storeId);
+  const { data: tablesResponse, isLoading: isLoadingTables } =
+    useGetTables(storeId);
+  const { data: zonesResponse, isLoading: isLoadingZones } =
+    useGetZones(storeId);
 
   const tables = tablesResponse?.data || [];
   const zones = zonesResponse?.data || [];
@@ -94,7 +101,7 @@ export default function TableSettingsPage() {
 
     if (hasSearchFilter) {
       filteredList = filteredList.filter((item: any) =>
-        item.name.toLowerCase().includes(filterValue.toLowerCase())
+        item.name.toLowerCase().includes(filterValue.toLowerCase()),
       );
     }
 
@@ -148,7 +155,11 @@ export default function TableSettingsPage() {
 
   const handleGenerateQrForTable = async (table: any) => {
     const uniqueId = uuidv4().substring(0, 8).toUpperCase();
-    await updateTable({ id: table.id, storeId: storeId!, qrCode: `TB-${uniqueId}` });
+    await updateTable({
+      id: table.id,
+      storeId: storeId!,
+      qrCode: `TB-${uniqueId}`,
+    });
   };
 
   const handleSave = async (onClose: () => void) => {
@@ -200,9 +211,9 @@ export default function TableSettingsPage() {
       case "zoneId":
         const zone = zones.find((z: any) => z.id === cellValue);
         return (
-           <Chip color="primary" variant="flat" size="sm" className="font-bold">
-             {zone?.name || "N/A"}
-           </Chip>
+          <Chip color="primary" variant="flat" size="sm" className="font-bold">
+            {zone?.name || "N/A"}
+          </Chip>
         );
       case "capacity":
         return (
@@ -213,21 +224,48 @@ export default function TableSettingsPage() {
         );
       case "qrCode":
         return cellValue ? (
-          <Chip color="success" variant="dot" size="sm" className="font-bold border-success/30">
+          <Chip
+            color="success"
+            variant="dot"
+            size="sm"
+            className="font-bold border-success/30"
+          >
             {cellValue}
           </Chip>
         ) : (
-          <Button size="sm" color="warning" variant="flat" onPress={() => handleGenerateQrForTable(table)} isLoading={isUpdatingTable}>
+          <Button
+            size="sm"
+            color="warning"
+            variant="flat"
+            onPress={() => handleGenerateQrForTable(table)}
+            isLoading={isUpdatingTable}
+          >
             <QrCode size={14} className="mr-1" /> ສ້າງລະຫັດ
           </Button>
         );
       case "actions":
         return (
           <div className="relative flex justify-end items-center gap-2">
-            <Button isIconOnly size="sm" variant="light" color="primary" onPress={() => handleOpenModal(selectedTab as "table" | "zone", table)}>
+            <Button
+              isIconOnly
+              size="sm"
+              variant="light"
+              color="primary"
+              onPress={() =>
+                handleOpenModal(selectedTab as "table" | "zone", table)
+              }
+            >
               <Edit size={18} />
             </Button>
-            <Button isIconOnly size="sm" variant="light" color="danger" onPress={() => handleDelete(selectedTab as "table" | "zone", table.id)}>
+            <Button
+              isIconOnly
+              size="sm"
+              variant="light"
+              color="danger"
+              onPress={() =>
+                handleDelete(selectedTab as "table" | "zone", table.id)
+              }
+            >
               <Trash2 size={18} />
             </Button>
           </div>
@@ -245,15 +283,20 @@ export default function TableSettingsPage() {
           <Input
             isClearable
             className="w-full sm:max-w-[44%]"
-            placeholder={`ຄົ້ນຫາຊື່${isTable ? 'ໂຕ໊ະ' : 'ໂຊນ'}...`}
+            placeholder={`ຄົ້ນຫາຊື່${isTable ? "ໂຕະ" : "ໂຊນ"}...`}
             startContent={<Search size={18} />}
             value={filterValue}
             onClear={() => setFilterValue("")}
             onValueChange={setFilterValue}
           />
           <div className="flex gap-3">
-             <Button color="primary" endContent={<Plus size={20} />} className="font-bold h-12" onPress={() => handleOpenModal(selectedTab as "table" | "zone")}>
-              ເພີ່ມ{isTable ? 'ໂຕ໊ະ' : 'ໂຊນ'}ໃໝ່
+            <Button
+              color="primary"
+              endContent={<Plus size={20} />}
+              className="font-bold h-12"
+              onPress={() => handleOpenModal(selectedTab as "table" | "zone")}
+            >
+              ເພີ່ມ{isTable ? "ໂຕະ" : "ໂຊນ"}ໃໝ່
             </Button>
           </div>
         </div>
@@ -264,28 +307,31 @@ export default function TableSettingsPage() {
   return (
     <div className="w-full space-y-6">
       <div className="flex flex-col gap-1">
-        <h1 className="text-3xl font-black text-primary">ຫນ້າໂຕ໊ະອາຫານ</h1>
-        <p className="text-default-500">ເພີ່ມ, ແກ້ໄຂ ຫຼື ລົບ ຂໍ້ມູນໂຕ໊ະອາຫານ ແລະ ໂຊນ</p>
+        <h1 className="text-3xl font-black text-primary">ຫນ້າໂຕະອາຫານ</h1>
+        <p className="text-default-500">
+          ເພີ່ມ, ແກ້ໄຂ ຫຼື ລົບ ຂໍ້ມູນໂຕະອາຫານ ແລະ ໂຊນ
+        </p>
       </div>
 
-      <Tabs 
-        aria-label="Table and Zone Tabs" 
-        selectedKey={selectedTab} 
+      <Tabs
+        aria-label="Table and Zone Tabs"
+        selectedKey={selectedTab}
         onSelectionChange={(key) => {
           setSelectedTab(key as string);
           setPage(1);
         }}
-        color="primary" 
-        variant="solid" 
+        color="primary"
+        variant="solid"
         radius="full"
         classNames={{
           tabList: "bg-content1 shadow-md w-full sm:w-auto",
           cursor: "w-full bg-primary",
           tab: "h-12 px-6",
-          tabContent: "font-bold text-default-500 group-data-[selected=true]:text-white"
+          tabContent:
+            "font-bold text-default-500 group-data-[selected=true]:text-white",
         }}
       >
-        <Tab key="table" title="ຈັດການໂຕ໊ະ" />
+        <Tab key="table" title="ຈັດການໂຕະ" />
         <Tab key="zone" title="ຈັດການໂຊນ" />
       </Tabs>
 
@@ -326,10 +372,16 @@ export default function TableSettingsPage() {
             </TableColumn>
           )}
         </TableHeader>
-        <TableBody emptyContent={"ບໍ່ມີຂໍ້ມູນ"} items={sortedItems} isLoading={isLoading}>
+        <TableBody
+          emptyContent={"ບໍ່ມີຂໍ້ມູນ"}
+          items={sortedItems}
+          isLoading={isLoading}
+        >
           {(item) => (
             <TableRow key={item.id}>
-              {(columnKey) => <TableCell>{renderCell(item, columnKey)}</TableCell>}
+              {(columnKey) => (
+                <TableCell>{renderCell(item, columnKey)}</TableCell>
+              )}
             </TableRow>
           )}
         </TableBody>
@@ -341,28 +393,33 @@ export default function TableSettingsPage() {
             <>
               <ModalHeader className="flex flex-col gap-1">
                 <h2 className="text-2xl font-black text-primary">
-                  {isEditing ? "ແກ້ໄຂ" : "ເພີ່ມ"} {modalType === "table" ? "ໂຕ໊ະອາຫານ" : "ໂຊນ"}
+                  {isEditing ? "ແກ້ໄຂ" : "ເພີ່ມ"}{" "}
+                  {modalType === "table" ? "ໂຕະອາຫານ" : "ໂຊນ"}
                 </h2>
               </ModalHeader>
               <ModalBody className="gap-4 pb-8">
                 {modalType === "table" ? (
                   <>
-                    <Input 
-                      label="ຊື່ໂຕ໊ະ" 
-                      placeholder="T-01" 
-                      variant="bordered" 
-                      labelPlacement="outside" 
+                    <Input
+                      label="ຊື່ໂຕະ"
+                      placeholder="T-01"
+                      variant="bordered"
+                      labelPlacement="outside"
                       value={formData.name || ""}
-                      onValueChange={(val) => setFormData({...formData, name: val})}
+                      onValueChange={(val) =>
+                        setFormData({ ...formData, name: val })
+                      }
                     />
-                    <Input 
-                      label="ຈຳນວນບ່ອນນັ່ງ" 
-                      placeholder="4" 
-                      variant="bordered" 
-                      type="number" 
-                      labelPlacement="outside" 
+                    <Input
+                      label="ຈຳນວນບ່ອນນັ່ງ"
+                      placeholder="4"
+                      variant="bordered"
+                      type="number"
+                      labelPlacement="outside"
                       value={formData.capacity?.toString() || ""}
-                      onValueChange={(val) => setFormData({...formData, capacity: val})}
+                      onValueChange={(val) =>
+                        setFormData({ ...formData, capacity: val })
+                      }
                     />
                     <Select
                       label="ໂຊນ"
@@ -370,32 +427,39 @@ export default function TableSettingsPage() {
                       variant="bordered"
                       labelPlacement="outside"
                       selectedKeys={formData.zoneId ? [formData.zoneId] : []}
-                      onSelectionChange={(keys) => setFormData({...formData, zoneId: Array.from(keys)[0] as string})}
+                      onSelectionChange={(keys) =>
+                        setFormData({
+                          ...formData,
+                          zoneId: Array.from(keys)[0] as string,
+                        })
+                      }
                     >
                       {zones.map((zone: any) => (
-                        <SelectItem key={zone.id}>
-                          {zone.name}
-                        </SelectItem>
+                        <SelectItem key={zone.id}>{zone.name}</SelectItem>
                       ))}
                     </Select>
                   </>
                 ) : (
                   <>
-                    <Input 
-                      label="ຊື່ໂຊນ" 
-                      placeholder="VIP Zone" 
-                      variant="bordered" 
-                      labelPlacement="outside" 
+                    <Input
+                      label="ຊື່ໂຊນ"
+                      placeholder="VIP Zone"
+                      variant="bordered"
+                      labelPlacement="outside"
                       value={formData.name || ""}
-                      onValueChange={(val) => setFormData({...formData, name: val})}
+                      onValueChange={(val) =>
+                        setFormData({ ...formData, name: val })
+                      }
                     />
-                    <Input 
-                      label="ລາຍລະອຽດ" 
-                      placeholder="ລາຍລະອຽດເພີ່ມເຕີມ..." 
-                      variant="bordered" 
-                      labelPlacement="outside" 
+                    <Input
+                      label="ລາຍລະອຽດ"
+                      placeholder="ລາຍລະອຽດເພີ່ມເຕີມ..."
+                      variant="bordered"
+                      labelPlacement="outside"
                       value={formData.description || ""}
-                      onValueChange={(val) => setFormData({...formData, description: val})}
+                      onValueChange={(val) =>
+                        setFormData({ ...formData, description: val })
+                      }
                     />
                   </>
                 )}
@@ -404,9 +468,14 @@ export default function TableSettingsPage() {
                 <Button color="danger" variant="light" onPress={onClose}>
                   ຍົກເລີກ
                 </Button>
-                <Button 
-                  color="primary" 
-                  isLoading={isCreatingTable || isUpdatingTable || isCreatingZone || isUpdatingZone}
+                <Button
+                  color="primary"
+                  isLoading={
+                    isCreatingTable ||
+                    isUpdatingTable ||
+                    isCreatingZone ||
+                    isUpdatingZone
+                  }
                   onPress={() => handleSave(onClose)}
                 >
                   ບັນທຶກ

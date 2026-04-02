@@ -58,10 +58,10 @@ export const useCreateTable = () => {
       queryClient.invalidateQueries({
         queryKey: ["tables", variables.storeId],
       });
-      toast.success("ເພີ່ມໂຕ໊ະສຳເລັດ");
+      toast.success("ເພີ່ມໂຕະສຳເລັດ");
     },
     onError: () => {
-      toast.error("ເກີດຂໍ້ຜິດພາດໃນການເພີ່ມໂຕ໊ະ");
+      toast.error("ເກີດຂໍ້ຜິດພາດໃນການເພີ່ມໂຕະ");
     },
   });
 };
@@ -75,10 +75,10 @@ export const useUpdateTable = () => {
       queryClient.invalidateQueries({
         queryKey: ["tables", variables.storeId],
       });
-      toast.success("ອັບເດດໂຕ໊ະສຳເລັດ");
+      toast.success("ອັບເດດໂຕະສຳເລັດ");
     },
     onError: () => {
-      toast.error("ເກີດຂໍ້ຜິດພາດໃນການອັບເດດໂຕ໊ະ");
+      toast.error("ເກີດຂໍ້ຜິດພາດໃນການອັບເດດໂຕະ");
     },
   });
 };
@@ -90,10 +90,10 @@ export const useDeleteTable = (storeId?: string) => {
       axiosInstance.delete(API_ENDPOINTS.TABLE.DETAIL(id)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tables", storeId] });
-      toast.success("ລຶບໂຕ໊ະສຳເລັດ");
+      toast.success("ລຶບໂຕະສຳເລັດ");
     },
     onError: () => {
-      toast.error("ເກີດຂໍ້ຜິດພາດໃນການລຶບໂຕ໊ະ");
+      toast.error("ເກີດຂໍ້ຜິດພາດໃນການລຶບໂຕະ");
     },
   });
 };
@@ -102,7 +102,9 @@ export const useGenerateQrCodes = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (storeId: string) =>
-      axiosInstance.post(API_ENDPOINTS.TABLE.LIST + "/generate-qrcodes", { storeId }),
+      axiosInstance.post(API_ENDPOINTS.TABLE.LIST + "/generate-qrcodes", {
+        storeId,
+      }),
     onSuccess: (_, storeId) => {
       queryClient.invalidateQueries({
         queryKey: ["tables", storeId],

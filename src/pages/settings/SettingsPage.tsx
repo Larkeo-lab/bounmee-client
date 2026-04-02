@@ -89,7 +89,7 @@ const settingsItems: SettingItem[] = [
     permissionKey: "role_permission",
   },
   {
-    titleKey: "ຕັ້ງຄ່າໂຕ໊ະ ແລະ ໂຊນ (Table & Zone Settings)",
+    titleKey: "ຕັ້ງຄ່າໂຕະ ແລະ ໂຊນ (Table & Zone Settings)",
     descriptionKey: "settings.description.table",
     href: "/settings/table",
     icon: Armchair,
@@ -115,7 +115,9 @@ const SettingsPage = () => {
     return false;
   };
 
-  const filteredItems = settingsItems.filter(item => canAccess(item.permissionKey));
+  const filteredItems = settingsItems.filter((item) =>
+    canAccess(item.permissionKey),
+  );
 
   return (
     <div className="w-full">

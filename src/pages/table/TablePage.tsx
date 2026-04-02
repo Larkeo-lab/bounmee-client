@@ -148,7 +148,7 @@ export default function TablePage() {
       }
     }
   }, [targetTableId, tables, selectedTable]);
-  
+
   // Real-time: Auto-open table when customer makes a NEW order
   useEffect(() => {
     const handleNewOrder = (data: { tableId: string }) => {
@@ -196,7 +196,7 @@ export default function TablePage() {
       t.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  const handleCloseTable = () => {
+  const handleCloseTable = (order?: any) => {
     if (selectedTable) {
       updateTable.mutate(
         {
@@ -206,13 +206,14 @@ export default function TablePage() {
         },
         {
           onSuccess: () => {
-            // ແຈ້ງເຕືອນລູກຄ້າວ່າຍອດຊຳລະສຳເລັດ ແລະ ໂຕ໊ະປິດແລ້ວ
+            // ແຈ້ງເຕືອນລູກຄ້າວ່າຍອດຊຳລະສຳເລັດ ແລະ ໂຕະປິດແລ້ວ
             if (socket.connected) {
               socket.emit("SYNC_TABLE_CART", {
                 storeId,
                 tableId: selectedTable.id,
-                cart: [],
+                cart: order?.items || [],
                 tableStatus: "AVAILABLE",
+                order, // ສົ່ງຂໍ້ມູນບີນໃຫ້ລູກຄ້າ
               });
               socket.emit("TABLE_SESSION_ENDED", { tableId: selectedTable.id });
             }
@@ -252,10 +253,10 @@ export default function TablePage() {
           <div>
             <h1 className="text-2xl md:text-3xl font-black text-primary flex items-center gap-2 md:gap-3">
               <Armchair className="w-7 h-7 md:w-8 md:h-8" />
-              ໂຕ໊ະອາຫານ
+              ໂຕະອາຫານ
             </h1>
             <p className="text-xs md:text-sm text-default-500 font-medium ml-9 md:ml-11">
-              ບໍລິຫານຈັດການພື້ນທີ່ ແລະ ໂຕ໊ະພາຍໃນຮ້ານຂອງທ່ານ
+              ບໍລິຫານຈັດການພື້ນທີ່ ແລະ ໂຕະພາຍໃນຮ້ານຂອງທ່ານ
             </p>
           </div>
         </div>
@@ -297,7 +298,7 @@ export default function TablePage() {
               </div>
               <div className="flex flex-col justify-center">
                 <p className="text-[10px] md:text-[11px] font-extrabold text-success-600/80 dark:text-success-400/80 uppercase tracking-wider md:tracking-widest mb-0.5">
-                  ໂຕ໊ະຫວ່າງ
+                  ໂຕະຫວ່າງ
                 </p>
                 <p className="text-xl md:text-3xl font-black text-success-900 dark:text-success-100 leading-none md:leading-tight">
                   {stats.available}
@@ -400,7 +401,7 @@ export default function TablePage() {
 
                   <div className="flex items-center gap-2 w-full md:w-auto">
                     <Input
-                      placeholder="ຄົ້ນຫາໂຕ໊ະ..."
+                      placeholder="ຄົ້ນຫາໂຕະ..."
                       startContent={
                         <Search size={18} className="text-default-400" />
                       }
@@ -505,8 +506,8 @@ export default function TablePage() {
                   </div>
                 ) : (
                   <EmptyState
-                    message="ບໍ່ພົບຂໍ້ມູນໂຕ໊ະ"
-                    description="ລອງຄົ້ນຫາດ້ວຍຊື່ໂຕ໊ະອື່ນ ຫຼື ເລືອກໂຊນອື່ນ"
+                    message="ບໍ່ພົບຂໍ້ມູນໂຕະ"
+                    description="ລອງຄົ້ນຫາດ້ວຍຊື່ໂຕະອື່ນ ຫຼື ເລືອກໂຊນອື່ນ"
                   />
                 )}
               </div>
@@ -540,337 +541,344 @@ export default function TablePage() {
             </Button>
           </div>
 
-        <div className="flex items-center justify-between px-2 lg:px-3 py-1.5 bg-default-100/50 border-b border-divider">
-          <div className="flex items-center gap-2">
-            <Checkbox
-              isSelected={
-                filteredCart.length > 0 &&
-                filteredCart.every((item) =>
-                  selectedCartItems.includes(`${item.id}-${item.status}`),
-                )
-              }
-              onValueChange={(isSelected) => {
-                if (isSelected) {
-                  const newIds = filteredCart.map(
-                    (item) => `${item.id}-${item.status}`,
-                  );
-                  setSelectedCartItems(
-                    Array.from(new Set([...selectedCartItems, ...newIds])),
-                  );
-                } else {
-                  const filteredIds = new Set(
-                    filteredCart.map((item) => `${item.id}-${item.status}`),
-                  );
-                  setSelectedCartItems(
-                    selectedCartItems.filter((id) => !filteredIds.has(id)),
-                  );
+          <div className="flex items-center justify-between px-2 lg:px-3 py-1.5 bg-default-100/50 border-b border-divider">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                isSelected={
+                  filteredCart.length > 0 &&
+                  filteredCart.every((item) =>
+                    selectedCartItems.includes(`${item.id}-${item.status}`),
+                  )
                 }
-              }}
-              size="sm"
-              isDisabled={filteredCart.length === 0}
-            >
-              <span className="text-xs font-bold text-default-700">
-                ເລືອກທັງໝົດ
-              </span>
-            </Checkbox>
-            <div className="flex flex-wrap items-center gap-1 lg:gap-1.5 ml-2 lg:ml-3">
-              {[
-                { value: "ALL", label: "ທັງໝົດ" },
-                { value: "PENDING", label: "ລໍຖ້າ" },
-                { value: "COOKING", label: "ກຳລັງຄົວ" },
-                { value: "SERVED", label: "ເສີບແລ້ວ" },
-              ].map((status) => (
-                <button
-                  key={status.value}
-                  onClick={() => {
-                    setStatusFilter(status.value);
-                    setSelectedCartItems([]);
-                  }}
-                  className={`px-2 py-1 text-[9px] lg:text-[10px] font-bold rounded-lg transition-all whitespace-nowrap outline-none border-[0.5px] ${
-                    statusFilter === status.value
-                      ? "bg-primary text-white border-primary shadow-md shadow-primary/30 scale-[1.02]"
-                      : "bg-default-100 text-default-500 border-default-200 hover:bg-default-200 hover:text-default-700"
-                  }`}
-                >
-                  {status.label}
-                </button>
-              ))}
-            </div>
-          </div>
-          {selectedCartItems.length > 0 && (
-            <span className="text-xs text-primary font-bold">
-              ເລືອກແລ້ວ {selectedCartItems.length}
-            </span>
-          )}
-        </div>
-
-        <ScrollShadow
-          size={0}
-          className="flex-grow p-2 lg:p-3 space-y-2 lg:space-y-3"
-        >
-          {filteredCart.length > 0
-            ? filteredCart.map((item) => {
-                const uniqueId = `${item.id}-${item.status}`;
-                return (
-                  <div
-                    key={uniqueId}
-                    className="flex gap-2 group items-center border-b border-divider border-dashed pb-2 lg:pb-3 last:border-b-0 last:pb-0"
+                onValueChange={(isSelected) => {
+                  if (isSelected) {
+                    const newIds = filteredCart.map(
+                      (item) => `${item.id}-${item.status}`,
+                    );
+                    setSelectedCartItems(
+                      Array.from(new Set([...selectedCartItems, ...newIds])),
+                    );
+                  } else {
+                    const filteredIds = new Set(
+                      filteredCart.map((item) => `${item.id}-${item.status}`),
+                    );
+                    setSelectedCartItems(
+                      selectedCartItems.filter((id) => !filteredIds.has(id)),
+                    );
+                  }
+                }}
+                size="sm"
+                isDisabled={filteredCart.length === 0}
+              >
+                <span className="text-xs font-bold text-default-700">
+                  ເລືອກທັງໝົດ
+                </span>
+              </Checkbox>
+              <div className="flex flex-wrap items-center gap-1 lg:gap-1.5 ml-2 lg:ml-3">
+                {[
+                  { value: "ALL", label: "ທັງໝົດ" },
+                  { value: "PENDING", label: "ລໍຖ້າ" },
+                  { value: "COOKING", label: "ກຳລັງຄົວ" },
+                  { value: "SERVED", label: "ເສີບແລ້ວ" },
+                ].map((status) => (
+                  <button
+                    key={status.value}
+                    onClick={() => {
+                      setStatusFilter(status.value);
+                      setSelectedCartItems([]);
+                    }}
+                    className={`px-2 py-1 text-[9px] lg:text-[10px] font-bold rounded-lg transition-all whitespace-nowrap outline-none border-[0.5px] ${
+                      statusFilter === status.value
+                        ? "bg-primary text-white border-primary shadow-md shadow-primary/30 scale-[1.02]"
+                        : "bg-default-100 text-default-500 border-default-200 hover:bg-default-200 hover:text-default-700"
+                    }`}
                   >
-                    <Checkbox
-                      isSelected={selectedCartItems.includes(uniqueId)}
-                      onValueChange={(isSelected) => {
-                        if (isSelected) {
-                          setSelectedCartItems((prev) => [...prev, uniqueId]);
-                        } else {
-                          setSelectedCartItems((prev) =>
-                            prev.filter((id) => id !== uniqueId),
-                          );
-                        }
-                      }}
-                      size="md"
-                      className="mr-1"
-                    />
-                    <Image
-                      src={getDisplayImageUrl(item.image)}
-                      className="w-10 h-10 lg:w-14 lg:h-14 object-cover min-w-[40px] lg:min-w-[56px]"
-                      radius="md"
-                    />
-                    <div className="flex-grow flex flex-col justify-between py-0.5">
-                      <div className="flex justify-between items-start gap-2">
-                        <span className="font-semibold text-[12px] lg:text-sm line-clamp-1">
-                          {item.name}
-                        </span>
-                        <Button
-                          isIconOnly
-                          size="sm"
-                          variant="light"
-                          color="danger"
-                          onClick={() => {
-                            setItemToRemove({
-                              id: item.id,
-                              status: item.status,
-                            });
-                            onRemoveItemOpen();
-                          }}
-                          className="min-w-5 h-5 w-5 lg:min-w-6 lg:h-6 lg:w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <Trash2 size={12} />
-                        </Button>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-primary font-bold text-[12px] lg:text-sm">
-                          {formatNumber(item.price * item.quantity)} ກີບ
-                        </span>
-                        {/* Status  */}
-                        {(() => {
-                          const statusConfig = getStatusDisplay(item.status);
-                          return (
-                            <Chip
+                    {status.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {selectedCartItems.length > 0 && (
+              <span className="text-xs text-primary font-bold">
+                ເລືອກແລ້ວ {selectedCartItems.length}
+              </span>
+            )}
+          </div>
+
+          <ScrollShadow
+            size={0}
+            className="flex-grow p-2 lg:p-3 space-y-2 lg:space-y-3"
+          >
+            {filteredCart.length > 0
+              ? filteredCart.map((item) => {
+                  const uniqueId = `${item.id}-${item.status}`;
+                  return (
+                    <div
+                      key={uniqueId}
+                      className="flex gap-2 group items-center border-b border-divider border-dashed pb-2 lg:pb-3 last:border-b-0 last:pb-0"
+                    >
+                      <Checkbox
+                        isSelected={selectedCartItems.includes(uniqueId)}
+                        onValueChange={(isSelected) => {
+                          if (isSelected) {
+                            setSelectedCartItems((prev) => [...prev, uniqueId]);
+                          } else {
+                            setSelectedCartItems((prev) =>
+                              prev.filter((id) => id !== uniqueId),
+                            );
+                          }
+                        }}
+                        size="md"
+                        className="mr-1"
+                      />
+                      <Image
+                        src={getDisplayImageUrl(item.image)}
+                        className="w-10 h-10 lg:w-14 lg:h-14 object-cover min-w-[40px] lg:min-w-[56px]"
+                        radius="md"
+                      />
+                      <div className="flex-grow flex flex-col justify-between py-0.5">
+                        <div className="flex justify-between items-start gap-2">
+                          <span className="font-semibold text-[12px] lg:text-sm line-clamp-1">
+                            {item.name}
+                          </span>
+                          <Button
+                            isIconOnly
+                            size="sm"
+                            variant="light"
+                            color="danger"
+                            onClick={() => {
+                              setItemToRemove({
+                                id: item.id,
+                                status: item.status,
+                              });
+                              onRemoveItemOpen();
+                            }}
+                            className="min-w-5 h-5 w-5 lg:min-w-6 lg:h-6 lg:w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <Trash2 size={12} />
+                          </Button>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-primary font-bold text-[12px] lg:text-sm">
+                            {formatNumber(item.price * item.quantity)} ກີບ
+                          </span>
+                          {/* Status  */}
+                          {(() => {
+                            const statusConfig = getStatusDisplay(item.status);
+                            return (
+                              <Chip
+                                size="sm"
+                                color={statusConfig.color}
+                                variant="flat"
+                                className="ml-auto mr-2 font-bold text-[10px] lg:text-[11px]"
+                              >
+                                {statusConfig.label}
+                              </Chip>
+                            );
+                          })()}
+                          <div className="flex ml-4 items-center gap-1.5 lg:gap-2 bg-default-100 rounded-lg p-0.5">
+                            <Button
+                              isIconOnly
                               size="sm"
-                              color={statusConfig.color}
-                              variant="flat"
-                              className="ml-auto mr-2 font-bold text-[10px] lg:text-[11px]"
-                            >
-                              {statusConfig.label}
-                            </Chip>
-                          );
-                        })()}
-                        <div className="flex ml-4 items-center gap-1.5 lg:gap-2 bg-default-100 rounded-lg p-0.5">
-                          <Button
-                            isIconOnly
-                            size="sm"
-                            variant="light"
-                            className="min-w-5 h-5 w-5 lg:min-w-6 lg:h-6 lg:w-6"
-                            onClick={() =>
-                              updateQuantity(item.id, item.status, -1)
-                            }
-                          >
-                            <Minus size={10} />
-                          </Button>
-                          <input
-                            type="text"
-                            inputMode="numeric"
-                            pattern="[0-9]*"
-                            value={item.quantity === 0 ? "" : item.quantity}
-                            onChange={(e) => {
-                              const val = e.target.value.replace(/[^0-9]/g, "");
-                              setQuantity(item.id, item.status, val);
-                            }}
-                            onBlur={() => {
-                              if (item.quantity === 0) {
-                                setQuantity(item.id, item.status, "1");
+                              variant="light"
+                              className="min-w-5 h-5 w-5 lg:min-w-6 lg:h-6 lg:w-6"
+                              onClick={() =>
+                                updateQuantity(item.id, item.status, -1)
                               }
-                            }}
-                            className="text-[11px] lg:text-xs font-bold w-6 lg:w-8 text-center bg-transparent outline-none focus:ring-1 focus:ring-primary/30 rounded"
-                          />
-                          <Button
-                            isIconOnly
-                            size="sm"
-                            variant="light"
-                            className="min-w-5 h-5 w-5 lg:min-w-6 lg:h-6 lg:w-6"
-                            onClick={() =>
-                              updateQuantity(item.id, item.status, 1)
-                            }
-                          >
-                            <Plus size={10} />
-                          </Button>
+                            >
+                              <Minus size={10} />
+                            </Button>
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              value={item.quantity === 0 ? "" : item.quantity}
+                              onChange={(e) => {
+                                const val = e.target.value.replace(
+                                  /[^0-9]/g,
+                                  "",
+                                );
+                                setQuantity(item.id, item.status, val);
+                              }}
+                              onBlur={() => {
+                                if (item.quantity === 0) {
+                                  setQuantity(item.id, item.status, "1");
+                                }
+                              }}
+                              className="text-[11px] lg:text-xs font-bold w-6 lg:w-8 text-center bg-transparent outline-none focus:ring-1 focus:ring-primary/30 rounded"
+                            />
+                            <Button
+                              isIconOnly
+                              size="sm"
+                              variant="light"
+                              className="min-w-5 h-5 w-5 lg:min-w-6 lg:h-6 lg:w-6"
+                              onClick={() =>
+                                updateQuantity(item.id, item.status, 1)
+                              }
+                            >
+                              <Plus size={10} />
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })
-            : null}
-        </ScrollShadow>
+                  );
+                })
+              : null}
+          </ScrollShadow>
 
-        <div className="px-2 py-1.5 lg:px-3 lg:py-2 border-t border-divider bg-default-50/50 flex-shrink-0">
-          <div className="grid grid-cols-4 gap-1 lg:gap-1.5">
-            <Button
-              variant="flat"
-              color={isSelectingMenu ? "danger" : "primary"}
-              className={`h-8 lg:h-9 font-bold text-[9px] lg:text-[11px] px-1 ${isSelectingMenu ? "bg-danger/10 text-danger" : "bg-primary/10"}`}
-              onClick={() => setIsSelectingMenu(!isSelectingMenu)}
-              startContent={<Utensils size={12} />}
-            >
-              {isSelectingMenu ? "ປິດເມນູ" : "ເປີດເມນູ"}
-            </Button>
-            <Button
-              color="warning"
-              className="h-8 lg:h-9 font-bold text-[9px] lg:text-[11px] text-white shadow-sm px-1"
-              onClick={() => {
-                try {
-                  updateStatus(selectedCartItems, "COOKING");
-                  setSelectedCartItems([]);
-                  toast.success("ອັບເດດສະຖານະສຳເລັດ");
-                } catch (error) {
-                  toast.error("ເກີດຂໍ້ຜິດພາດໃນການອັບເດດ");
+          <div className="px-2 py-1.5 lg:px-3 lg:py-2 border-t border-divider bg-default-50/50 flex-shrink-0">
+            <div className="grid grid-cols-4 gap-1 lg:gap-1.5">
+              <Button
+                variant="flat"
+                color={isSelectingMenu ? "danger" : "primary"}
+                className={`h-8 lg:h-9 font-bold text-[9px] lg:text-[11px] px-1 ${isSelectingMenu ? "bg-danger/10 text-danger" : "bg-primary/10"}`}
+                onClick={() => setIsSelectingMenu(!isSelectingMenu)}
+                startContent={<Utensils size={12} />}
+              >
+                {isSelectingMenu ? "ປິດເມນູ" : "ເປີດເມນູ"}
+              </Button>
+              <Button
+                color="warning"
+                className="h-8 lg:h-9 font-bold text-[9px] lg:text-[11px] text-white shadow-sm px-1"
+                onClick={() => {
+                  try {
+                    updateStatus(selectedCartItems, "COOKING");
+                    setSelectedCartItems([]);
+                    toast.success("ອັບເດດສະຖານະສຳເລັດ");
+                  } catch (error) {
+                    toast.error("ເກີດຂໍ້ຜິດພາດໃນການອັບເດດ");
+                  }
+                }}
+                startContent={<ChefHat size={12} />}
+                isDisabled={
+                  selectedCartItems.length === 0 ||
+                  selectedCartItems.some((uId) => {
+                    const [itemId, itemStatus] = uId.split("-");
+                    const item = cart.find(
+                      (i) => i.id === itemId && i.status === itemStatus,
+                    );
+                    return (
+                      item?.status === "COOKING" || item?.status === "SERVED"
+                    );
+                  })
                 }
-              }}
-              startContent={<ChefHat size={12} />}
-              isDisabled={
-                selectedCartItems.length === 0 ||
-                selectedCartItems.some((uId) => {
-                  const [itemId, itemStatus] = uId.split("-");
-                  const item = cart.find(
-                    (i) => i.id === itemId && i.status === itemStatus,
-                  );
-                  return item?.status === "COOKING" || item?.status === "SERVED";
-                })
-              }
-            >
-              ສົ່ງໄປຄົວ
-            </Button>
-            <Button
-              color="primary"
-              className="h-8 lg:h-9 font-bold text-[9px] lg:text-[11px] text-white shadow-sm px-1"
-              onClick={() => {
-                try {
-                  updateStatus(selectedCartItems, "SERVED");
-                  setSelectedCartItems([]);
-                  toast.success("ອັບເດດສະຖານະສຳເລັດ");
-                } catch (error) {
-                  toast.error("ເກີດຂໍ້ຜິດພາດໃນການອັບເດດ");
+              >
+                ສົ່ງໄປຄົວ
+              </Button>
+              <Button
+                color="primary"
+                className="h-8 lg:h-9 font-bold text-[9px] lg:text-[11px] text-white shadow-sm px-1"
+                onClick={() => {
+                  try {
+                    updateStatus(selectedCartItems, "SERVED");
+                    setSelectedCartItems([]);
+                    toast.success("ອັບເດດສະຖານະສຳເລັດ");
+                  } catch (error) {
+                    toast.error("ເກີດຂໍ້ຜິດພາດໃນການອັບເດດ");
+                  }
+                }}
+                startContent={<ChefHat size={12} />}
+                isDisabled={
+                  selectedCartItems.length === 0 ||
+                  selectedCartItems.some((uId) => {
+                    const [itemId, itemStatus] = uId.split("-");
+                    const item = cart.find(
+                      (i) => i.id === itemId && i.status === itemStatus,
+                    );
+                    return item?.status === "SERVED";
+                  })
                 }
-              }}
-              startContent={<ChefHat size={12} />}
-              isDisabled={
-                selectedCartItems.length === 0 ||
-                selectedCartItems.some((uId) => {
-                  const [itemId, itemStatus] = uId.split("-");
-                  const item = cart.find(
-                    (i) => i.id === itemId && i.status === itemStatus,
-                  );
-                  return item?.status === "SERVED";
-                })
-              }
-            >
-              ເສີບອາຫານ
-            </Button>
-            <Button
-              color="secondary"
-              variant="solid"
-              className="h-8 lg:h-9 font-bold text-[9px] lg:text-[11px] text-white shadow-sm px-1"
-              onClick={onQrOpen}
-              startContent={<QrCode size={12} />}
-            >
-              QR
-            </Button>
+              >
+                ເສີບອາຫານ
+              </Button>
+              <Button
+                color="secondary"
+                variant="solid"
+                className="h-8 lg:h-9 font-bold text-[9px] lg:text-[11px] text-white shadow-sm px-1"
+                onClick={onQrOpen}
+                startContent={<QrCode size={12} />}
+              >
+                QR
+              </Button>
+            </div>
           </div>
-        </div>
 
-        <div className="px-2 py-2 lg:px-3 lg:py-2.5 border-t border-divider bg-white mt-auto flex-shrink-0">
-          <div className="flex flex-col gap-1 mb-2">
-            <div className="flex justify-between items-center text-[10px] lg:text-xs text-warning-600 font-bold">
-              <span>ລໍຖ້າ:</span>
-              <span>{formatNumber(statusTotals.PENDING)} ກີບ</span>
-            </div>
-            <div className="flex justify-between items-center text-[10px] lg:text-xs text-primary-600 font-bold">
-              <span>ກຳລັງຄົວ:</span>
-              <span>{formatNumber(statusTotals.COOKING)} ກີບ</span>
-            </div>
-            <div className="flex justify-between items-center text-[10px] lg:text-xs text-success-600 font-bold">
-              <span>ເສີບແລ້ວ:</span>
-              <span>{formatNumber(statusTotals.SERVED)} ກີບ</span>
-            </div>
-            <div className="flex justify-between items-center font-black pt-1 border-t border-divider mt-1">
-              <span className="text-xs lg:text-sm text-default-700">ທັງໝົດ:</span>
-              <div className="text-right">
-                <span className="text-primary text-base lg:text-lg">
-                  {formatNumber(subtotal)} ກີບ
+          <div className="px-2 py-2 lg:px-3 lg:py-2.5 border-t border-divider bg-white mt-auto flex-shrink-0">
+            <div className="flex flex-col gap-1 mb-2">
+              <div className="flex justify-between items-center text-[10px] lg:text-xs text-warning-600 font-bold">
+                <span>ລໍຖ້າ:</span>
+                <span>{formatNumber(statusTotals.PENDING)} ກີບ</span>
+              </div>
+              <div className="flex justify-between items-center text-[10px] lg:text-xs text-primary-600 font-bold">
+                <span>ກຳລັງຄົວ:</span>
+                <span>{formatNumber(statusTotals.COOKING)} ກີບ</span>
+              </div>
+              <div className="flex justify-between items-center text-[10px] lg:text-xs text-success-600 font-bold">
+                <span>ເສີບແລ້ວ:</span>
+                <span>{formatNumber(statusTotals.SERVED)} ກີບ</span>
+              </div>
+              <div className="flex justify-between items-center font-black pt-1 border-t border-divider mt-1">
+                <span className="text-xs lg:text-sm text-default-700">
+                  ທັງໝົດ:
                 </span>
+                <div className="text-right">
+                  <span className="text-primary text-base lg:text-lg">
+                    {formatNumber(subtotal)} ກີບ
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="grid grid-cols-2 gap-2 lg:gap-3">
-            <Button
-              variant="flat"
-              color="danger"
-              className="h-9 lg:h-11 font-bold text-xs lg:text-sm"
-              isLoading={updateTable.isPending}
-              onClick={() => {
-                if (cart.length > 0) {
-                  toast.error(
-                    "ບໍ່ສາມາດປິດໂຕ໊ະໄດ້! ກະລຸນາເຄຼຍລາຍການອາຫານໃນກະຕ່າອອກໃຫ້ໝົດກ່ອນ.",
-                    {
-                      style: {
-                        fontWeight: "bold",
-                        borderRadius: "12px",
+            <div className="grid grid-cols-2 gap-2 lg:gap-3">
+              <Button
+                variant="flat"
+                color="danger"
+                className="h-9 lg:h-11 font-bold text-xs lg:text-sm"
+                isLoading={updateTable.isPending}
+                onClick={() => {
+                  if (cart.length > 0) {
+                    toast.error(
+                      "ບໍ່ສາມາດປິດໂຕະໄດ້! ກະລຸນາເຄຼຍລາຍການອາຫານໃນກະຕ່າອອກໃຫ້ໝົດກ່ອນ.",
+                      {
+                        style: {
+                          fontWeight: "bold",
+                          borderRadius: "12px",
+                        },
                       },
-                    },
-                  );
-                  return;
+                    );
+                    return;
+                  }
+                  onCloseTableOpen();
+                }}
+                startContent={<Trash2 size={14} />}
+              >
+                ປິດໂຕະ
+              </Button>
+              <Button
+                color="primary"
+                className="h-9 lg:h-11 font-bold text-xs lg:text-sm shadow-md shadow-primary/20"
+                startContent={<Banknote size={14} />}
+                onPress={onOpen}
+                isDisabled={
+                  cart.length === 0 ||
+                  !cart.every(
+                    (item) =>
+                      item.status?.toUpperCase() === "SERVED" ||
+                      item.status?.toUpperCase() === "CANCEL",
+                  )
                 }
-                onCloseTableOpen();
-              }}
-              startContent={<Trash2 size={14} />}
-            >
-              ປິດໂຕະ
-            </Button>
-            <Button
-              color="primary"
-              className="h-9 lg:h-11 font-bold text-xs lg:text-sm shadow-md shadow-primary/20"
-              startContent={<Banknote size={14} />}
-              onPress={onOpen}
-              isDisabled={
-                cart.length === 0 ||
-                !cart.every(
-                  (item) =>
-                    item.status?.toUpperCase() === "SERVED" ||
-                    item.status?.toUpperCase() === "CANCEL",
-                )
-              }
-            >
-              ຕໍ່ໄປ
-            </Button>
-          </div>
+              >
+                ຕໍ່ໄປ
+              </Button>
+            </div>
           </div>
         </div>
       ) : (
         <div className="hidden lg:flex w-full lg:w-[400px] flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 border-l border-divider animate-in fade-in duration-500">
           <div className="flex flex-col items-center gap-4 opacity-40">
             <ShoppingCart size={80} strokeWidth={1} />
-            <p className="font-bold text-lg">ກະລຸນາເລືອກໂຕ໊ະ</p>
+            <p className="font-bold text-lg">ກະລຸນາເລືອກໂຕະ</p>
           </div>
         </div>
       )}
@@ -915,8 +923,8 @@ export default function TablePage() {
         total={subtotal}
         items={cart}
         tableId={selectedTable?.id}
-        onPaymentSuccess={() => {
-          handleCloseTable();
+        onPaymentSuccess={(order) => {
+          handleCloseTable(order);
         }}
       />
 
