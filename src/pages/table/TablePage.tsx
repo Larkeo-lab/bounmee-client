@@ -439,7 +439,26 @@ export default function TablePage() {
                         isPressable
                         key={product.id}
                         onPress={() => addToCart(product)}
-                        className="group relative border-none bg-white/70 dark:bg-gray-800/70 backdrop-blur-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 h-[130px] lg:h-[150px] flex flex-col"
+                        isDisabled={
+                          (product.stockQty || 0) <=
+                          cart
+                            .filter(
+                              (i) =>
+                                i.id === product.id && i.status !== "CANCEL"
+                            )
+                            .reduce((sum, i) => sum + i.quantity, 0)
+                        }
+                        className={clsx(
+                          "group relative border-none bg-white/70 dark:bg-gray-800/70 backdrop-blur-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 h-[130px] lg:h-[150px] flex flex-col",
+                          (product.stockQty || 0) <=
+                            cart
+                              .filter(
+                                (i) =>
+                                  i.id === product.id && i.status !== "CANCEL"
+                              )
+                              .reduce((sum, i) => sum + i.quantity, 0) &&
+                            "opacity-60 grayscale-[0.5]"
+                        )}
                       >
                         <CardBody className="p-0 relative overflow-hidden flex-grow shrink">
                           <div className="absolute top-2 right-2 z-20">
@@ -712,6 +731,18 @@ export default function TablePage() {
                               size="sm"
                               variant="light"
                               className="min-w-5 h-5 w-5 lg:min-w-6 lg:h-6 lg:w-6"
+                              isDisabled={
+                                item.quantity +
+                                  cart
+                                    .filter(
+                                      (i) =>
+                                        i.id === item.id &&
+                                        i.status !== "CANCEL" &&
+                                        `${i.id}-${i.status}` !== uniqueId
+                                    )
+                                    .reduce((sum, i) => sum + i.quantity, 0) >=
+                                item.stockQty
+                              }
                               onClick={() =>
                                 updateQuantity(item.id, item.status, 1)
                               }
@@ -746,6 +777,12 @@ export default function TablePage() {
                     updateStatus(selectedCartItems, "COOKING");
                     setSelectedCartItems([]);
                     toast.success("ອັບເດດສະຖານະສຳເລັດ");
+                    
+                    // Play notification sound
+                    try {
+                      const audio = new Audio("/assets/void/notification.mp3");
+                      audio.play().catch(e => console.log("Audio play blocked:", e));
+                    } catch (e) {}
                   } catch (error) {
                     toast.error("ເກີດຂໍ້ຜິດພາດໃນການອັບເດດ");
                   }
@@ -754,10 +791,7 @@ export default function TablePage() {
                 isDisabled={
                   selectedCartItems.length === 0 ||
                   selectedCartItems.some((uId) => {
-                    const [itemId, itemStatus] = uId.split("-");
-                    const item = cart.find(
-                      (i) => i.id === itemId && i.status === itemStatus,
-                    );
+                    const item = cart.find((i) => `${i.id}-${i.status}` === uId);
                     return (
                       item?.status === "COOKING" || item?.status === "SERVED"
                     );
@@ -782,10 +816,7 @@ export default function TablePage() {
                 isDisabled={
                   selectedCartItems.length === 0 ||
                   selectedCartItems.some((uId) => {
-                    const [itemId, itemStatus] = uId.split("-");
-                    const item = cart.find(
-                      (i) => i.id === itemId && i.status === itemStatus,
-                    );
+                    const item = cart.find((i) => `${i.id}-${i.status}` === uId);
                     return item?.status === "SERVED";
                   })
                 }

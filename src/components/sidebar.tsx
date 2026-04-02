@@ -13,7 +13,7 @@ import { motion, AnimatePresence } from "framer-motion";
 // Icons import
 import {
   ShoppingCart,
-  LayoutDashboard,
+  BarChart3,
   Menu,
   X,
   ArrowRightToLine,
@@ -26,6 +26,7 @@ import {
   Receipt,
   LayoutGrid,
   History,
+  ChefHat,
 } from "lucide-react";
 
 import deePosLogo from "/assets/logo.png";
@@ -73,7 +74,7 @@ const sidebarGroups: MenuGroup[] = [
       {
         labelKey: "sidebar.menu.statisticsReport",
         href: "/dashboard",
-        icon: LayoutDashboard,
+        icon: BarChart3,
         permissionKey: "dashboard",
       },
       {
@@ -87,6 +88,12 @@ const sidebarGroups: MenuGroup[] = [
         href: "/ordering",
         icon: Receipt,
         permissionKey: "ordering",
+      },
+      {
+        labelKey: "sidebar.menu.kitchen",
+        href: "/kitchen",
+        icon: ChefHat,
+        permissionKey: "kitchen",
       },
     ],
   },
@@ -118,18 +125,32 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
       if (tableId === "default") return false;
       const snapshot = dismissedCarts[tableId]; // { [itemId]: qty } or undefined
 
-      const pendingItems = (items as any[]).filter(i => i.status === "PENDING");
+      const pendingItems = (items as any[]).filter(
+        (i) => i.status === "PENDING",
+      );
       if (pendingItems.length === 0) return false;
 
       if (!snapshot) return true; // Never dismissed → show
 
       // Has any item with quantity > snapshot → show
-      return pendingItems.some(item => {
+      return pendingItems.some((item) => {
         const seenQty = (snapshot as any)[item.id] || 0;
         return item.quantity > seenQty;
       });
     }).length;
   }, [carts, dismissedCarts]);
+
+  // Calculate kitchen badge (cooking items count)
+  const kitchenBadge = useMemo(() => {
+    let count = 0;
+    Object.values(carts).forEach((items) => {
+      if (Array.isArray(items)) {
+        const cookingItems = items.filter((i) => i.status === "COOKING");
+        count += cookingItems.length;
+      }
+    });
+    return count;
+  }, [carts]);
 
   // Permission Logic
   const userRole = user?.user?.role;
@@ -146,12 +167,17 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
   const filteredGroups = sidebarGroups
     .map((group) => ({
       ...group,
-      items: group.items.map((item) => {
-        if (item.href === "/ordering") {
-          return { ...item, badge: orderingBadge };
-        }
-        return item;
-      }).filter((item) => canAccess(item.permissionKey)),
+      items: group.items
+        .map((item) => {
+          if (item.href === "/ordering") {
+            return { ...item, badge: orderingBadge };
+          }
+          if (item.href === "/kitchen") {
+            return { ...item, badge: kitchenBadge };
+          }
+          return item;
+        })
+        .filter((item) => canAccess(item.permissionKey)),
     }))
     .filter((group) => group.items.length > 0);
 
@@ -209,7 +235,10 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
     if (href === "/" && currentPath === "/") {
       return true;
     }
-    if (href !== "/" && (currentPath === href || currentPath.startsWith(href + "/"))) {
+    if (
+      href !== "/" &&
+      (currentPath === href || currentPath.startsWith(href + "/"))
+    ) {
       return true;
     }
     return false;

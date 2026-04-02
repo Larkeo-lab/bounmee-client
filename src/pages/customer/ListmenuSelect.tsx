@@ -184,42 +184,7 @@ export default function ListmenuSelect({
                                 </span>
                                 <div className="flex justify-between items-center mt-1">
                                   <span className="text-default-500 font-bold text-sm">
-                                    {item.status?.toUpperCase() === "PENDING" ? (
-                                      <div className="flex items-center gap-1.5 bg-default-100/80 rounded-xl p-1 shadow-inner border border-default-200">
-                                        <Button
-                                          size="sm"
-                                          isIconOnly
-                                          variant="light"
-                                          className="h-8 w-8 min-w-8"
-                                          onPress={() =>
-                                            onUpdatePlacedQuantity?.(index, -1)
-                                          }
-                                        >
-                                          <Minus size={14} />
-                                        </Button>
-                                        <span className="font-extrabold w-6 text-center text-primary">
-                                          {item.quantity}
-                                        </span>
-                                        <Button
-                                          size="sm"
-                                          isIconOnly
-                                          variant="light"
-                                          className="h-8 w-8 min-w-8 bg-white shadow-sm"
-                                          isDisabled={item.quantity >= (item.stockQty || 999)}
-                                          onPress={() => {
-                                            if (item.quantity >= (item.stockQty || 999)) {
-                                              toast.error(`ຂໍອະໄພ, ສິນຄ້າ "${item.name}" ມີໃນສາງພຽງ ${item.stockQty} ລາຍການ`);
-                                              return;
-                                            }
-                                            onUpdatePlacedQuantity?.(index, 1);
-                                          }}
-                                        >
-                                          <Plus size={14} />
-                                        </Button>
-                                      </div>
-                                    ) : (
-                                      `x${item.quantity}`
-                                    )}
+                                    x{item.quantity}
                                   </span>
                                   <Chip
                                     size="sm"

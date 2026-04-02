@@ -500,45 +500,60 @@ export default function CustomerMenuPage() {
           </div>
         ) : (
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-            {filteredProducts?.map((product: any) => (
-              <Card
-                key={product.id}
-                className="border-none shadow-sm hover:shadow-md transition-all bg-white overflow-hidden"
-              >
-                <CardBody className="p-0 flex flex-col h-full">
-                  <div className="relative aspect-[4/3]">
-                    <img
-                      src={getDisplayImageUrl(product.image)}
-                      className="w-full h-full object-cover"
-                    />
-                    {product.stockQty <= 0 && (
-                      <div className="absolute inset-0 bg-black/40 z-10 flex items-center justify-center">
-                        <span className="text-white font-bold bg-danger/90 px-2 py-0.5 rounded text-xs">
-                          ໝົດແລ້ວ
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-3 flex-grow flex flex-col justify-between gap-2">
-                    <h3 className="font-bold text-sm line-clamp-2 leading-tight">
-                      {product.name}
-                    </h3>
-                    <p className="text-primary font-black text-sm">
-                      {formatNumber(product.price)} ₭
-                    </p>
-                    <Button
-                      color="primary"
-                      variant="solid"
-                      className="w-full font-bold text-xs h-9"
-                      onPress={() => addToCart(product)}
-                      isDisabled={product.stockQty <= 0 || isTableClosed}
-                    >
-                      <Plus size={16} className="mr-1" /> ເເພີ່ມລົງກະຕ່າ
-                    </Button>
-                  </div>
-                </CardBody>
-              </Card>
-            ))}
+            {filteredProducts?.map((product: any) => {
+              const currentInCart =
+                cart.find((i: any) => i.id === product.id)?.quantity || 0;
+              const alreadyPlaced = placedOrders
+                .filter(
+                  (i: any) =>
+                    (i.id === product.id || i.product?.id === product.id) &&
+                    i.status?.toUpperCase() !== "CANCEL"
+                )
+                .reduce((acc, i) => acc + (i.quantity || i.qty || 0), 0);
+              const totalUsed = currentInCart + alreadyPlaced;
+
+              return (
+                <Card
+                  key={product.id}
+                  className="border-none shadow-sm hover:shadow-md transition-all bg-white overflow-hidden"
+                >
+                  <CardBody className="p-0 flex flex-col h-full">
+                    <div className="relative aspect-[4/3]">
+                      <img
+                        src={getDisplayImageUrl(product.image)}
+                        className="w-full h-full object-cover"
+                      />
+                      {product.stockQty <= 0 && (
+                        <div className="absolute inset-0 bg-black/40 z-10 flex items-center justify-center">
+                          <span className="text-white font-bold bg-danger/90 px-2 py-0.5 rounded text-xs">
+                            ໝົດແລ້ວ
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-3 flex-grow flex flex-col justify-between gap-2">
+                      <h3 className="font-bold text-sm line-clamp-2 leading-tight">
+                        {product.name}
+                      </h3>
+                      <p className="text-primary font-black text-sm">
+                        {formatNumber(product.price)} ₭
+                      </p>
+                      <Button
+                        color="primary"
+                        variant="solid"
+                        className="w-full font-bold text-xs h-9"
+                        onPress={() => addToCart(product)}
+                        isDisabled={
+                          totalUsed >= (product.stockQty || 0) || isTableClosed
+                        }
+                      >
+                        <Plus size={16} className="mr-1" /> ເເພີ່ມລົງກະຕ່າ
+                      </Button>
+                    </div>
+                  </CardBody>
+                </Card>
+              );
+            })}
           </div>
         )}
       </main>

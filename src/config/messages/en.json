@@ -111,8 +111,31 @@
       "managePrinter": "Printer Management",
       "manageProfile": "Profile Management",
       "manageMoneyRate": "Money Rate Management",
-      "table": "Manage Tables"
+      "table": "Manage Tables",
+      "kitchen": "Kitchen"
     }
+  },
+  "kitchen": {
+    "title": "Kitchen Screen",
+    "subtitle": "Manage cooking items and preparation",
+    "viewByTable": "View by Table",
+    "viewByItem": "View by Item",
+    "emptyState": "No items currently cooking",
+    "emptyDescription": "Items will appear here when sent from the table",
+    "table": "Table",
+    "itemsCount": "items",
+    "cookingWait": "Cooking...",
+    "minutes": "min",
+    "serve": "Serve",
+    "serveAll": "Serve All",
+    "no": "#",
+    "image": "Image",
+    "itemName": "Item Name",
+    "quantity": "Qty",
+    "waitTime": "Wait Time",
+    "action": "Action",
+    "serveSuccess": "Served {{name}} successfully",
+    "serveAllSuccess": "All items in table served successfully"
   },
   "settings": {
     "description": {

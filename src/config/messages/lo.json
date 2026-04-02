@@ -114,8 +114,31 @@
       "managePrinter": "ຈັດການປິນເຕີ",
       "manageProfile": "ຈັດການໂປຟາຍ",
       "manageMoneyRate": "ຈັດການອັດຕາແລກປ່ຽນ",
-      "table": "ຫນ້າໂຕະ"
+      "table": "ຫນ້າໂຕະ",
+      "kitchen": "ລະບົບຫ້ອງຄົວ"
     }
+  },
+  "kitchen": {
+    "title": "ໜ້າຈໍຫ້ອງຄົວ (Kitchen)",
+    "subtitle": "ຈັດການລາຍການອາຫານທີ່ກຳລັງຄົວ ແລະ ກຽມເສີບ",
+    "viewByTable": "ເບິ່ງຕາມໂຕະ",
+    "viewByItem": "ເບິ່ງຕາມລາຍການ",
+    "emptyState": "ບໍ່ມີລາຍການອາຫານທີ່ກຳລັງຄົວ",
+    "emptyDescription": "ເມື່ອມີການກົດ 'ສົ່ງໄປຄົວ' ຈາກໜ້າໂຕະ ລາຍການຈະມາສະແດງຢູ່ບ່ອນນີ້",
+    "table": "ໂຕະ",
+    "itemsCount": "ລາຍການ",
+    "cookingWait": "ກຳລັງຄົວ...",
+    "minutes": "ນາທີ",
+    "serve": "ເສີບອາຫານ",
+    "serveAll": "ເສີບທັງໝົດ",
+    "no": "ລຳດັບ",
+    "image": "ຮູບພາບ",
+    "itemName": "ຊື່ອາຫານ",
+    "quantity": "ຈຳນວນ",
+    "waitTime": "ເວລາລໍຖ້າ",
+    "action": "ຈັດການ",
+    "serveSuccess": "ເສີບ {{name}} ສຳເລັດ",
+    "serveAllSuccess": "ເສີບອາຫານທັງໝົດໃນໂຕະສຳເລັດ"
   },
   "settings": {
     "description": {

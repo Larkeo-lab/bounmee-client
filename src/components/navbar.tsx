@@ -11,6 +11,7 @@ import {
 } from "@heroui/navbar";
 import { siteConfig } from "@/config/site";
 import ProfileDropdown from "./profile-dropdown";
+import LanguageSwitch from "./common/language-switch";
 import { SearchIcon } from "@/components/icons";
 
 export const Navbar = () => {
@@ -45,7 +46,8 @@ export const Navbar = () => {
         className="flex basis-1/5 sm:basis-full"
         justify="end"
       >
-        <NavbarItem className="flex items-center ml-4">
+        <NavbarItem className="flex items-center gap-4">
+          <LanguageSwitch />
           <ProfileDropdown />
         </NavbarItem>
       </NavbarContent>

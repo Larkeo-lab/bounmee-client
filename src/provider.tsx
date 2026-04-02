@@ -15,6 +15,7 @@ export interface CartItem {
   quantity: number;
   stockQty: number;
   status: string;
+  timestamp?: number;
 }
 
 interface CartContextType {
@@ -24,7 +25,7 @@ interface CartContextType {
   removeFromCart: (id: string, status: string) => void;
   updateQuantity: (id: string, status: string, delta: number) => void;
   setQuantity: (id: string, status: string, value: string) => void;
-  updateStatus: (uniqueIds: string[], status: string) => void;
+  updateStatus: (uniqueIds: string[], status: string, tableId?: string) => void;
   clearCart: () => void;
   subtotal: number;
   activeTableId: string | null;
@@ -160,6 +161,7 @@ export const Provider: React.FC<{ children: React.ReactNode }> = ({
                       quantity: Number(newItem.quantity),
                       stockQty: newItem.stockQty || 999,
                       status: status,
+                      timestamp: newItem.timestamp || Date.now(),
                     });
                   }
                 });
@@ -238,10 +240,21 @@ export const Provider: React.FC<{ children: React.ReactNode }> = ({
             socket.on("CUSTOMER_ORDER", handleCustomerOrder);
             socket.on("CUSTOMER_UPDATE_QTY", handleCustomerUpdateQty);
 
+            // Listen for changes from other POS or server sync
+            const handleTableCartUpdated = (data: { tableId: string, cart: any[] }) => {
+              console.log("♻️ TABLE_CART_UPDATED received:", data.tableId);
+              setCarts((prev) => ({
+                ...prev,
+                [data.tableId]: data.cart || []
+              }));
+            };
+            socket.on("TABLE_CART_UPDATED", handleTableCartUpdated);
+
             return () => {
               socket.off("connect", joinRoom);
               socket.off("CUSTOMER_ORDER", handleCustomerOrder);
               socket.off("CUSTOMER_UPDATE_QTY", handleCustomerUpdateQty);
+              socket.off("TABLE_CART_UPDATED", handleTableCartUpdated);
             };
           }
         }
@@ -297,19 +310,20 @@ export const Provider: React.FC<{ children: React.ReactNode }> = ({
         (item) => item.id === product.id && item.status === status,
       );
       if (existing) {
-        if (
-          product.stockQty !== undefined &&
-          existing.quantity + 1 > product.stockQty
-        ) {
+        const totalQtyInCart = prev
+          .filter((i) => i.id === product.id && i.status !== "CANCEL")
+          .reduce((sum, i) => sum + i.quantity, 0);
+
+        if (product.stockQty !== undefined && totalQtyInCart + 1 > product.stockQty) {
           toast.error(
-            `ສິນຄ້າ "${product.name}" ມີໃນສາງພຽງ ${product.stockQty} ລາຍການ`,
+            `ສິນຄ້າ "${product.name}" ມີໃນສາງພຽງ ${product.stockQty} ລາຍການ`
           );
           return prev;
         }
         return prev.map((item) =>
           item.id === product.id && item.status === status
             ? { ...item, quantity: item.quantity + 1 }
-            : item,
+            : item
         );
       }
 
@@ -328,6 +342,7 @@ export const Provider: React.FC<{ children: React.ReactNode }> = ({
           quantity: 1,
           stockQty: product.stockQty,
           status: status,
+          timestamp: Date.now(),
         },
       ];
     });
@@ -340,21 +355,33 @@ export const Provider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const updateQuantity = (id: string, status: string, delta: number) => {
-    updateCurrentCart((prev) =>
-      prev.map((item) => {
+    updateCurrentCart((prev) => {
+      const targetItem = prev.find((i) => i.id === id && i.status === status);
+      if (!targetItem) return prev;
+
+      if (delta > 0) {
+        const totalQtyInCart = prev
+          .filter((i) => i.id === id && i.status !== "CANCEL")
+          .reduce((sum, i) => sum + i.quantity, 0);
+
+        if (
+          targetItem.stockQty !== undefined &&
+          totalQtyInCart + delta > targetItem.stockQty
+        ) {
+          toast.error(
+            `ສິນຄ້າ "${targetItem.name}" ມີໃນສາງພຽງ ${targetItem.stockQty} ລາຍການ`
+          );
+          return prev;
+        }
+      }
+
+      return prev.map((item) => {
         if (item.id === id && item.status === status) {
-          const newQty = item.quantity + delta;
-          if (item.stockQty !== undefined && newQty > item.stockQty) {
-            toast.error(
-              `ສິນຄ້າ "${item.name}" ມີໃນສາງພຽງ ${item.stockQty} ລາຍການ`,
-            );
-            return item;
-          }
-          return { ...item, quantity: Math.max(1, newQty) };
+          return { ...item, quantity: Math.max(1, item.quantity + delta) };
         }
         return item;
-      }),
-    );
+      });
+    });
   };
 
   const setQuantity = (id: string, status: string, value: string) => {
@@ -386,12 +413,19 @@ export const Provider: React.FC<{ children: React.ReactNode }> = ({
     );
   };
 
-  const updateStatus = (uniqueIds: string[], status: string) => {
-    updateCurrentCart((prev) => {
-      // 1. Update statuses
-      const updatedCart = prev.map((item) => {
+  const updateStatus = (uniqueIds: string[], status: string, tableId?: string) => {
+    const targetTableId = tableId || activeTableId || "default";
+    
+    setCarts((prev) => {
+      const targetCart = prev[targetTableId] || [];
+      
+      // 1. Update statuses and refresh timestamp if it jumps to cooking without one
+      const updatedCart = targetCart.map((item) => {
         const uId = `${item.id}-${item.status}`;
-        return uniqueIds.includes(uId) ? { ...item, status } : item;
+        if (uniqueIds.includes(uId)) {
+          return { ...item, status, timestamp: item.timestamp || Date.now() };
+        }
+        return item;
       });
 
       // 2. Merge items with same id and status
@@ -406,7 +440,11 @@ export const Provider: React.FC<{ children: React.ReactNode }> = ({
           mergedCart.push({ ...item });
         }
       });
-      return mergedCart;
+      
+      return {
+        ...prev,
+        [targetTableId]: mergedCart
+      };
     });
   };
 

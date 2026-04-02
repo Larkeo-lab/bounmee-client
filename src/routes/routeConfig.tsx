@@ -25,6 +25,7 @@ import TablePage from "@/pages/table/TablePage";
 import TableSettingsPage from "@/pages/settings/table/TableSettingsPage";
 import ProductOrderPage from "@/pages/productOrder/ProductOrderPage";
 import OrderingPage from "@/pages/ordering/OrderingPage";
+import KitchenPage from "@/pages/kitchen/KitchenPage";
 
 export interface AppRoute {
   path: string;
@@ -159,6 +160,13 @@ export const appRoutes: AppRoute[] = [
     isPrivate: true,
     requiresLayout: true,
     permissionKey: "ordering",
+  },
+  {
+    path: "/kitchen",
+    element: <KitchenPage />,
+    isPrivate: true,
+    requiresLayout: true,
+    permissionKey: "kitchen",
   },
   {
     path: "/*",
