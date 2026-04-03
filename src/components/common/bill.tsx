@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo } from "react";
 import {
   Modal,
   ModalContent,
@@ -265,7 +265,7 @@ export default function BillModal({
           item.status?.toUpperCase() === "CANCEL"
             ? acc
             : acc + Number(item.price) * Number(item.quantity),
-        0
+        0,
       )
     );
   }, [finalOrder, placedOrders]);
@@ -332,7 +332,7 @@ export default function BillModal({
                       <p className="text-xs font-bold font-sans">
                         {finalOrder?.createdAt
                           ? new Date(finalOrder.createdAt).toLocaleString(
-                              "lo-LA"
+                              "lo-LA",
                             )
                           : new Date().toLocaleString("lo-LA")}
                       </p>
@@ -354,19 +354,19 @@ export default function BillModal({
                     <Chip
                       size="sm"
                       color={getPaymentMethodColor(
-                        finalOrder?.paymentMethod || paymentMethod || ""
+                        finalOrder?.paymentMethod || paymentMethod || "",
                       )}
                       variant="flat"
                       className="font-black text-[10px] uppercase"
                     >
                       {getPaymentMethodLabel(
-                        finalOrder?.paymentMethod || paymentMethod || ""
+                        finalOrder?.paymentMethod || paymentMethod || "",
                       )}
                       {finalOrder?.bank?.name
                         ? ` (${finalOrder.bank.name})`
                         : bankName
-                        ? ` (${bankName})`
-                        : ""}
+                          ? ` (${bankName})`
+                          : ""}
                     </Chip>
                   </div>
 
@@ -382,7 +382,7 @@ export default function BillModal({
                     <div className="space-y-3 pr-1">
                       {(finalOrder?.items || placedOrders)
                         .filter(
-                          (i: any) => i.status?.toUpperCase() !== "CANCEL"
+                          (i: any) => i.status?.toUpperCase() !== "CANCEL",
                         )
                         .map((item: any, idx: number) => {
                           const productName = item.product?.name || item.name;
