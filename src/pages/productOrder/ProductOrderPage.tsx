@@ -28,7 +28,7 @@ import {
 import EmptyState from "@/components/common/empty-state";
 
 import { useCart } from "@/provider";
-import PaymentModal from "@/components/main/payment-modal";
+import PaymentModal from "@/components/common/payment-modal";
 import { useAuth } from "@/routes/AuthContext";
 import { useGetCategories, Category } from "@/services/category/useCategory";
 import {
@@ -188,24 +188,31 @@ export default function ProductOrderPage() {
             </div>
           </div>
 
-          <Tabs
-            aria-label="Product Categories"
-            color="primary"
-            variant="underlined"
-            selectedKey={selectedCategory}
-            onSelectionChange={(key) => setSelectedCategory(key as string)}
-            classNames={{
-              tabList: "gap-4 lg:gap-6 overflow-x-auto",
-              cursor: "w-full bg-primary",
-              tab: "max-w-fit px-1 h-10 lg:h-12",
-              tabContent:
-                "group-data-[selected=true]:text-primary font-medium text-sm lg:text-base",
-            }}
+          <ScrollShadow 
+            size={40} 
+            orientation="horizontal" 
+            className="max-w-full w-0 min-w-full overflow-x-auto scrollbar-hide"
+            hideScrollBar
           >
-            {categories.map((cat) => (
-              <Tab key={cat.id} title={cat.label} />
-            ))}
-          </Tabs>
+            <Tabs
+              aria-label="Product Categories"
+              color="primary"
+              variant="underlined"
+              selectedKey={selectedCategory}
+              onSelectionChange={(key) => setSelectedCategory(key as string)}
+              classNames={{
+                tabList: "gap-4 lg:gap-6 flex-nowrap p-0 min-w-max border-b-2 border-divider",
+                cursor: "w-full bg-primary",
+                tab: "max-w-fit px-1 h-10 lg:h-12 flex-shrink-0",
+                tabContent:
+                  "group-data-[selected=true]:text-primary font-medium text-sm lg:text-base whitespace-nowrap",
+              }}
+            >
+              {categories.map((cat) => (
+                <Tab key={cat.id} title={cat.label} />
+              ))}
+            </Tabs>
+          </ScrollShadow>
         </div>
 
         {/* Product Grid */}

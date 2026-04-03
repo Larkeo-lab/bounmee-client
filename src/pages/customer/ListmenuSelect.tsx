@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Modal,
   ModalContent,
@@ -8,8 +9,9 @@ import {
   Image,
   Chip,
   Divider,
+  Input,
 } from "@heroui/react";
-import { Plus, Minus, CheckCircle, Clock, Utensils } from "lucide-react";
+import { Plus, Minus, CheckCircle, Clock, Utensils, MessageSquare } from "lucide-react";
 import { formatNumber } from "@/utils/numberFormat";
 import { getDisplayImageUrl } from "@/lib/utils";
 import { toast } from "react-hot-toast";
@@ -24,7 +26,7 @@ interface ListmenuSelectProps {
   cartTotalItems: number;
   submitOrder: () => void;
   isPending: boolean;
-  onUpdatePlacedQuantity: (index: number, delta: number) => void;
+  updateNote: (id: string, note: string) => void;
 }
 
 const getStatusDisplay = (status: string) => {
@@ -52,17 +54,26 @@ export default function ListmenuSelect({
   cartTotalItems,
   submitOrder,
   isPending,
-  onUpdatePlacedQuantity,
+  updateNote,
 }: ListmenuSelectProps) {
+  const [activeNoteIds, setActiveNoteIds] = useState<Set<string>>(new Set());
+
+  const toggleNote = (id: string) => {
+    setActiveNoteIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
   const combinedOrdersSubtotal = (placedOrders || []).reduce(
-    (acc, item) => 
-      item.status?.toUpperCase() === "CANCEL" 
-        ? acc 
+    (acc, item) =>
+      item.status?.toUpperCase() === "CANCEL"
+        ? acc
         : acc + Number(item.price) * Number(item.quantity),
     0,
   );
-
-  console.log("placedOrders", placedOrders);
 
   return (
     <Modal
@@ -79,13 +90,12 @@ export default function ListmenuSelect({
               <h3 className="font-black text-xl flex items-center justify-between text-default-800">
                 ລາຍການສັ່ງອາຫານ
                 <span className="text-primary text-sm px-3 py-1 bg-primary/10 rounded-full w-auto">
-                  ທັງໝົດ {cartTotalItems + (placedOrders?.length || 0)} ລາຍການ
+                  ທັງໝົດ {cartTotalItems + (placedOrders?.length || 0)} ລายການ
                 </span>
               </h3>
             </ModalHeader>
             <ModalBody className="p-4 sm:p-5">
               <div className="flex flex-col gap-6">
-                {/* 1. รายการที่กำลังเลือก (Pending Local Cart) */}
                 {cart.length > 0 && (
                   <div className="flex flex-col gap-3">
                     <h4 className="font-bold text-sm text-default-500 uppercase tracking-widest flex items-center gap-2">
@@ -95,57 +105,114 @@ export default function ListmenuSelect({
                       {cart.map((item) => (
                         <div
                           key={item.id}
-                          className="flex items-center gap-3 border-b border-gray-50 pb-3 h-24 last:border-0 last:pb-0"
+                          className="flex flex-col gap-2 border-b border-gray-50 pb-3 last:border-0 last:pb-0"
                         >
-                          <div className="w-20 h-20 shrink-0">
-                            <Image
-                              src={getDisplayImageUrl(item.image)}
-                              alt={item.name}
-                              className="w-full h-full object-cover rounded-xl shadow-sm border border-default-100"
-                            />
-                          </div>
-                          <div className="flex-1 flex flex-col justify-between h-full py-1 min-w-0">
-                            <div>
-                              <span className="font-black line-clamp-1 leading-tight text-default-800 block">
+                          <div className="flex items-center gap-3">
+                            <div className="w-16 h-16 shrink-0">
+                              <Image
+                                src={getDisplayImageUrl(item.image)}
+                                alt={item.name}
+                                className="w-full h-full object-cover rounded-xl shadow-sm border border-default-100"
+                              />
+                            </div>
+                            <div className="flex-1 flex flex-col justify-between min-w-0 py-0.5">
+                              <span className="font-black line-clamp-1 leading-tight text-default-800 block text-sm mb-1">
                                 {item.name}
                               </span>
-                              <span className="text-primary font-black text-sm block mt-1">
-                                {formatNumber(item.price)} ₭
-                              </span>
-                            </div>
-                            <div className="flex items-center justify-end mt-auto">
-                              <div className="flex items-center gap-1.5 bg-default-100/80 rounded-xl p-1 shadow-inner border border-default-200">
-                                <Button
-                                  size="sm"
-                                  isIconOnly
-                                  variant="light"
-                                  className="h-8 w-8 min-w-8"
-                                  onPress={() => updateQuantity(item.id, -1)}
-                                >
-                                  <Minus size={14} />
-                                </Button>
-                                <span className="font-extrabold w-6 text-center text-primary">
-                                  {item.quantity}
+                              
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="text-primary font-black text-sm">
+                                  {formatNumber(item.price)} ₭
                                 </span>
-                                <Button
-                                  size="sm"
-                                  isIconOnly
-                                  variant="light"
-                                  className="h-8 w-8 min-w-8 bg-white shadow-sm"
-                                  isDisabled={item.quantity >= (item.stockQty || 999)}
-                                  onPress={() => {
-                                    if (item.quantity >= (item.stockQty || 999)) {
-                                      toast.error(`ຂໍອະໄພ, ສິນຄ້າ "${item.name}" ມີໃນສາງພຽງ ${item.stockQty} ລາຍການ`);
-                                      return;
+                                
+                                <div className="flex items-center gap-1.5 bg-default-100/80 rounded-xl p-1 shadow-inner border border-default-200">
+                                  <Button
+                                    size="sm"
+                                    isIconOnly
+                                    variant="light"
+                                    className="h-7 w-7 min-w-7"
+                                    onPress={() => updateQuantity(item.id, -1)}
+                                  >
+                                    <Minus size={12} />
+                                  </Button>
+                                  <span className="font-extrabold w-5 text-center text-primary text-xs">
+                                    {item.quantity}
+                                  </span>
+                                  <Button
+                                    size="sm"
+                                    isIconOnly
+                                    variant="light"
+                                    className="h-7 w-7 min-w-7 bg-white shadow-sm"
+                                    isDisabled={
+                                      item.quantity >= (item.stockQty || 999)
                                     }
-                                    updateQuantity(item.id, 1);
-                                  }}
-                                >
-                                  <Plus size={14} />
-                                </Button>
+                                    onPress={() => {
+                                      if (
+                                        item.quantity >= (item.stockQty || 999)
+                                      ) {
+                                        toast.error(
+                                          `ຂໍອະໄພ, ສິນຄ້າ "${item.name}" ມີໃນສາງພຽງ ${item.stockQty} ລາຍການ`,
+                                        );
+                                        return;
+                                      }
+                                      updateQuantity(item.id, 1);
+                                    }}
+                                  >
+                                    <Plus size={12} />
+                                  </Button>
+                                </div>
                               </div>
+
+                              {!item.note && !activeNoteIds.has(item.id) && (
+                                <div className="mt-1">
+                                  <Button
+                                    size="sm"
+                                    variant="flat"
+                                    className="h-6 min-w-0 px-2 bg-default-100/50 rounded-xl text-[10px] font-bold text-default-400"
+                                    onPress={() => toggleNote(item.id)}
+                                    startContent={<MessageSquare size={12} />}
+                                  >
+                                    ເພີ່ມໝາຍເຫດ
+                                  </Button>
+                                </div>
+                              )}
                             </div>
                           </div>
+                          {(item.note || activeNoteIds.has(item.id)) && (
+                            <div className="flex flex-col gap-1.5 mt-1">
+                              <Input
+                                size="sm"
+                                placeholder="ໝາຍເຫດ (ເຊັ່ນ: ບໍ່ເຜັດ...)"
+                                value={item.note || ""}
+                                onValueChange={(val) => updateNote(item.id, val)}
+                                variant="flat"
+                                autoFocus
+                                startContent={
+                                  <MessageSquare
+                                    size={14}
+                                    className="text-primary"
+                                  />
+                                }
+                                classNames={{
+                                  input: "text-[11px] font-medium",
+                                  inputWrapper: "h-8 bg-default-100/50 rounded-xl px-2",
+                                }}
+                                endContent={
+                                  !item.note && (
+                                    <Button
+                                      isIconOnly
+                                      size="sm"
+                                      variant="light"
+                                      className="h-6 w-6 min-w-6"
+                                      onPress={() => toggleNote(item.id)}
+                                    >
+                                      <Minus size={12} />
+                                    </Button>
+                                  )
+                                }
+                              />
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -156,11 +223,11 @@ export default function ListmenuSelect({
                   <Divider className="opacity-50" />
                 )}
 
-                {/* 2. รายการที่สั่งไปแล้ว (Placed Orders Sync from POS) */}
                 {Array.isArray(placedOrders) && placedOrders.length > 0 && (
                   <div className="flex flex-col gap-3">
                     <h4 className="font-bold text-sm text-success uppercase tracking-widest flex items-center gap-2">
-                      <Clock size={16} /> ລາຍການທີ່ສັ່ງໄປແລ້ວ ({placedOrders.length})
+                      <Clock size={16} /> ລາຍການທີ່ສັ່ງໄປແລ້ວ (
+                      {placedOrders.length})
                     </h4>
                     <div className="flex flex-col gap-4">
                       {placedOrders.map((item, index) => {
@@ -195,6 +262,11 @@ export default function ListmenuSelect({
                                     {statusInfo.label}
                                   </Chip>
                                 </div>
+                                {item.note && (
+                                  <p className="text-[10px] text-default-400 italic mt-1 bg-default-50 p-1 rounded border border-divider/5 line-clamp-1">
+                                    ໝາຍເຫດ: {item.note}
+                                  </p>
+                                )}
                               </div>
                               <span className="text-default-700 font-black text-sm mt-auto">
                                 {formatNumber(item.price * item.quantity)} ₭

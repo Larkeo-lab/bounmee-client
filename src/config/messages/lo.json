@@ -114,6 +114,7 @@
       "managePrinter": "ຈັດການປິນເຕີ",
       "manageProfile": "ຈັດການໂປຟາຍ",
       "manageMoneyRate": "ຈັດການອັດຕາແລກປ່ຽນ",
+      "manageTable": "ຈັດການໂຕະ ແລະ ໂຊນ",
       "table": "ຫນ້າໂຕະ",
       "kitchen": "ລະບົບຫ້ອງຄົວ"
     }
@@ -136,6 +137,7 @@
     "itemName": "ຊື່ອາຫານ",
     "quantity": "ຈຳນວນ",
     "waitTime": "ເວລາລໍຖ້າ",
+    "note": "ໝາຍເຫດ",
     "action": "ຈັດການ",
     "serveSuccess": "ເສີບ {{name}} ສຳເລັດ",
     "serveAllSuccess": "ເສີບອາຫານທັງໝົດໃນໂຕະສຳເລັດ"

@@ -20,8 +20,6 @@ export default function ProfileDropdown() {
     logout();
   };
 
-  console.log("userProfile", userProfile);
-
   return (
     <>
       <Dropdown placement="bottom-end">
@@ -63,7 +61,7 @@ export default function ProfileDropdown() {
           <DropdownItem
             key="logout"
             color="danger"
-            onPress={onOpen}
+            onPress={() => setTimeout(onOpen, 100)}
             startContent={<LogOut size={18} />}
           >
             ອອກຈາກລະບົບ

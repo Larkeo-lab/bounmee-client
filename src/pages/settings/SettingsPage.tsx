@@ -89,7 +89,7 @@ const settingsItems: SettingItem[] = [
     permissionKey: "role_permission",
   },
   {
-    titleKey: "ຕັ້ງຄ່າໂຕະ ແລະ ໂຊນ (Table & Zone Settings)",
+    titleKey: "sidebar.menu.manageTable",
     descriptionKey: "settings.description.table",
     href: "/settings/table",
     icon: Armchair,

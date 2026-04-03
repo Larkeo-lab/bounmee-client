@@ -1,11 +1,19 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { socket } from "@/config/socket";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import { toast } from "react-hot-toast";
 import { I18nProvider } from "@react-aria/i18n";
 import { HeroUIProvider } from "@heroui/react";
 import { useHref, useNavigate } from "react-router-dom";
 import { AuthProvider } from "./routes/AuthContext";
 import { Toaster } from "react-hot-toast";
+import queryClient from "./config/queryClient";
+import { useCartSync } from "./hooks/useCartSync";
+import { useWifiConnect } from "./hooks/wifiConnect";
 
 export interface CartItem {
   id: string;
@@ -16,15 +24,16 @@ export interface CartItem {
   stockQty: number;
   status: string;
   timestamp?: number;
+  note?: string;
 }
 
 interface CartContextType {
   cart: CartItem[];
   carts: { [tableId: string]: CartItem[] };
   addToCart: (product: any) => void;
-  removeFromCart: (id: string, status: string) => void;
-  updateQuantity: (id: string, status: string, delta: number) => void;
-  setQuantity: (id: string, status: string, value: string) => void;
+  removeFromCart: (id: string, status: string, note?: string) => void;
+  updateQuantity: (id: string, status: string, delta: number, note?: string) => void;
+  setQuantity: (id: string, status: string, value: string, note?: string) => void;
   updateStatus: (uniqueIds: string[], status: string, tableId?: string) => void;
   clearCart: () => void;
   subtotal: number;
@@ -32,6 +41,9 @@ interface CartContextType {
   setActiveTableId: (id: string | null) => void;
   dismissedCarts: { [tableId: string]: { [itemId: string]: number } };
   dismissTable: (tableId: string) => void;
+  setTableCart: (tableId: string, cart: CartItem[]) => void;
+  isConnected: boolean;
+  rtt: number | null;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -42,11 +54,10 @@ export const useCart = () => {
   return context;
 };
 
-export const Provider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
+export const Provider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const navigate = useNavigate();
-  // 1. Initial Load: Try to get carts from localStorage
+
+  // 1. Core State
   const [carts, setCarts] = useState<{ [tableId: string]: CartItem[] }>(() => {
     try {
       const saved = localStorage.getItem("pos_carts");
@@ -55,276 +66,92 @@ export const Provider: React.FC<{ children: React.ReactNode }> = ({
       return {};
     }
   });
+
   const [activeTableId, setActiveTableId] = useState<string | null>(null);
+  const [dismissedCarts, setDismissedCarts] = useState<{ [tableId: string]: { [itemId: string]: number } }>(() => {
+    try {
+      const saved = localStorage.getItem("pos_dismissed_carts");
+      return saved ? JSON.parse(saved) : {};
+    } catch (e) {
+      return {};
+    }
+  });
 
-  // 2. Auto-save carts to localStorage whenever it changes
+  // 2. Persistence
+  useEffect(() => { localStorage.setItem("pos_carts", JSON.stringify(carts)); }, [carts]);
+  useEffect(() => { localStorage.setItem("pos_dismissed_carts", JSON.stringify(dismissedCarts)); }, [dismissedCarts]);
+
+  // Handle dismissal clearing
   useEffect(() => {
-    localStorage.setItem("pos_carts", JSON.stringify(carts));
-  }, [carts]);
+    const tableIdsToClear = Object.entries(carts)
+      .filter(([id, items]) => (!items || items.length === 0) && dismissedCarts[id])
+      .map(([id]) => id);
 
-  // Handle dismissed table orders (seen status)
-  const [dismissedCarts, setDismissedCarts] = useState<{
-    [tableId: string]: { [itemId: string]: number };
-  }>({});
-
-  useEffect(() => {
-    localStorage.setItem("pos_dismissed_carts", JSON.stringify(dismissedCarts));
-  }, [dismissedCarts]);
-
-  // If a cart is cleared, reset its dismissal item to ensure new guests are shown
-  useEffect(() => {
-    const hasEmptyCartsToClear = Object.entries(carts).some(
-      ([tableId, items]) =>
-        (!items || items.length === 0) && dismissedCarts[tableId] !== undefined,
-    );
-
-    if (hasEmptyCartsToClear) {
-      setDismissedCarts((prev) => {
+    if (tableIdsToClear.length > 0) {
+      setDismissedCarts(prev => {
         const next = { ...prev };
-        let changed = false;
-        Object.entries(carts).forEach(([tableId, items]) => {
-          if ((!items || items.length === 0) && next[tableId] !== undefined) {
-            delete next[tableId];
-            changed = true;
-          }
-        });
-        return changed ? next : prev;
+        tableIdsToClear.forEach(id => delete next[id]);
+        return next;
       });
     }
   }, [carts]);
 
-  const dismissTable = (tableId: string) => {
-    // Save snapshot of current pending items: { itemId: quantity }
-    const snapshot: { [itemId: string]: number } = {};
-    carts[tableId]
-      ?.filter((i) => i.status === "PENDING")
-      ?.forEach((item) => {
-        snapshot[item.id] = (snapshot[item.id] || 0) + item.quantity;
-      });
-    setDismissedCarts((prev) => ({ ...prev, [tableId]: snapshot }));
-  };
+  // 3. Merging Logic
+  const mergeCarts = useCallback((local: CartItem[], incoming: any[], tableStatus?: string): CartItem[] => {
+    const incomingItems: CartItem[] = (incoming || []).map(item => ({
+      ...item,
+      status: (item.status || "PENDING").toUpperCase(),
+    }));
 
-  // Initialize Socket on POS side
-  useEffect(() => {
-    const setupSocket = () => {
-      try {
-        const authData = localStorage.getItem("authPOS");
-        if (authData) {
-          const authDataJson = JSON.parse(authData);
-          const currentStoreId =
-            authDataJson?.user?.store?.id || authDataJson?.user?.storeId;
+    if (tableStatus === "AVAILABLE") return incomingItems;
 
-          if (currentStoreId) {
-            if (!socket.connected) {
-              socket.connect();
-            }
+    const mergedMap = new Map<string, CartItem>();
+    incomingItems.forEach(item => {
+      const key = `${item.id}-${item.status}-${(item.note || "").trim()}`.toUpperCase();
+      mergedMap.set(key, item);
+    });
 
-            const joinRoom = () => {
-              socket.emit("JOIN:STORE", currentStoreId);
-              console.log(`📡 POS Socket JOINED: store-${currentStoreId}`);
-            };
-
-            socket.on("connect", joinRoom);
-            if (socket.connected) joinRoom();
-
-            const handleCustomerOrder = ({
-              tableId,
-              tableName,
-              itemCount,
-              items,
-            }: {
-              tableId: string;
-              tableName?: string;
-              itemCount?: number;
-              items: any[];
-            }) => {
-              console.log("📩 CUSTOMER_ORDER received:", { tableId, items });
-
-              setCarts((prev) => {
-                const tableCart = prev[tableId] || [];
-                const newCart = [...tableCart];
-
-                items.forEach((newItem: any) => {
-                  const status = newItem.status || "PENDING";
-                  const existing = newCart.find(
-                    (i) => i.id === newItem.id && i.status === status,
-                  );
-                  if (existing) {
-                    existing.quantity =
-                      Number(existing.quantity) + Number(newItem.quantity);
-                  } else {
-                    newCart.push({
-                      id: newItem.id,
-                      name: newItem.name,
-                      price: Number(newItem.price),
-                      image: newItem.image || null,
-                      quantity: Number(newItem.quantity),
-                      stockQty: newItem.stockQty || 999,
-                      status: status,
-                      timestamp: newItem.timestamp || Date.now(),
-                    });
-                  }
-                });
-
-                // Play notification sound for POS for NEW items
-                const audio = new Audio("/assets/void/notification.mp3");
-                audio
-                  .play()
-                  .catch((e) =>
-                    console.log("Audio play blocked by browser:", e),
-                  );
-
-                // Proactively broadcast after customer submission
-                if (socket.connected) {
-                  socket.emit("SYNC_TABLE_CART", {
-                    storeId: currentStoreId,
-                    tableId,
-                    cart: newCart,
-                  });
-                }
-
-                return { ...prev, [tableId]: newCart };
-              });
-
-              const displayTable = tableName
-                ? `ໂຕະ ${tableName}`
-                : "ໂຕະຍັງບໍ່ລະບຸ";
-              const displayItems = itemCount
-                ? `${itemCount} ລາຍການ`
-                : "ບາງລາຍການ";
-              toast.success(`📱 ${displayTable}: ມີອໍເດີໃໝ່ ${displayItems}!`);
-            };
-
-            const handleCustomerUpdateQty = ({
-              tableId,
-              index,
-              delta,
-            }: {
-              tableId: string;
-              index: number;
-              delta: number;
-            }) => {
-              setCarts((prev) => {
-                const tableCart = prev[tableId] || [];
-                const newCart = [...tableCart];
-
-                // Note: Customer update by index is risky if list changes,
-                // but let's keep it for compatibility or fix it to ID+Status later.
-                if (
-                  newCart[index] &&
-                  (newCart[index].status === "PENDING" ||
-                    !newCart[index].status)
-                ) {
-                  const newQty = Math.max(
-                    0,
-                    (newCart[index].quantity || 0) + delta,
-                  );
-                  if (newQty === 0) {
-                    newCart.splice(index, 1);
-                  } else {
-                    newCart[index] = { ...newCart[index], quantity: newQty };
-                  }
-
-                  if (socket.connected) {
-                    socket.emit("SYNC_TABLE_CART", {
-                      storeId: currentStoreId,
-                      tableId,
-                      cart: newCart,
-                    });
-                  }
-                }
-                return { ...prev, [tableId]: newCart };
-              });
-            };
-
-            socket.on("CUSTOMER_ORDER", handleCustomerOrder);
-            socket.on("CUSTOMER_UPDATE_QTY", handleCustomerUpdateQty);
-
-            // Listen for changes from other POS or server sync
-            const handleTableCartUpdated = (data: { tableId: string, cart: any[] }) => {
-              console.log("♻️ TABLE_CART_UPDATED received:", data.tableId);
-              setCarts((prev) => ({
-                ...prev,
-                [data.tableId]: data.cart || []
-              }));
-            };
-            socket.on("TABLE_CART_UPDATED", handleTableCartUpdated);
-
-            return () => {
-              socket.off("connect", joinRoom);
-              socket.off("CUSTOMER_ORDER", handleCustomerOrder);
-              socket.off("CUSTOMER_UPDATE_QTY", handleCustomerUpdateQty);
-              socket.off("TABLE_CART_UPDATED", handleTableCartUpdated);
-            };
-          }
-        }
-      } catch (e) {
-        console.error("Socket setup err:", e);
+    (local || []).forEach(localItem => {
+      const localStatus = (localItem.status || "").toUpperCase();
+      const key = `${localItem.id}-${localStatus}-${(localItem.note || "").trim()}`.toUpperCase();
+      
+      if (localStatus === "SERVED" && !mergedMap.has(key)) {
+        mergedMap.set(key, localItem);
+      } else if (localStatus === "PENDING" || localStatus === "COOKING") {
+        if (!mergedMap.has(key)) mergedMap.set(key, localItem);
       }
-    };
+    });
 
-    const cleanup = setupSocket();
-    return () => {
-      if (typeof cleanup === "function") cleanup();
-    };
+    return Array.from(mergedMap.values());
   }, []);
 
-  // POS Broadcast: เมื่อ Cart ของโต๊ะที่เลือกมีการเปลี่ยนแปลง ให้ Sync ส่งไปให้ Server
-  useEffect(() => {
-    if (activeTableId && activeTableId !== "default") {
-      try {
-        const authData = localStorage.getItem("authPOS");
-        if (authData) {
-          const authDataJson = JSON.parse(authData);
-          const storeId =
-            authDataJson?.user?.store?.id || authDataJson?.user?.storeId;
+  // 3. Initialize Connectivity
+  const { isConnected, rtt } = useWifiConnect();
 
-          if (storeId && socket.connected) {
-            socket.emit("SYNC_TABLE_CART", {
-              storeId,
-              tableId: activeTableId,
-              cart: carts[activeTableId] || [],
-            });
-          }
-        }
-      } catch (e) {
-        console.error("Cart sync error:", e);
-      }
-    }
-  }, [carts, activeTableId]);
+  // 4. Initialize Sync
+  useCartSync({ carts, setCarts, mergeCarts, isConnected });
 
+  // 5. Cart Actions
   const currentCartId = activeTableId || "default";
   const cart = carts[currentCartId] || [];
 
-  const updateCurrentCart = (updater: (prev: CartItem[]) => CartItem[]) => {
-    setCarts((prev) => ({
-      ...prev,
-      [currentCartId]: updater(prev[currentCartId] || []),
-    }));
-  };
+  const updateCurrentCart = useCallback((updater: (prev: CartItem[]) => CartItem[]) => {
+    setCarts(prev => ({ ...prev, [currentCartId]: updater(prev[currentCartId] || []) }));
+  }, [currentCartId]);
 
-  const addToCart = (product: any) => {
-    const status = product.status || "PENDING";
-    updateCurrentCart((prev) => {
-      const existing = prev.find(
-        (item) => item.id === product.id && item.status === status,
-      );
+  const addToCart = useCallback((product: any) => {
+    const status = (product.status || "PENDING").toUpperCase();
+    const note = (product.note || "").trim();
+    
+    updateCurrentCart(prev => {
+      const existing = prev.find(i => i.id === product.id && i.status === status && (i.note || "").trim() === note);
       if (existing) {
-        const totalQtyInCart = prev
-          .filter((i) => i.id === product.id && i.status !== "CANCEL")
-          .reduce((sum, i) => sum + i.quantity, 0);
-
-        if (product.stockQty !== undefined && totalQtyInCart + 1 > product.stockQty) {
-          toast.error(
-            `ສິນຄ້າ "${product.name}" ມີໃນສາງພຽງ ${product.stockQty} ລາຍການ`
-          );
+        const totalInCart = prev.filter(i => i.id === product.id && i.status !== "CANCEL").reduce((s, i) => s + i.quantity, 0);
+        if (product.stockQty !== undefined && totalInCart + 1 > product.stockQty) {
+          toast.error(`ສິນຄ້າ "${product.name}" ມີໃນສາງພຽງ ${product.stockQty} ລາຍການ`);
           return prev;
         }
-        return prev.map((item) =>
-          item.id === product.id && item.status === status
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
+        return prev.map(i => i === existing ? { ...i, quantity: i.quantity + 1 } : i);
       }
 
       if (product.stockQty <= 0) {
@@ -332,150 +159,110 @@ export const Provider: React.FC<{ children: React.ReactNode }> = ({
         return prev;
       }
 
-      return [
-        ...prev,
-        {
-          id: product.id,
-          name: product.name,
-          price: product.price,
-          image: product.image,
-          quantity: 1,
-          stockQty: product.stockQty,
-          status: status,
-          timestamp: Date.now(),
-        },
-      ];
+      return [...prev, {
+        id: product.id, name: product.name, price: Number(product.price),
+        image: product.image || null, quantity: 1, stockQty: product.stockQty,
+        status, timestamp: Date.now(), note: note || undefined,
+      }];
     });
-  };
+    queryClient.invalidateQueries({ queryKey: ["tables"] });
+  }, [updateCurrentCart]);
 
-  const removeFromCart = (id: string, status: string) => {
-    updateCurrentCart((prev) =>
-      prev.filter((item) => !(item.id === id && item.status === status)),
-    );
-  };
+  const removeFromCart = useCallback((id: string, status: string, note?: string) => {
+    updateCurrentCart(prev => prev.filter(i => !(i.id === id && i.status === status && (i.note || "") === (note || ""))));
+    queryClient.invalidateQueries({ queryKey: ["tables"] });
+  }, [updateCurrentCart]);
 
-  const updateQuantity = (id: string, status: string, delta: number) => {
-    updateCurrentCart((prev) => {
-      const targetItem = prev.find((i) => i.id === id && i.status === status);
-      if (!targetItem) return prev;
-
-      if (delta > 0) {
-        const totalQtyInCart = prev
-          .filter((i) => i.id === id && i.status !== "CANCEL")
-          .reduce((sum, i) => sum + i.quantity, 0);
-
-        if (
-          targetItem.stockQty !== undefined &&
-          totalQtyInCart + delta > targetItem.stockQty
-        ) {
-          toast.error(
-            `ສິນຄ້າ "${targetItem.name}" ມີໃນສາງພຽງ ${targetItem.stockQty} ລາຍການ`
-          );
-          return prev;
+  const updateQuantity = useCallback((id: string, status: string, delta: number, note?: string) => {
+    updateCurrentCart(prev => prev.map(item => {
+      if (item.id === id && item.status === status && (item.note || "") === (note || "")) {
+        const newQty = Math.max(1, item.quantity + delta);
+        if (delta > 0 && item.stockQty !== undefined && newQty > item.stockQty) {
+          toast.error(`ສິນຄ້າ "${item.name}" ມີໃນສະຕັອກພຽງ ${item.stockQty} ລາຍການ`);
+          return item;
         }
+        return { ...item, quantity: newQty };
       }
+      return item;
+    }));
+    queryClient.invalidateQueries({ queryKey: ["tables"] });
+  }, [updateCurrentCart]);
 
-      return prev.map((item) => {
-        if (item.id === id && item.status === status) {
-          return { ...item, quantity: Math.max(1, item.quantity + delta) };
-        }
-        return item;
-      });
-    });
-  };
-
-  const setQuantity = (id: string, status: string, value: string) => {
-    if (value === "") {
-      updateCurrentCart((prev) =>
-        prev.map((item) =>
-          item.id === id && item.status === status
-            ? { ...item, quantity: 0 }
-            : item,
-        ),
-      );
-      return;
-    }
-    const newQty = parseInt(value);
+  const setQuantity = useCallback((id: string, status: string, value: string, note?: string) => {
+    const newQty = value === "" ? 0 : parseInt(value);
     if (isNaN(newQty)) return;
-    updateCurrentCart((prev) =>
-      prev.map((item) => {
-        if (item.id === id && item.status === status) {
-          if (item.stockQty !== undefined && newQty > item.stockQty) {
-            toast.error(
-              `ສິນຄ້າ "${item.name}" ມີໃນສາງພຽງ ${item.stockQty} ລາຍການ`,
-            );
-            return { ...item, quantity: item.stockQty };
-          }
-          return { ...item, quantity: Math.max(1, newQty) };
-        }
-        return item;
-      }),
-    );
-  };
 
-  const updateStatus = (uniqueIds: string[], status: string, tableId?: string) => {
+    updateCurrentCart(prev => prev.map(item => {
+      if (item.id === id && item.status === status && (item.note || "") === (note || "")) {
+        if (item.stockQty !== undefined && newQty > item.stockQty) {
+          toast.error(`ສິນຄ້າ "${item.name}" ມີໃນສະຕັອກພຽງ ${item.stockQty} ລາຍການ`);
+          return { ...item, quantity: item.stockQty };
+        }
+        return { ...item, quantity: Math.max(0, newQty) };
+      }
+      return item;
+    }));
+    queryClient.invalidateQueries({ queryKey: ["tables"] });
+  }, [updateCurrentCart]);
+
+  const updateStatus = useCallback((uniqueIds: string[], status: string, tableId?: string) => {
+    const targetStatus = status.toUpperCase();
     const targetTableId = tableId || activeTableId || "default";
-    
-    setCarts((prev) => {
+
+    setCarts(prev => {
       const targetCart = prev[targetTableId] || [];
-      
-      // 1. Update statuses and refresh timestamp if it jumps to cooking without one
-      const updatedCart = targetCart.map((item) => {
-        const uId = `${item.id}-${item.status}`;
-        if (uniqueIds.includes(uId)) {
-          return { ...item, status, timestamp: item.timestamp || Date.now() };
+      const normalizedIds = uniqueIds.map(id => id.toUpperCase());
+
+      const updatedCart = targetCart.map(item => {
+        const key = `${item.id}-${item.status.toUpperCase()}-${(item.note || "").trim()}`.toUpperCase();
+        if (normalizedIds.includes(key)) {
+          return { ...item, status: targetStatus, timestamp: item.timestamp || Date.now() };
         }
         return item;
       });
 
-      // 2. Merge items with same id and status
-      const mergedCart: CartItem[] = [];
-      updatedCart.forEach((item) => {
-        const existing = mergedCart.find(
-          (m) => m.id === item.id && m.status === item.status,
-        );
-        if (existing) {
-          existing.quantity += item.quantity;
-        } else {
-          mergedCart.push({ ...item });
-        }
+      const mergedMap = new Map<string, CartItem>();
+      updatedCart.forEach(item => {
+        const key = `${item.id}-${item.status}-${(item.note || "").trim()}`.toUpperCase();
+        const existing = mergedMap.get(key);
+        if (existing) existing.quantity += item.quantity;
+        else mergedMap.set(key, { ...item });
       });
-      
-      return {
-        ...prev,
-        [targetTableId]: mergedCart
-      };
+
+      return { ...prev, [targetTableId]: Array.from(mergedMap.values()) };
     });
-  };
+    queryClient.invalidateQueries({ queryKey: ["tables"] });
+  }, [activeTableId]);
 
-  const clearCart = () => updateCurrentCart(() => []);
+  const clearCart = useCallback(() => updateCurrentCart(() => []), [updateCurrentCart]);
 
-  const subtotal = cart.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0,
-  );
+  const dismissTable = useCallback((tableId: string) => {
+    const snapshot: { [itemId: string]: number } = {};
+    (carts[tableId] || []).filter(i => i.status === "PENDING").forEach(i => {
+      snapshot[i.id] = (snapshot[i.id] || 0) + i.quantity;
+    });
+    setDismissedCarts(prev => ({ ...prev, [tableId]: snapshot }));
+  }, [carts]);
+
+  const setTableCart = useCallback((tableId: string, cart: CartItem[]) => {
+    setCarts(prev => {
+      const mergedCart = mergeCarts(prev[tableId] || [], cart);
+      if (JSON.stringify(prev[tableId] || []) === JSON.stringify(mergedCart)) return prev;
+      return { ...prev, [tableId]: mergedCart };
+    });
+  }, [mergeCarts]);
+
+  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   return (
     <I18nProvider locale="en-GB">
       <HeroUIProvider navigate={navigate} useHref={useHref}>
         <AuthProvider>
-          <CartContext.Provider
-            value={{
-              cart,
-              carts,
-              addToCart,
-              removeFromCart,
-              updateQuantity,
-              setQuantity,
-              updateStatus,
-              clearCart,
-              subtotal,
-              activeTableId,
-              setActiveTableId,
-              dismissedCarts,
-              dismissTable,
-            }}
-          >
+          <CartContext.Provider value={{
+            cart, carts, addToCart, removeFromCart, updateQuantity, setQuantity,
+            updateStatus, clearCart, subtotal, activeTableId, setActiveTableId,
+            dismissedCarts, dismissTable, setTableCart, isConnected, rtt
+          }}>
             {children}
             <Toaster position="top-right" />
           </CartContext.Provider>

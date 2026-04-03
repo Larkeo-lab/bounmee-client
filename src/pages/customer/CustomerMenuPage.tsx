@@ -1,4 +1,5 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useParams } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { axiosInstance } from "@/lib/axios";
@@ -11,16 +12,13 @@ import {
   ScrollShadow,
   Badge,
   useDisclosure,
-  Modal,
-  ModalContent,
-  Chip,
 } from "@heroui/react";
-import { Plus, ShoppingCart, CheckCircle2, Download } from "lucide-react";
+import { Plus, ShoppingCart } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getDisplayImageUrl } from "@/lib/utils";
 import { formatNumber } from "@/utils/numberFormat";
 import ListmenuSelect from "./ListmenuSelect";
-/* import html2canvas from "html2canvas"; */
+import BillModal from "@/components/common/bill";
 import { socket } from "@/config/socket";
 
 export default function CustomerMenuPage() {
@@ -55,8 +53,6 @@ export default function CustomerMenuPage() {
   const [bankName, setBankName] = useState<string | null>(null);
   const [finalOrder, setFinalOrder] = useState<any | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
-  const [isDownloading, setIsDownloading] = useState(false);
-  const billRef = React.useRef<HTMLDivElement>(null);
 
   const {
     isOpen: isCartOpen,
@@ -64,6 +60,9 @@ export default function CustomerMenuPage() {
     onOpenChange: onCartOpenChange,
     onClose: onCloseCart,
   } = useDisclosure();
+
+  const cartRef = useRef<HTMLDivElement>(null);
+  const [flyingItems, setFlyingItems] = useState<any[]>([]);
 
   useEffect(() => {
     if (qrCode) {
@@ -75,7 +74,7 @@ export default function CustomerMenuPage() {
     if (qrCode) {
       localStorage.setItem(
         `placedOrders_${qrCode}`,
-        JSON.stringify(placedOrders),
+        JSON.stringify(placedOrders)
       );
     }
   }, [placedOrders, qrCode]);
@@ -118,7 +117,6 @@ export default function CustomerMenuPage() {
           if (!isClosing) {
             setPlacedOrders(data.cart || []);
           } else {
-            // isClosing => Don't clear placedOrders yet, but if cart present, use it
             if (data.cart && data.cart.length > 0) {
               setPlacedOrders(data.cart);
             }
@@ -193,7 +191,8 @@ export default function CustomerMenuPage() {
     },
   });
 
-  const addToCart = (product: any) => {
+  const addToCart = (product: any, e?: React.MouseEvent) => {
+    console.log("addToCart triggered", { product, hasEvent: !!e });
     if (isTableClosed) {
       toast.error("ໂຕະຖືກປິດແລ້ວ, ບໍ່ສາມາດສັ່ງອາຫານໄດ້.");
       return;
@@ -203,7 +202,7 @@ export default function CustomerMenuPage() {
 
     if (existingQty >= (product.stockQty || 999)) {
       toast.error(
-        `ຂໍອະໄພ, ສິນຄ້າ "${product.name}" ມີໃນສາງພຽງ ${product.stockQty} ລາຍການ`,
+        `ຂໍອະໄພ, ສິນຄ້າ "${product.name}" ມີໃນສາງພຽງ ${product.stockQty} ລາຍການ`
       );
       return;
     }
@@ -214,12 +213,50 @@ export default function CustomerMenuPage() {
         return prev.map((item) =>
           item.id === product.id
             ? { ...item, quantity: item.quantity + 1 }
-            : item,
+            : item
         );
       }
       return [...prev, { ...product, quantity: 1 }];
     });
-    toast.success(`ເພີ່ມ ${product.name} ລົງກະຕ່າແລ້ວ!`);
+
+    // Animation logic
+    let buttonRect: DOMRect | undefined;
+    const targetElement = e?.currentTarget as HTMLElement;
+
+    if (targetElement) {
+      buttonRect = targetElement.getBoundingClientRect();
+    } else {
+      buttonRect = (document.activeElement as HTMLElement)?.getBoundingClientRect();
+    }
+    
+    const cartIconRect = cartRef.current?.getBoundingClientRect();
+
+    console.log("Position check:", { buttonRect, cartIconRect });
+
+    if (buttonRect && cartIconRect) {
+      const id = Math.random().toString(36).substring(2, 9);
+      const newItem = {
+        id,
+        startX: buttonRect.left + buttonRect.width / 2,
+        startY: buttonRect.top + buttonRect.height / 2,
+        endX: cartIconRect.left + cartIconRect.width / 2,
+        endY: cartIconRect.top + cartIconRect.height / 2,
+        image: product.image,
+      };
+      console.log("Creating flying item:", newItem);
+      setFlyingItems((prev) => [...prev, newItem]);
+      setTimeout(() => {
+        setFlyingItems((prev) => {
+          const filtered = prev.filter((item) => item.id !== id);
+          console.log("Removing flying item, count left:", filtered.length);
+          return filtered;
+        });
+      }, 1000);
+    }
+
+    toast.success(`ເພີ່ມ ${product.name} ລົງກະຕ່າແລ້ວ!`, {
+      duration: 1500,
+    });
   };
 
   const updateQuantity = (id: string, delta: number) => {
@@ -230,7 +267,7 @@ export default function CustomerMenuPage() {
           if (item.id === id) {
             if (delta > 0 && item.quantity >= (item.stockQty || 999)) {
               toast.error(
-                `ຂໍອະໄພ, ສິນຄ້າ "${item.name}" ມີໃນສາງພຽງ ${item.stockQty} ລາຍການ`,
+                `ຂໍອະໄພ, ສິນຄ້າ "${item.name}" ມີໃນສາງພຽງ ${item.stockQty} ລາຍການ`
               );
               return item;
             }
@@ -238,26 +275,15 @@ export default function CustomerMenuPage() {
           }
           return item;
         })
-        .filter((item) => item.quantity > 0),
+        .filter((item) => item.quantity > 0)
     );
   };
 
-  const onUpdatePlacedQuantity = (index: number, delta: number) => {
-    if (isTableClosed || !tableData?.id) return;
-    const item = placedOrders[index];
-    if (delta > 0 && item && item.quantity >= (item.stockQty || 999)) {
-      toast.error(
-        `ຂໍອະໄພ, ສິນຄ້າ "${item.name}" ມີໃນສາງພຽງ ${item.stockQty} ລາຍການ`,
-      );
-      return;
-    }
-    if (socket.connected) {
-      socket.emit("CUSTOMER_UPDATE_QTY", {
-        tableId: tableData.id,
-        index,
-        delta,
-      });
-    }
+  const updateNote = (id: string, note: string) => {
+    if (isTableClosed) return;
+    setCart((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, note } : item))
+    );
   };
 
   const submitOrder = () => {
@@ -267,123 +293,12 @@ export default function CustomerMenuPage() {
 
   const subtotal = useMemo(
     () => cart.reduce((acc, item) => acc + item.price * item.quantity, 0),
-    [cart],
+    [cart]
   );
   const cartTotalItems = useMemo(
     () => cart.reduce((acc, item) => acc + item.quantity, 0),
-    [cart],
+    [cart]
   );
-
-  const getPaymentMethodColor = (method: string) => {
-    switch (method) {
-      case "CASH":
-        return "success";
-      case "TRANSFER":
-        return "primary";
-      default:
-        return "default";
-    }
-  };
-
-  const getPaymentMethodLabel = (method: string) => {
-    switch (method) {
-      case "CASH":
-        return "ເງິນສົດ";
-      case "TRANSFER":
-        return "ເງິນໂອນ";
-      default:
-        return method;
-    }
-  };
-
-  const handleDownloadBill = async () => {
-    if (!billRef.current) {
-      toast.error("ບິນບໍ່ພົບໃນໜ້າຈໍ");
-      return;
-    }
-    
-    setIsDownloading(true);
-    try {
-      // Import html2canvas dynamically
-      const h2cModule = await import("html2canvas");
-      const html2canvas = h2cModule.default || h2cModule;
-      
-      // Ensure we have a valid DOM node
-      const element = billRef.current;
-      
-      await new Promise((resolve) => setTimeout(resolve, 400));
-
-      const canvas = await (html2canvas as any)(element, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: "#ffffff",
-        scrollX: 0,
-        scrollY: 0,
-        onclone: (clonedDoc: Document) => {
-          // 1. Broadly sanitize ALL style tags to remove oklch/oklab functions
-          const styleTags = clonedDoc.getElementsByTagName("style");
-          for (let i = 0; i < styleTags.length; i++) {
-            try {
-              let css = styleTags[i].innerHTML;
-              // Replace any occurrence of oklch(...) or oklab(...) with a fallback color
-              css = css.replace(/oklch\([^)]+\)/g, "#000");
-              css = css.replace(/oklab\([^)]+\)/g, "#000");
-              styleTags[i].innerHTML = css;
-            } catch (e) {
-              console.warn("Style tag sanitization failed", e);
-            }
-          }
-
-          // 2. Clear problematic HeroUI variables that might still be in scope
-          const styleOverride = clonedDoc.createElement("style");
-          styleOverride.innerHTML = `
-            * {
-              -webkit-animation: none !important;
-              animation: none !important;
-              transition: none !important;
-            }
-            /* Explicitly re-apply standard colors to key components */
-            .text-primary { color: #0070f3 !important; }
-            .bg-primary { background-color: #0070f3 !important; }
-            .text-success { color: #17c964 !important; }
-            .bg-success { background-color: #17c964 !important; }
-            .text-danger { color: #f31260 !important; }
-            .bg-danger { background-color: #f31260 !important; }
-            .text-default-400 { color: #a1a1aa !important; }
-            .text-default-500 { color: #71717a !important; }
-            .text-default-600 { color: #52525b !important; }
-            .text-default-800 { color: #27272a !important; }
-            .text-default-900 { color: #18181b !important; }
-            .bg-default-100 { background-color: #f4f4f5 !important; }
-            .bg-gray-50\\/80 { background-color: #f9fafb !important; }
-          `;
-          clonedDoc.head.appendChild(styleOverride);
-
-          // 3. Hide bouncing/pulsing icons
-          const elementsToHide = clonedDoc.querySelectorAll(".animate-pulse, .animate-bounce");
-          elementsToHide.forEach((el: any) => el.style.display = "none");
-        }
-      });
-
-      const dataUrl = canvas.toDataURL("image/png");
-      const link = document.createElement("a");
-      link.href = dataUrl;
-      link.download = `Bill-${Date.now()}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      toast.success("ດາວໂຫຼດບິນສຳເລັດ!");
-    } catch (error: any) {
-      console.error("Critical download failure:", error);
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      // Show the actual error to the user so they can report what it says
-      toast.error(`ຂໍ້ຜິດພາດ: ${errorMessage}`);
-    } finally {
-      setIsDownloading(false);
-    }
-  };
 
   if (isLoadingTable)
     return (
@@ -542,7 +457,7 @@ export default function CustomerMenuPage() {
                         color="primary"
                         variant="solid"
                         className="w-full font-bold text-xs h-9"
-                        onPress={() => addToCart(product)}
+                        onClick={(e) => addToCart(product, e)}
                         isDisabled={
                           totalUsed >= (product.stockQty || 0) || isTableClosed
                         }
@@ -558,219 +473,18 @@ export default function CustomerMenuPage() {
         )}
       </main>
 
-      <Modal
+      <BillModal
         isOpen={isTableClosed}
         onOpenChange={(open) => !open && setIsTableClosed(true)}
-        isDismissable={false}
-        hideCloseButton
-        backdrop="blur"
-        size="md"
-        placement="top"
-        className="mx-4 rounded-3xl"
-        scrollBehavior="outside"
-      >
-        <ModalContent className="bg-transparent shadow-none border-none">
-          <div className="py-10 flex flex-col items-center text-center">
-            <div className="w-16 h-16 bg-success/20 rounded-full flex items-center justify-center text-success animate-bounce shadow-lg mb-4 backdrop-blur-md">
-              <CheckCircle2 size={32} />
-            </div>
-            <div className="space-y-1 mb-6">
-              <h1 className="text-2xl font-black text-white uppercase drop-shadow-md">
-                ຂອບໃຈຫຼາຍໆ!
-              </h1>
-              <p className="text-white/80 font-medium text-sm drop-shadow-sm">
-                ການຊຳລະເງິນສຳເລັດແລ້ວ.
-              </p>
-            </div>
-
-            <div ref={billRef} className="w-full max-w-sm">
-              <Card className="border-none shadow-[0_20px_50px_rgba(0,0,0,0.2)] bg-white w-full overflow-hidden rounded-3xl">
-                <CardBody className="p-0">
-                  <div className="p-6 border-b border-divider flex flex-col items-center gap-1 bg-gray-50/80">
-                    <h2 className="text-xl font-black text-primary uppercase">
-                      {tableData?.store?.name}
-                    </h2>
-                    <p className="text-xs text-default-500 font-bold font-sans">
-                      #{finalOrder?.orderNumber || `BILL-${tableData?.name}`}
-                    </p>
-                    <div className="mt-2 text-[10px] text-default-400 font-medium flex gap-2">
-                      <span>📍 {tableData?.store?.address || "Address"}</span>
-                      <span>📞 {tableData?.store?.tel || "-"}</span>
-                    </div>
-                  </div>
-
-                  <div className="p-5 space-y-4">
-                    <div className="grid grid-cols-2 gap-4 text-left">
-                      <div className="space-y-1">
-                        <p className="text-[10px] text-default-400 font-bold uppercase tracking-wider">
-                          ວັນທີ/ເວລາ
-                        </p>
-                        <p className="text-xs font-bold font-sans">
-                          {finalOrder?.createdAt
-                            ? new Date(finalOrder.createdAt).toLocaleString(
-                                "lo-LA",
-                              )
-                            : new Date().toLocaleString("lo-LA")}
-                        </p>
-                      </div>
-                      <div className="space-y-1 text-right">
-                        <p className="text-[10px] text-default-400 font-bold uppercase tracking-wider">
-                          ພະນັກງານ
-                        </p>
-                        <p className="text-xs font-bold text-primary">
-                          {finalOrder?.employee?.name || "ເຈົ້າຂອງຮ້ານ"}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-between items-center p-3 bg-default-100 rounded-2xl border border-divider">
-                      <span className="text-xs font-bold text-default-600">
-                        ຮູບແບບການຊຳລະ:
-                      </span>
-                      <Chip
-                        size="sm"
-                        color={getPaymentMethodColor(
-                          finalOrder?.paymentMethod || paymentMethod || "",
-                        )}
-                        variant="flat"
-                        className="font-black text-[10px] uppercase"
-                      >
-                        {getPaymentMethodLabel(
-                          finalOrder?.paymentMethod || paymentMethod || "",
-                        )}
-                        {finalOrder?.bank?.name
-                          ? ` (${finalOrder.bank.name})`
-                          : bankName
-                            ? ` (${bankName})`
-                            : ""}
-                      </Chip>
-                    </div>
-
-                    <div className="border-t border-dashed border-divider pt-4 space-y-4">
-                      {/* Table Header */}
-                      <div className="grid grid-cols-12 gap-1 text-[10px] font-black text-default-400 uppercase tracking-tighter text-left border-b border-divider pb-2">
-                        <div className="col-span-1">#</div>
-                        <div className="col-span-5">ລາຍການ</div>
-                        <div className="col-span-1 text-center">ຈຳນວນ</div>
-                        <div className="col-span-2 text-right">ລາຄາ</div>
-                        <div className="col-span-3 text-right">ລວມ</div>
-                      </div>
-
-                      <div className="space-y-3 pr-1">
-                        {(finalOrder?.items || placedOrders)
-                          .filter(
-                            (i: any) => i.status?.toUpperCase() !== "CANCEL",
-                          )
-                          .map((item: any, idx: number) => {
-                            const productName = item.product?.name || item.name;
-                            const qty = item.qty || item.quantity;
-                            const price = item.unitPrice || item.price;
-                            return (
-                              <div
-                                key={idx}
-                                className="grid grid-cols-12 gap-1 text-[11px] font-bold border-b border-divider/5 pb-2 items-start text-left"
-                              >
-                                <div className="col-span-1 text-default-400 font-medium">
-                                  {idx + 1}
-                                </div>
-                                <div className="col-span-5 text-default-800 line-clamp-2 leading-tight">
-                                  {productName}
-                                </div>
-                                <div className="col-span-1 text-center text-primary font-black">
-                                  {qty}
-                                </div>
-                                <div className="col-span-2 text-right text-default-500">
-                                  {formatNumber(price)}
-                                </div>
-                                <div className="col-span-3 text-right text-default-900 font-black">
-                                  {formatNumber(price * qty)}
-                                </div>
-                              </div>
-                            );
-                          })}
-                      </div>
-                    </div>
-
-                    <div className="pt-4 border-t-2 border-primary/20 space-y-2">
-                      <div className="flex justify-between items-center text-xs text-default-500 font-bold">
-                        <span>ຍອດລວມ (Total):</span>
-                        <span className="font-sans">
-                          {formatNumber(
-                            finalOrder?.totalAmount ||
-                              placedOrders.reduce(
-                                (acc, item) =>
-                                  item.status?.toUpperCase() === "CANCEL"
-                                    ? acc
-                                    : acc +
-                                      Number(item.price) *
-                                        Number(item.quantity),
-                                0,
-                              ),
-                          )}{" "}
-                          ₭
-                        </span>
-                      </div>
-                      {finalOrder && (
-                        <>
-                          <div className="flex justify-between items-center text-xs text-default-500 font-bold">
-                            <span>ຮັບເງິນ (Received):</span>
-                            <span className="font-sans">
-                              {formatNumber(finalOrder.receivedAmount)} ₭
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center text-sm font-black text-primary">
-                            <span>ເງິນທອນ (Change):</span>
-                            <span className="text-lg font-sans">
-                              {formatNumber(finalOrder.change)} ₭
-                            </span>
-                          </div>
-                        </>
-                      )}
-                      {!finalOrder && (
-                        <div className="flex justify-between items-center text-sm font-black text-primary pt-1">
-                          <span>ຍອດລວມທັງໝົດ:</span>
-                          <span className="text-xl font-sans">
-                            {formatNumber(
-                              placedOrders.reduce(
-                                (acc, item) =>
-                                  item.status?.toUpperCase() === "CANCEL"
-                                    ? acc
-                                    : acc +
-                                      Number(item.price) *
-                                        Number(item.quantity),
-                                0,
-                              ),
-                            )}{" "}
-                            ₭
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="p-6 bg-primary/5 text-primary font-black text-center text-sm border-t border-dashed border-divider italic">
-                    ⭐ ຂໍຂອບໃຈທີ່ໃຊ້ບໍລິການ! ກະລຸນາກັບມາໃໝ່ເດີ້ ⭐
-                  </div>
-                </CardBody>
-              </Card>
-            </div>
-
-            <Button
-              color="primary"
-              variant="shadow"
-              size="lg"
-              className="mt-8 w-full max-w-sm rounded-2xl font-black h-14 text-lg animate-pulse"
-              startContent={!isDownloading && <Download size={24} />}
-              onClick={handleDownloadBill}
-              isLoading={isDownloading}
-            >
-              ດາວໂຫຼດບິນ (DOWNLOAD BILL)
-            </Button>
-          </div>
-        </ModalContent>
-      </Modal>
+        tableData={tableData}
+        finalOrder={finalOrder}
+        paymentMethod={paymentMethod}
+        bankName={bankName}
+        placedOrders={placedOrders}
+      />
 
       {/* Floating Cart Button */}
-      <div className="fixed bottom-6 right-6 z-40">
+      <div className="fixed bottom-6 right-6 z-40" ref={cartRef}>
         <Badge
           content={cartTotalItems + (placedOrders?.length || 0)}
           color="danger"
@@ -792,6 +506,52 @@ export default function CustomerMenuPage() {
         </Badge>
       </div>
 
+      {/* Flying Animation Overlay */}
+      <AnimatePresence>
+        {flyingItems.map((item) => (
+          <motion.div
+            key={item.id}
+            initial={{
+              left: item.startX,
+              top: item.startY,
+              scale: 1,
+              opacity: 1,
+            }}
+            animate={{
+              left: item.endX,
+              top: item.endY,
+              scale: 0.1,
+              opacity: 0.2,
+            }}
+            exit={{ opacity: 0 }}
+            transition={{
+              duration: 0.8,
+              ease: [0.4, 0, 0.2, 1],
+            }}
+            style={{
+              position: "fixed",
+              transform: "translate(-50%, -50%)",
+              pointerEvents: "none",
+              zIndex: 99999,
+              width: 60,
+              height: 60,
+            }}
+          >
+            <div className="w-full h-full rounded-full border-2 border-white shadow-xl overflow-hidden bg-primary flex items-center justify-center">
+              {item.image ? (
+                <img
+                  src={getDisplayImageUrl(item.image)}
+                  className="w-full h-full object-cover"
+                  alt=""
+                />
+              ) : (
+                <ShoppingCart className="text-white" size={24} />
+              )}
+            </div>
+          </motion.div>
+        ))}
+      </AnimatePresence>
+
       <ListmenuSelect
         isOpen={isCartOpen}
         onOpenChange={onCartOpenChange}
@@ -802,7 +562,7 @@ export default function CustomerMenuPage() {
         cartTotalItems={cartTotalItems}
         submitOrder={submitOrder}
         isPending={submitOrderMutation.isPending}
-        onUpdatePlacedQuantity={onUpdatePlacedQuantity}
+        updateNote={updateNote}
       />
     </div>
   );

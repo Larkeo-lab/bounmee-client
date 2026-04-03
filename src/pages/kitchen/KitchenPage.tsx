@@ -28,6 +28,7 @@ import {
   CheckCircle2,
   ShoppingCart,
   Loader2,
+  MessageSquare,
 } from "lucide-react";
 import EmptyState from "@/components/common/empty-state";
 import { getDisplayImageUrl } from "@/lib/utils";
@@ -39,7 +40,7 @@ export default function KitchenPage() {
   const storeId = user?.user?.storeId;
   const { data: tablesResponse, isLoading: isLoadingTables } =
     useGetTables(storeId);
-  const { carts, updateStatus, setActiveTableId } = useCart();
+  const { carts, updateStatus, isConnected } = useCart();
 
   const tables = tablesResponse?.data || [];
   const [selectedView, setSelectedView] = useState<"table" | "item">("item");
@@ -49,6 +50,8 @@ export default function KitchenPage() {
     const timer = setInterval(() => setNow(Date.now()), 60000);
     return () => clearInterval(timer);
   }, []);
+
+  const [isServing, setIsServing] = useState<string | null>(null);
 
   const getElapsedMinutes = (val?: string | number) => {
     if (!val) return 0;
@@ -95,30 +98,54 @@ export default function KitchenPage() {
   }, [cookingOrdersByTable]);
 
   const handleServeItem = (tableId: string, item: CartItem) => {
-    // We need to set active table first because updateStatus uses activeTableId
-    setActiveTableId(tableId);
+    if (!isConnected) {
+      toast.error("⚠️ ຕອນນີ້ Offline! ຂໍ້ມູນການເສີບຈະອັບເດດໄປຍັງเครื่องอื่นເມື່ອເນັດກັບມາ.", {
+        duration: 4000,
+        style: { fontWeight: "bold" }
+      });
+    }
+    const uId = `${item.id}-${item.status}-${item.note || ""}-${tableId}`;
+    if (isServing === uId) return;
 
-    // We use setTimeout because state update for activeTableId might not be immediate in the next call if not handled carefully
-    // But updateStatus uses updateCurrentCart which uses activeTableId from its closure of currentCartId
-    // Actually, updateStatus uses currentCartId calculated during render of Provider.
-    // This is a bit tricky with the current Provider design.
+    setIsServing(uId);
 
-    // Let's assume for now we can just call it, but maybe we should update Provider to support tableId.
-    // For now, I'll update Provider first to be safer.
-
-    setTimeout(() => {
-      updateStatus([`${item.id}-${item.status}`], "SERVED");
+    try {
+      updateStatus(
+        [`${item.id}-${item.status}-${item.note || ""}`],
+        "SERVED",
+        tableId,
+      );
       toast.success(t("kitchen.serveSuccess", { name: item.name }));
-    }, 0);
+    } catch (error) {
+      console.error("Failed to serve item:", error);
+    } finally {
+      // In practice, the item will be removed from the list,
+      // but we reset state for safety if it fails.
+      setTimeout(() => setIsServing(null), 500);
+    }
   };
 
   const handleServeAllInTable = (tableId: string, items: CartItem[]) => {
-    setActiveTableId(tableId);
-    setTimeout(() => {
-      const ids = items.map((item) => `${item.id}-${item.status}`);
-      updateStatus(ids, "SERVED");
+    if (!isConnected) {
+      toast.error("⚠️ ຕອນนี้ Offline! ข้อมูลจะอับเดดไปยับเครื่องอื่นเมือเน็ตกลับมา.", {
+        duration: 4000,
+        style: { fontWeight: "bold" }
+      });
+    }
+    if (isServing === tableId) return;
+    setIsServing(tableId);
+
+    try {
+      const ids = items.map(
+        (item) => `${item.id}-${item.status}-${item.note || ""}`,
+      );
+      updateStatus(ids, "SERVED", tableId);
       toast.success(t("kitchen.serveAllSuccess"));
-    }, 0);
+    } catch (error) {
+      console.error("Failed to serve all items:", error);
+    } finally {
+      setTimeout(() => setIsServing(null), 500);
+    }
   };
 
   if (isLoadingTables) {
@@ -225,11 +252,25 @@ export default function KitchenPage() {
                                 x{item.quantity}
                               </span>
                             </div>
+                            {item.note && (
+                              <div className="flex items-start gap-1.5 mb-1.5 px-2 py-1.5 bg-warning-50 border border-warning-100 rounded-lg">
+                                <MessageSquare
+                                  size={11}
+                                  className="text-warning-600 shrink-0 mt-0.5"
+                                />
+                                <p className="text-[11px] text-warning-700 font-semibold leading-snug">
+                                  {item.note}
+                                </p>
+                              </div>
+                            )}
                             <div className="flex flex-wrap items-center gap-1.5 text-[10px] text-warning font-medium mb-2">
                               <Timer size={10} />
                               <span>
                                 {t("kitchen.cookingWait")} (
-                                {getElapsedMinutes((item as any).createdAt || item.timestamp)} {t("kitchen.minutes")})
+                                {getElapsedMinutes(
+                                  (item as any).createdAt || item.timestamp,
+                                )}{" "}
+                                {t("kitchen.minutes")})
                               </span>
                             </div>
                             <Button
@@ -241,6 +282,10 @@ export default function KitchenPage() {
                               startContent={<CheckCircle2 size={14} />}
                               onPress={() =>
                                 handleServeItem(order.tableId, item)
+                              }
+                              isLoading={
+                                isServing ===
+                                `${item.id}-${item.status}-${item.note || ""}-${order.tableId}`
                               }
                             >
                               {t("kitchen.serve")}
@@ -261,6 +306,7 @@ export default function KitchenPage() {
                     onPress={() =>
                       handleServeAllInTable(order.tableId, order.items)
                     }
+                    isLoading={isServing === order.tableId}
                   >
                     {t("kitchen.serveAll")}
                   </Button>
@@ -301,6 +347,12 @@ export default function KitchenPage() {
                 align="center"
                 className="bg-primary/5 text-primary font-black uppercase tracking-wider"
               >
+                {t("kitchen.note")}
+              </TableColumn>
+              <TableColumn
+                align="center"
+                className="bg-primary/5 text-primary font-black uppercase tracking-wider"
+              >
                 {t("kitchen.waitTime")}
               </TableColumn>
               <TableColumn
@@ -329,12 +381,13 @@ export default function KitchenPage() {
                       />
                     </TableCell>
                     <TableCell className="font-bold text-default-800">
-                      {data.item.name}
+                      <div>
+                        <p>{data.item.name}</p>
+                      </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1.5 justify-center font-bold text-primary bg-primary/5 px-3 py-1.5 rounded-full text-xs">
-                        <TableIcon size={14} />
-                        <span>{t("kitchen.table")} {data.tableName}</span>
+                        <span>{data.tableName}</span>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -345,11 +398,18 @@ export default function KitchenPage() {
                       </div>
                     </TableCell>
                     <TableCell>
+                      <div className="flex items-center justify-center gap-1 mt-1 text-warning-600">
+                        <span className="text-[11px] font-semibold">
+                          {data.item.note}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
                       <div className="flex items-center justify-center gap-1.5 text-sm text-warning font-black">
                         <Timer size={14} className="shrink-0" />
                         <span>
                           {getElapsedMinutes(
-                            (data.item as any).createdAt || data.item.timestamp
+                            (data.item as any).createdAt || data.item.timestamp,
                           )}{" "}
                           {t("kitchen.minutes")}
                         </span>
@@ -363,6 +423,10 @@ export default function KitchenPage() {
                         className="font-bold text-success hover:bg-success hover:text-white transition-all w-full"
                         startContent={<CheckCircle2 size={16} />}
                         onPress={() => handleServeItem(data.tableId, data.item)}
+                        isLoading={
+                          isServing ===
+                          `${data.item.id}-${data.item.status}-${data.item.note || ""}-${data.tableId}`
+                        }
                       >
                         {t("kitchen.serve")}
                       </Button>

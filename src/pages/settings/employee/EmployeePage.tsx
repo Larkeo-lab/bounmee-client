@@ -33,7 +33,6 @@ import {
   User,
   Lock,
   Shield,
-  Store as StoreIcon,
 } from "lucide-react";
 import { useAuth } from "@/routes/AuthContext";
 import {
@@ -84,7 +83,7 @@ export default function EmployeePage() {
     password: "",
     language: "LA" as "LA" | "EN",
     permissionId: "",
-    businessType: "RETAIL" as "RETAIL" | "RESTAURANT" | "ONLINE" | "CAFE",
+    businessType: "RESTAURANT" as "RETAIL" | "RESTAURANT" | "ONLINE" | "CAFE",
   });
 
   const {
@@ -236,7 +235,7 @@ export default function EmployeePage() {
       password: "",
       language: "LA",
       permissionId: "",
-      businessType: "RETAIL",
+      businessType: "RESTAURANT",
     });
     setPreviewImage("");
     setSelectedEmployee(null);
@@ -252,7 +251,7 @@ export default function EmployeePage() {
       language: item.language || "LA",
       password: "",
       permissionId: item.permissionId || "",
-      businessType: item.businessType || "RETAIL",
+      businessType: "RESTAURANT",
     });
     setPreviewImage(item.logoUrl || "");
     onUpdateOpen();
@@ -397,7 +396,7 @@ export default function EmployeePage() {
             <SelectItem key={perm.id}>{perm.name}</SelectItem>
           ))}
         </Select>
-        <Select
+        {/* <Select
           label="ຮູບແບບຮ້ານ (Business Type)"
           placeholder="ເລືອກຮູບແບບຮ້ານ"
           variant="bordered"
@@ -412,7 +411,7 @@ export default function EmployeePage() {
           <SelectItem key="RESTAURANT">ຮ້ານອາຫານ (Restaurant)</SelectItem>
           <SelectItem key="CAFE">ຮ້ານກາເຟ (Cafe)</SelectItem>
           <SelectItem key="ONLINE">ອອນໄລນ໌ (Online)</SelectItem>
-        </Select>
+        </Select> */}
       </div>
     </div>
   );

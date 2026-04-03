@@ -13,8 +13,44 @@ import { siteConfig } from "@/config/site";
 import ProfileDropdown from "./profile-dropdown";
 import LanguageSwitch from "./common/language-switch";
 import { SearchIcon } from "@/components/icons";
+import { useCart } from "@/provider";
+import { Wifi, WifiHigh, WifiLow, WifiOff } from "lucide-react";
+import clsx from "clsx";
 
 export const Navbar = () => {
+  const { isConnected, rtt } = useCart();
+
+  const WifiSignal = () => {
+    if (!isConnected) return <WifiOff size={16} className="text-danger animate-pulse" />;
+    
+    // Determine icon based on strength
+    let Icon = Wifi;
+    let textColor = "text-success";
+    let shadowColor = "rgba(23,201,100,0.6)";
+
+    if (rtt !== null) {
+      if (rtt >= 400) {
+        Icon = WifiLow;
+        textColor = "text-danger";
+        shadowColor = "rgba(243,18,96,0.6)";
+      } else if (rtt >= 150) {
+        Icon = WifiHigh;
+        textColor = "text-success";
+        shadowColor = "rgba(23,201,100,0.6)"; 
+      }
+    }
+
+    return (
+      <Icon 
+        size={16} 
+        className={clsx(
+          textColor, 
+          `drop-shadow-[0_0_3px_${shadowColor}] transition-all duration-500`
+        )} 
+      />
+    );
+  };
+
   const searchInput = (
     <Input
       aria-label="Search"
@@ -42,11 +78,15 @@ export const Navbar = () => {
       position="sticky"
       className="py-0 border-b border-b-default-200"
     >
-      <NavbarContent
-        className="flex basis-1/5 sm:basis-full"
-        justify="end"
-      >
+      <NavbarContent className="flex basis-1/5 sm:basis-full" justify="end">
         <NavbarItem className="flex items-center gap-4">
+          {/* status online and offline */}
+          <div className={clsx(
+            "flex items-center justify-center px-2.5 py-1.5 rounded-full border shadow-sm transition-all duration-300",
+            isConnected ? "bg-success/5 border-success/10" : "bg-danger/5 border-danger/10"
+          )}>
+            <WifiSignal />
+          </div>
           <LanguageSwitch />
           <ProfileDropdown />
         </NavbarItem>

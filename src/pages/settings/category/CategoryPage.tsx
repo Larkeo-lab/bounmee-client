@@ -47,16 +47,20 @@ export default function CategoryPage() {
   } = useDisclosure();
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(
+    null,
+  );
   const [page, setPage] = useState(1);
-  const rowsPerPage = 10;
+  const rowsPerPage = 30;
 
   const [formData, setFormData] = useState({
     name: "",
     description: "",
   });
 
-  const { data: categoryResponse, isLoading } = useGetCategories(user?.user?.storeId);
+  const { data: categoryResponse, isLoading } = useGetCategories(
+    user?.user?.storeId,
+  );
   const categories = categoryResponse?.data || [];
 
   const createCategoryMutation = useCreateCategory();
@@ -147,7 +151,9 @@ export default function CategoryPage() {
             <LayoutGrid size={28} />
             ຈັດການປະເພດສິນຄ້າ
           </h1>
-          <p className="text-default-500">ຈັດການໝວດໝູ່ສິນຄ້າທັງໝົດໃນຮ້ານຂອງທ່ານ</p>
+          <p className="text-default-500">
+            ຈັດການໝວດໝູ່ສິນຄ້າທັງໝົດໃນຮ້ານຂອງທ່ານ
+          </p>
         </div>
         <Button
           color="primary"
@@ -196,47 +202,44 @@ export default function CategoryPage() {
           )
         }
       >
-            <TableHeader>
-              <TableColumn>ຊື່ປະເພດສິນຄ້າ</TableColumn>
-              <TableColumn>ຄຳອະທິບາຍ</TableColumn>
-              <TableColumn className="text-center">ຈັດການ</TableColumn>
-            </TableHeader>
-            <TableBody
-              isLoading={isLoading}
-              emptyContent={<EmptyState />}
-            >
-              {items.map((category) => (
-                <TableRow key={category.id}>
-                  <TableCell className="font-semibold">{category.name}</TableCell>
-                  <TableCell className="text-default-500 max-w-xs truncate">
-                    {category.description || "-"}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center justify-center gap-2">
-                      <Button
-                        isIconOnly
-                        size="sm"
-                        variant="light"
-                        color="primary"
-                        onPress={() => handleEditOpen(category)}
-                      >
-                        <Edit2 size={18} />
-                      </Button>
-                      <Button
-                        isIconOnly
-                        size="sm"
-                        variant="light"
-                        color="danger"
-                        onPress={() => handleDeleteOpen(category)}
-                      >
-                        <Trash2 size={18} />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+        <TableHeader>
+          <TableColumn>ຊື່ປະເພດສິນຄ້າ</TableColumn>
+          <TableColumn>ຄຳອະທິບາຍ</TableColumn>
+          <TableColumn className="text-center">ຈັດການ</TableColumn>
+        </TableHeader>
+        <TableBody isLoading={isLoading} emptyContent={<EmptyState />}>
+          {items.map((category) => (
+            <TableRow key={category.id}>
+              <TableCell className="font-semibold">{category.name}</TableCell>
+              <TableCell className="text-default-500 max-w-xs truncate">
+                {category.description || "-"}
+              </TableCell>
+              <TableCell>
+                <div className="flex items-center justify-center gap-2">
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    variant="light"
+                    color="primary"
+                    onPress={() => handleEditOpen(category)}
+                  >
+                    <Edit2 size={18} />
+                  </Button>
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    variant="light"
+                    color="danger"
+                    onPress={() => handleDeleteOpen(category)}
+                  >
+                    <Trash2 size={18} />
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
       {/* Create Modal */}
       <Modal
         isOpen={isCreateOpen}
@@ -247,7 +250,9 @@ export default function CategoryPage() {
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader className="flex flex-col gap-1">ເພີ່ມປະເພດສິນຄ້າໃໝ່</ModalHeader>
+              <ModalHeader className="flex flex-col gap-1">
+                ເພີ່ມປະເພດສິນຄ້າໃໝ່
+              </ModalHeader>
               <ModalBody>
                 <div className="space-y-4">
                   <Input
@@ -255,7 +260,9 @@ export default function CategoryPage() {
                     placeholder="ລະບຸຊື່ປະເພດສິນຄ້າ"
                     variant="bordered"
                     value={formData.name}
-                    onValueChange={(val) => setFormData({ ...formData, name: val })}
+                    onValueChange={(val) =>
+                      setFormData({ ...formData, name: val })
+                    }
                   />
                   <Textarea
                     label="ຄຳອະທິບາຍ"
@@ -296,7 +303,9 @@ export default function CategoryPage() {
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader className="flex flex-col gap-1">ແກ້ໄຂປະເພດສິນຄ້າ</ModalHeader>
+              <ModalHeader className="flex flex-col gap-1">
+                ແກ້ໄຂປະເພດສິນຄ້າ
+              </ModalHeader>
               <ModalBody>
                 <div className="space-y-4">
                   <Input
@@ -304,7 +313,9 @@ export default function CategoryPage() {
                     placeholder="ລະບຸຊື່ປະເພດສິນຄ້າ"
                     variant="bordered"
                     value={formData.name}
-                    onValueChange={(val) => setFormData({ ...formData, name: val })}
+                    onValueChange={(val) =>
+                      setFormData({ ...formData, name: val })
+                    }
                   />
                   <Textarea
                     label="ຄຳອະທິບາຍ"
@@ -336,11 +347,17 @@ export default function CategoryPage() {
       </Modal>
 
       {/* Delete Modal */}
-      <Modal isOpen={isDeleteOpen} onOpenChange={onDeleteOpenChange} placement="center">
+      <Modal
+        isOpen={isDeleteOpen}
+        onOpenChange={onDeleteOpenChange}
+        placement="center"
+      >
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader className="flex flex-col gap-1">ຢືນຢັນການລຶບ</ModalHeader>
+              <ModalHeader className="flex flex-col gap-1">
+                ຢືນຢັນການລຶບ
+              </ModalHeader>
               <ModalBody>
                 <p>
                   ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບປະເພດສິນຄ້າ{" "}

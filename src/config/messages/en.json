@@ -133,6 +133,7 @@
     "itemName": "Item Name",
     "quantity": "Qty",
     "waitTime": "Wait Time",
+    "note": "Note",
     "action": "Action",
     "serveSuccess": "Served {{name}} successfully",
     "serveAllSuccess": "All items in table served successfully"

@@ -485,29 +485,34 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
                 : "flex items-center justify-center py-1.5 px-1",
             )}
           >
+            {/* Store Logo */}
+            <Image
+              src={
+                getDisplayImageUrl(user?.user?.store?.logoUrl) || deePosLogo
+              }
+              fallbackSrc={deePosLogo}
+              alt={user?.user?.store?.name || "Store Logo"}
+              radius="full"
+              className="w-10 h-10 md:w-11 md:h-11 aspect-square object-cover border-2 border-white/20 flex-shrink-0"
+            />
+
+            {/* Store Name (Status Text Removed) */}
             <div
               className={clsx(
-                "flex items-center gap-2 flex-grow min-w-0 overflow-x-auto scrollbar-hide",
+                "flex-grow min-w-0 ml-2 overflow-hidden",
                 !isDesktopExpanded && "hidden",
               )}
             >
-              <Image
-                src={
-                  getDisplayImageUrl(user?.user?.store?.logoUrl) || deePosLogo
-                }
-                fallbackSrc={deePosLogo}
-                alt={user?.user?.store?.name || "Store Logo"}
-                radius="full"
-                className="w-12 h-12 aspect-square object-cover border-2 border-white/20"
-              />
-              <span className="font-bold text-lg whitespace-nowrap">
-                {(() => {
-                  const name = user?.user?.store?.name || t("sidebar.title");
-                  return name.length >= 14
-                    ? `${name.substring(0, 14)}...`
-                    : name;
-                })()}
-              </span>
+              <div className="flex flex-col min-w-0">
+                <span className="font-bold text-base whitespace-nowrap leading-none">
+                  {(() => {
+                    const name = user?.user?.store?.name || t("sidebar.title");
+                    return name.length >= 14
+                      ? `${name.substring(0, 14)}...`
+                      : name;
+                  })()}
+                </span>
+              </div>
             </div>
 
             {/* Desktop Toggle Button */}

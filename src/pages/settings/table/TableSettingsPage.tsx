@@ -38,6 +38,7 @@ import { v4 as uuidv4 } from "uuid";
 import { useGetTables } from "@/services/table/useTable";
 import { useGetZones } from "@/services/table/useZone";
 import { toast } from "react-hot-toast";
+import ConfirmModal from "@/components/common/popup-confirm";
 
 const columns = [
   { name: "ຊື່ໂຕະ", uid: "name", sortable: true },
@@ -68,6 +69,15 @@ export default function TableSettingsPage() {
   const [formData, setFormData] = useState<any>({});
   const [isEditing, setIsEditing] = useState(false);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const {
+    isOpen: isDeleteOpen,
+    onOpen: onDeleteOpen,
+    onOpenChange: onDeleteOpenChange,
+  } = useDisclosure();
+  const [itemToDelete, setItemToDelete] = useState<{
+    type: "table" | "zone";
+    id: string;
+  } | null>(null);
 
   const { mutateAsync: createTable, isPending: isCreatingTable } =
     useCreateTable();
@@ -143,13 +153,19 @@ export default function TableSettingsPage() {
     onOpen();
   };
 
-  const handleDelete = async (type: "table" | "zone", id: string) => {
-    if (window.confirm("ທ່ານແນ່ໃຈຫລືບໍ່ວ່າຕ້ອງການລົບຂໍ້ມູນນີ້?")) {
-      if (type === "table") {
-        await deleteTable(id);
+  const handleDelete = (type: "table" | "zone", id: string) => {
+    setItemToDelete({ type, id });
+    onDeleteOpen();
+  };
+
+  const confirmDelete = async () => {
+    if (itemToDelete) {
+      if (itemToDelete.type === "table") {
+        await deleteTable(itemToDelete.id);
       } else {
-        await deleteZone(id);
+        await deleteZone(itemToDelete.id);
       }
+      setItemToDelete(null);
     }
   };
 
@@ -485,6 +501,17 @@ export default function TableSettingsPage() {
           )}
         </ModalContent>
       </Modal>
+      <ConfirmModal
+        isOpen={isDeleteOpen}
+        onOpenChange={onDeleteOpenChange}
+        title="ຢືນຢັນການລົບ?"
+        message="ທ່ານແນ່ໃຈຫລືບໍ່ວ່າຕ້ອງການລົບຂໍ້ມູນນີ້? ການລົບຈະບໍ່ສາມາດກູ້ຄືນໄດ້."
+        confirmText="ຢືນຢັນລົບ"
+        cancelText="ຍົກເລີກ"
+        onConfirm={confirmDelete}
+        color="danger"
+        icon={<Trash2 size={24} />}
+      />
     </div>
   );
 }

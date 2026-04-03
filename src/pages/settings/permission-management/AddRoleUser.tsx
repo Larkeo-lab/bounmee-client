@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Table,
   TableHeader,
@@ -29,9 +30,10 @@ import { useQueryClient } from "@tanstack/react-query";
 type PermissionType = "read" | "create" | "update" | "delete" | "full_access";
 
 type PermissionId =
-  | "dashboard"
   | "pos"
   | "order"
+  | "ordering"
+  | "kitchen"
   | "table"
   | "table_settings"
   | "settings"
@@ -42,7 +44,8 @@ type PermissionId =
   | "printer"
   | "money_rate"
   | "role_permission"
-  | "profile";
+  | "profile"
+  | "dashboard";
 
 type PermissionRow = {
   id: PermissionId;
@@ -62,6 +65,7 @@ const roleSchema = z.object({
 });
 
 export default function AddRoleUser() {
+  const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -73,8 +77,19 @@ export default function AddRoleUser() {
 
   const [permissions, setPermissions] = useState<PermissionRow[]>([
     {
+      id: "table",
+      name: "sidebar.menu.table",
+      permissions: {
+        read: false,
+        create: false,
+        update: false,
+        delete: false,
+        full_access: false,
+      },
+    },
+    {
       id: "pos",
-      name: "ໜ້າຂາຍ (POS Sales)",
+      name: "sidebar.menu.pos",
       permissions: {
         read: false,
         create: false,
@@ -85,7 +100,7 @@ export default function AddRoleUser() {
     },
     {
       id: "dashboard",
-      name: "ລາຍງານສະຖິຕິ (Dashboard)",
+      name: "sidebar.menu.statisticsReport",
       permissions: {
         read: false,
         create: false,
@@ -96,7 +111,7 @@ export default function AddRoleUser() {
     },
     {
       id: "order",
-      name: "ລາຍການສັ່ງຊື້ (Order Records)",
+      name: "sidebar.menu.order",
       permissions: {
         read: false,
         create: false,
@@ -106,8 +121,19 @@ export default function AddRoleUser() {
       },
     },
     {
-      id: "table",
-      name: "ໜ້າລາຍການໂຕະ (Table Dashboard)",
+      id: "ordering",
+      name: "sidebar.menu.ordering",
+      permissions: {
+        read: false,
+        create: false,
+        update: false,
+        delete: false,
+        full_access: false,
+      },
+    },
+    {
+      id: "kitchen",
+      name: "sidebar.menu.kitchen",
       permissions: {
         read: false,
         create: false,
@@ -119,7 +145,7 @@ export default function AddRoleUser() {
 
     {
       id: "settings",
-      name: "ຈັດການການຕັ້ງຄ່າ (Settings)",
+      name: "sidebar.menu.setting",
       permissions: {
         read: false,
         create: false,
@@ -130,7 +156,7 @@ export default function AddRoleUser() {
     },
     {
       id: "product",
-      name: "ຈັດການສິນຄ້າ (Products)",
+      name: "sidebar.menu.manageProduct",
       permissions: {
         read: false,
         create: false,
@@ -141,7 +167,7 @@ export default function AddRoleUser() {
     },
     {
       id: "category",
-      name: "ຈັດການໝວດໝູ່ (Categories)",
+      name: "sidebar.menu.manageCategory",
       permissions: {
         read: false,
         create: false,
@@ -152,7 +178,7 @@ export default function AddRoleUser() {
     },
     {
       id: "bank",
-      name: "ຈັດການທະນາຄານ (Bank Accounts)",
+      name: "sidebar.menu.manageBank",
       permissions: {
         read: false,
         create: false,
@@ -163,7 +189,7 @@ export default function AddRoleUser() {
     },
     {
       id: "employee",
-      name: "ຈັດການພະນັກງານ (Employees)",
+      name: "sidebar.menu.manageEmployee",
       permissions: {
         read: false,
         create: false,
@@ -174,29 +200,7 @@ export default function AddRoleUser() {
     },
     {
       id: "printer",
-      name: "ຈັດການປິ່ນເຕີ (Printers)",
-      permissions: {
-        read: false,
-        create: false,
-        update: false,
-        delete: false,
-        full_access: false,
-      },
-    },
-    {
-      id: "money_rate",
-      name: "ຈັດການອັດຕາແລກປ່ຽນ (Money Rates)",
-      permissions: {
-        read: false,
-        create: false,
-        update: false,
-        delete: false,
-        full_access: false,
-      },
-    },
-    {
-      id: "role_permission",
-      name: "ບົດບາດ ແລະ ສິດນຳໃຊ້ (Roles & Permissions)",
+      name: "sidebar.menu.managePrinter",
       permissions: {
         read: false,
         create: false,
@@ -207,7 +211,29 @@ export default function AddRoleUser() {
     },
     {
       id: "profile",
-      name: "ຈັດການຂໍ້ມູນຮ້ານ (Store Profile)",
+      name: "sidebar.menu.manageProfile",
+      permissions: {
+        read: false,
+        create: false,
+        update: false,
+        delete: false,
+        full_access: false,
+      },
+    },
+    {
+      id: "money_rate",
+      name: "sidebar.menu.manageMoneyRate",
+      permissions: {
+        read: false,
+        create: false,
+        update: false,
+        delete: false,
+        full_access: false,
+      },
+    },
+    {
+      id: "role_permission",
+      name: "sidebar.menu.managePermission",
       permissions: {
         read: false,
         create: false,
@@ -218,7 +244,7 @@ export default function AddRoleUser() {
     },
     {
       id: "table_settings",
-      name: "ຕັ້ງຄ່າໂຕະ ແລະ ໂຊນ (Table & Zone Settings)",
+      name: "sidebar.menu.manageTable",
       permissions: {
         read: false,
         create: false,
@@ -227,28 +253,6 @@ export default function AddRoleUser() {
         full_access: false,
       },
     },
-    // {
-    //   id: "officers",
-    //   name: "ຈັດການເຈົ້າໜ້າທີ່",
-    //   permissions: {
-    //     read: false,
-    //     create: false,
-    //     update: false,
-    //     delete: false,
-    //     full_access: false,
-    //   },
-    // },
-    // {
-    //   id: "citizens",
-    //   name: "ຈັດການປະຊາຊົນ",
-    //   permissions: {
-    //     read: false,
-    //     create: false,
-    //     update: false,
-    //     delete: false,
-    //     full_access: false,
-    //   },
-    // },
   ]);
 
   const { user } = useAuth();
@@ -548,7 +552,7 @@ export default function AddRoleUser() {
                                   className="text-gray-400 ml-6"
                                 />
                               )}
-                              <span>{item.name}</span>
+                              <span>{item.name.includes(".") ? t(item.name) : item.name}</span>
                             </div>
                           </TableCell>
                         );
