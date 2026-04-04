@@ -48,10 +48,15 @@ export default function CustomerMenuPage() {
     }
   });
 
-  const [isTableClosed, setIsTableClosed] = useState(false);
+  const [isTableClosed, setIsTableClosed] = useState(() => {
+    return sessionStorage.getItem(`tableClosed_${qrCode}`) === "true";
+  });
   const [paymentMethod, setPaymentMethod] = useState<string | null>(null);
   const [bankName, setBankName] = useState<string | null>(null);
-  const [finalOrder, setFinalOrder] = useState<any | null>(null);
+  const [finalOrder, setFinalOrder] = useState<any | null>(() => {
+    const saved = sessionStorage.getItem(`finalOrder_${qrCode}`);
+    return saved ? JSON.parse(saved) : null;
+  });
   const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
 
   const {
@@ -74,7 +79,7 @@ export default function CustomerMenuPage() {
     if (qrCode) {
       localStorage.setItem(
         `placedOrders_${qrCode}`,
-        JSON.stringify(placedOrders)
+        JSON.stringify(placedOrders),
       );
     }
   }, [placedOrders, qrCode]);
@@ -125,8 +130,11 @@ export default function CustomerMenuPage() {
           if (isClosing) {
             if (data.order) {
               setFinalOrder(data.order);
+              sessionStorage.setItem(`finalOrder_${qrCode}`, JSON.stringify(data.order));
             }
             setIsTableClosed(true);
+            sessionStorage.setItem(`tableClosed_${qrCode}`, "true");
+            
             if (data.paymentMethod) setPaymentMethod(data.paymentMethod);
             if (data.bankName) setBankName(data.bankName);
             localStorage.removeItem(`cart_${qrCode}`);
@@ -138,6 +146,7 @@ export default function CustomerMenuPage() {
       const handleTableClosed = (data: { tableId: string }) => {
         if (data.tableId === tableData.id) {
           setIsTableClosed(true);
+          sessionStorage.setItem(`tableClosed_${qrCode}`, "true");
         }
       };
 
@@ -202,7 +211,7 @@ export default function CustomerMenuPage() {
 
     if (existingQty >= (product.stockQty || 999)) {
       toast.error(
-        `ຂໍອະໄພ, ສິນຄ້າ "${product.name}" ມີໃນສາງພຽງ ${product.stockQty} ລາຍການ`
+        `ຂໍອະໄພ, ສິນຄ້າ "${product.name}" ມີໃນສາງພຽງ ${product.stockQty} ລາຍການ`,
       );
       return;
     }
@@ -213,7 +222,7 @@ export default function CustomerMenuPage() {
         return prev.map((item) =>
           item.id === product.id
             ? { ...item, quantity: item.quantity + 1 }
-            : item
+            : item,
         );
       }
       return [...prev, { ...product, quantity: 1 }];
@@ -226,9 +235,11 @@ export default function CustomerMenuPage() {
     if (targetElement) {
       buttonRect = targetElement.getBoundingClientRect();
     } else {
-      buttonRect = (document.activeElement as HTMLElement)?.getBoundingClientRect();
+      buttonRect = (
+        document.activeElement as HTMLElement
+      )?.getBoundingClientRect();
     }
-    
+
     const cartIconRect = cartRef.current?.getBoundingClientRect();
 
     console.log("Position check:", { buttonRect, cartIconRect });
@@ -267,7 +278,7 @@ export default function CustomerMenuPage() {
           if (item.id === id) {
             if (delta > 0 && item.quantity >= (item.stockQty || 999)) {
               toast.error(
-                `ຂໍອະໄພ, ສິນຄ້າ "${item.name}" ມີໃນສາງພຽງ ${item.stockQty} ລາຍການ`
+                `ຂໍອະໄພ, ສິນຄ້າ "${item.name}" ມີໃນສາງພຽງ ${item.stockQty} ລາຍການ`,
               );
               return item;
             }
@@ -275,14 +286,14 @@ export default function CustomerMenuPage() {
           }
           return item;
         })
-        .filter((item) => item.quantity > 0)
+        .filter((item) => item.quantity > 0),
     );
   };
 
   const updateNote = (id: string, note: string) => {
     if (isTableClosed) return;
     setCart((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, note } : item))
+      prev.map((item) => (item.id === id ? { ...item, note } : item)),
     );
   };
 
@@ -293,11 +304,11 @@ export default function CustomerMenuPage() {
 
   const subtotal = useMemo(
     () => cart.reduce((acc, item) => acc + item.price * item.quantity, 0),
-    [cart]
+    [cart],
   );
   const cartTotalItems = useMemo(
     () => cart.reduce((acc, item) => acc + item.quantity, 0),
-    [cart]
+    [cart],
   );
 
   if (isLoadingTable)
@@ -322,6 +333,7 @@ export default function CustomerMenuPage() {
       </div>
     );
 
+  // If table is AVAILABLE and we are NOT in the closed/bill process
   if (tableData?.status === "AVAILABLE" && !isTableClosed) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-8 text-center gap-8">
@@ -422,7 +434,7 @@ export default function CustomerMenuPage() {
                 .filter(
                   (i: any) =>
                     (i.id === product.id || i.product?.id === product.id) &&
-                    i.status?.toUpperCase() !== "CANCEL"
+                    i.status?.toUpperCase() !== "CANCEL",
                 )
                 .reduce((acc, i) => acc + (i.quantity || i.qty || 0), 0);
               const totalUsed = currentInCart + alreadyPlaced;

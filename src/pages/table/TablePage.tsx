@@ -94,7 +94,7 @@ export default function TablePage() {
       storeId || "",
       selectedCategory === "all" ? undefined : selectedCategory,
       true,
-      ""
+      "",
     );
   const products = productResponse?.data || [];
 
@@ -128,6 +128,7 @@ export default function TablePage() {
     addToCart,
     removeFromCart,
     clearCart,
+    clearTableCart,
     subtotal,
     setActiveTableId,
     setTableCart,
@@ -228,25 +229,31 @@ export default function TablePage() {
   // ຟັງຊັນສຳລັບປິດໂຕະ: ອັບເດດສະຖານະໂຕະ ແລະ ລ້າງຂໍ້ມູນຕະກ້າ
   const handleCloseTable = (order?: any) => {
     if (selectedTable) {
+      const closingTableId = selectedTable.id;
       updateTable.mutate(
         {
-          id: selectedTable.id,
+          id: closingTableId,
           storeId: selectedTable.storeId || storeId,
           status: "AVAILABLE",
+          activeCart: [], // Explicitly clear via REST Too
         },
         {
           onSuccess: () => {
             if (socket.connected) {
+              // 1. Sync empty cart to clear server-side activeCart and other POS devices
               socket.emit("SYNC_TABLE_CART", {
                 storeId,
-                tableId: selectedTable.id,
-                cart: order?.items || [],
+                tableId: closingTableId,
+                cart: [], // Clear!
                 tableStatus: "AVAILABLE",
                 order,
               });
-              socket.emit("TABLE_SESSION_ENDED", { tableId: selectedTable.id });
+              // 2. Notify session ended
+              socket.emit("TABLE_SESSION_ENDED", { tableId: closingTableId });
             }
-            clearCart();
+            
+            // 3. Clear local cart state for this table
+            clearTableCart(closingTableId);
             setSelectedTable(null);
           },
         },

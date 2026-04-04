@@ -14,6 +14,7 @@ export interface TableItem {
   zoneId: string | null;
   isActive: boolean;
   status: string;
+  activeCart?: any[];
   createdAt: string;
   updatedAt: string;
   zone?: Zone;
@@ -28,6 +29,7 @@ export interface CreateTableInput {
   zoneId?: string;
   isActive?: boolean;
   status?: string;
+  activeCart?: any[];
 }
 
 export interface UpdateTableInput extends Partial<CreateTableInput> {

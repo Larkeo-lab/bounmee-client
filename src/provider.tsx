@@ -36,6 +36,7 @@ interface CartContextType {
   setQuantity: (id: string, status: string, value: string, note?: string) => void;
   updateStatus: (uniqueIds: string[], status: string, tableId?: string) => void;
   clearCart: () => void;
+  clearTableCart: (tableId: string) => void;
   subtotal: number;
   activeTableId: string | null;
   setActiveTableId: (id: string | null) => void;
@@ -236,6 +237,15 @@ export const Provider: React.FC<{ children: React.ReactNode }> = ({ children }) 
 
   const clearCart = useCallback(() => updateCurrentCart(() => []), [updateCurrentCart]);
 
+  const clearTableCart = useCallback((tableId: string) => {
+    setCarts(prev => {
+      const next = { ...prev };
+      delete next[tableId];
+      return next;
+    });
+    queryClient.invalidateQueries({ queryKey: ["tables"] });
+  }, []);
+
   const dismissTable = useCallback((tableId: string) => {
     const snapshot: { [itemId: string]: number } = {};
     (carts[tableId] || []).filter(i => i.status === "PENDING").forEach(i => {
@@ -260,7 +270,7 @@ export const Provider: React.FC<{ children: React.ReactNode }> = ({ children }) 
         <AuthProvider>
           <CartContext.Provider value={{
             cart, carts, addToCart, removeFromCart, updateQuantity, setQuantity,
-            updateStatus, clearCart, subtotal, activeTableId, setActiveTableId,
+            updateStatus, clearCart, clearTableCart, subtotal, activeTableId, setActiveTableId,
             dismissedCarts, dismissTable, setTableCart, isConnected, rtt
           }}>
             {children}
