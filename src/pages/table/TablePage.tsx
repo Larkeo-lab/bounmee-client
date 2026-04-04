@@ -251,7 +251,7 @@ export default function TablePage() {
               // 2. Notify session ended
               socket.emit("TABLE_SESSION_ENDED", { tableId: closingTableId });
             }
-            
+
             // 3. Clear local cart state for this table
             clearTableCart(closingTableId);
             setSelectedTable(null);
@@ -278,20 +278,20 @@ export default function TablePage() {
   };
 
   return (
-    <div className="h-[calc(100vh-140px)] flex flex-col gap-4 overflow-hidden lg:flex-row lg:gap-4">
+    <div className="h-[calc(100vh-100px)] w-full max-w-full flex flex-col overflow-hidden lg:flex-row">
       <div className="flex-grow flex flex-col min-h-0 lg:h-full">
         <div
           className={clsx(
-            "flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4 flex-shrink-0 mb-4",
+            "flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4 flex-shrink-0 px-2 pt-2",
             selectedTable && "hidden lg:flex",
           )}
         >
           <div>
-            <h1 className="text-2xl md:text-3xl font-black text-primary flex items-center gap-2 md:gap-3">
-              <Armchair className="w-7 h-7 md:w-8 md:h-8" />
+            <h1 className="text-xl md:text-2xl font-black text-primary flex items-center gap-2 md:gap-3">
+              <Armchair className="w-4 h-4 md:w-6 md:h-6" />
               ໂຕະອາຫານ
             </h1>
-            <p className="text-xs md:text-sm text-default-500 font-medium ml-9 md:ml-11">
+            <p className="text-[10px] md:text-xs text-default-500 font-medium ml-6 md:ml-9">
               ບໍລິຫານຈັດການພື້ນທີ່ ແລະ ໂຕະພາຍໃນຮ້ານຂອງທ່ານ
             </p>
           </div>
@@ -300,34 +300,34 @@ export default function TablePage() {
         {/* Header Stats */}
         <div
           className={clsx(
-            "grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4 flex-shrink-0",
+            "grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4 flex-shrink-0 px-2 mt-2",
             selectedTable && "hidden lg:grid",
           )}
         >
           <Card className="bg-gradient-to-br from-primary-50 to-primary-100/50 dark:from-primary-900/20 dark:to-primary-800/10 border-1 border-primary-100 dark:border-primary-800/30">
-            <CardBody className="p-3 md:p-5 flex flex-row items-center gap-3 md:gap-4">
-              <div className="p-2 md:p-3.5 bg-white/80 dark:bg-primary-900/50 rounded-xl text-primary">
-                <TableIcon className="w-5 h-5 md:w-[26px] md:h-[26px]" />
+            <CardBody className="p-2 md:p-3 flex flex-row items-center gap-2 md:gap-3">
+              <div className="p-1.5 md:p-2 bg-white/80 dark:bg-primary-900/50 rounded-lg text-primary">
+                <TableIcon className="w-4 h-4 md:w-5 md:h-5" />
               </div>
               <div>
-                <p className="text-[10px] md:text-[11px] font-extrabold uppercase">
+                <p className="text-[9px] md:text-[10px] font-extrabold uppercase">
                   ທັງໝົດ
                 </p>
-                <p className="text-xl md:text-3xl font-black">{stats.total}</p>
+                <p className="text-lg md:text-xl font-black">{stats.total}</p>
               </div>
             </CardBody>
           </Card>
 
           <Card className="bg-gradient-to-br from-success-50 to-success-100/50 dark:from-success-900/20 dark:to-success-800/10 border-1 border-success-100 dark:border-success-800/30">
-            <CardBody className="p-3 md:p-5 flex flex-row items-center gap-3 md:gap-4">
-              <div className="p-2 md:p-3.5 bg-white/80 dark:bg-success-900/50 rounded-xl text-success">
-                <CheckCircle2 className="w-5 h-5 md:w-[26px] md:h-[26px]" />
+            <CardBody className="p-2 md:p-3 flex flex-row items-center gap-2 md:gap-3">
+              <div className="p-1.5 md:p-2 bg-white/80 dark:bg-success-900/50 rounded-lg text-success">
+                <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5" />
               </div>
               <div>
-                <p className="text-[10px] md:text-[11px] font-extrabold uppercase">
+                <p className="text-[9px] md:text-[10px] font-extrabold uppercase">
                   ໂຕະຫວ່າງ
                 </p>
-                <p className="text-xl md:text-3xl font-black">
+                <p className="text-lg md:text-xl font-black">
                   {stats.available}
                 </p>
               </div>
@@ -335,15 +335,15 @@ export default function TablePage() {
           </Card>
 
           <Card className="bg-gradient-to-br from-danger-50 to-danger-100/50 dark:from-danger-900/20 dark:to-danger-800/10 border-1 border-danger-100 dark:border-danger-800/30">
-            <CardBody className="p-3 md:p-5 flex flex-row items-center gap-3 md:gap-4">
-              <div className="p-2 md:p-3.5 bg-white/80 dark:bg-danger-900/50 rounded-xl text-danger">
-                <Users className="w-5 h-5 md:w-[26px] md:h-[26px]" />
+            <CardBody className="p-2 md:p-3 flex flex-row items-center gap-2 md:gap-3">
+              <div className="p-1.5 md:p-2 bg-white/80 dark:bg-danger-900/50 rounded-lg text-danger">
+                <Users className="w-4 h-4 md:w-5 md:h-5" />
               </div>
               <div>
-                <p className="text-[10px] md:text-[11px] font-extrabold uppercase">
+                <p className="text-[9px] md:text-[10px] font-extrabold uppercase">
                   ມີລູກຄ້າ
                 </p>
-                <p className="text-xl md:text-3xl font-black">
+                <p className="text-lg md:text-xl font-black">
                   {stats.occupied}
                 </p>
               </div>
@@ -351,15 +351,15 @@ export default function TablePage() {
           </Card>
 
           <Card className="bg-gradient-to-br from-warning-50 to-warning-100/50 dark:from-warning-900/20 dark:to-warning-800/10 border-1 border-warning-100 dark:border-warning-800/30">
-            <CardBody className="p-3 md:p-5 flex flex-row items-center gap-3 md:gap-4">
-              <div className="p-2 md:p-3.5 bg-white/80 dark:bg-warning-900/50 rounded-xl text-warning">
-                <Clock className="w-5 h-5 md:w-[26px] md:h-[26px]" />
+            <CardBody className="p-2 md:p-3 flex flex-row items-center gap-2 md:gap-3">
+              <div className="p-1.5 md:p-2 bg-white/80 dark:bg-warning-900/50 rounded-lg text-warning">
+                <Clock className="w-4 h-4 md:w-5 md:h-5" />
               </div>
               <div>
-                <p className="text-[10px] md:text-[11px] font-extrabold uppercase">
+                <p className="text-[9px] md:text-[10px] font-extrabold uppercase">
                   ຈອງແລ້ວ
                 </p>
-                <p className="text-xl md:text-3xl font-black">
+                <p className="text-lg md:text-xl font-black">
                   {stats.reserved}
                 </p>
               </div>
@@ -367,9 +367,9 @@ export default function TablePage() {
           </Card>
         </div>
 
-        <Card className="flex-grow min-h-0 border-none shadow-md overflow-hidden bg-white/70 dark:bg-gray-800/70 backdrop-blur-md flex flex-col mt-4">
+        <Card className="flex-grow min-h-0 border-none shadow-md overflow-hidden bg-white/70 dark:bg-gray-800/70 backdrop-blur-md flex flex-col mt-2">
           <CardBody className="p-0 flex flex-col h-full overflow-hidden">
-            <div className="p-4 md:p-6 border-b border-divider flex flex-col md:flex-row gap-4 items-center justify-between bg-primary/5 flex-shrink-0">
+            <div className="p-2 md:p-3 border-b border-divider flex flex-col md:flex-row gap-3 items-center justify-between bg-primary/5 flex-shrink-0">
               {isSelectingMenu ? (
                 <div className="flex items-center justify-between w-full">
                   <h2 className="text-xl md:text-2xl font-black text-primary flex items-center gap-3">
@@ -378,6 +378,7 @@ export default function TablePage() {
                   <Button
                     variant="flat"
                     color="danger"
+                    size="sm"
                     onPress={() => setIsSelectingMenu(false)}
                     className="font-bold"
                   >
@@ -386,43 +387,62 @@ export default function TablePage() {
                 </div>
               ) : (
                 <>
-                  <Tabs
-                    variant="solid"
-                    color="primary"
-                    selectedKey={selectedZone}
-                    onSelectionChange={(key) => setSelectedZone(key as string)}
-                  >
-                    <Tab
-                      key="all"
-                      title={
-                        <div className="flex items-center gap-2">
-                          <LayoutGrid size={16} />
-                          <span>ທັງໝົດ</span>
-                        </div>
+                  <div className="flex-1 overflow-x-auto scrollbar-hide">
+                    <Tabs
+                      variant="solid"
+                      color="primary"
+                      size="sm"
+                      selectedKey={selectedZone}
+                      onSelectionChange={(key) =>
+                        setSelectedZone(key as string)
                       }
-                    />
-                    {zones.map((zone: any) => (
-                      <Tab key={zone.id} title={zone.name} />
-                    ))}
-                  </Tabs>
+                      classNames={{
+                        tabList: "flex-nowrap",
+                      }}
+                    >
+                      <Tab
+                        key="all"
+                        title={
+                          <div className="flex items-center gap-1.5 whitespace-nowrap">
+                            <LayoutGrid size={14} />
+                            <span className="text-[11px] md:text-xs">
+                              ທັງໝົດ
+                            </span>
+                          </div>
+                        }
+                      />
+                      {zones.map((zone: any) => (
+                        <Tab
+                          key={zone.id}
+                          title={
+                            <span className="whitespace-nowrap text-[11px] md:text-xs">
+                              {zone.name}
+                            </span>
+                          }
+                        />
+                      ))}
+                    </Tabs>
+                  </div>
 
                   <div className="flex items-center gap-2 w-full md:w-auto">
                     <Input
                       placeholder="ຄົ້ນຫາໂຕະ..."
+                      size="sm"
                       startContent={
-                        <Search size={18} className="text-default-400" />
+                        <Search size={16} className="text-default-400" />
                       }
                       variant="bordered"
-                      className="w-full md:w-64"
+                      className="w-full md:w-56"
                       value={searchQuery}
                       onValueChange={setSearchQuery}
                     />
                     <Button
                       isIconOnly
+                      size="sm"
                       variant="flat"
                       onClick={() => navigate("/settings/table")}
                     >
-                      <Settings size={18} />
+                      <Settings size={16} />
                     </Button>
                   </div>
                 </>

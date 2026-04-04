@@ -130,11 +130,14 @@ export default function CustomerMenuPage() {
           if (isClosing) {
             if (data.order) {
               setFinalOrder(data.order);
-              sessionStorage.setItem(`finalOrder_${qrCode}`, JSON.stringify(data.order));
+              sessionStorage.setItem(
+                `finalOrder_${qrCode}`,
+                JSON.stringify(data.order),
+              );
             }
             setIsTableClosed(true);
             sessionStorage.setItem(`tableClosed_${qrCode}`, "true");
-            
+
             if (data.paymentMethod) setPaymentMethod(data.paymentMethod);
             if (data.bankName) setBankName(data.bankName);
             localStorage.removeItem(`cart_${qrCode}`);
@@ -474,7 +477,7 @@ export default function CustomerMenuPage() {
                           totalUsed >= (product.stockQty || 0) || isTableClosed
                         }
                       >
-                        <Plus size={16} className="mr-1" /> ເເພີ່ມລົງກະຕ່າ
+                        <Plus size={16} className="mr-1" /> ເພີ່ມລົງກະຕ່າ
                       </Button>
                     </div>
                   </CardBody>

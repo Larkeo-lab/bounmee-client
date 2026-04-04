@@ -136,7 +136,7 @@ export default function OrderPage() {
   console.log("orders", orders);
 
   return (
-    <div className="space-y-4 pb-4">
+    <div className="space-y-4 p-4 lg:p-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-divider pb-3">
         <div>
           <h1 className="text-xl font-bold text-primary flex items-center gap-2">

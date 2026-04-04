@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, type ChangeEvent } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Card,
   CardBody,
@@ -18,6 +19,7 @@ import { getDisplayImageUrl } from "@/lib/utils";
 
 export default function ProfilePage() {
   const { user } = useAuth();
+  const { i18n } = useTranslation();
   const { data: storeResponse, isLoading } = useGetStoreDetail(user?.user?.store?.id);
   const store = storeResponse?.data;
 
@@ -32,23 +34,32 @@ export default function ProfilePage() {
     email: "",
     logoUrl: "",
     language: "LA" as string,
+    province: "",
+    district: "",
   });
   const [previewImage, setPreviewImage] = useState<string>("");
 
   useEffect(() => {
     if (store) {
       const adminUser = store.users?.find((u: any) => u.role === "STORE_ADMIN");
+      const currentLang = i18n.language === "EN" ? "EN" : "LA";
       setFormData({
         name: store.name || "",
         address: store.address || "",
         phone: adminUser?.phone || "",
         email: adminUser?.email || "",
         logoUrl: store.logoUrl || "",
-        language: adminUser?.language || "LA",
+        language: currentLang,
+        province: currentLang === "LA" 
+          ? store.province?.nameLo || store.province?.nameEn || ""
+          : store.province?.nameEn || store.province?.nameLo || "",
+        district: currentLang === "LA"
+          ? store.district?.nameLo || store.district?.nameEn || ""
+          : store.district?.nameEn || store.district?.nameLo || "",
       });
       setPreviewImage(store.logoUrl || "");
     }
-  }, [store]);
+  }, [store, i18n.language]);
 
   const handleImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -92,6 +103,8 @@ export default function ProfilePage() {
       </div>
     );
   }
+
+  console.log('formData', formData)
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -196,24 +209,29 @@ export default function ProfilePage() {
                   startContent={<Mail size={18} className="text-default-400" />}
                 />
 
-                <Select
-                  label="ພາສາ (Language)"
-                  placeholder="ເລືອກພາສາ"
+
+                <Input
+                  label="ແຂວງ (Province)"
+                  placeholder="ແຂວງ"
                   variant="bordered"
                   labelPlacement="outside"
-                  selectedKeys={[formData.language]}
-                  onSelectionChange={(keys) => {
-                    const val = Array.from(keys)[0] as string;
-                    setFormData({ ...formData, language: val });
-                  }}
-                  startContent={<Languages size={18} className="text-default-400" />}
-                >
-                  <SelectItem key="LA">ພາສາລາວ (Lao)</SelectItem>
-                  <SelectItem key="EN">English (US)</SelectItem>
-                </Select>
+                  value={formData.province}
+                  isReadOnly
+                  startContent={<MapPin size={18} className="text-default-400" />}
+                />
+
+                <Input
+                  label="ເມືອງ (District)"
+                  placeholder="ເມືອງ"
+                  variant="bordered"
+                  labelPlacement="outside"
+                  value={formData.district}
+                  isReadOnly
+                  startContent={<MapPin size={18} className="text-default-400" />}
+                />
 
                 <Textarea
-                  label="ທີ່ຢູ່"
+                  label="ລາຍລະອຽດທີ່ຢູ່"
                   placeholder="ລະບຸທີ່ຢູ່ຂອງຮ້ານ"
                   variant="bordered"
                   labelPlacement="outside"

@@ -4,6 +4,7 @@ export const API_ENDPOINTS = {
   AUTH: {
     LOGIN: `${API_VERSION}/auth/login-store`,
     LOGIN_USER: `${API_VERSION}/auth/login`,
+    REGISTER: `${API_VERSION}/auth/register-store`,
   },
   STORAGE: {
     IMAGE: `${API_VERSION}/storage/image/upload`,
@@ -64,5 +65,15 @@ export const API_ENDPOINTS = {
   ZONE: {
     LIST: `${API_VERSION}/table/zones`,
     DETAIL: (id: string) => `${API_VERSION}/table/zones/${id}`,
+  },
+  PROVINCE: {
+    LIST: `${API_VERSION}/province`,
+    DETAIL: (id: string) => `${API_VERSION}/province/${id}`,
+  },
+  DISTRICT: {
+    LIST: `${API_VERSION}/district`,
+    DETAIL: (id: string) => `${API_VERSION}/district/${id}`,
+    BY_PROVINCE: (provinceCode: string) =>
+      `${API_VERSION}/district?provinceCode=${provinceCode}`,
   },
 };

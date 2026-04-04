@@ -194,7 +194,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-8 pb-8">
+    <div className="space-y-8 p-4 lg:p-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-divider pb-6">
         <div>

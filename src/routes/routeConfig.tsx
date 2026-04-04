@@ -3,7 +3,8 @@ import { RouteObject } from "react-router-dom";
 import { Role } from "@/types";
 
 // Import page components
-import LoginPage from "@/pages/Login";
+import LoginPage from "@/pages/auth/Login";
+import RegisterPage from "@/pages/auth/Register";
 import PageNotFound from "@/pages/PageNotFound";
 import CustomerMenuPage from "@/pages/customer/CustomerMenuPage";
 import ProductPage from "@/pages/settings/product/ProductPage";
@@ -41,6 +42,11 @@ export const appRoutes: AppRoute[] = [
   {
     path: "/",
     element: <LoginPage />,
+    isPrivate: false,
+  },
+  {
+    path: "/register",
+    element: <RegisterPage />,
     isPrivate: false,
   },
   {

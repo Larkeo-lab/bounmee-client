@@ -16,7 +16,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/routes";
 
 // Version number
-import version from "../../package.json";
+import version from "../../../package.json";
 import oneDoorLogo from "/assets/logo.png";
 import LanguageSwitch from "@/components/common/language-switch";
 import { showErrorToast } from "@/config/error-messages";
@@ -261,6 +261,7 @@ export default function Login() {
                 variant="light"
                 color="primary"
                 className="p-0 h-auto font-bold"
+                onClick={() => navigate("/register")}
               >
                 {t("auth.register")}
               </Button>

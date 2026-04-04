@@ -128,23 +128,23 @@ export const TableCart = ({
     <>
       <Card
         isPressable
-        className={`group relative overflow-hidden min-h-[170px] lg:min-h-[190px] h-auto border-1 backdrop-blur-md transition-all duration-400 hover:-translate-y-1.5 hover:shadow-xl select-none touch-manipulation ${colors.wrapper}`}
+        className={`group relative overflow-hidden min-h-[140px] lg:min-h-[150px] h-auto border-1 backdrop-blur-md transition-all duration-400 hover:-translate-y-1.5 hover:shadow-xl select-none touch-manipulation ${colors.wrapper}`}
         onClick={handleTableClick}
       >
         <CardBody className="p-0 flex flex-col h-full overflow-hidden">
           <div className={`h-1.5 w-full shrink-0 ${colors.indicator}`} />
 
-          <div className="p-4 flex flex-col flex-grow z-10 relative">
-            <div className="flex justify-between items-start mb-3 text-gray-800 dark:text-gray-100">
+          <div className="p-3 flex flex-col flex-grow z-10 relative">
+            <div className="flex justify-between items-start mb-2 text-gray-800 dark:text-gray-100">
               <div className="flex flex-col text-left">
-                <span className="text-3xl font-black tracking-tight leading-none mb-1">
+                <span className="text-2xl font-black tracking-tight leading-none mb-1">
                   {table.name}
                 </span>
                 <div
                   className={`flex items-center gap-1.5 ${colors.iconText} opacity-80`}
                 >
-                  <Users size={14} strokeWidth={2.5} />
-                  <span className="text-[12px] font-bold tracking-wide">
+                  <Users size={12} strokeWidth={2.5} />
+                  <span className="text-[11px] font-bold tracking-wide">
                     {table.capacity} ບ່ອນນັ່ງ
                   </span>
                 </div>
@@ -152,7 +152,7 @@ export const TableCart = ({
             </div>
 
             {/* Modern Order Status Summary */}
-            <div className="flex flex-col gap-1.5 mb-5 mt-1">
+            <div className="flex flex-col gap-1 mb-3 mt-1">
               <div className="flex items-center justify-between bg-white/50 dark:bg-black/20 backdrop-blur-sm border border-white/60 dark:border-white/10 px-2.5 py-1.5 rounded-xl shadow-sm">
                 <span className="text-[10px] font-bold text-default-600 uppercase tracking-widest text-left">
                   ທັງໝົດ:
