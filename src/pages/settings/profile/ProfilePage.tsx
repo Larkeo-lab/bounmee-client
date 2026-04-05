@@ -8,10 +8,17 @@ import {
   Image,
   Spinner,
   Textarea,
-  Select,
-  SelectItem,
 } from "@heroui/react";
-import { Store as StoreIcon, Upload, Save, X, Phone, MapPin, Building, Mail, Languages } from "lucide-react";
+import {
+  Store as StoreIcon,
+  Upload,
+  Save,
+  X,
+  Phone,
+  MapPin,
+  Building,
+  Mail,
+} from "lucide-react";
 import { useAuth } from "@/routes/AuthContext";
 import { useGetStoreDetail, useUpdateStore } from "@/services/store/useStore";
 import { useUploadImage } from "@/services/storage";
@@ -20,7 +27,9 @@ import { getDisplayImageUrl } from "@/lib/utils";
 export default function ProfilePage() {
   const { user } = useAuth();
   const { i18n } = useTranslation();
-  const { data: storeResponse, isLoading } = useGetStoreDetail(user?.user?.store?.id);
+  const { data: storeResponse, isLoading } = useGetStoreDetail(
+    user?.user?.store?.id,
+  );
   const store = storeResponse?.data;
 
   const updateStoreMutation = useUpdateStore();
@@ -50,12 +59,14 @@ export default function ProfilePage() {
         email: adminUser?.email || "",
         logoUrl: store.logoUrl || "",
         language: currentLang,
-        province: currentLang === "LA" 
-          ? store.province?.nameLo || store.province?.nameEn || ""
-          : store.province?.nameEn || store.province?.nameLo || "",
-        district: currentLang === "LA"
-          ? store.district?.nameLo || store.district?.nameEn || ""
-          : store.district?.nameEn || store.district?.nameLo || "",
+        province:
+          currentLang === "LA"
+            ? store.province?.nameLo || store.province?.nameEn || ""
+            : store.province?.nameEn || store.province?.nameLo || "",
+        district:
+          currentLang === "LA"
+            ? store.district?.nameLo || store.district?.nameEn || ""
+            : store.district?.nameEn || store.district?.nameLo || "",
       });
       setPreviewImage(store.logoUrl || "");
     }
@@ -104,7 +115,7 @@ export default function ProfilePage() {
     );
   }
 
-  console.log('formData', formData)
+  console.log("formData", formData);
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -185,8 +196,12 @@ export default function ProfilePage() {
                   variant="bordered"
                   labelPlacement="outside"
                   value={formData.name}
-                  onValueChange={(val) => setFormData({ ...formData, name: val })}
-                  startContent={<Building size={18} className="text-default-400" />}
+                  onValueChange={(val) =>
+                    setFormData({ ...formData, name: val })
+                  }
+                  startContent={
+                    <Building size={18} className="text-default-400" />
+                  }
                 />
 
                 <Input
@@ -195,8 +210,12 @@ export default function ProfilePage() {
                   variant="bordered"
                   labelPlacement="outside"
                   value={formData.phone}
-                  onValueChange={(val) => setFormData({ ...formData, phone: val })}
-                  startContent={<Phone size={18} className="text-default-400" />}
+                  onValueChange={(val) =>
+                    setFormData({ ...formData, phone: val })
+                  }
+                  startContent={
+                    <Phone size={18} className="text-default-400" />
+                  }
                 />
 
                 <Input
@@ -205,10 +224,11 @@ export default function ProfilePage() {
                   variant="bordered"
                   labelPlacement="outside"
                   value={formData.email}
-                  onValueChange={(val) => setFormData({ ...formData, email: val })}
+                  onValueChange={(val) =>
+                    setFormData({ ...formData, email: val })
+                  }
                   startContent={<Mail size={18} className="text-default-400" />}
                 />
-
 
                 <Input
                   label="ແຂວງ (Province)"
@@ -217,7 +237,9 @@ export default function ProfilePage() {
                   labelPlacement="outside"
                   value={formData.province}
                   isReadOnly
-                  startContent={<MapPin size={18} className="text-default-400" />}
+                  startContent={
+                    <MapPin size={18} className="text-default-400" />
+                  }
                 />
 
                 <Input
@@ -227,7 +249,9 @@ export default function ProfilePage() {
                   labelPlacement="outside"
                   value={formData.district}
                   isReadOnly
-                  startContent={<MapPin size={18} className="text-default-400" />}
+                  startContent={
+                    <MapPin size={18} className="text-default-400" />
+                  }
                 />
 
                 <Textarea
@@ -236,8 +260,12 @@ export default function ProfilePage() {
                   variant="bordered"
                   labelPlacement="outside"
                   value={formData.address}
-                  onValueChange={(val) => setFormData({ ...formData, address: val })}
-                  startContent={<MapPin size={18} className="text-default-400 mt-2" />}
+                  onValueChange={(val) =>
+                    setFormData({ ...formData, address: val })
+                  }
+                  startContent={
+                    <MapPin size={18} className="text-default-400 mt-2" />
+                  }
                   minRows={3}
                 />
               </div>
