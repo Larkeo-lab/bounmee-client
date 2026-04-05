@@ -14,6 +14,7 @@ import { Toaster } from "react-hot-toast";
 import queryClient from "./config/queryClient";
 import { useCartSync } from "./hooks/useCartSync";
 import { useWifiConnect } from "./hooks/wifiConnect";
+import { ChatProvider } from "./contexts/ChatContext";
 
 export interface CartItem {
   id: string;
@@ -43,6 +44,8 @@ interface CartContextType {
   dismissedCarts: { [tableId: string]: { [itemId: string]: number } };
   dismissTable: (tableId: string) => void;
   setTableCart: (tableId: string, cart: CartItem[]) => void;
+  orderingCount: number;
+  kitchenCount: number;
   isConnected: boolean;
   rtt: number | null;
 }
@@ -264,18 +267,36 @@ export const Provider: React.FC<{ children: React.ReactNode }> = ({ children }) 
 
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
+  // Derived Statistics
+  const kitchenCount = Object.values(carts).reduce((acc, items) => {
+    return acc + items.filter(i => i.status === "COOKING").length;
+  }, 0);
+
+  const orderingCount = Object.entries(carts).reduce((acc, [tableId, items]) => {
+    if (tableId === "default") return acc;
+    const pendingItems = items.filter(i => i.status === "PENDING");
+    const snapshot = dismissedCarts[tableId];
+
+    if (!snapshot) return acc + (pendingItems.length > 0 ? 1 : 0);
+    const hasNew = pendingItems.some(i => i.quantity > (snapshot[i.id] || 0));
+    return acc + (hasNew ? 1 : 0);
+  }, 0);
+
   return (
     <I18nProvider locale="en-GB">
       <HeroUIProvider navigate={navigate} useHref={useHref}>
         <AuthProvider>
-          <CartContext.Provider value={{
-            cart, carts, addToCart, removeFromCart, updateQuantity, setQuantity,
-            updateStatus, clearCart, clearTableCart, subtotal, activeTableId, setActiveTableId,
-            dismissedCarts, dismissTable, setTableCart, isConnected, rtt
-          }}>
-            {children}
-            <Toaster position="top-right" />
-          </CartContext.Provider>
+          <ChatProvider>
+            <CartContext.Provider value={{
+              cart, carts, addToCart, removeFromCart, updateQuantity, setQuantity,
+              updateStatus, clearCart, clearTableCart, subtotal, activeTableId, setActiveTableId,
+              dismissedCarts, dismissTable, setTableCart, orderingCount, kitchenCount,
+              isConnected, rtt
+            }}>
+              {children}
+              <Toaster position="top-right" />
+            </CartContext.Provider>
+          </ChatProvider>
         </AuthProvider>
       </HeroUIProvider>
     </I18nProvider>

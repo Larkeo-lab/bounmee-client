@@ -56,7 +56,8 @@ export const API_ENDPOINTS = {
   ROLE_PERMISSION: {
     LIST: `${API_VERSION}/permission-role`,
     DETAIL: (id: string) => `${API_VERSION}/permission-role/${id}`,
-    TOGGLE_STATUS: (id: string) => `${API_VERSION}/permission-role/status/${id}`,
+    TOGGLE_STATUS: (id: string) =>
+      `${API_VERSION}/permission-role/status/${id}`,
   },
   TABLE: {
     LIST: `${API_VERSION}/table`,
@@ -75,5 +76,10 @@ export const API_ENDPOINTS = {
     DETAIL: (id: string) => `${API_VERSION}/district/${id}`,
     BY_PROVINCE: (provinceCode: string) =>
       `${API_VERSION}/district?provinceCode=${provinceCode}`,
+  },
+  CHAT: {
+    HISTORY: (tableId: string) => `${API_VERSION}/chat/history/${tableId}`,
+    UNREAD: (storeId: string) => `${API_VERSION}/chat/unread/${storeId}`,
+    READ: (tableId: string) => `${API_VERSION}/chat/read/${tableId}`,
   },
 };

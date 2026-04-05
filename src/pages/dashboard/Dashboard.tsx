@@ -136,6 +136,7 @@ export default function Dashboard() {
         day: item.label,
         revenue: item.totalSales,
         cost: item.totalExpenses,
+        profit: item.totalProfit,
       })) || []
     );
   }, [dashboard]);
@@ -347,6 +348,12 @@ export default function Dashboard() {
                   ຕົ້ນທຶນ
                 </span>
               </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-success" />
+                <span className="text-xs font-bold text-default-500">
+                  ກຳໄລ
+                </span>
+              </div>
             </div>
           </div>
           <div className="h-80 w-full">
@@ -356,6 +363,10 @@ export default function Dashboard() {
                   <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1} />
                     <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#22c55e" stopOpacity={0.1} />
+                    <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid
@@ -400,6 +411,7 @@ export default function Dashboard() {
                   strokeWidth={3}
                   fillOpacity={1}
                   fill="url(#colorRevenue)"
+                  name="ລາຍຮັບ"
                 />
                 <Area
                   type="monotone"
@@ -408,6 +420,16 @@ export default function Dashboard() {
                   strokeWidth={2}
                   strokeDasharray="5 5"
                   fill="transparent"
+                  name="ຕົ້ນທຶน"
+                />
+                <Area
+                  type="monotone"
+                  dataKey="profit"
+                  stroke="#22c55e"
+                  strokeWidth={2}
+                  fillOpacity={1}
+                  fill="url(#colorProfit)"
+                  name="ກຳໄລ"
                 />
               </AreaChart>
             </ResponsiveContainer>

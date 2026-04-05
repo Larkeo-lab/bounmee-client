@@ -45,17 +45,18 @@ type PermissionId =
   | "money_rate"
   | "role_permission"
   | "profile"
-  | "dashboard";
+  | "dashboard"
+  | "chat";
 
 type PermissionRow = {
   id: PermissionId;
   name: string;
   permissions: {
     read: boolean;
-    create: boolean;
-    update: boolean;
-    delete: boolean;
-    full_access: boolean;
+    create?: boolean;
+    update?: boolean;
+    delete?: boolean;
+    full_access?: boolean;
   };
 };
 
@@ -81,10 +82,10 @@ export default function AddRoleUser() {
       name: "sidebar.menu.table",
       permissions: {
         read: false,
-        create: false,
-        update: false,
-        delete: false,
-        full_access: false,
+        // create: false,
+        // update: false,
+        // delete: false,
+        // full_access: false,
       },
     },
     {
@@ -92,10 +93,10 @@ export default function AddRoleUser() {
       name: "sidebar.menu.pos",
       permissions: {
         read: false,
-        create: false,
-        update: false,
-        delete: false,
-        full_access: false,
+        // create: false,
+        // update: false,
+        // delete: false,
+        // full_access: false,
       },
     },
     {
@@ -103,10 +104,10 @@ export default function AddRoleUser() {
       name: "sidebar.menu.statisticsReport",
       permissions: {
         read: false,
-        create: false,
-        update: false,
-        delete: false,
-        full_access: false,
+        // create: false,
+        // update: false,
+        // delete: false,
+        // full_access: false,
       },
     },
     {
@@ -114,10 +115,10 @@ export default function AddRoleUser() {
       name: "sidebar.menu.order",
       permissions: {
         read: false,
-        create: false,
-        update: false,
-        delete: false,
-        full_access: false,
+        // create: false,
+        // update: false,
+        // delete: false,
+        // full_access: false,
       },
     },
     {
@@ -125,10 +126,10 @@ export default function AddRoleUser() {
       name: "sidebar.menu.ordering",
       permissions: {
         read: false,
-        create: false,
-        update: false,
-        delete: false,
-        full_access: false,
+        // create: false,
+        // update: false,
+        // delete: false,
+        // full_access: false,
       },
     },
     {
@@ -136,10 +137,21 @@ export default function AddRoleUser() {
       name: "sidebar.menu.kitchen",
       permissions: {
         read: false,
-        create: false,
-        update: false,
-        delete: false,
-        full_access: false,
+        // create: false,
+        // update: false,
+        // delete: false,
+        // full_access: false,
+      },
+    },
+    {
+      id: "chat",
+      name: "sidebar.menu.chat",
+      permissions: {
+        read: false,
+        // create: false,
+        // update: false,
+        // delete: false,
+        // full_access: false,
       },
     },
 
@@ -148,10 +160,10 @@ export default function AddRoleUser() {
       name: "sidebar.menu.setting",
       permissions: {
         read: false,
-        create: false,
-        update: false,
-        delete: false,
-        full_access: false,
+        // create: false,
+        // update: false,
+        // delete: false,
+        // full_access: false,
       },
     },
     {
@@ -159,10 +171,10 @@ export default function AddRoleUser() {
       name: "sidebar.menu.manageProduct",
       permissions: {
         read: false,
-        create: false,
-        update: false,
-        delete: false,
-        full_access: false,
+        // create: false,
+        // update: false,
+        // delete: false,
+        // full_access: false,
       },
     },
     {
@@ -170,10 +182,10 @@ export default function AddRoleUser() {
       name: "sidebar.menu.manageCategory",
       permissions: {
         read: false,
-        create: false,
-        update: false,
-        delete: false,
-        full_access: false,
+        // create: false,
+        // update: false,
+        // delete: false,
+        // full_access: false,
       },
     },
     {
@@ -181,10 +193,10 @@ export default function AddRoleUser() {
       name: "sidebar.menu.manageBank",
       permissions: {
         read: false,
-        create: false,
-        update: false,
-        delete: false,
-        full_access: false,
+        // create: false,
+        // update: false,
+        // delete: false,
+        // full_access: false,
       },
     },
     {
@@ -192,10 +204,10 @@ export default function AddRoleUser() {
       name: "sidebar.menu.manageEmployee",
       permissions: {
         read: false,
-        create: false,
-        update: false,
-        delete: false,
-        full_access: false,
+        // create: false,
+        // update: false,
+        // delete: false,
+        // full_access: false,
       },
     },
     {
@@ -203,10 +215,10 @@ export default function AddRoleUser() {
       name: "sidebar.menu.managePrinter",
       permissions: {
         read: false,
-        create: false,
-        update: false,
-        delete: false,
-        full_access: false,
+        // create: false,
+        // update: false,
+        // delete: false,
+        // full_access: false,
       },
     },
     {
@@ -214,10 +226,10 @@ export default function AddRoleUser() {
       name: "sidebar.menu.manageProfile",
       permissions: {
         read: false,
-        create: false,
-        update: false,
-        delete: false,
-        full_access: false,
+        // create: false,
+        // update: false,
+        // delete: false,
+        // full_access: false,
       },
     },
     {
@@ -225,10 +237,10 @@ export default function AddRoleUser() {
       name: "sidebar.menu.manageMoneyRate",
       permissions: {
         read: false,
-        create: false,
-        update: false,
-        delete: false,
-        full_access: false,
+        // create: false,
+        // update: false,
+        // delete: false,
+        // full_access: false,
       },
     },
     {
@@ -236,10 +248,10 @@ export default function AddRoleUser() {
       name: "sidebar.menu.managePermission",
       permissions: {
         read: false,
-        create: false,
-        update: false,
-        delete: false,
-        full_access: false,
+        // create: false,
+        // update: false,
+        // delete: false,
+        // full_access: false,
       },
     },
     {
@@ -247,10 +259,10 @@ export default function AddRoleUser() {
       name: "sidebar.menu.manageTable",
       permissions: {
         read: false,
-        create: false,
-        update: false,
-        delete: false,
-        full_access: false,
+        // create: false,
+        // update: false,
+        // delete: false,
+        // full_access: false,
       },
     },
   ]);
@@ -518,11 +530,11 @@ export default function AddRoleUser() {
                   <span>ເຂົ້າເຖິງທັງໝົດໃນລະບົບ</span>
                 </div>
               </TableColumn>
-              <TableColumn key="read">ອ່ານຂໍ້ມູນ</TableColumn>
-              <TableColumn key="create">ສ້າງຂໍ້ມູນ</TableColumn>
+              <TableColumn key="read">ສະແດງ</TableColumn>
+              {/* <TableColumn key="create">ສ້າງຂໍ້ມູນ</TableColumn>
               <TableColumn key="update">ແກ້ໄຂຂໍ້ມູນ</TableColumn>
-              <TableColumn key="delete">ລົບຂໍ້ມູນ</TableColumn>
-              <TableColumn key="full_access">ຈັດການທັງໝົດ</TableColumn>
+              <TableColumn key="delete">ລົບຂໍ້ມູນ</TableColumn> */}
+              {/* <TableColumn key="full_access">ຈັດການທັງໝົດ</TableColumn> */}
             </TableHeader>
 
             <TableBody items={permissions}>
@@ -552,7 +564,11 @@ export default function AddRoleUser() {
                                   className="text-gray-400 ml-6"
                                 />
                               )}
-                              <span>{item.name.includes(".") ? t(item.name) : item.name}</span>
+                              <span>
+                                {item.name.includes(".")
+                                  ? t(item.name)
+                                  : item.name}
+                              </span>
                             </div>
                           </TableCell>
                         );
@@ -563,6 +579,8 @@ export default function AddRoleUser() {
                       case "full_access":
                         const isHeader = ["settings"].includes(item.id);
                         if (isHeader) return <TableCell>{null}</TableCell>;
+                        if (key !== "read")
+                          return <TableCell>{null}</TableCell>;
                         return (
                           <TableCell>
                             <Checkbox

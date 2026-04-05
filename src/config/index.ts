@@ -1,5 +1,6 @@
 const laFlag = "/assets/images/lao-flag.png"
 const enFlag = "/assets/images/en-flag.png"
+const thFlag = "/assets/images/thai-flag.png"
 
 // Create language with flag 
 export const languageConfigs = [
@@ -7,6 +8,11 @@ export const languageConfigs = [
     label: 'ພາສາລາວ',
     value: 'lo',
     flag: laFlag,
+  },
+  {
+    label: 'ไทย',
+    value: 'th',
+    flag: thFlag,
   },
   {
     label: 'English',

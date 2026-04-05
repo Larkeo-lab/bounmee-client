@@ -27,6 +27,7 @@ import TableSettingsPage from "@/pages/settings/table/TableSettingsPage";
 import ProductOrderPage from "@/pages/productOrder/ProductOrderPage";
 import OrderingPage from "@/pages/ordering/OrderingPage";
 import KitchenPage from "@/pages/kitchen/KitchenPage";
+import ChatPage from "@/pages/chat/ChatPage";
 
 export interface AppRoute {
   path: string;
@@ -173,6 +174,13 @@ export const appRoutes: AppRoute[] = [
     isPrivate: true,
     requiresLayout: true,
     permissionKey: "kitchen",
+  },
+  {
+    path: "/chat",
+    element: <ChatPage />,
+    isPrivate: true,
+    requiresLayout: true,
+    permissionKey: "chat",
   },
   {
     path: "/*",

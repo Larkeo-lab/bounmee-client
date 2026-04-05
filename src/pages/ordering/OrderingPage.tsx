@@ -107,7 +107,7 @@ export default function OrderingPage() {
   };
 
   return (
-    <div className="space-y-8 pb-8">
+    <div className="space-y-8 pb-8 m-4">
       {/* Header Section - Matched with OrderPage style */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-divider pb-6">
         <div>

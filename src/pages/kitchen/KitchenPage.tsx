@@ -99,10 +99,13 @@ export default function KitchenPage() {
 
   const handleServeItem = (tableId: string, item: CartItem) => {
     if (!isConnected) {
-      toast.error("⚠️ ຕອນນີ້ Offline! ຂໍ້ມູນການເສີບຈະອັບເດດໄປຍັງเครื่องอื่นເມື່ອເນັດກັບມາ.", {
-        duration: 4000,
-        style: { fontWeight: "bold" }
-      });
+      toast.error(
+        "⚠️ ຕອນນີ້ Offline! ຂໍ້ມູນການເສີບຈະອັບເດດໄປຍັງเครื่องอื่นເມື່ອເນັດກັບມາ.",
+        {
+          duration: 4000,
+          style: { fontWeight: "bold" },
+        },
+      );
     }
     const uId = `${item.id}-${item.status}-${item.note || ""}-${tableId}`;
     if (isServing === uId) return;
@@ -127,10 +130,13 @@ export default function KitchenPage() {
 
   const handleServeAllInTable = (tableId: string, items: CartItem[]) => {
     if (!isConnected) {
-      toast.error("⚠️ ຕອນนี้ Offline! ข้อมูลจะอับเดดไปยับเครื่องอื่นเมือเน็ตกลับมา.", {
-        duration: 4000,
-        style: { fontWeight: "bold" }
-      });
+      toast.error(
+        "⚠️ ຕອນนี้ Offline! ข้อมูลจะอับเดดไปยับเครื่องอื่นเมือเน็ตกลับมา.",
+        {
+          duration: 4000,
+          style: { fontWeight: "bold" },
+        },
+      );
     }
     if (isServing === tableId) return;
     setIsServing(tableId);
@@ -157,7 +163,7 @@ export default function KitchenPage() {
   }
 
   return (
-    <div className="h-[calc(100vh-140px)] flex flex-col gap-6 overflow-hidden">
+    <div className="h-[calc(100vh-140px)] flex flex-col gap-6 overflow-hidden m-4">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 flex-shrink-0">
         <div>
           <h1 className="text-2xl md:text-3xl font-black text-primary flex items-center gap-3">

@@ -112,7 +112,8 @@
       "manageProfile": "Profile Management",
       "manageMoneyRate": "Money Rate Management",
       "table": "Manage Tables",
-      "kitchen": "Kitchen"
+      "kitchen": "Kitchen",
+      "chat": "Chat Context"
     }
   },
   "kitchen": {

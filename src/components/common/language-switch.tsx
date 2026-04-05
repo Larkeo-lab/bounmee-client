@@ -1,6 +1,5 @@
-import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { Switch, Avatar } from '@heroui/react'
+import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Button, Avatar } from '@heroui/react'
 import { languageConfigs } from '@/config'
 
 interface Language {
@@ -20,41 +19,49 @@ export default function LanguageSwitch() {
   const { i18n } = useTranslation()
 
   const currentLanguage = languages.find(lang => lang.code === i18n.language) || languages[0]
-  const [isSelected, setIsSelected] = React.useState(currentLanguage.code === languages[1]?.code)
 
-  const handleLanguageChange = (selected: boolean) => {
-    setIsSelected(selected)
-    const newLanguage = selected ? languages[1] : languages[0]
-    i18n.changeLanguage(newLanguage.code)
+  const handleLanguageChange = (key: any) => {
+    i18n.changeLanguage(key.toString())
   }
 
-  // Update isSelected when language changes externally
-  React.useEffect(() => {
-    setIsSelected(currentLanguage.code === languages[1]?.code)
-  }, [currentLanguage.code])
-
-  const startLanguage = languages[0]
-  const endLanguage = languages[1] || languages[0]
-
   return (
-    <Switch
-      isSelected={isSelected}
-      onValueChange={handleLanguageChange}
-      color='default'
-      size="md"
-      thumbIcon={({ isSelected }) =>
-        !isSelected ? <Avatar
-          src={startLanguage.flag}
-          alt={`${startLanguage.name} flag`}
-          className="w-5 h-5"
-        /> : <Avatar
-          src={endLanguage.flag}
-          alt={`${endLanguage.name} flag`}
-          className="w-5 h-5"
-        />
-      }
-    >
-      {/* {currentLanguage.name} */}
-    </Switch>
+    <Dropdown placement="bottom-end" className="bg-white/90 backdrop-blur-md border-none shadow-2xl">
+      <DropdownTrigger>
+        <Button 
+          variant="light" 
+          isIconOnly
+          radius="full"
+          className="min-w-10 w-10 h-10 border border-default-100 bg-white/50 shadow-sm"
+        >
+          <Avatar 
+            src={currentLanguage.flag} 
+            className="w-6 h-6"
+            radius="full"
+          />
+        </Button>
+      </DropdownTrigger>
+      <DropdownMenu 
+        aria-label="Language selection" 
+        onAction={handleLanguageChange}
+        variant="flat"
+        className="p-2"
+        itemClasses={{
+          base: "rounded-xl font-bold transition-all p-2.5",
+          selectedIcon: "text-primary",
+        }}
+      >
+        {languages.map((lang) => (
+          <DropdownItem
+            key={lang.code}
+            startContent={
+              <Avatar src={lang.flag} className="w-5 h-5 shadow-sm" radius="full" />
+            }
+            className={currentLanguage.code === lang.code ? "text-primary" : "text-default-700"}
+          >
+            {lang.name}
+          </DropdownItem>
+        ))}
+      </DropdownMenu>
+    </Dropdown>
   )
 }

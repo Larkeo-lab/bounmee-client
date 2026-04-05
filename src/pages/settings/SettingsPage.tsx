@@ -120,7 +120,7 @@ const SettingsPage = () => {
   );
 
   return (
-    <div className="w-full">
+    <div className="w-full m-4 mr-4">
       <div className="mb-8">
         <h1 className="text-3xl font-black text-primary mb-2">
           {t("sidebar.menu.setting")}

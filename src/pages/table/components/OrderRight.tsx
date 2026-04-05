@@ -192,7 +192,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
               return (
                 <div
                   key={uniqueId}
-                  className="flex gap-2 group items-center border-b border-divider border-dashed pb-2 lg:pb-3 last:border-b-0 last:pb-0"
+                  className="flex gap-1.5 group items-center border-b border-divider border-dashed pb-1.5 lg:pb-2 last:border-b-0 last:pb-0"
                 >
                   <Checkbox
                     isSelected={selectedCartItems.includes(uniqueId)}
@@ -205,17 +205,17 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                         );
                       }
                     }}
-                    size="md"
-                    className="mr-1"
+                    size="sm"
+                    className="mr-0.5"
                   />
                   <Image
                     src={getDisplayImageUrl(item.image)}
-                    className="w-10 h-10 lg:w-14 lg:h-14 object-cover min-w-[40px] lg:min-w-[56px]"
+                    className="w-9 h-9 lg:w-12 lg:h-12 object-cover min-w-[36px] lg:min-w-[48px]"
                     radius="md"
                   />
                   <div className="flex-grow flex flex-col justify-between py-0.5">
-                    <div className="flex justify-between items-start gap-2">
-                      <span className="font-semibold text-[12px] lg:text-sm line-clamp-1">
+                    <div className="flex justify-between items-start gap-1">
+                      <span className="font-semibold text-[11px] lg:text-[13px] line-clamp-1">
                         {item.name}
                       </span>
                       <Button
@@ -236,8 +236,8 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                         <Trash2 size={12} />
                       </Button>
                     </div>
-                    <div className="flex justify-between items-center mt-1.5 gap-2">
-                      <span className="text-primary font-bold text-[12px] lg:text-sm shrink-0">
+                    <div className="flex justify-between items-center mt-0.5 gap-1.5">
+                      <span className="text-primary font-bold text-[11px] lg:text-[13px] shrink-0">
                         {formatNumber(item.price * item.quantity)} ກີບ
                       </span>
 

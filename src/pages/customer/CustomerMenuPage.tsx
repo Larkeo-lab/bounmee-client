@@ -13,13 +13,14 @@ import {
   Badge,
   useDisclosure,
 } from "@heroui/react";
-import { Plus, ShoppingCart } from "lucide-react";
+import { Plus, ShoppingCart, MessageCircle } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getDisplayImageUrl } from "@/lib/utils";
 import { formatNumber } from "@/utils/numberFormat";
 import ListmenuSelect from "./ListmenuSelect";
 import BillModal from "@/components/common/bill";
 import { socket } from "@/config/socket";
+import ChatPage from "./chatPage";
 
 export default function CustomerMenuPage() {
   const { qrCode } = useParams<{ qrCode: string }>();
@@ -65,6 +66,14 @@ export default function CustomerMenuPage() {
     onOpenChange: onCartOpenChange,
     onClose: onCloseCart,
   } = useDisclosure();
+
+  const {
+    isOpen: isChatOpen,
+    onOpen: onOpenChat,
+    onOpenChange: onChatOpenChange,
+  } = useDisclosure();
+
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
 
   const cartRef = useRef<HTMLDivElement>(null);
   const [flyingItems, setFlyingItems] = useState<any[]>([]);
@@ -153,15 +162,34 @@ export default function CustomerMenuPage() {
         }
       };
 
+      const playNotificationSound = () => {
+        const audio = new Audio("/assets/void/pop_ding.mp3");
+        audio.play().catch((err) => console.log("Audio play error:", err));
+      };
+
+      const handleReceiveChatMessage = (data: {
+        tableId: string;
+        sender: "staff" | "customer";
+      }) => {
+        if (data.tableId === tableData.id && data.sender === "staff") {
+          playNotificationSound();
+          if (!isChatOpen) {
+            setUnreadChatCount((prev) => prev + 1);
+          }
+        }
+      };
+
       socket.on("TABLE_CART_UPDATED", handleCartUpdate);
       socket.on("TABLE_SESSION_ENDED", handleTableClosed);
+      socket.on("CHAT_MESSAGE_RECEIVED", handleReceiveChatMessage);
 
       return () => {
         socket.off("TABLE_CART_UPDATED", handleCartUpdate);
         socket.off("TABLE_SESSION_ENDED", handleTableClosed);
+        socket.off("CHAT_MESSAGE_RECEIVED", handleReceiveChatMessage);
       };
     }
-  }, [storeId, tableData?.id, qrCode]);
+  }, [storeId, tableData?.id, qrCode, isChatOpen]);
 
   const { data: productsData, isLoading: isLoadingProducts } = useQuery({
     queryKey: ["public-products", storeId],
@@ -349,7 +377,7 @@ export default function CustomerMenuPage() {
           </h2>
           <p className="text-default-500 font-medium max-w-xs mx-auto">
             ຂໍອະໄພ, ໂຕະນີ້ໄດ້ຖືກປິດການບໍລິການແລ້ວ.
-            ກະລຸນາຕິດຕໍ່ພະນັກງານເພື່ອເປີດໂຕະໃໝ່.
+            ກະລຸນາຕິດຕໍ່ພะນັກງານເພື່ອເປີດໂຕະໃໝ່.
           </p>
         </div>
         <div className="flex flex-col items-center gap-2 opacity-30 mt-8">
@@ -498,25 +526,52 @@ export default function CustomerMenuPage() {
         placedOrders={placedOrders}
       />
 
-      {/* Floating Cart Button */}
-      <div className="fixed bottom-6 right-6 z-40" ref={cartRef}>
+      {/* Floating Buttons Group */}
+      <div className="fixed bottom-6 right-6 z-40 flex flex-col gap-4 items-end">
+        {/* Floating Cart Button */}
+        <div ref={cartRef}>
+          <Badge
+            content={cartTotalItems + (placedOrders?.length || 0)}
+            color="danger"
+            shape="circle"
+            size="lg"
+            className="font-bold border-none"
+            isInvisible={cartTotalItems + (placedOrders?.length || 0) === 0}
+          >
+            <Button
+              isIconOnly
+              color="primary"
+              variant="shadow"
+              size="lg"
+              className="w-16 h-16 rounded-full shadow-2xl"
+              onPress={onOpenCart}
+            >
+              <ShoppingCart size={28} className="text-white" />
+            </Button>
+          </Badge>
+        </div>
+
+        {/* Floating Chat Button */}
         <Badge
-          content={cartTotalItems + (placedOrders?.length || 0)}
+          content={unreadChatCount}
           color="danger"
           shape="circle"
           size="lg"
           className="font-bold border-none"
-          isInvisible={cartTotalItems + (placedOrders?.length || 0) === 0}
+          isInvisible={unreadChatCount === 0}
         >
           <Button
             isIconOnly
-            color="primary"
+            color="success"
             variant="shadow"
             size="lg"
-            className="w-16 h-16 rounded-full shadow-2xl"
-            onPress={onOpenCart}
+            className="w-16 h-16 rounded-full shadow-2xl transition-transform hover:scale-110 active:scale-95"
+            onPress={() => {
+              setUnreadChatCount(0);
+              onOpenChat();
+            }}
           >
-            <ShoppingCart size={28} className="text-white" />
+            <MessageCircle size={28} className="text-white" />
           </Button>
         </Badge>
       </div>
@@ -578,6 +633,14 @@ export default function CustomerMenuPage() {
         submitOrder={submitOrder}
         isPending={submitOrderMutation.isPending}
         updateNote={updateNote}
+      />
+
+      <ChatPage
+        isOpen={isChatOpen}
+        onOpenChange={onChatOpenChange}
+        tableName={tableData?.name || ""}
+        storeId={storeId || ""}
+        tableId={tableData?.id || ""}
       />
     </div>
   );

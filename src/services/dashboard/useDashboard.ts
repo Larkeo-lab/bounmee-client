@@ -14,6 +14,7 @@ export interface RevenueTrend {
   label: string;
   totalSales: number;
   totalExpenses: number;
+  totalProfit: number;
 }
 
 export interface PaymentChannel {

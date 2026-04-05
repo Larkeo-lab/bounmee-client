@@ -145,7 +145,7 @@ export default function ProductOrderPage() {
   ];
 
   return (
-    <div className="flex flex-col lg:flex-row h-[calc(100vh-80px)] gap-0 lg:gap-4 overflow-hidden -m-4">
+    <div className="flex flex-col lg:flex-row h-[calc(100vh-80px)] gap-0 lg:gap-4 overflow-hidden m-4">
       {/* Product Selection Section */}
       <div className="flex-grow flex flex-col min-h-0 lg:h-full p-4 lg:pb-4 pb-2">
         {/* Header with Search and Category Tabs */}
@@ -188,9 +188,9 @@ export default function ProductOrderPage() {
             </div>
           </div>
 
-          <ScrollShadow 
-            size={40} 
-            orientation="horizontal" 
+          <ScrollShadow
+            size={40}
+            orientation="horizontal"
             className="max-w-full w-0 min-w-full overflow-x-auto scrollbar-hide"
             hideScrollBar
           >
@@ -201,7 +201,8 @@ export default function ProductOrderPage() {
               selectedKey={selectedCategory}
               onSelectionChange={(key) => setSelectedCategory(key as string)}
               classNames={{
-                tabList: "gap-4 lg:gap-6 flex-nowrap p-0 min-w-max border-b-2 border-divider",
+                tabList:
+                  "gap-4 lg:gap-6 flex-nowrap p-0 min-w-max border-b-2 border-divider",
                 cursor: "w-full bg-primary",
                 tab: "max-w-fit px-1 h-10 lg:h-12 flex-shrink-0",
                 tabContent:
@@ -223,20 +224,20 @@ export default function ProductOrderPage() {
               description="ລອງຄົ້ນຫາດ້ວຍຄຳສັບອື່ນ ຫຼື ປ່ຽນໝວດໝູ່"
             />
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5 2xl:grid-cols-6 gap-3 lg:gap-4">
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-2 lg:gap-3">
               {products.map((product) => (
                 <Card
                   isPressable
                   key={product.id}
                   onPress={() => addToCart(product)}
-                  className="group relative border-none bg-white/70 dark:bg-gray-800/70 backdrop-blur-md hover:shadow-2xl hover:-translate-y-2 transition-all duration-300"
+                  className="group relative border-none bg-white/70 dark:bg-gray-800/70 backdrop-blur-md hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
                 >
-                  <CardBody className="p-0 relative overflow-hidden h-[130px] sm:h-[150px] lg:h-[160px]">
+                  <CardBody className="p-0 relative overflow-hidden h-[100px] sm:h-[120px] lg:h-[130px]">
                     {/* Stock Indicator Badge */}
-                    <div className="absolute top-2 right-2 z-20">
+                    <div className="absolute top-1 right-1 z-20">
                       <div
                         className={clsx(
-                          "px-2 py-0.5 lg:py-1 rounded-full text-[9px] lg:text-[10px] font-bold text-white shadow-lg backdrop-blur-md",
+                          "px-1.5 py-0.5 rounded-full text-[8px] lg:text-[10px] font-bold text-white shadow-lg backdrop-blur-md",
                           product.stockQty > 10
                             ? "bg-green-500/80"
                             : product.stockQty > 0
@@ -245,8 +246,8 @@ export default function ProductOrderPage() {
                         )}
                       >
                         {product.stockQty > 0
-                          ? `ຍັງເຫຼືອ: ${product.stockQty}`
-                          : "ໝົດແລ້ວ"}
+                          ? `${product.stockQty}`
+                          : "ໝົດ"}
                       </div>
                     </div>
 
@@ -267,14 +268,14 @@ export default function ProductOrderPage() {
                     />
                   </CardBody>
 
-                  <CardFooter className="flex flex-col items-start gap-1 p-2 lg:p-4 bg-white/40 dark:bg-gray-900/40 backdrop-blur-sm">
-                    <b className="text-[12px] lg:text-small font-bold text-default-700 w-full truncate mb-0.5 group-hover:text-primary transition-colors">
+                  <CardFooter className="flex flex-col items-start gap-0.5 p-2 lg:p-3 bg-white/40 dark:bg-gray-900/40 backdrop-blur-sm">
+                    <b className="text-[11px] lg:text-[13px] font-bold text-default-700 w-full truncate group-hover:text-primary transition-colors">
                       {product.name}
                     </b>
                     <div className="flex justify-between items-center w-full">
-                      <p className="text-primary font-black text-sm lg:text-base whitespace-nowrap">
+                      <p className="text-primary font-black text-[12px] lg:text-[14px] whitespace-nowrap">
                         {formatNumber(product.price)}{" "}
-                        <span className="text-[9px] lg:text-[10px] font-medium text-default-400">
+                        <span className="text-[8px] lg:text-[9px] font-medium text-default-400">
                           ກີບ
                         </span>
                       </p>

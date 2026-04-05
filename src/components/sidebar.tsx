@@ -9,6 +9,8 @@ import clsx from "clsx";
 import { useAuth } from "@/routes/AuthContext";
 import { Modal, ModalContent, ModalBody, ModalFooter } from "@heroui/react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useChat } from "@/contexts/ChatContext";
+import { useCart } from "@/provider";
 
 // Icons import
 import {
@@ -27,6 +29,7 @@ import {
   LayoutGrid,
   History,
   ChefHat,
+  MessageCircle,
 } from "lucide-react";
 
 import deePosLogo from "/assets/logo.png";
@@ -34,7 +37,6 @@ const bgLineName = "/line-nam-bg.png";
 
 import versionApp from "../../package.json";
 import { getDisplayImageUrl } from "@/lib/utils";
-import { useCart } from "@/provider";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -95,6 +97,12 @@ const sidebarGroups: MenuGroup[] = [
         icon: ChefHat,
         permissionKey: "kitchen",
       },
+      {
+        labelKey: "sidebar.menu.chat",
+        href: "/chat",
+        icon: MessageCircle,
+        permissionKey: "chat",
+      },
     ],
   },
   {
@@ -111,46 +119,19 @@ const sidebarGroups: MenuGroup[] = [
 
 export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
   const { t } = useTranslation();
-  const { useMemo } = React;
   const location = useLocation();
   const navigate = useNavigate();
   const { logout, isTokenExpired, user } = useAuth();
-  const { carts, dismissedCarts } = useCart();
+  const { unreadCounts } = useChat();
+  const { orderingCount, kitchenCount } = useCart();
   const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set());
   const [isDesktopExpanded, setIsDesktopExpanded] = useState(true);
 
-  // Calculate ordering badge
-  const orderingBadge = useMemo(() => {
-    return Object.entries(carts).filter(([tableId, items]) => {
-      if (tableId === "default") return false;
-      const snapshot = dismissedCarts[tableId]; // { [itemId]: qty } or undefined
-
-      const pendingItems = (items as any[]).filter(
-        (i) => i.status === "PENDING",
-      );
-      if (pendingItems.length === 0) return false;
-
-      if (!snapshot) return true; // Never dismissed → show
-
-      // Has any item with quantity > snapshot → show
-      return pendingItems.some((item) => {
-        const seenQty = (snapshot as any)[item.id] || 0;
-        return item.quantity > seenQty;
-      });
-    }).length;
-  }, [carts, dismissedCarts]);
-
-  // Calculate kitchen badge (cooking items count)
-  const kitchenBadge = useMemo(() => {
-    let count = 0;
-    Object.values(carts).forEach((items) => {
-      if (Array.isArray(items)) {
-        const cookingItems = items.filter((i) => i.status === "COOKING");
-        count += cookingItems.length;
-      }
-    });
-    return count;
-  }, [carts]);
+  // Calculate total chat unread count from all tables
+  const totalChatUnread = Object.values(unreadCounts).reduce(
+    (acc, count) => acc + count,
+    0,
+  );
 
   // Permission Logic
   const userRole = user?.user?.role;
@@ -169,11 +150,14 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
       ...group,
       items: group.items
         .map((item) => {
+          if (item.href === "/chat") {
+            return { ...item, badge: totalChatUnread };
+          }
           if (item.href === "/ordering") {
-            return { ...item, badge: orderingBadge };
+            return { ...item, badge: orderingCount };
           }
           if (item.href === "/kitchen") {
-            return { ...item, badge: kitchenBadge };
+            return { ...item, badge: kitchenCount };
           }
           return item;
         })
@@ -487,9 +471,7 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
           >
             {/* Store Logo */}
             <Image
-              src={
-                getDisplayImageUrl(user?.user?.store?.logoUrl) || deePosLogo
-              }
+              src={getDisplayImageUrl(user?.user?.store?.logoUrl) || deePosLogo}
               fallbackSrc={deePosLogo}
               alt={user?.user?.store?.name || "Store Logo"}
               radius="full"
