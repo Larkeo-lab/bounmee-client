@@ -117,7 +117,7 @@ export default function PermissionManagement() {
   }, []);
 
   return (
-    <div className="">
+    <div className=" m-4">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-medium font-bold text-gray-500">

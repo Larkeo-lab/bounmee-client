@@ -321,7 +321,7 @@ export default function TableSettingsPage() {
   }, [filterValue, onOpen, selectedTab]);
 
   return (
-    <div className="w-full space-y-6">
+    <div className="space-y-6 m-4">
       <div className="flex flex-col gap-1">
         <h1 className="text-3xl font-black text-primary">ຫນ້າໂຕະອາຫານ</h1>
         <p className="text-default-500">

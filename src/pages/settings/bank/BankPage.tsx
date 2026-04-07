@@ -248,14 +248,16 @@ export default function BankPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 m-4">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-primary flex items-center gap-2">
             <Landmark size={28} />
             ຈັດການທະນາຄານ
           </h1>
-          <p className="text-default-500">ຈັດການຂໍ້ມູນທະນາຄານສຳລັບຮັບຜ່ານ QR Code</p>
+          <p className="text-default-500">
+            ຈັດການຂໍ້ມູນທະນາຄານສຳລັບຮັບຜ່ານ QR Code
+          </p>
         </div>
         <Button
           color="primary"
@@ -310,10 +312,7 @@ export default function BankPage() {
           <TableColumn>ສະຖານະ</TableColumn>
           <TableColumn className="text-center">ຈັດການ</TableColumn>
         </TableHeader>
-        <TableBody
-          isLoading={isLoading}
-          emptyContent={<EmptyState />}
-        >
+        <TableBody isLoading={isLoading} emptyContent={<EmptyState />}>
           {items.map((bank) => (
             <TableRow key={bank.id}>
               <TableCell>
@@ -386,7 +385,9 @@ export default function BankPage() {
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader className="flex flex-col gap-1">ເພີ່ມທະນາຄານໃໝ່</ModalHeader>
+              <ModalHeader className="flex flex-col gap-1">
+                ເພີ່ມທະນາຄານໃໝ່
+              </ModalHeader>
               <ModalBody>{bankForm}</ModalBody>
               <ModalFooter>
                 <Button variant="light" onPress={onClose}>
@@ -395,7 +396,10 @@ export default function BankPage() {
                 <Button
                   color="primary"
                   onPress={() => handleCreateSubmit(onClose)}
-                  isLoading={createBankMutation.isPending || uploadImageMutation.isPending}
+                  isLoading={
+                    createBankMutation.isPending ||
+                    uploadImageMutation.isPending
+                  }
                   isDisabled={!formData.name}
                 >
                   ບັນທຶກ
@@ -416,7 +420,9 @@ export default function BankPage() {
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader className="flex flex-col gap-1">ແກ້ໄຂຂໍ້ມູນທະນາຄານ</ModalHeader>
+              <ModalHeader className="flex flex-col gap-1">
+                ແກ້ໄຂຂໍ້ມູນທະນາຄານ
+              </ModalHeader>
               <ModalBody>{bankForm}</ModalBody>
               <ModalFooter>
                 <Button variant="light" onPress={onClose}>
@@ -425,7 +431,10 @@ export default function BankPage() {
                 <Button
                   color="primary"
                   onPress={() => handleUpdateSubmit(onClose)}
-                  isLoading={updateBankMutation.isPending || uploadImageMutation.isPending}
+                  isLoading={
+                    updateBankMutation.isPending ||
+                    uploadImageMutation.isPending
+                  }
                   isDisabled={!formData.name}
                 >
                   ອັບເດດ
@@ -437,11 +446,17 @@ export default function BankPage() {
       </Modal>
 
       {/* Delete Modal */}
-      <Modal isOpen={isDeleteOpen} onOpenChange={onDeleteOpenChange} placement="center">
+      <Modal
+        isOpen={isDeleteOpen}
+        onOpenChange={onDeleteOpenChange}
+        placement="center"
+      >
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader className="flex flex-col gap-1">ຢືນຢັນການລຶບ</ModalHeader>
+              <ModalHeader className="flex flex-col gap-1">
+                ຢືນຢັນການລຶບ
+              </ModalHeader>
               <ModalBody>
                 <p>
                   ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບທະນາຄານ{" "}
