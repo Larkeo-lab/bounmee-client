@@ -641,6 +641,7 @@ export default function CustomerMenuPage() {
         tableName={tableData?.name || ""}
         storeId={storeId || ""}
         tableId={tableData?.id || ""}
+        logoUrl={tableData?.store?.logoUrl}
       />
     </div>
   );
