@@ -24,10 +24,10 @@ import PrivateRoute from "./PrivateRoute";
 import Dashboard from "@/pages/dashboard/Dashboard";
 import TablePage from "@/pages/table/TablePage";
 import TableSettingsPage from "@/pages/settings/table/TableSettingsPage";
-import ProductOrderPage from "@/pages/productOrder/ProductOrderPage";
 import OrderingPage from "@/pages/ordering/OrderingPage";
 import KitchenPage from "@/pages/kitchen/KitchenPage";
 import ChatPage from "@/pages/chat/ChatPage";
+import ProductOrderPage from "@/pages/saleGeneral/ProductOrderPage";
 
 export interface AppRoute {
   path: string;

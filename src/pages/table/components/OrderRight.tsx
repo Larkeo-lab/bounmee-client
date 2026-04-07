@@ -1,11 +1,5 @@
 import React from "react";
-import {
-  Button,
-  Checkbox,
-  Image,
-  ScrollShadow,
-  Chip,
-} from "@heroui/react";
+import { Button, Checkbox, Image, ScrollShadow, Chip } from "@heroui/react";
 import {
   ShoppingCart,
   Trash2,
@@ -32,7 +26,9 @@ interface OrderRightProps {
   setSelectedCartItems: React.Dispatch<React.SetStateAction<string[]>>;
   isSelectingMenu: boolean;
   setIsSelectingMenu: React.Dispatch<React.SetStateAction<boolean>>;
-  setItemToRemove: React.Dispatch<React.SetStateAction<{ id: string; status: string; note?: string; } | null>>;
+  setItemToRemove: React.Dispatch<
+    React.SetStateAction<{ id: string; status: string; note?: string } | null>
+  >;
   onRemoveItemOpen: () => void;
   expandedNotes: Set<string>;
   toggleNote: (uId: string) => void;
@@ -83,17 +79,18 @@ export const OrderRight: React.FC<OrderRightProps> = ({
   const {
     cart,
     updateQuantity,
-    setQuantity,
     updateStatus,
     subtotal,
     isConnected, // 🌐 Get connection status
   } = useCart();
 
   return (
-    <div className={clsx(
-      "w-full sm:w-[320px] md:w-[350px] lg:w-[400px] flex flex-col bg-white dark:bg-gray-800 border-t sm:border-t-0 sm:border-l border-divider shadow-2xl z-30 sm:h-full overflow-hidden flex-shrink-0 rounded-t-[30px] sm:rounded-none animate-in fade-in slide-in-from-bottom-full sm:slide-in-from-right-4 duration-500",
-      isSelectingMenu ? "h-[45vh]" : "h-[75vh]"
-    )}>
+    <div
+      className={clsx(
+        "w-full sm:w-[320px] md:w-[350px] lg:w-[400px] flex flex-col bg-white dark:bg-gray-800 border-t sm:border-t-0 sm:border-l border-divider shadow-2xl z-30 sm:h-full overflow-hidden flex-shrink-0 rounded-t-[30px] sm:rounded-none animate-in fade-in slide-in-from-bottom-full sm:slide-in-from-right-4 duration-500",
+        isSelectingMenu ? "h-[45vh]" : "h-[75vh]",
+      )}
+    >
       {/* Mobile Drag Indicator */}
       <div className="flex justify-center pt-2 sm:hidden">
         <div className="w-10 h-1 bg-default-300 rounded-full" />
@@ -157,8 +154,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
               } else {
                 const filteredIds = new Set(
                   filteredCart.map(
-                    (item) =>
-                      `${item.id}-${item.status}-${item.note || ""}`,
+                    (item) => `${item.id}-${item.status}-${item.note || ""}`,
                   ),
                 );
                 setSelectedCartItems(
@@ -256,17 +252,12 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                               )}
                               onClick={() => toggleNote(uniqueId)}
                             >
-                              <MessageSquare
-                                size={14}
-                                strokeWidth={2.5}
-                              />
+                              <MessageSquare size={14} strokeWidth={2.5} />
                             </div>
                           )}
 
                           {(() => {
-                            const statusConfig = getStatusDisplay(
-                              item.status,
-                            );
+                            const statusConfig = getStatusDisplay(item.status);
                             return (
                               <Chip
                                 size="sm"
@@ -307,12 +298,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                             className="min-w-6 h-6 w-6"
                             isDisabled={item.quantity >= item.stockQty}
                             onClick={() =>
-                              updateQuantity(
-                                item.id,
-                                item.status,
-                                1,
-                                item.note,
-                              )
+                              updateQuantity(item.id, item.status, 1, item.note)
                             }
                           >
                             <Plus size={10} />
@@ -379,10 +365,13 @@ export const OrderRight: React.FC<OrderRightProps> = ({
             className="h-8 md:h-9 font-bold text-[9px] md:text-[11px] text-white shadow-sm px-1"
             onClick={() => {
               if (!isConnected) {
-                toast.error("⚠️ ຕອນນີ້ Offline! ອໍເດີ້ຈະຖືກສົ່ງໄປຄົວທັນທີເມື່ອເນັດກັບມາ.", {
-                  duration: 4000,
-                  style: { fontWeight: "bold" }
-                });
+                toast.error(
+                  "⚠️ ຕອນນີ້ Offline! ອໍເດີ້ຈະຖືກສົ່ງໄປຄົວທັນທີເມື່ອເນັດກັບມາ.",
+                  {
+                    duration: 4000,
+                    style: { fontWeight: "bold" },
+                  },
+                );
               }
               console.log(
                 "🚀 Clicked Send to Kitchen. selectedCartItems:",
@@ -411,9 +400,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                 const item = cart.find(
                   (i) => `${i.id}-${i.status}-${i.note || ""}` === uId,
                 );
-                return (
-                  item?.status === "COOKING" || item?.status === "SERVED"
-                );
+                return item?.status === "COOKING" || item?.status === "SERVED";
               })
             }
           >
@@ -424,10 +411,13 @@ export const OrderRight: React.FC<OrderRightProps> = ({
             className="h-8 md:h-9 font-bold text-[9px] md:text-[11px] text-white shadow-sm px-1"
             onClick={() => {
               if (!isConnected) {
-                toast.error("⚠️ ຕອນນີ້ Offline! ຂໍ້ມູນຈະອັບເດດໄປຍັງເຄື່ອງອື່ນເມື່ອເນັດກັບມາ.", {
-                  duration: 4000,
-                  style: { fontWeight: "bold" }
-                });
+                toast.error(
+                  "⚠️ ຕອນນີ້ Offline! ຂໍ້ມູນຈະອັບເດດໄປຍັງເຄື່ອງອື່ນເມື່ອເນັດກັບມາ.",
+                  {
+                    duration: 4000,
+                    style: { fontWeight: "bold" },
+                  },
+                );
               }
               try {
                 updateStatus(selectedCartItems, "SERVED");
@@ -477,9 +467,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
             <span>{formatNumber(statusTotals.SERVED)} ກີບ</span>
           </div>
           <div className="flex justify-between items-center font-black pt-1 border-t border-divider mt-1">
-            <span className="text-xs md:text-sm text-default-700">
-              ທັງໝົດ:
-            </span>
+            <span className="text-xs md:text-sm text-default-700">ທັງໝົດ:</span>
             <div className="text-right">
               <span className="text-primary text-base md:text-lg">
                 {formatNumber(subtotal)} ກີບ

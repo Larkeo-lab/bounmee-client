@@ -40,9 +40,9 @@ import {
   Banknote,
 } from "lucide-react";
 import { useAuth } from "@/routes/AuthContext";
-import { useGetOrders, Order, OrderItem } from "@/services/order/useOrder";
+import { useGetOrders, Order } from "@/services/order/useOrder";
 import dayjs from "dayjs";
-import { getDisplayImageUrl, cn } from "@/lib/utils";
+import { getDisplayImageUrl } from "@/lib/utils";
 import { formatNumber } from "@/utils/numberFormat";
 import GlobalPagination from "@/components/common/globle-pagination";
 import { exportOrdersToExcel } from "@/utils/exportOrder";
