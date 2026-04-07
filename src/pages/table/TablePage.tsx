@@ -81,6 +81,13 @@ export default function TablePage() {
   const [selectedZone, setSelectedZone] = useState<string>("all"); // ໂຊນທີ່ເລືອກໃນປະຈຸບັນ
   const [searchQuery, setSearchQuery] = useState(""); // ຄຳຄົ້ນຫາຊື່ໂຕະ
   const [selectedTable, setSelectedTable] = useState<any | null>(null); // ໂຕະທີ່ກຳລັງເປີດຢູ່ (Active)
+  const [lastSelectedTable, setLastSelectedTable] = useState<any | null>(null);
+
+  useEffect(() => {
+    if (selectedTable) {
+      setLastSelectedTable(selectedTable);
+    }
+  }, [selectedTable]);
   const [isSelectingMenu, setIsSelectingMenu] = useState(false); // ສະຖານະການເລືອກເມນູ (Mobile)
   const [selectedCartItems, setSelectedCartItems] = useState<string[]>([]); // ລາຍການອາຫານທີ່ຕິກເລືອກ
   const [statusFilter, setStatusFilter] = useState<string>("ALL"); // ຕົວຊ່ວຍກັ່ນຕອງສະຖານະອາຫານ
@@ -141,16 +148,15 @@ export default function TablePage() {
     if (
       selectedTable?.id &&
       syncedTableRef.current !== selectedTable.id &&
-      Array.isArray(selectedTable.activeCart) &&
-      selectedTable.activeCart.length > 0
+      Array.isArray(selectedTable.activeCart)
     ) {
       syncedTableRef.current = selectedTable.id;
-      setTableCart(selectedTable.id, selectedTable.activeCart);
+      setTableCart(selectedTable.id, selectedTable.activeCart, selectedTable.status);
     }
     if (!selectedTable) {
       syncedTableRef.current = null;
     }
-  }, [selectedTable?.id, setTableCart]);
+  }, [selectedTable?.id, setTableCart, selectedTable?.status, selectedTable?.activeCart]);
 
   // useEffect: อัปเดต ID โต๊ะที่กำลังใช้งานใน Cart context เพื่อให้จัดการตะกร้าได้ถูกโต๊ะ
   useEffect(() => {
@@ -159,6 +165,7 @@ export default function TablePage() {
     } else {
       setActiveTableId(null);
       setSelectedCartItems([]);
+      setIsSelectingMenu(false); // Reset menu selection mode when no table is selected
     }
   }, [selectedTable, setActiveTableId]);
 
@@ -278,12 +285,12 @@ export default function TablePage() {
   };
 
   return (
-    <div className="h-[calc(100vh-100px)] w-full max-w-full flex flex-col overflow-hidden lg:flex-row">
-      <div className="flex-grow flex flex-col min-h-0 lg:h-full">
+    <div className="h-[calc(100vh-100px)] w-full max-w-full flex flex-col overflow-hidden sm:flex-row min-h-0">
+      <div className="flex-grow flex flex-col min-h-0 min-w-0 sm:h-full">
         <div
           className={clsx(
             "flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4 flex-shrink-0 px-2 pt-2",
-            selectedTable && "hidden lg:flex",
+            selectedTable && "hidden sm:flex",
           )}
         >
           <div>
@@ -300,12 +307,12 @@ export default function TablePage() {
         {/* Header Stats */}
         <div
           className={clsx(
-            "grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4 flex-shrink-0 px-2 mt-2",
-            selectedTable && "hidden lg:grid",
+            "grid grid-cols-4 gap-1.5 md:gap-4 flex-shrink-0 px-2 mt-2",
+            selectedTable && "hidden sm:grid",
           )}
         >
           <Card className="bg-gradient-to-br from-primary-50 to-primary-100/50 dark:from-primary-900/20 dark:to-primary-800/10 border-1 border-primary-100 dark:border-primary-800/30">
-            <CardBody className="p-2 md:p-3 flex flex-row items-center gap-2 md:gap-3">
+            <CardBody className="p-1.5 md:p-3 flex flex-row items-center gap-1.5 md:gap-3">
               <div className="p-1.5 md:p-2 bg-white/80 dark:bg-primary-900/50 rounded-lg text-primary">
                 <TableIcon className="w-4 h-4 md:w-5 md:h-5" />
               </div>
@@ -319,7 +326,7 @@ export default function TablePage() {
           </Card>
 
           <Card className="bg-gradient-to-br from-success-50 to-success-100/50 dark:from-success-900/20 dark:to-success-800/10 border-1 border-success-100 dark:border-success-800/30">
-            <CardBody className="p-2 md:p-3 flex flex-row items-center gap-2 md:gap-3">
+            <CardBody className="p-1.5 md:p-3 flex flex-row items-center gap-1.5 md:gap-3">
               <div className="p-1.5 md:p-2 bg-white/80 dark:bg-success-900/50 rounded-lg text-success">
                 <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5" />
               </div>
@@ -335,7 +342,7 @@ export default function TablePage() {
           </Card>
 
           <Card className="bg-gradient-to-br from-danger-50 to-danger-100/50 dark:from-danger-900/20 dark:to-danger-800/10 border-1 border-danger-100 dark:border-danger-800/30">
-            <CardBody className="p-2 md:p-3 flex flex-row items-center gap-2 md:gap-3">
+            <CardBody className="p-1.5 md:p-3 flex flex-row items-center gap-1.5 md:gap-3">
               <div className="p-1.5 md:p-2 bg-white/80 dark:bg-danger-900/50 rounded-lg text-danger">
                 <Users className="w-4 h-4 md:w-5 md:h-5" />
               </div>
@@ -351,7 +358,7 @@ export default function TablePage() {
           </Card>
 
           <Card className="bg-gradient-to-br from-warning-50 to-warning-100/50 dark:from-warning-900/20 dark:to-warning-800/10 border-1 border-warning-100 dark:border-warning-800/30">
-            <CardBody className="p-2 md:p-3 flex flex-row items-center gap-2 md:gap-3">
+            <CardBody className="p-1.5 md:p-3 flex flex-row items-center gap-1.5 md:gap-3">
               <div className="p-1.5 md:p-2 bg-white/80 dark:bg-warning-900/50 rounded-lg text-warning">
                 <Clock className="w-4 h-4 md:w-5 md:h-5" />
               </div>
@@ -449,9 +456,13 @@ export default function TablePage() {
               )}
             </div>
 
-            <div className="p-6 flex-grow overflow-y-auto scrollbar-hide">
+            <div className={clsx(
+              "p-4 sm:p-6 flex-grow overflow-y-auto scrollbar-hide transition-all duration-300",
+              selectedTable && !isSelectingMenu && "pb-[70vh] sm:pb-6",
+              selectedTable && isSelectingMenu && "pb-[45vh] sm:pb-6"
+            )}>
               {isSelectingMenu ? (
-                <div className="space-y-4">
+                <div className="space-y-4 pb-10">
                   <ScrollShadow
                     size={40}
                     orientation="horizontal"
@@ -494,10 +505,10 @@ export default function TablePage() {
                   {filteredTables.length > 0 ? (
                     <div
                       className={clsx(
-                        "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 lg:gap-3",
+                        "grid gap-2 lg:gap-3",
                         selectedTable
-                          ? "lg:grid-cols-4 xl:grid-cols-5"
-                          : "lg:grid-cols-5 xl:grid-cols-5",
+                          ? "grid-cols-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+                          : "grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6",
                       )}
                     >
                       {filteredTables.map((table: any) => (
@@ -518,39 +529,60 @@ export default function TablePage() {
         </Card>
       </div>
 
-      {/* orders */}
-      {selectedTable ? (
-        <OrderRight
-          selectedTable={selectedTable} // ข้อมูลโต๊ะที่เปิดอยู่
-          setSelectedTable={setSelectedTable} // ฟังก์ชันสำหรับเปลี่ยนหรือปิดหน้าต่างโต๊ะ
-          filteredCart={filteredCart} // รายการอาหารในตะกร้าที่กรองตามสถานะ
-          selectedCartItems={selectedCartItems} // รายการ ID ของสินค้าที่ติ๊กเลือก (Checkbox)
-          setSelectedCartItems={setSelectedCartItems} // ฟังก์ชันสำหรับอัปเดตรายการที่ติ๊กเลือก
-          isSelectingMenu={isSelectingMenu} // สถานะการเปิด/ปิดหน้าเมนูอาหาร
-          setIsSelectingMenu={setIsSelectingMenu} // ฟังก์ชันเปิด/ปิดหน้าเมนู
-          setItemToRemove={setItemToRemove} // ระบุรายการที่ต้องการลบทิ้ง
-          onRemoveItemOpen={onRemoveItemOpen} // เปิดหน้าต่างยืนยันการลบ
-          expandedNotes={expandedNotes} // รายการที่กำลังเปิดดูหมายเหตุ (Note)
-          toggleNote={toggleNote} // ฟังก์ชันเปิด/ปิดการแสดงหมายเหตุ
-          statusFilter={statusFilter} // ตัวกรองสถานะปัจจุบัน (ทั้งหมด, รอ, กำลังคั่ว, เสิร์ฟแล้ว)
-          setStatusFilter={setStatusFilter} // ฟังก์ชันสำหรับเปลี่ยนตัวกรองสถานะ
-          statusTotals={statusTotals} // ยอดรวมราคาแยกตามแต่ละสถานะ
-          onQrOpen={onQrOpen} // เปิดหน้าต่าง QR Code ของโต๊ะ
-          onPaymentOpen={onOpen} // เปิดหน้าต่างรับชำระเงิน
-          onCloseTableOpen={onCloseTableOpen} // เปิดหน้าต่างยืนยันการเช็คเอาท์ (ปิดโต๊ะ)
-          updateTablePending={updateTable.isPending} // สถานะการบันทึกข้อมูลโต๊ะไปยัง Server
-        />
-      ) : (
-        <div className="hidden lg:flex w-full lg:w-[400px] flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 border-l border-divider">
-          <div className="flex flex-col items-center gap-4 opacity-40">
-            <ShoppingCart size={80} strokeWidth={1} />
-            <p className="font-bold text-lg">ກະລຸນາເລືອກໂຕະ</p>
+      {/* orders side panel/bottom sheet */}
+      <div
+        className={clsx(
+          "fixed inset-0 z-50 transition-opacity duration-300 sm:hidden",
+          (selectedTable && !isSelectingMenu) ? "bg-black/40 opacity-100" : "opacity-0 pointer-events-none"
+        )}
+        onClick={() => {
+          if (!isSelectingMenu) {
+            setSelectedTable(null);
+          }
+        }}
+      />
+
+      <div
+        className={clsx(
+          "fixed inset-x-0 bottom-0 z-50 transition-all duration-500 ease-in-out transform sm:relative sm:inset-auto sm:translate-y-0 sm:opacity-100 sm:pointer-events-auto shrink-0",
+          selectedTable
+            ? "translate-y-0 opacity-100 shadow-[0_-8px_30px_rgb(0,0,0,0.12)]"
+            : "translate-y-full opacity-0 pointer-events-none sm:opacity-100 sm:pointer-events-auto",
+        )}
+      >
+        {(selectedTable || lastSelectedTable) ? (
+          <OrderRight
+            selectedTable={selectedTable || lastSelectedTable}
+            setSelectedTable={setSelectedTable}
+            filteredCart={filteredCart}
+            selectedCartItems={selectedCartItems}
+            setSelectedCartItems={setSelectedCartItems}
+            isSelectingMenu={isSelectingMenu}
+            setIsSelectingMenu={setIsSelectingMenu}
+            setItemToRemove={setItemToRemove}
+            onRemoveItemOpen={onRemoveItemOpen}
+            expandedNotes={expandedNotes}
+            toggleNote={toggleNote}
+            statusFilter={statusFilter}
+            setStatusFilter={setStatusFilter}
+            statusTotals={statusTotals}
+            onQrOpen={onQrOpen}
+            onPaymentOpen={onOpen}
+            onCloseTableOpen={onCloseTableOpen}
+            updateTablePending={updateTable.isPending}
+          />
+        ) : (
+          <div className="hidden sm:flex w-full sm:w-[320px] md:w-[350px] lg:w-[400px] h-full flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 border-l border-divider">
+            <div className="flex flex-col items-center gap-4 opacity-40">
+              <ShoppingCart size={80} strokeWidth={1} />
+              <p className="font-bold text-lg">ກະລຸນາເລືອກໂຕະ</p>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Modals */}
-      <Modal isOpen={isQrOpen} onOpenChange={onQrOpenChange} size="md">
+      <Modal isOpen={isQrOpen} onOpenChange={onQrOpenChange} placement="center" size="md">
         <ModalContent>
           <ModalHeader>QR Code ໂຕະ {selectedTable?.name}</ModalHeader>
           <ModalBody className="flex flex-col items-center pb-8 pt-4">

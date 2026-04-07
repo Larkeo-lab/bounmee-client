@@ -43,7 +43,7 @@ interface CartContextType {
   setActiveTableId: (id: string | null) => void;
   dismissedCarts: { [tableId: string]: { [itemId: string]: number } };
   dismissTable: (tableId: string) => void;
-  setTableCart: (tableId: string, cart: CartItem[]) => void;
+  setTableCart: (tableId: string, cart: CartItem[], tableStatus?: string) => void;
   orderingCount: number;
   kitchenCount: number;
   isConnected: boolean;
@@ -257,9 +257,9 @@ export const Provider: React.FC<{ children: React.ReactNode }> = ({ children }) 
     setDismissedCarts(prev => ({ ...prev, [tableId]: snapshot }));
   }, [carts]);
 
-  const setTableCart = useCallback((tableId: string, cart: CartItem[]) => {
+  const setTableCart = useCallback((tableId: string, cart: CartItem[], tableStatus?: string) => {
     setCarts(prev => {
-      const mergedCart = mergeCarts(prev[tableId] || [], cart);
+      const mergedCart = mergeCarts(prev[tableId] || [], cart, tableStatus);
       if (JSON.stringify(prev[tableId] || []) === JSON.stringify(mergedCart)) return prev;
       return { ...prev, [tableId]: mergedCart };
     });

@@ -16,6 +16,7 @@ import {
   DropdownMenu,
   DropdownItem,
 } from "@heroui/react";
+import clsx from "clsx";
 import { getDisplayImageUrl } from "@/lib/utils";
 import DateRangePickerComponent from "@/components/common/date-range-picker";
 import { useState, useMemo, useEffect } from "react";
@@ -43,9 +44,6 @@ import {
 import {
   Users,
   TrendingUp,
-  CircleDollarSign,
-  Wallet,
-  ArrowDownRight,
   LayoutDashboard,
   Package,
   Filter,
@@ -70,10 +68,22 @@ interface StatCardProps {
 }
 
 const StatCard = ({ title, value, icon, color }: StatCardProps) => {
+  const colorClasses: Record<string, string> = {
+    success: "bg-success/10 text-success bg-success",
+    danger: "bg-danger/10 text-danger bg-danger",
+    primary: "bg-primary/10 text-primary bg-primary",
+    warning: "bg-warning/10 text-warning bg-warning",
+  };
+
+  const selectedClasses = colorClasses[color] || "bg-default-100 text-default-500 bg-default-500";
+
   return (
     <Card className="p-5 border-none shadow-sm hover:shadow-md transition-all duration-300 bg-white dark:bg-default-50 overflow-hidden relative">
       <div
-        className={`absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 rounded-full opacity-10 bg-${color}`}
+        className={clsx(
+          "absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 rounded-full opacity-10",
+          selectedClasses.split(" ")[2]
+        )}
       />
       <div className="flex justify-between items-start relative z-10">
         <div className="space-y-2">
@@ -82,7 +92,7 @@ const StatCard = ({ title, value, icon, color }: StatCardProps) => {
             {formatNumber(value)}
           </h3>
         </div>
-        <div className={`p-3 rounded-2xl bg-${color}/10 text-${color}`}>
+        <div className={clsx("p-3 rounded-2xl", selectedClasses.split(" ").slice(0, 2).join(" "))}>
           {icon}
         </div>
       </div>
@@ -127,7 +137,6 @@ export default function Dashboard() {
     refetch();
   }, []);
 
-  console.log("dashboard", dashboard);
 
   const summary = dashboard?.summary;
   const revenueTrend = useMemo(() => {
@@ -295,19 +304,19 @@ export default function Dashboard() {
         <StatCard
           title="ຍອດຂາຍທັງໝົດ"
           value={summary?.totalSales || 0}
-          icon={<CircleDollarSign size={24} />}
+          icon={<span className="font-black text-lg">ກີບ</span>}
           color="success"
         />
         <StatCard
           title="ລາຍຈ່າຍທັງໝົດ"
           value={summary?.totalExpenses || 0}
-          icon={<ArrowDownRight size={24} />}
+          icon={<span className="font-black text-lg">ກີບ</span>}
           color="danger"
         />
         <StatCard
           title="ກຳໄລ່ທັງຫມົດ"
           value={summary?.totalProfit || 0}
-          icon={<Wallet size={24} />}
+          icon={<span className="font-black text-lg">ກີບ</span>}
           color="primary"
         />
         <StatCard
@@ -350,9 +359,7 @@ export default function Dashboard() {
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-success" />
-                <span className="text-xs font-bold text-default-500">
-                  ກຳໄລ
-                </span>
+                <span className="text-xs font-bold text-default-500">ກຳໄລ</span>
               </div>
             </div>
           </div>

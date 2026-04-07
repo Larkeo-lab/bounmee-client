@@ -16,6 +16,7 @@ import {
   ChefHat,
   QrCode,
   Banknote,
+  ChevronDown,
 } from "lucide-react";
 import { useCart } from "@/provider";
 import { getDisplayImageUrl } from "@/lib/utils";
@@ -89,10 +90,18 @@ export const OrderRight: React.FC<OrderRightProps> = ({
   } = useCart();
 
   return (
-    <div className="w-full lg:w-[400px] flex flex-col bg-white dark:bg-gray-800 border-t lg:border-t-0 lg:border-l border-divider shadow-2xl z-30 h-[55vh] lg:h-full animate-in fade-in slide-in-from-right-4 duration-300">
-      <div className="p-2 lg:p-3 border-b border-divider flex items-center justify-between bg-primary/5">
+    <div className={clsx(
+      "w-full sm:w-[320px] md:w-[350px] lg:w-[400px] flex flex-col bg-white dark:bg-gray-800 border-t sm:border-t-0 sm:border-l border-divider shadow-2xl z-30 sm:h-full overflow-hidden flex-shrink-0 rounded-t-[30px] sm:rounded-none animate-in fade-in slide-in-from-bottom-full sm:slide-in-from-right-4 duration-500",
+      isSelectingMenu ? "h-[45vh]" : "h-[75vh]"
+    )}>
+      {/* Mobile Drag Indicator */}
+      <div className="flex justify-center pt-2 sm:hidden">
+        <div className="w-10 h-1 bg-default-300 rounded-full" />
+      </div>
+
+      <div className="p-2 md:p-3 border-b border-divider flex items-center justify-between bg-primary/5 flex-shrink-0">
         <div className="flex flex-col flex-grow">
-          <div className="flex items-center gap-2 font-bold text-base lg:text-lg">
+          <div className="flex items-center gap-2 font-bold text-base md:text-lg">
             <ShoppingCart size={18} className="text-primary" />
             <span>ໂຕະ {selectedTable?.name}</span>
           </div>
@@ -102,18 +111,31 @@ export const OrderRight: React.FC<OrderRightProps> = ({
             </p>
           </div>
         </div>
-        <Button
-          isIconOnly
-          size="sm"
-          variant="light"
-          color="danger"
-          onClick={() => setSelectedTable(null)}
-        >
-          ✕
-        </Button>
+        <div className="flex items-center gap-1">
+          {/* Mobile Minimize instead of Close Table when Menu is open */}
+          <Button
+            isIconOnly
+            size="sm"
+            variant="light"
+            color="default"
+            className="sm:hidden"
+            onClick={() => setIsSelectingMenu(false)}
+          >
+            <ChevronDown size={20} />
+          </Button>
+          <Button
+            isIconOnly
+            size="sm"
+            variant="light"
+            color="danger"
+            onClick={() => setSelectedTable(null)}
+          >
+            ✕
+          </Button>
+        </div>
       </div>
 
-      <div className="flex items-center justify-between px-2 lg:px-3 py-1.5 bg-default-100/50 border-b border-divider">
+      <div className="flex items-center justify-between px-2 md:px-3 py-1.5 bg-default-100/50 border-b border-divider flex-shrink-0">
         <div className="flex items-center gap-2">
           <Checkbox
             isSelected={
@@ -175,109 +197,72 @@ export const OrderRight: React.FC<OrderRightProps> = ({
             ))}
           </div>
         </div>
-        {selectedCartItems.length > 0 && (
-          <span className="text-xs text-primary font-bold">
-            ເລືອກແລ້ວ {selectedCartItems.length}
-          </span>
-        )}
       </div>
 
-      <ScrollShadow
-        size={0}
-        className="flex-grow p-2 lg:p-3 space-y-2 lg:space-y-3"
-      >
-        {filteredCart.length > 0
-          ? filteredCart.map((item) => {
-              const uniqueId = `${item.id}-${item.status}-${item.note || ""}`;
-              return (
-                <div
-                  key={uniqueId}
-                  className="flex gap-1.5 group items-center border-b border-divider border-dashed pb-1.5 lg:pb-2 last:border-b-0 last:pb-0"
-                >
-                  <Checkbox
-                    isSelected={selectedCartItems.includes(uniqueId)}
-                    onValueChange={(isSelected) => {
-                      if (isSelected) {
-                        setSelectedCartItems((prev) => [...prev, uniqueId]);
-                      } else {
-                        setSelectedCartItems((prev) =>
-                          prev.filter((id) => id !== uniqueId),
-                        );
-                      }
-                    }}
-                    size="sm"
-                    className="mr-0.5"
-                  />
-                  <Image
-                    src={getDisplayImageUrl(item.image)}
-                    className="w-9 h-9 lg:w-12 lg:h-12 object-cover min-w-[36px] lg:min-w-[48px]"
-                    radius="md"
-                  />
-                  <div className="flex-grow flex flex-col justify-between py-0.5">
-                    <div className="flex justify-between items-start gap-1">
-                      <span className="font-semibold text-[11px] lg:text-[13px] line-clamp-1">
-                        {item.name}
-                      </span>
-                      <Button
-                        isIconOnly
-                        size="sm"
-                        variant="light"
-                        color="danger"
-                        onClick={() => {
-                          setItemToRemove({
-                            id: item.id,
-                            status: item.status,
-                            note: item.note,
-                          });
-                          onRemoveItemOpen();
-                        }}
-                        className="min-w-5 h-5 w-5 lg:min-w-6 lg:h-6 lg:w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <Trash2 size={12} />
-                      </Button>
-                    </div>
-                    <div className="flex justify-between items-center mt-0.5 gap-1.5">
-                      <span className="text-primary font-bold text-[11px] lg:text-[13px] shrink-0">
+      {selectedCartItems.length > 0 && (
+        <div className="px-3 py-1 bg-primary/10 border-b border-primary/20 animate-in fade-in slide-in-from-top-1 duration-300">
+          <span className="text-[10px] sm:text-xs text-primary font-bold">
+            ເລືອກແລ້ວ: {selectedCartItems.length} ລາຍການ
+          </span>
+        </div>
+      )}
+
+      <ScrollShadow className="flex-grow overflow-y-auto px-1 md:px-2 py-1 md:py-2 flex flex-col gap-1 sm:gap-1.5 scrollbar-hide">
+        {filteredCart.length > 0 ? (
+          filteredCart.map((item) => {
+            const uniqueId = `${item.id}-${item.status}-${item.note || ""}`;
+            return (
+              <div
+                key={uniqueId}
+                className="flex gap-2 group items-center border-b border-divider border-dashed pb-2 last:border-b-0 last:pb-0"
+              >
+                <Checkbox
+                  isSelected={selectedCartItems.includes(uniqueId)}
+                  onValueChange={(isSelected) => {
+                    if (isSelected) {
+                      setSelectedCartItems((prev) => [...prev, uniqueId]);
+                    } else {
+                      setSelectedCartItems((prev) =>
+                        prev.filter((id) => id !== uniqueId),
+                      );
+                    }
+                  }}
+                  size="sm"
+                />
+                <Image
+                  src={getDisplayImageUrl(item.image)}
+                  className="w-10 h-10 lg:w-12 lg:h-12 object-cover min-w-[40px] lg:min-w-[48px]"
+                  radius="md"
+                />
+                <div className="flex-grow flex flex-col justify-between py-0.5 min-w-0">
+                  <div className="flex flex-col">
+                    <span className="font-bold text-xs lg:text-sm line-clamp-1">
+                      {item.name}
+                    </span>
+                    <div className="flex justify-between items-center mt-1">
+                      <span className="text-primary font-black text-xs lg:text-sm">
                         {formatNumber(item.price * item.quantity)} ກີບ
                       </span>
 
-                      <div className="flex items-center gap-3">
-                        {/* note & status stack */}
-                        <div className="flex flex-col items-end gap-1">
-                          {/* note badge */}
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2">
                           {item.note && (
                             <div
                               className={clsx(
-                                "flex items-center gap-1.5 px-2 py-1 rounded-full cursor-pointer transition-all border shadow-sm",
+                                "p-1.5 rounded-full cursor-pointer transition-all border",
                                 expandedNotes.has(uniqueId)
-                                  ? "bg-primary text-white border-primary scale-105"
-                                  : "bg-danger-50 text-danger border-danger-100 hover:bg-danger-100",
+                                  ? "bg-primary text-white border-primary"
+                                  : "bg-danger-50 text-danger border-danger-100",
                               )}
-                              onClick={() => {
-                                console.log("🛒 Cart Item Details:", item);
-                                toggleNote(uniqueId);
-                              }}
+                              onClick={() => toggleNote(uniqueId)}
                             >
-                              <div className="relative">
-                                <MessageSquare
-                                  size={14}
-                                  strokeWidth={
-                                    expandedNotes.has(uniqueId) ? 2.5 : 2
-                                  }
-                                  className={
-                                    expandedNotes.has(uniqueId)
-                                      ? "text-white"
-                                      : "text-danger"
-                                  }
-                                />
-                                <div className="absolute -top-1 -right-1 bg-danger text-white text-[7px] font-bold w-3 h-3 flex items-center justify-center rounded-full ring-1 ring-white">
-                                  1
-                                </div>
-                              </div>
+                              <MessageSquare
+                                size={14}
+                                strokeWidth={2.5}
+                              />
                             </div>
                           )}
 
-                          {/* Status  */}
                           {(() => {
                             const statusConfig = getStatusDisplay(
                               item.status,
@@ -295,13 +280,12 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                           })()}
                         </div>
 
-                        {/* Quantity Controls */}
-                        <div className="flex items-center gap-1.5 lg:gap-2 bg-default-100 rounded-lg p-0.5 shadow-sm border border-default-200/50">
+                        <div className="flex items-center gap-1 bg-default-100 rounded-lg p-0.5 border border-default-200">
                           <Button
                             isIconOnly
                             size="sm"
                             variant="light"
-                            className="min-w-5 h-5 w-5 lg:min-w-6 lg:h-6 lg:w-6"
+                            className="min-w-6 h-6 w-6"
                             onClick={() =>
                               updateQuantity(
                                 item.id,
@@ -313,49 +297,15 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                           >
                             <Minus size={10} />
                           </Button>
-                          <input
-                            type="text"
-                            id={`qty-${uniqueId}`}
-                            name={`qty-${uniqueId}`}
-                            inputMode="numeric"
-                            pattern="[0-9]*"
-                            autoComplete="off"
-                            value={item.quantity === 0 ? "" : item.quantity}
-                            onChange={(e) => {
-                              const val = e.target.value.replace(
-                                /[^0-9]/g,
-                                "",
-                              );
-                              setQuantity(
-                                item.id,
-                                item.status,
-                                val,
-                                item.note,
-                              );
-                            }}
-                            className="w-5 lg:w-6 text-center bg-transparent font-bold text-[10px] lg:text-xs outline-none"
-                          />
+                          <span className="w-6 text-center font-bold text-xs">
+                            {item.quantity}
+                          </span>
                           <Button
                             isIconOnly
                             size="sm"
                             variant="light"
-                            className="min-w-5 h-5 w-5 lg:min-w-6 lg:h-6 lg:w-6"
-                            isDisabled={
-                              item.quantity +
-                                cart
-                                  .filter(
-                                    (i) =>
-                                      i.id === item.id &&
-                                      i.status !== "CANCEL" &&
-                                      `${i.id}-${i.status}-${item.note || ""}` !==
-                                        uniqueId,
-                                  )
-                                  .reduce(
-                                    (sum, i) => sum + i.quantity,
-                                    0,
-                                  ) >=
-                              item.stockQty
-                            }
+                            className="min-w-6 h-6 w-6"
+                            isDisabled={item.quantity >= item.stockQty}
                             onClick={() =>
                               updateQuantity(
                                 item.id,
@@ -370,31 +320,55 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                         </div>
                       </div>
                     </div>
-
-                    {item.note && expandedNotes.has(uniqueId) && (
-                      <div className="mt-2 px-2.5 py-2 bg-warning-50/50 border border-warning-100 rounded-xl animate-in fade-in zoom-in duration-200 shadow-sm">
-                        <p className="text-[10px] lg:text-[11px] text-warning-700 font-bold flex items-center gap-1.5">
-                          <MessageSquare size={12} className="shrink-0" />
-                          <span>ໝາຍເຫດ:</span>
-                        </p>
-                        <p className="text-[10px] lg:text-[11px] text-warning-600 mt-0.5 leading-relaxed">
-                          {item.note}
-                        </p>
-                      </div>
-                    )}
                   </div>
+
+                  {item.note && expandedNotes.has(uniqueId) && (
+                    <div className="mt-2 px-2.5 py-2 bg-warning-50 border border-warning-100 rounded-xl">
+                      <p className="text-[10px] text-warning-700 font-bold flex items-center gap-1">
+                        <MessageSquare size={12} />
+                        <span>ໝາຍເຫດ:</span>
+                      </p>
+                      <p className="text-[10px] text-warning-600 mt-0.5">
+                        {item.note}
+                      </p>
+                    </div>
+                  )}
                 </div>
-              );
-            })
-          : null}
+
+                <Button
+                  isIconOnly
+                  size="sm"
+                  variant="flat"
+                  color="danger"
+                  onClick={() => {
+                    setItemToRemove({
+                      id: item.id,
+                      status: item.status,
+                      note: item.note,
+                    });
+                    onRemoveItemOpen();
+                  }}
+                  className="min-w-8 h-8 w-8 sm:min-w-7 sm:h-7 sm:w-7 transition-all -mr-1"
+                >
+                  <Trash2 size={16} className="sm:size-[14px]" />
+                </Button>
+              </div>
+            );
+          })
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full text-default-400 gap-2 opacity-60">
+            <ShoppingCart size={40} strokeWidth={1} />
+            <p className="text-xs font-bold">ບໍ່ມີລາຍການອາຫານ</p>
+          </div>
+        )}
       </ScrollShadow>
 
-      <div className="px-2 py-1.5 lg:px-3 lg:py-2 border-t border-divider bg-default-50/50 flex-shrink-0">
-        <div className="grid grid-cols-4 gap-1 lg:gap-1.5">
+      <div className="px-2 py-1.5 sm:px-3 sm:py-2 border-t border-divider bg-default-50/50 flex-shrink-0 z-40">
+        <div className="grid grid-cols-4 xl:grid-cols-4 gap-1 md:gap-2 items-stretch">
           <Button
             variant="flat"
             color={isSelectingMenu ? "danger" : "primary"}
-            className={`h-8 lg:h-9 font-bold text-[9px] lg:text-[11px] px-1 ${isSelectingMenu ? "bg-danger/10 text-danger" : "bg-primary/10"}`}
+            className={`h-8 md:h-9 font-bold text-[9px] md:text-[11px] px-1 ${isSelectingMenu ? "bg-danger/10 text-danger" : "bg-primary/10"}`}
             onClick={() => setIsSelectingMenu(!isSelectingMenu)}
             startContent={<Utensils size={12} />}
           >
@@ -402,7 +376,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
           </Button>
           <Button
             color="warning"
-            className="h-8 lg:h-9 font-bold text-[9px] lg:text-[11px] text-white shadow-sm px-1"
+            className="h-8 md:h-9 font-bold text-[9px] md:text-[11px] text-white shadow-sm px-1"
             onClick={() => {
               if (!isConnected) {
                 toast.error("⚠️ ຕອນນີ້ Offline! ອໍເດີ້ຈະຖືກສົ່ງໄປຄົວທັນທີເມື່ອເນັດກັບມາ.", {
@@ -447,7 +421,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
           </Button>
           <Button
             color="primary"
-            className="h-8 lg:h-9 font-bold text-[9px] lg:text-[11px] text-white shadow-sm px-1"
+            className="h-8 md:h-9 font-bold text-[9px] md:text-[11px] text-white shadow-sm px-1"
             onClick={() => {
               if (!isConnected) {
                 toast.error("⚠️ ຕອນນີ້ Offline! ຂໍ້ມູນຈະອັບເດດໄປຍັງເຄື່ອງອື່ນເມື່ອເນັດກັບມາ.", {
@@ -460,7 +434,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                 setSelectedCartItems([]);
                 toast.success("ອັບເດດສະຖານະສຳເລັດ");
               } catch (error) {
-                toast.error("ເກີດຂໍ้ຜິດພาดໃນการอับเดด");
+                toast.error("ເກີດຂໍ້ຜິດພາດໃນການອັບເດດ");
               }
             }}
             startContent={<ChefHat size={12} />}
@@ -479,7 +453,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
           <Button
             color="secondary"
             variant="solid"
-            className="h-8 lg:h-9 font-bold text-[9px] lg:text-[11px] text-white shadow-sm px-1"
+            className="h-8 md:h-9 font-bold text-[9px] md:text-[11px] text-white shadow-sm px-1"
             onClick={onQrOpen}
             startContent={<QrCode size={12} />}
           >
@@ -488,7 +462,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
         </div>
       </div>
 
-      <div className="px-2 py-2 lg:px-3 lg:py-2.5 border-t border-divider bg-white mt-auto flex-shrink-0">
+      <div className="px-2 py-2 md:px-3 md:py-2.5 border-t border-divider bg-white mt-auto flex-shrink-0">
         <div className="flex flex-col gap-1 mb-2">
           <div className="flex justify-between items-center text-[10px] lg:text-xs text-warning-600 font-bold">
             <span>ລໍຖ້າ:</span>
@@ -498,27 +472,27 @@ export const OrderRight: React.FC<OrderRightProps> = ({
             <span>ກຳລັງຄົວ:</span>
             <span>{formatNumber(statusTotals.COOKING)} ກີບ</span>
           </div>
-          <div className="flex justify-between items-center text-[10px] lg:text-xs text-success-600 font-bold">
+          <div className="flex justify-between items-center text-[10px] md:text-xs text-success-600 font-bold">
             <span>ເສີບແລ້ວ:</span>
             <span>{formatNumber(statusTotals.SERVED)} ກີບ</span>
           </div>
           <div className="flex justify-between items-center font-black pt-1 border-t border-divider mt-1">
-            <span className="text-xs lg:text-sm text-default-700">
+            <span className="text-xs md:text-sm text-default-700">
               ທັງໝົດ:
             </span>
             <div className="text-right">
-              <span className="text-primary text-base lg:text-lg">
+              <span className="text-primary text-base md:text-lg">
                 {formatNumber(subtotal)} ກີບ
               </span>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 lg:gap-3">
+        <div className="grid grid-cols-2 gap-2 md:gap-3">
           <Button
             variant="flat"
             color="danger"
-            className="h-9 lg:h-11 font-bold text-xs lg:text-sm"
+            className="h-9 md:h-11 font-bold text-xs md:text-sm"
             isLoading={updateTablePending}
             onClick={() => {
               if (cart.length > 0) {
@@ -541,7 +515,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
           </Button>
           <Button
             color="primary"
-            className="h-9 lg:h-11 font-bold text-xs lg:text-sm shadow-md shadow-primary/20"
+            className="h-9 md:h-11 font-bold text-xs md:text-sm shadow-md shadow-primary/20"
             startContent={<Banknote size={14} />}
             onPress={onPaymentOpen}
             isDisabled={

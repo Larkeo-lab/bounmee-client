@@ -57,10 +57,12 @@ export default function BankPage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewImage, setPreviewImage] = useState<string>("");
+  const [qrCodePreview, setQrCodePreview] = useState<string>("");
 
   const [formData, setFormData] = useState({
     name: "",
     logoUrl: "",
+    qrCodeImage: "",
     isActive: true,
   });
 
@@ -130,9 +132,11 @@ export default function BankPage() {
     setFormData({
       name: "",
       logoUrl: "",
+      qrCodeImage: "",
       isActive: true,
     });
     setPreviewImage("");
+    setQrCodePreview("");
     setSelectedBank(null);
   };
 
@@ -141,9 +145,11 @@ export default function BankPage() {
     setFormData({
       name: bank.name,
       logoUrl: bank.logoUrl || "",
+      qrCodeImage: bank.qrCodeImage || "",
       isActive: bank.isActive,
     });
     setPreviewImage(bank.logoUrl || "");
+    setQrCodePreview(bank.qrCodeImage || "");
     onUpdateOpen();
   };
 
@@ -167,6 +173,21 @@ export default function BankPage() {
     }
   };
 
+  const handleQrCodeChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      try {
+        const previewUrl = URL.createObjectURL(file);
+        setQrCodePreview(previewUrl);
+
+        const imageName = await uploadImageMutation.mutateAsync(file);
+        setFormData((prev) => ({ ...prev, qrCodeImage: imageName }));
+      } catch (error) {
+        console.error("Failed to upload QR code:", error);
+      }
+    }
+  };
+
   const removeImage = () => {
     setFormData((prev) => ({ ...prev, logoUrl: "" }));
     setPreviewImage("");
@@ -175,57 +196,119 @@ export default function BankPage() {
     }
   };
 
+  const removeQrCode = () => {
+    setFormData((prev) => ({ ...prev, qrCodeImage: "" }));
+    setQrCodePreview("");
+  };
+
   const bankForm = (
     <div className="space-y-4 py-2">
-      <div className="flex flex-col items-center gap-2 mb-4">
-        <div
-          onClick={() => fileInputRef.current?.click()}
-          className={`
-            relative group cursor-pointer
-            w-32 h-32 rounded-full border-2 border-dashed 
-            transition-all duration-200 ease-in-out
-            flex items-center justify-center overflow-hidden
-            ${previewImage || formData.logoUrl ? "border-primary bg-primary/5" : "border-default-200 hover:border-primary hover:bg-default-50"}
-          `}
-        >
-          {uploadImageMutation.isPending ? (
-            <Spinner color="primary" />
-          ) : previewImage || formData.logoUrl ? (
-            <>
-              <Image
-                src={getDisplayImageUrl(previewImage || formData.logoUrl)}
-                alt="Preview"
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                <Edit2 size={24} className="text-white" />
-              </div>
-            </>
-          ) : (
-            <div className="flex flex-col items-center gap-1 text-default-400">
-              <Upload size={24} />
-              <span className="text-tiny">ອັບໂຫລດ</span>
-            </div>
-          )}
-          <input
-            type="file"
-            ref={fileInputRef}
-            className="hidden"
-            accept="image/*"
-            onChange={handleImageChange}
-          />
-        </div>
-        {(previewImage || formData.logoUrl) && (
-          <Button
-            size="sm"
-            color="danger"
-            variant="light"
-            startContent={<X size={14} />}
-            onPress={removeImage}
+      <div className="flex justify-center gap-8 mb-4">
+        {/* Logo Upload */}
+        <div className="flex flex-col items-center gap-2">
+          <p className="text-tiny text-default-500 font-medium">ຮູບໂລໂກ້</p>
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            className={`
+              relative group cursor-pointer
+              w-24 h-24 rounded-full border-2 border-dashed 
+              transition-all duration-200 ease-in-out
+              flex items-center justify-center overflow-hidden
+              ${previewImage || formData.logoUrl ? "border-primary bg-primary/5" : "border-default-200 hover:border-primary hover:bg-default-50"}
+            `}
           >
-            ລົບຮູບ
-          </Button>
-        )}
+            {uploadImageMutation.isPending ? (
+              <Spinner color="primary" />
+            ) : previewImage || formData.logoUrl ? (
+              <>
+                <Image
+                  src={getDisplayImageUrl(previewImage || formData.logoUrl)}
+                  alt="Preview"
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                  <Edit2 size={20} className="text-white" />
+                </div>
+              </>
+            ) : (
+              <div className="flex flex-col items-center gap-1 text-default-400">
+                <Upload size={20} />
+                <span className="text-tiny">ອັບໂຫລດ</span>
+              </div>
+            )}
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              accept="image/*"
+              onChange={handleImageChange}
+            />
+          </div>
+          {(previewImage || formData.logoUrl) && (
+            <Button
+              size="sm"
+              color="danger"
+              variant="light"
+              startContent={<X size={14} />}
+              onPress={removeImage}
+            >
+              ລົບຮູບ
+            </Button>
+          )}
+        </div>
+
+        {/* QR Code Upload */}
+        <div className="flex flex-col items-center gap-2">
+          <p className="text-tiny text-default-500 font-medium">QR Code ຮັບເງິນ</p>
+          <label className="cursor-pointer">
+            <div
+              className={`
+                relative group
+                w-24 h-24 rounded-2xl border-2 border-dashed 
+                transition-all duration-200 ease-in-out
+                flex items-center justify-center overflow-hidden
+                ${qrCodePreview || formData.qrCodeImage ? "border-primary bg-primary/5" : "border-default-200 hover:border-primary hover:bg-default-50"}
+              `}
+            >
+              {uploadImageMutation.isPending ? (
+                <Spinner color="primary" />
+              ) : qrCodePreview || formData.qrCodeImage ? (
+                <>
+                  <Image
+                    src={getDisplayImageUrl(qrCodePreview || formData.qrCodeImage)}
+                    alt="QR Preview"
+                    className="w-full h-full object-contain"
+                  />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                    <Edit2 size={20} className="text-white" />
+                  </div>
+                </>
+              ) : (
+                <div className="flex flex-col items-center gap-1 text-default-400">
+                  <Upload size={20} />
+                  <span className="text-tiny">ອັບໂຫລດ QR</span>
+                </div>
+              )}
+              <input
+                type="file"
+                className="hidden"
+                accept="image/*"
+                onChange={handleQrCodeChange}
+              />
+            </div>
+          </label>
+          {(qrCodePreview || formData.qrCodeImage) && (
+            <Button
+              size="sm"
+              color="danger"
+              variant="light"
+              startContent={<X size={14} />}
+              onPress={removeQrCode}
+            >
+              ລົບ QR
+            </Button>
+          )}
+        </div>
       </div>
 
       <Input

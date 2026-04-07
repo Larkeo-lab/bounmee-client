@@ -63,6 +63,7 @@ export default function PaymentModal({
     isOpen ? user?.user?.storeId : "",
   );
   const banks = bankResponse?.data || [];
+  const selectedBankData = banks.find((b: Bank) => b.id === selectedBank);
   // get money rate
 
   const { data: moneyRateResponse } = useGetMoneyRates(
@@ -141,9 +142,15 @@ export default function PaymentModal({
     <Modal
       isOpen={isOpen}
       onOpenChange={onOpenChange}
+      placement="center"
       size="2xl"
       backdrop="blur"
-      className="dark:bg-gray-900"
+      scrollBehavior="inside"
+      className="dark:bg-gray-900 mx-0 sm:mx-2"
+      classNames={{
+        wrapper: "z-[60]",
+        backdrop: "z-[60]",
+      }}
     >
       <ModalContent>
         {(onClose) => (
@@ -154,13 +161,13 @@ export default function PaymentModal({
             <ModalBody className="pb-8">
               <div className="flex flex-col gap-6">
                 {/* Payment Method Selection */}
-                <div className="flex justify-center">
-                  <ButtonGroup className="w-full max-w-md shadow-sm">
+                <div className="flex justify-center -mt-2">
+                  <ButtonGroup className="w-full max-w-full sm:max-w-md shadow-sm">
                     <Button
-                      className="flex-grow h-14 font-bold text-lg"
+                      className="flex-grow h-10 sm:h-11 font-bold text-sm sm:text-base"
                       color={paymentMethod === "CASH" ? "primary" : "default"}
                       variant={paymentMethod === "CASH" ? "solid" : "flat"}
-                      startContent={<Banknote size={24} />}
+                      startContent={<Banknote size={20} />}
                       onClick={() => {
                         setPaymentMethod("CASH");
                         setSelectedBank(null);
@@ -169,12 +176,12 @@ export default function PaymentModal({
                       ເງິນສົດ
                     </Button>
                     <Button
-                      className="flex-grow h-14 font-bold text-lg"
+                      className="flex-grow h-10 sm:h-11 font-bold text-sm sm:text-base"
                       color={
                         paymentMethod === "TRANSFER" ? "primary" : "default"
                       }
                       variant={paymentMethod === "TRANSFER" ? "solid" : "flat"}
-                      startContent={<CreditCard size={24} />}
+                      startContent={<CreditCard size={20} />}
                       onClick={() => {
                         setPaymentMethod("TRANSFER");
                         setReceivedAmount(total.toString());
@@ -188,13 +195,13 @@ export default function PaymentModal({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {/* Left Side: Summary */}
                   <div className="space-y-6">
-                    <div className="p-4 bg-default-50 rounded-2xl border border-divider">
-                      <p className="text-default-500 text-sm mb-1 uppercase tracking-wider font-semibold">
+                    <div className="p-3 bg-default-50 rounded-2xl border border-divider">
+                      <p className="text-default-500 text-xs mb-1 uppercase tracking-wider font-semibold">
                         ຍອດລວມທັງໝົດ
                       </p>
-                      <p className="text-4xl font-black text-primary">
+                      <p className="text-2xl font-black text-primary">
                         {total.toLocaleString()}{" "}
-                        <span className="text-xl font-normal">ກີບ</span>
+                        <span className="text-lg font-normal">ກີບ</span>
                       </p>
                     </div>
 
@@ -202,7 +209,7 @@ export default function PaymentModal({
                       {paymentMethod === "CASH" ? (
                         <>
                           <div>
-                            <p className="text-default-500 text-sm mb-2 font-medium">
+                            <p className="text-default-500 text-xs mb-2 font-medium">
                               ເລືອກສະກຸນເງິນ
                             </p>
                             <div className="grid grid-cols-3 gap-2">
@@ -216,7 +223,7 @@ export default function PaymentModal({
                                   color={
                                     currency === curr ? "primary" : "default"
                                   }
-                                  className="font-bold h-12"
+                                  className="font-bold h-10"
                                   onClick={() => setCurrency(curr)}
                                 >
                                   {curr}
@@ -225,30 +232,30 @@ export default function PaymentModal({
                             </div>
                           </div>
 
-                          <div className="p-4 bg-primary/10 rounded-2xl border border-primary/20">
-                            <p className="text-primary text-sm mb-1 font-semibold uppercase">
+                          <div className="p-3 bg-primary/10 rounded-2xl border border-primary/20">
+                            <p className="text-primary text-xs mb-1 font-semibold uppercase">
                               ຈຳນວນເງິນທີ່ຮັບມາ
                             </p>
                             <div className="flex flex-col">
-                              <p className="text-3xl font-black text-primary-600">
+                              <p className="text-2xl font-black text-primary-600">
                                 {Number(receivedAmount).toLocaleString()}{" "}
                                 <span className="text-lg font-normal">
                                   {currency}
                                 </span>
                               </p>
                               {currency !== "LAK" && (
-                                <p className="text-sm font-bold text-primary/60">
+                                <p className="text-xs font-bold text-primary/60">
                                   ≈ {receivedAmountInLAK.toLocaleString()} ກີບ
                                 </p>
                               )}
                             </div>
                           </div>
 
-                          <div className="p-4 bg-success/10 rounded-2xl border border-success/20">
-                            <p className="text-success-600 text-sm mb-1 font-semibold uppercase">
+                          <div className="p-3 bg-success/10 rounded-2xl border border-success/20">
+                            <p className="text-success-600 text-xs mb-1 font-semibold uppercase">
                               ເງິນທອນ
                             </p>
-                            <p className="text-3xl font-black text-success">
+                            <p className="text-2xl font-black text-success">
                               {change.toLocaleString()}{" "}
                               <span className="text-lg font-normal">ກີບ</span>
                             </p>
@@ -268,7 +275,7 @@ export default function PaymentModal({
                               {banks.map((bank: Bank) => (
                                 <Button
                                   key={bank.id}
-                                  className={`h-22 min-h-20 py-2 flex flex-col gap-1 border-2 transition-all ${
+                                  className={`h-22 min-h-18 py-2 flex flex-col gap-1 border-2 transition-all ${
                                     selectedBank === bank.id
                                       ? "border-primary bg-primary/10"
                                       : "border-transparent bg-default-100"
@@ -319,7 +326,7 @@ export default function PaymentModal({
                         <Button
                           color="primary"
                           variant="solid"
-                          className="h-16 text-2xl font-black rounded-xl mb-1 shadow-lg shadow-primary/20"
+                          className="h-12 text-xl font-black rounded-xl mb-1 shadow-md shadow-primary/20"
                           onPress={() => {
                             setCurrency("LAK");
                             setReceivedAmount(total.toString());
@@ -333,7 +340,7 @@ export default function PaymentModal({
                               <Button
                                 key={num}
                                 variant="flat"
-                                className="h-16 text-2xl font-bold bg-default-100/50 hover:bg-primary hover:text-white transition-all rounded-xl shadow-sm"
+                                className="h-14 text-xl font-bold bg-default-100/50 hover:bg-primary hover:text-white transition-all rounded-xl shadow-sm"
                                 onPress={() =>
                                   handleKeypadPress(num.toString())
                                 }
@@ -347,8 +354,8 @@ export default function PaymentModal({
                           <Button
                             color="warning"
                             variant="flat"
-                            className="h-16 text-xl font-bold rounded-xl"
-                            startContent={<Delete size={24} />}
+                            className="h-12 text-lg font-bold rounded-xl"
+                            startContent={<Delete size={20} />}
                             onPress={deleteLastDigit}
                           >
                             ລຶບ
@@ -356,8 +363,8 @@ export default function PaymentModal({
                           <Button
                             color="danger"
                             variant="flat"
-                            className="h-16 text-xl font-bold rounded-xl"
-                            startContent={<XCircle size={24} />}
+                            className="h-12 text-lg font-bold rounded-xl"
+                            startContent={<XCircle size={20} />}
                             onPress={clearReceived}
                           >
                             ລຶບທັງໝົດ
@@ -365,18 +372,40 @@ export default function PaymentModal({
                         </div>
                       </>
                     ) : (
-                      <div className="h-full flex flex-col items-center justify-center p-8 bg-primary/5 rounded-3xl border-2 border-dashed border-primary/20 opacity-80">
-                        <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                          <CreditCard size={48} className="text-primary" />
-                        </div>
-                        <p className="text-lg font-bold text-primary">
-                          ກະລຸນາໂອນເງິນ
-                        </p>
-                        <p className="text-center text-sm text-default-500 mt-2">
-                          ກະລຸນາກວດສອບຫຼັກຖານການໂອນ
-                          <br />
-                          ໃຫ້ຖືກຕ້ອງກ່ອນກົດຢືນຢັນ
-                        </p>
+                      <div className="h-full flex flex-col items-center justify-center p-4 bg-primary/5 rounded-3xl border-2 border-dashed border-primary/20 transition-all">
+                        {selectedBankData?.qrCodeImage ? (
+                          <>
+                            <div className="bg-white p-3 rounded-2xl shadow-sm mb-4 border border-divider">
+                              <img
+                                src={getDisplayImageUrl(
+                                  selectedBankData.qrCodeImage,
+                                )}
+                                alt="QR Code"
+                                className="w-48 h-48 sm:w-64 sm:h-64 object-contain"
+                              />
+                            </div>
+                            <p className="text-lg font-black text-primary text-center">
+                              {selectedBankData.name}
+                            </p>
+                            <p className="text-sm text-default-500 font-bold">
+                              ກະລຸນາສະແກນ QR ເພື່ອໂອນເງິນ
+                            </p>
+                          </>
+                        ) : (
+                          <>
+                            <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                              <CreditCard size={48} className="text-primary" />
+                            </div>
+                            <p className="text-lg font-bold text-primary">
+                              ກະລຸນາໂອນເງິນ
+                            </p>
+                            <p className="text-center text-sm text-default-500 mt-2 font-medium">
+                              ກະລຸນາກວດສອບຫຼັກຖານການໂອນ
+                              <br />
+                              ໃຫ້ຖືກຕ້ອງກ່ອນກົດຢືນຢັນ
+                            </p>
+                          </>
+                        )}
                       </div>
                     )}
                   </div>
@@ -388,14 +417,14 @@ export default function PaymentModal({
                 color="default"
                 variant="flat"
                 onPress={onClose}
-                className="h-14 px-8 font-bold text-lg"
+                className="h-12 px-6 font-bold text-base"
               >
                 ຍົກເລີກ
               </Button>
               <Button
                 color="primary"
-                className="flex-grow h-14 font-black text-xl shadow-lg shadow-primary/30"
-                startContent={<CheckCircle2 size={24} />}
+                className="flex-grow h-12 font-black text-lg shadow-md shadow-primary/30"
+                startContent={<CheckCircle2 size={22} />}
                 onPress={() => handleConfirm(onClose)}
                 isLoading={createOrderMutation.isPending}
                 isDisabled={

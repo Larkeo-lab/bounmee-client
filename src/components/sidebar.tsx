@@ -125,7 +125,26 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
   const { unreadCounts } = useChat();
   const { orderingCount, kitchenCount } = useCart();
   const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set());
-  const [isDesktopExpanded, setIsDesktopExpanded] = useState(true);
+  const [isDesktopExpanded, setIsDesktopExpanded] = useState(() => {
+    return typeof window !== "undefined" && window.innerWidth > 1024;
+  });
+
+  // Auto-collapse sidebar on tablet/iPad sizes
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth <= 1024) {
+        setIsDesktopExpanded(false);
+      } else {
+        setIsDesktopExpanded(true);
+      }
+    };
+    
+    // Initial check
+    handleResize();
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // Calculate total chat unread count from all tables
   const totalChatUnread = Object.values(unreadCounts).reduce(
@@ -389,7 +408,14 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
                     )}
                   />
                 ) : (
-                  <IconComponent className="w-5 h-5 flex-shrink-0" />
+                  <div className="relative flex-shrink-0">
+                    <IconComponent className="w-5 h-5 flex-shrink-0" />
+                    {!isDesktopExpanded && item.badge !== undefined ? (
+                      <span className="absolute -top-1.5 -right-2 bg-white text-primary text-[9px] font-black min-w-[16px] h-4 items-center justify-center rounded-full shadow-sm hidden md:flex px-0.5">
+                        {item.badge > 99 ? "99+" : item.badge}
+                      </span>
+                    ) : null}
+                  </div>
                 )}
                 <span
                   className={clsx(
@@ -401,15 +427,15 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
                 </span>
               </div>
 
-              {item.badge && item.badge > 0 && (
+              {item.badge !== undefined && (
                 <div
                   className={clsx(
                     "flex-shrink-0",
                     !isDesktopExpanded && "md:hidden",
                   )}
                 >
-                  <span className="bg-white text-warning text-[11px] font-bold px-1.5 py-0.5 rounded-full shadow-sm">
-                    {item.badge}
+                  <span className="bg-white text-primary text-[11px] font-bold px-1.5 py-0.5 rounded-full shadow-sm">
+                    {item.badge > 99 ? "99+" : item.badge}
                   </span>
                 </div>
               )}

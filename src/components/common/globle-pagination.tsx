@@ -1,4 +1,5 @@
 import { Pagination } from "@heroui/react";
+import { cn } from "@/lib/utils";
 
 interface GlobalPaginationProps {
   showing?: number;
@@ -8,6 +9,7 @@ interface GlobalPaginationProps {
   initialPage?: number;
   page?: number;
   onChange?: (page: number) => void;
+  compact?: boolean;
 }
 
 export default function GlobalPagination({
@@ -18,16 +20,20 @@ export default function GlobalPagination({
   initialPage = 1,
   page,
   onChange,
+  compact = false,
 }: GlobalPaginationProps) {
   return (
-    <div className={"flex flex-col sm:flex-row justify-between items-center p-4 gap-4"}>
-      {(showing !== undefined && results !== undefined) && (
+    <div className={cn(
+      "flex flex-col sm:flex-row justify-between items-center gap-4",
+      compact ? "p-0" : "p-4"
+    )}>
+      {!compact && showing !== undefined && results !== undefined && (
         <p className="text-sm text-gray-500 font-medium order-2 sm:order-1">
           ສະແດງ {showing}-{results} ຈາກ {totalItems} ລາຍການ
         </p>
       )}
-      {!showing && <div className="hidden sm:block"></div>}
-      <div className="order-1 sm:order-2">
+      {!showing && !compact && <div className="hidden sm:block"></div>}
+      <div className={cn("order-1 sm:order-2", compact && "w-full flex justify-center")}>
         <Pagination
           size="sm"
           radius="lg"

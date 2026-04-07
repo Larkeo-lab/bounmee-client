@@ -34,10 +34,10 @@ export const MenuList: React.FC<MenuListProps> = ({
   return (
     <div
       className={clsx(
-        "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 md:gap-4",
+        "grid gap-2 lg:gap-3",
         selectedTable
-          ? "lg:grid-cols-5 xl:grid-cols-6"
-          : "lg:grid-cols-6 xl:grid-cols-7",
+          ? "grid-cols-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+          : "grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6",
       )}
     >
       {products.map((product: Product) => {
@@ -54,7 +54,7 @@ export const MenuList: React.FC<MenuListProps> = ({
             onPress={() => addToCart(product)}
             isDisabled={isOutOfStock}
             className={clsx(
-              "group relative border-none bg-white/70 dark:bg-gray-800/70 backdrop-blur-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 h-[130px] lg:h-[150px] flex flex-col",
+              "group relative border-none bg-white/70 dark:bg-gray-800/70 backdrop-blur-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 min-h-[110px] md:min-h-[130px] lg:min-h-[150px] flex flex-col",
               isOutOfStock && "opacity-60 grayscale-[0.5]",
             )}
           >

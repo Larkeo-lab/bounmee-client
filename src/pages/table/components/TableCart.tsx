@@ -128,16 +128,18 @@ export const TableCart = ({
     <>
       <Card
         isPressable
-        className={`group relative overflow-hidden min-h-[140px] lg:min-h-[150px] h-auto border-1 backdrop-blur-md transition-all duration-400 hover:-translate-y-1.5 hover:shadow-xl select-none touch-manipulation ${colors.wrapper}`}
+        className={`group relative overflow-hidden min-h-[110px] md:min-h-[130px] lg:min-h-[150px] h-auto border-1 backdrop-blur-md transition-all duration-400 hover:-translate-y-1.5 hover:shadow-xl select-none touch-manipulation ${colors.wrapper}`}
         onClick={handleTableClick}
       >
         <CardBody className="p-0 flex flex-col h-full overflow-hidden">
-          <div className={`h-1.5 w-full shrink-0 ${colors.indicator}`} />
+          <div
+            className={`h-1 !w-full md:h-1.5 shrink-0 ${colors.indicator}`}
+          />
 
-          <div className="p-3 flex flex-col flex-grow z-10 relative">
-            <div className="flex justify-between items-start mb-2 text-gray-800 dark:text-gray-100">
+          <div className="p-2 md:p-3 flex flex-col flex-grow z-10 relative">
+            <div className="flex justify-between items-start mb-1.5 md:mb-2 text-gray-800 dark:text-gray-100">
               <div className="flex flex-col text-left">
-                <span className="text-2xl font-black tracking-tight leading-none mb-1">
+                <span className="text-xl md:text-2xl font-black tracking-tight leading-none mb-1">
                   {table.name}
                 </span>
                 <div
@@ -152,12 +154,12 @@ export const TableCart = ({
             </div>
 
             {/* Modern Order Status Summary */}
-            <div className="flex flex-col gap-1 mb-3 mt-1">
-              <div className="flex items-center justify-between bg-white/50 dark:bg-black/20 backdrop-blur-sm border border-white/60 dark:border-white/10 px-2.5 py-1.5 rounded-xl shadow-sm">
-                <span className="text-[10px] font-bold text-default-600 uppercase tracking-widest text-left">
+            <div className="flex flex-col gap-0.5 md:gap-1 mb-2 md:mb-3 mt-1">
+              <div className="flex items-center justify-between bg-white/50 dark:bg-black/20 backdrop-blur-sm border border-white/60 dark:border-white/10 px-2 md:px-2.5 py-1 md:py-1.5 rounded-lg md:rounded-xl shadow-sm">
+                <span className="text-[9px] md:text-[10px] font-bold text-default-600 uppercase tracking-widest text-left">
                   ທັງໝົດ:
                 </span>
-                <span className="text-sm font-black text-primary">
+                <span className="text-xs md:text-sm font-black text-primary">
                   {tableCart.reduce(
                     (acc: number, i: any) => acc + i.quantity,
                     0,
@@ -165,8 +167,8 @@ export const TableCart = ({
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 gap-1.5 px-1 mt-0.5">
-                <div className="flex items-center justify-between text-[11px]">
+              <div className="grid grid-cols-1 gap-0.5 md:gap-1.5 px-1 mt-0.5">
+                <div className="flex items-center justify-between text-[10px] md:text-[11px]">
                   <span className="flex items-center gap-2 text-default-500 font-bold">
                     <div className="w-1.5 h-1.5 rounded-full bg-default-400" />
                     ລໍຖ້າ:
@@ -176,7 +178,7 @@ export const TableCart = ({
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between text-[11px]">
+                <div className="flex items-center justify-between text-[10px] md:text-[11px]">
                   <span className="flex items-center gap-2 text-warning-600 font-bold">
                     <div className="w-1.5 h-1.5 rounded-full bg-warning-500 animate-pulse" />
                     ກຳລັງຄົວ:
@@ -186,7 +188,7 @@ export const TableCart = ({
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between text-[11px]">
+                <div className="flex items-center justify-between text-[10px] md:text-[11px]">
                   <span className="flex items-center gap-2 text-success-600 font-bold">
                     <div className="w-1.5 h-1.5 rounded-full bg-success-500" />
                     ເສີບແລ້ວ:
@@ -198,13 +200,13 @@ export const TableCart = ({
               </div>
             </div>
 
-            <div className="mt-auto pt-3 flex items-center justify-between border-t border-black/5 dark:border-white/5">
+            <div className="mt-auto pt-2 md:pt-3 flex items-center justify-between border-t border-black/5 dark:border-white/5">
               <Chip
                 startContent={getStatusIcon(table.status)}
                 color={colors.chipColor}
                 variant="flat"
                 size="sm"
-                className="font-bold border-none"
+                className="font-bold border-none text-[10px] md:text-xs h-5 md:h-6"
               >
                 {getStatusLabel(table.status)}
               </Chip>
@@ -226,7 +228,12 @@ export const TableCart = ({
         </CardBody>
       </Card>
 
-      <Modal isOpen={isOpen} onOpenChange={onOpenChange} size="md">
+      <Modal
+        isOpen={isOpen}
+        placement="center"
+        onOpenChange={onOpenChange}
+        size="md"
+      >
         <ModalContent>
           <ModalHeader className="flex flex-col gap-1 text-center">
             <span className="text-lg font-bold">ໂຕະ {table.name}</span>

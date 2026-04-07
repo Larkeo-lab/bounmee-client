@@ -7,6 +7,7 @@ export interface Bank {
   id: string;
   name: string;
   logoUrl: string | null;
+  qrCodeImage: string | null;
   isActive: boolean;
   storeId: string;
 }
@@ -14,6 +15,7 @@ export interface Bank {
 export interface CreateBankInput {
   name: string;
   logoUrl?: string;
+  qrCodeImage?: string;
   isActive?: boolean;
   storeId: string;
 }
@@ -22,6 +24,7 @@ export interface UpdateBankInput {
   id: string;
   name?: string;
   logoUrl?: string;
+  qrCodeImage?: string;
   isActive?: boolean;
   storeId?: string;
 }

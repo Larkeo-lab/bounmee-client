@@ -35,11 +35,13 @@ export default function ConfirmModal({
       isOpen={isOpen}
       onOpenChange={onOpenChange}
       size="xs"
+      placement="center"
       hideCloseButton
       backdrop="blur"
       classNames={{
+        wrapper: "z-[9999]",
+        backdrop: "z-[9998] bg-black/30",
         base: "border-none shadow-2xl",
-        backdrop: "bg-black/30"
       }}
     >
       <ModalContent>
