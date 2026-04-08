@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: dee-pos-admin
+    container_name: dee-pos-store
     restart: always
     ports:
       - "4173:4173"
