@@ -36,6 +36,7 @@ interface CartContextType {
   updateQuantity: (id: string, status: string, delta: number, note?: string) => void;
   setQuantity: (id: string, status: string, value: string, note?: string) => void;
   updateStatus: (uniqueIds: string[], status: string, tableId?: string) => void;
+  updateItemNote: (id: string, status: string, oldNote: string | undefined, newNote: string) => void;
   clearCart: () => void;
   clearTableCart: (tableId: string) => void;
   subtotal: number;
@@ -238,6 +239,32 @@ export const Provider: React.FC<{ children: React.ReactNode }> = ({ children }) 
     queryClient.invalidateQueries({ queryKey: ["tables"] });
   }, [activeTableId]);
 
+  const updateItemNote = useCallback((id: string, status: string, oldNote: string | undefined, newNote: string) => {
+    updateCurrentCart(prev => {
+      const normalizedOldNote = (oldNote || "").trim();
+      const normalizedNewNote = newNote.trim();
+      
+      const itemIndex = prev.findIndex(i => i.id === id && i.status === status && (i.note || "").trim() === normalizedOldNote);
+      if (itemIndex === -1) return prev;
+
+      const newCart = [...prev];
+      const targetItem = { ...newCart[itemIndex], note: normalizedNewNote || undefined };
+
+      // Check if merging is needed (if another item with same ID, status, and NEW note already exists)
+      const existingIndex = prev.findIndex((i, idx) => idx !== itemIndex && i.id === id && i.status === status && (i.note || "").trim() === normalizedNewNote);
+      
+      if (existingIndex !== -1) {
+        newCart[existingIndex] = { ...newCart[existingIndex], quantity: newCart[existingIndex].quantity + targetItem.quantity };
+        newCart.splice(itemIndex, 1);
+      } else {
+        newCart[itemIndex] = targetItem;
+      }
+
+      return newCart;
+    });
+    queryClient.invalidateQueries({ queryKey: ["tables"] });
+  }, [updateCurrentCart]);
+
   const clearCart = useCallback(() => updateCurrentCart(() => []), [updateCurrentCart]);
 
   const clearTableCart = useCallback((tableId: string) => {
@@ -289,7 +316,7 @@ export const Provider: React.FC<{ children: React.ReactNode }> = ({ children }) 
           <ChatProvider>
             <CartContext.Provider value={{
               cart, carts, addToCart, removeFromCart, updateQuantity, setQuantity,
-              updateStatus, clearCart, clearTableCart, subtotal, activeTableId, setActiveTableId,
+              updateStatus, updateItemNote, clearCart, clearTableCart, subtotal, activeTableId, setActiveTableId,
               dismissedCarts, dismissTable, setTableCart, orderingCount, kitchenCount,
               isConnected, rtt
             }}>

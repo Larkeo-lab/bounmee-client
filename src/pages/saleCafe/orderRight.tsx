@@ -1,69 +1,85 @@
-import React, { useState } from "react";
-import clsx from "clsx";
-import {
-  Button,
-  Image,
-  ScrollShadow,
-  Chip,
-  useDisclosure,
-} from "@heroui/react";
+import React from "react";
+import { Button, Checkbox, Image, ScrollShadow, Chip, Input, Tooltip } from "@heroui/react";
 import {
   ShoppingCart,
   Trash2,
-  Minus,
+  MessageSquare,
   Plus,
-  ChevronDown,
+  Minus,
+  Utensils,
+  ChefHat,
   Banknote,
+  ChevronDown,
 } from "lucide-react";
-import { formatNumber } from "@/utils/numberFormat";
-import { getDisplayImageUrl } from "@/lib/utils";
 import { useCart } from "@/provider";
-import ConfirmModal from "@/components/common/popup-confirm";
+import { getDisplayImageUrl } from "@/lib/utils";
+import { formatNumber } from "@/utils/numberFormat";
+import clsx from "clsx";
+import { toast } from "react-hot-toast";
 
 interface OrderRightProps {
   isMinimized: boolean;
   setIsMinimized: (v: boolean) => void;
+  filteredCart: any[];
+  selectedCartItems: string[];
+  setSelectedCartItems: React.Dispatch<React.SetStateAction<string[]>>;
+  setItemToRemove: React.Dispatch<
+    React.SetStateAction<{ id: string; status: string; note?: string } | null>
+  >;
+  onRemoveItemOpen: () => void;
+  expandedNotes: Set<string>;
+  toggleNote: (uId: string) => void;
+  statusFilter: string;
+  setStatusFilter: (status: string) => void;
+  statusTotals: Record<string, number>;
   onPaymentOpen: () => void;
+  onClearCartOpen: () => void;
 }
+
+const getStatusDisplay = (status: string) => {
+  switch (status?.toUpperCase()) {
+    case "PENDING":
+      return { label: "ລໍຖ້າ", color: "warning" as const };
+    case "COOKING":
+      return { label: "ກຳລັງຄົວ", color: "primary" as const };
+    case "SERVED":
+      return { label: "ເສີບແລ້ວ", color: "success" as const };
+    case "CANCEL":
+      return { label: "ຍົກເລີກ", color: "danger" as const };
+    default:
+      return { label: status || "ລໍຖ້າ", color: "default" as const };
+  }
+};
 
 export const OrderRight: React.FC<OrderRightProps> = ({
   isMinimized,
   setIsMinimized,
+  filteredCart,
+  selectedCartItems,
+  setSelectedCartItems,
+  setItemToRemove,
+  onRemoveItemOpen,
+  expandedNotes,
+  toggleNote,
+  statusFilter,
+  setStatusFilter,
+  statusTotals,
   onPaymentOpen,
+  onClearCartOpen,
 }) => {
   const {
     cart,
-    removeFromCart,
     updateQuantity,
-    clearCart,
+    updateStatus,
+    updateItemNote,
     subtotal,
+    isConnected,
   } = useCart();
-
-  const { isOpen: isRemoveOpen, onOpen: onRemoveOpen, onOpenChange: onRemoveOpenChange } = useDisclosure();
-  const { isOpen: isClearOpen, onOpen: onClearOpen, onOpenChange: onClearOpenChange } = useDisclosure();
-  const [itemToRemove, setItemToRemove] = useState<{ id: string; name: string; status: string } | null>(null);
 
   const isEmpty = cart.length === 0;
 
-  const handleRemoveClick = (id: string, name: string, status: string) => {
-    setItemToRemove({ id, name, status });
-    onRemoveOpen();
-  };
-
-  const confirmRemove = () => {
-    if (itemToRemove) {
-      removeFromCart(itemToRemove.id, itemToRemove.status);
-      setItemToRemove(null);
-    }
-  };
-
-  const confirmClear = () => {
-    clearCart();
-  };
-
   return (
     <>
-      {/* Cart Section (Bottom Sheet on Mobile, Sidebar on Desktop) */}
       <div
         className={clsx(
           "fixed inset-x-0 bottom-0 z-40 transition-all duration-500 ease-in-out transform lg:relative lg:inset-auto lg:translate-y-0 lg:opacity-100 lg:pointer-events-auto shrink-0 flex flex-col bg-white dark:bg-gray-800 border-t lg:border-t-0 lg:border-l border-divider shadow-2xl lg:shadow-none lg:w-[350px] xl:w-[400px] overflow-hidden rounded-t-[30px] lg:rounded-none",
@@ -73,11 +89,12 @@ export const OrderRight: React.FC<OrderRightProps> = ({
           "h-[75vh] lg:h-full"
         )}
       >
-        <div className="flex flex-col items-center pt-2 pb-1 lg:hidden">
+        {/* Mobile Drag Indicator */}
+        <div className="flex justify-center pt-2 lg:hidden">
           <div className="w-10 h-1 bg-default-300 rounded-full mb-2" />
         </div>
 
-        <div className="px-4 py-2 border-b border-divider flex items-center justify-between bg-primary/5">
+        <div className="p-3 border-b border-divider flex items-center justify-between bg-primary/5 flex-shrink-0">
           <div className="flex items-center gap-2 font-black text-base lg:text-lg text-primary">
             <ShoppingCart size={20} />
             <span>ລາຍການທີ່ເລືອກ</span>
@@ -85,7 +102,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
               {cart.length}
             </Chip>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <Button
               isIconOnly
               size="sm"
@@ -100,7 +117,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
               size="sm"
               variant="light"
               color="danger"
-              onClick={onClearOpen}
+              onClick={onClearCartOpen}
               isDisabled={isEmpty}
             >
               <Trash2 size={18} />
@@ -108,64 +125,232 @@ export const OrderRight: React.FC<OrderRightProps> = ({
           </div>
         </div>
 
-        <ScrollShadow size={0} className="flex-grow p-4 space-y-4 overflow-y-auto scrollbar-hide">
-          {cart.map((item) => (
-            <div
-              key={item.id}
-              className="flex gap-3 group items-center border-b border-divider border-dashed pb-3 last:border-b-0 last:pb-0"
+        {/* Status Filters */}
+        <div className="flex items-center justify-between px-3 py-1.5 bg-default-100/50 border-b border-divider flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <Checkbox
+              isSelected={
+                filteredCart.length > 0 &&
+                filteredCart.every((item) =>
+                  selectedCartItems.includes(
+                    `${item.id}-${item.status}-${item.note || ""}`,
+                  ),
+                )
+              }
+              onValueChange={(isSelected) => {
+                if (isSelected) {
+                  const newIds = filteredCart.map(
+                    (item) => `${item.id}-${item.status}-${item.note || ""}`,
+                  );
+                  setSelectedCartItems(
+                    Array.from(new Set([...selectedCartItems, ...newIds])),
+                  );
+                } else {
+                  const filteredIds = new Set(
+                    filteredCart.map(
+                      (item) => `${item.id}-${item.status}-${item.note || ""}`,
+                    ),
+                  );
+                  setSelectedCartItems(
+                    selectedCartItems.filter((id) => !filteredIds.has(id)),
+                  );
+                }
+              }}
+              size="sm"
+              isDisabled={filteredCart.length === 0}
             >
-              <Image
-                src={getDisplayImageUrl(item.image)}
-                className="w-14 h-14 object-cover rounded-xl shadow-sm"
-              />
-              <div className="flex-grow flex flex-col justify-between py-0.5">
-                <div className="flex justify-between items-start gap-2">
-                  <span className="font-bold text-[13px] lg:text-sm line-clamp-1">
-                    {item.name}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center mt-1">
-                  <span className="text-primary font-black text-xs lg:text-sm">
-                    {formatNumber(item.price * item.quantity)} <span className="text-[10px] font-normal">ກີບ</span>
-                  </span>
-                  <div className="flex items-center gap-1 bg-default-100 rounded-lg p-0.5 border border-default-200">
-                    <Button
-                      isIconOnly
-                      size="sm"
-                      variant="light"
-                      className="min-w-7 h-7 w-7"
-                      onClick={() => updateQuantity(item.id, item.status, -1)}
-                    >
-                      <Minus size={12} />
-                    </Button>
-                    <span className="w-6 text-center font-bold text-xs">
-                       {item.quantity}
-                    </span>
-                    <Button
-                      isIconOnly
-                      size="sm"
-                      variant="light"
-                      className="min-w-7 h-7 w-7"
-                      onClick={() => updateQuantity(item.id, item.status, 1)}
-                    >
-                      <Plus size={12} />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-              <Button
-                isIconOnly
-                size="sm"
-                variant="flat"
-                color="danger"
-                onClick={() => handleRemoveClick(item.id, item.name, item.status)}
-                className="min-w-8 h-8 w-8 ml-2"
-              >
-                <Trash2 size={16} />
-              </Button>
+              <span className="text-xs font-bold text-default-700">
+                ເລືອກທັງໝົດ
+              </span>
+            </Checkbox>
+            <div className="flex flex-wrap items-center gap-1 ml-2">
+              {[
+                { value: "ALL", label: "ທັງໝົດ" },
+                { value: "PENDING", label: "ລໍຖ້າ" },
+                { value: "COOKING", label: "ກຳລັງຄົວ" },
+                { value: "SERVED", label: "ເສີບແລ້ວ" },
+              ].map((status) => (
+                <button
+                  key={status.value}
+                  onClick={() => {
+                    setStatusFilter(status.value);
+                    setSelectedCartItems([]);
+                  }}
+                  className={clsx(
+                    "px-2 py-1 text-[10px] font-bold rounded-lg transition-all whitespace-nowrap outline-none border-[0.5px]",
+                    statusFilter === status.value
+                      ? "bg-primary text-white border-primary shadow-md shadow-primary/30 scale-[1.02]"
+                      : "bg-default-100 text-default-500 border-default-200 hover:bg-default-200 hover:text-default-700"
+                  )}
+                >
+                  {status.label}
+                </button>
+              ))}
             </div>
-          ))}
-          {isEmpty && (
+          </div>
+        </div>
+
+        {selectedCartItems.length > 0 && (
+          <div className="px-3 py-1 bg-primary/10 border-b border-primary/20 animate-in fade-in slide-in-from-top-1 duration-300 flex justify-between items-center">
+            <span className="text-xs text-primary font-bold">
+              ເລືອກແລ້ວ: {selectedCartItems.length} ລາຍການ
+            </span>
+          </div>
+        )}
+
+        <ScrollShadow className="flex-grow overflow-y-auto p-4 space-y-4 scrollbar-hide">
+          {filteredCart.length > 0 ? (
+            filteredCart.map((item) => {
+              const uniqueId = `${item.id}-${item.status}-${item.note || ""}`;
+              return (
+                <div
+                  key={uniqueId}
+                  className="flex gap-3 group items-center border-b border-divider border-dashed pb-3 last:border-b-0 last:pb-0"
+                >
+                  <Checkbox
+                    isSelected={selectedCartItems.includes(uniqueId)}
+                    onValueChange={(isSelected) => {
+                      if (isSelected) {
+                        setSelectedCartItems((prev) => [...prev, uniqueId]);
+                      } else {
+                        setSelectedCartItems((prev) =>
+                          prev.filter((id) => id !== uniqueId),
+                        );
+                      }
+                    }}
+                    size="sm"
+                  />
+                  <Image
+                    src={getDisplayImageUrl(item.image)}
+                    className="w-14 h-14 object-cover rounded-xl shadow-sm"
+                  />
+                  <div className="flex-grow flex flex-col justify-between py-0.5">
+                    <div className="flex justify-between items-start gap-2">
+                      <span className="font-bold text-[13px] lg:text-sm line-clamp-1">
+                        {item.name}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center mt-1">
+                      <div className="flex flex-col">
+                        <span className="text-primary font-black text-xs lg:text-sm">
+                          {formatNumber(item.price * item.quantity)} <span className="text-[10px] font-normal">ກີບ</span>
+                        </span>
+                        <div className="flex items-center gap-2 mt-1">
+                          {(item.status !== "SERVED" || item.note) && (
+                            <Tooltip content={item.status === "SERVED" ? "ເບິ່ງໝາຍເຫດ" : (item.note ? "ແກ້ໄຂໝາຍເຫດ" : "ເພີ່ມໝາຍເຫດ")}>
+                              <div
+                                className={clsx(
+                                  "p-1 rounded-full cursor-pointer transition-all border",
+                                  expandedNotes.has(uniqueId)
+                                    ? "bg-primary text-white border-primary"
+                                    : item.note
+                                      ? "bg-warning-50 text-warning border-warning-100"
+                                      : "bg-default-50 text-default-400 border-default-200",
+                                )}
+                                onClick={() => toggleNote(uniqueId)}
+                              >
+                                <MessageSquare size={12} strokeWidth={2.5} />
+                              </div>
+                            </Tooltip>
+                          )}
+                          {(() => {
+                            const statusConfig = getStatusDisplay(item.status);
+                            return (
+                              <Chip
+                                size="sm"
+                                color={statusConfig.color}
+                                variant="flat"
+                                className="font-bold text-[9px] h-5"
+                              >
+                                {statusConfig.label}
+                              </Chip>
+                            );
+                          })()}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 bg-default-100 rounded-lg p-0.5 border border-default-200">
+                        <Button
+                          isIconOnly
+                          size="sm"
+                          variant="light"
+                          className="min-w-7 h-7 w-7"
+                          onClick={() => updateQuantity(item.id, item.status, -1, item.note)}
+                        >
+                          <Minus size={12} />
+                        </Button>
+                        <span className="w-6 text-center font-bold text-xs">
+                          {item.quantity}
+                        </span>
+                        <Button
+                          isIconOnly
+                          size="sm"
+                          variant="light"
+                          className="min-w-7 h-7 w-7"
+                          onClick={() => updateQuantity(item.id, item.status, 1, item.note)}
+                        >
+                          <Plus size={12} />
+                        </Button>
+                      </div>
+                    </div>
+                    {expandedNotes.has(uniqueId) && (
+                      <div className="mt-2 animate-in slide-in-from-top-1 duration-200">
+                        {item.status === "SERVED" ? (
+                          <div className="px-2.5 py-2 bg-warning-50 border border-warning-100 rounded-xl">
+                            <p className="text-[10px] text-warning-700 font-bold flex items-center gap-1">
+                              <MessageSquare size={12} />
+                              <span>ໝາຍເຫດ:</span>
+                            </p>
+                            <p className="text-[10px] text-warning-600 mt-0.5">
+                              {item.note || "ບໍ່ມີໝາຍເຫດ"}
+                            </p>
+                          </div>
+                        ) : (
+                          <Input
+                            size="sm"
+                            variant="bordered"
+                            placeholder="ເພີ່ມໝາຍເຫດທີ່ນີ້..."
+                            defaultValue={item.note || ""}
+                            onBlur={(e) => {
+                              const val = e.target.value;
+                              if (val !== (item.note || "")) {
+                                updateItemNote(item.id, item.status, item.note, val);
+                              }
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                const val = (e.target as HTMLInputElement).value;
+                                updateItemNote(item.id, item.status, item.note, val);
+                                toggleNote(uniqueId);
+                              }
+                            }}
+                            startContent={<MessageSquare size={14} className="text-default-400" />}
+                            classNames={{
+                              input: "text-[11px]",
+                              inputWrapper: "h-8 min-h-8 px-2 bg-warning-50/30 border-warning-200 focus-within:!border-warning-400",
+                            }}
+                            autoFocus
+                          />
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    variant="flat"
+                    color="danger"
+                    onClick={() => {
+                      setItemToRemove({ id: item.id, status: item.status, note: item.note });
+                      onRemoveItemOpen();
+                    }}
+                    className="min-w-8 h-8 w-8 ml-2"
+                  >
+                    <Trash2 size={16} />
+                  </Button>
+                </div>
+              );
+            })
+          ) : (
             <div className="flex flex-col items-center justify-center h-full opacity-40 py-10">
               <ShoppingCart size={48} className="mb-2" />
               <p className="font-bold">ຍັງບໍ່ມີລາຍການ</p>
@@ -173,14 +358,111 @@ export const OrderRight: React.FC<OrderRightProps> = ({
           )}
         </ScrollShadow>
 
+        <div className="px-3 py-2 border-t border-divider bg-default-50/50 flex-shrink-0 z-40">
+          <div className="grid grid-cols-2 gap-2 mb-2">
+            <Button
+              color="warning"
+              className="h-8 md:h-9 font-bold text-[9px] md:text-[11px] text-white shadow-sm px-1"
+              onClick={() => {
+                if (!isConnected) {
+                  toast.error(
+                    "⚠️ ຕອນນີ້ Offline! ອໍເດີ້ຈະຖືກສົ່ງໄປຄົວທັນທີເມື່ອເນັດກັບມາ.",
+                    {
+                      duration: 4000,
+                      style: { fontWeight: "bold" },
+                    },
+                  );
+                }
+                console.log(
+                  "🚀 Clicked Send to Kitchen. selectedCartItems:",
+                  selectedCartItems,
+                );
+                try {
+                  updateStatus(selectedCartItems, "COOKING");
+                  setSelectedCartItems([]);
+                  toast.success("ອັບເດດສະຖານະສຳເລັດ");
+
+                  // Play notification sound
+                  try {
+                    const audio = new Audio("/assets/void/notification.mp3");
+                    audio
+                      .play()
+                      .catch((e) => console.log("Audio play blocked:", e));
+                  } catch (e) {}
+                } catch (error) {
+                  toast.error("ເກີດຂໍ້ຜິດພາດໃນການອັບເດດ");
+                }
+              }}
+              startContent={<ChefHat size={12} />}
+              isDisabled={
+                selectedCartItems.length === 0 ||
+                selectedCartItems.some((uId) => {
+                  const item = cart.find(
+                    (i) => `${i.id}-${i.status}-${i.note || ""}` === uId,
+                  );
+                  return item?.status === "COOKING" || item?.status === "SERVED";
+                })
+              }
+            >
+              ສົ່ງໄປຄົວ
+            </Button>
+            <Button
+              color="primary"
+              className="h-8 md:h-9 font-bold text-[9px] md:text-[11px] text-white shadow-sm px-1"
+              onClick={() => {
+                if (!isConnected) {
+                  toast.error(
+                    "⚠️ ຕອນນີ້ Offline! ຂໍ້ມູນຈະອັບເດດໄປຍັງເຄື່ອງອື່ນເມື່ອເນັດກັບມາ.",
+                    {
+                      duration: 4000,
+                      style: { fontWeight: "bold" },
+                    },
+                  );
+                }
+                try {
+                  updateStatus(selectedCartItems, "SERVED");
+                  setSelectedCartItems([]);
+                  toast.success("ອັບເດດສະຖານະສຳເລັດ");
+                } catch (error) {
+                  toast.error("ເກີດຂໍ້ຜິດພາດໃນການອັບເດດ");
+                }
+              }}
+              startContent={<Utensils size={12} />}
+              isDisabled={
+                selectedCartItems.length === 0 ||
+                selectedCartItems.some((uId) => {
+                  const item = cart.find(
+                    (i) => `${i.id}-${i.status}-${i.note || ""}` === uId,
+                  );
+                  return item?.status === "SERVED";
+                })
+              }
+            >
+              ເສີບອາຫານ
+            </Button>
+          </div>
+        </div>
+
         <div className="p-4 border-t border-divider bg-default-50/80 backdrop-blur-md">
-          <div className="space-y-2 mb-4">
-            <div className="flex justify-between items-center font-black">
-              <span className="text-default-700">ທັງໝົດ:</span>
-              <span className="text-primary text-xl lg:text-2xl">
-                {formatNumber(subtotal)} <span className="text-xs font-normal">ກີບ</span>
-              </span>
-            </div>
+          <div className="flex flex-col gap-1 mb-3">
+             <div className="flex justify-between items-center text-xs text-warning-600 font-bold">
+                <span>ລໍຖ້າ:</span>
+                <span>{formatNumber(statusTotals.PENDING)} ກີບ</span>
+             </div>
+             <div className="flex justify-between items-center text-xs text-primary-600 font-bold">
+                <span>ກຳລັງຄົວ:</span>
+                <span>{formatNumber(statusTotals.COOKING)} ກີບ</span>
+             </div>
+             <div className="flex justify-between items-center text-xs text-success-600 font-bold">
+                <span>ເສີບແລ້ວ:</span>
+                <span>{formatNumber(statusTotals.SERVED)} ກີບ</span>
+             </div>
+             <div className="flex justify-between items-center font-black pt-2 border-t border-divider mt-1">
+                <span className="text-default-700">ທັງໝົດ:</span>
+                <span className="text-primary text-xl lg:text-2xl">
+                  {formatNumber(subtotal)} <span className="text-xs font-normal">ກີບ</span>
+                </span>
+             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -188,7 +470,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
               variant="flat"
               color="danger"
               className="h-12 font-bold text-base"
-              onClick={onClearOpen}
+              onClick={onClearCartOpen}
               startContent={<Trash2 size={18} />}
               isDisabled={isEmpty}
             >
@@ -199,7 +481,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
               className="h-12 font-black text-lg shadow-lg shadow-primary/20"
               startContent={<Banknote size={20} />}
               onPress={onPaymentOpen}
-              isDisabled={isEmpty}
+              isDisabled={isEmpty || !cart.every(i => i.status === "SERVED" || i.status === "CANCEL")}
             >
               ຕໍ່ໄປ
             </Button>
@@ -214,28 +496,6 @@ export const OrderRight: React.FC<OrderRightProps> = ({
           onClick={() => setIsMinimized(true)}
         />
       )}
-
-      {/* Confirm Remove Item Modal */}
-      <ConfirmModal
-        isOpen={isRemoveOpen}
-        onOpenChange={onRemoveOpenChange}
-        title="ຢືນຢັນການລົບ?"
-        message={`ທ່ານຕ້ອງການລົບລາຍການ "${itemToRemove?.name}" ອອກແທ້ຫຼືບໍ່?`}
-        onConfirm={confirmRemove}
-        color="danger"
-        icon={<Trash2 size={24} />}
-      />
-
-      {/* Confirm Clear Cart Modal */}
-      <ConfirmModal
-        isOpen={isClearOpen}
-        onOpenChange={onClearOpenChange}
-        title="ຢືນຢັນການລ້າງຕະກ້າ?"
-        message="ທ່ານຕ້ອງການລ້າງລາຍການທັງໝົດໃນຕະກ້າແທ້ຫຼືບໍ່?"
-        onConfirm={confirmClear}
-        color="danger"
-        icon={<Trash2 size={24} />}
-      />
     </>
   );
 };

@@ -74,7 +74,7 @@ export default function KitchenPage() {
         const table = tables.find((t: any) => t.id === tableId);
         tableOrders.push({
           tableId,
-          tableName: table?.name || "ບໍ່ຮູ້ຊື່ໂຕະ",
+          tableName: table?.name || "ໜ້າຮ້ານ",
           items: cookingItems,
         });
       }

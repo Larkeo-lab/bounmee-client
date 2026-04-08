@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import clsx from "clsx";
 import {
   Card,
@@ -19,6 +19,7 @@ import EmptyState from "@/components/common/empty-state";
 
 import { useCart } from "@/provider";
 import PaymentModal from "@/components/common/payment-modal";
+import ConfirmModal from "@/components/common/popup-confirm";
 import { useAuth } from "@/routes/AuthContext";
 import { useGetCategories, Category } from "@/services/category/useCategory";
 import {
@@ -41,15 +42,73 @@ interface FlyingItem {
 
 export default function ProductOrderPage() {
   const { user } = useAuth();
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const { isOpen: isPaymentOpen, onOpen: onPaymentOpen, onOpenChange: onPaymentOpenChange } = useDisclosure();
   const [isMinimized, setIsMinimized] = useState(true);
   const [flyingItems, setFlyingItems] = useState<FlyingItem[]>([]);
-
-  const { cart, addToCart, clearCart, subtotal, setActiveTableId } = useCart();
+  const { cart, addToCart, removeFromCart, updateQuantity, updateStatus, clearCart, subtotal, setActiveTableId } = useCart();
+  const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [selectedCartItems, setSelectedCartItems] = useState<string[]>([]);
+  const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
+  const [itemToRemove, setItemToRemove] = useState<{
+    id: string;
+    status: string;
+    note?: string;
+  } | null>(null);
+  const {
+    isOpen: isRemoveItemOpen,
+    onOpen: onRemoveItemOpen,
+    onOpenChange: onRemoveItemOpenChange,
+  } = useDisclosure();
+  const {
+    isOpen: isClearCartOpen,
+    onOpen: onClearCartOpen,
+    onOpenChange: onClearCartOpenChange,
+  } = useDisclosure();
 
   useEffect(() => {
     setActiveTableId(null);
   }, [setActiveTableId]);
+
+  // Sync selection with cart
+  useEffect(() => {
+    setSelectedCartItems((prev) =>
+      prev.filter((uId) =>
+        cart.some(
+          (item) => `${item.id}-${item.status}-${item.note || ""}` === uId,
+        ),
+      ),
+    );
+  }, [cart]);
+
+  const toggleNote = (uId: string) => {
+    setExpandedNotes((prev) => {
+      const next = new Set(prev);
+      if (next.has(uId)) next.delete(uId);
+      else next.add(uId);
+      return next;
+    });
+  };
+
+  const filteredCart = useMemo(() => {
+    return cart.filter((item) => {
+      if (statusFilter === "ALL") return true;
+      const itemStatus = item.status?.toUpperCase() || "PENDING";
+      return itemStatus === statusFilter;
+    }, [cart, statusFilter]);
+  }, [cart, statusFilter]);
+
+  const statusTotals = useMemo(() => {
+    return cart.reduce(
+      (acc, item) => {
+        const s = item.status?.toUpperCase() || "PENDING";
+        if (s !== "CANCEL") {
+          acc[s] = (acc[s] || 0) + item.price * item.quantity;
+        }
+        return acc;
+      },
+      { PENDING: 0, COOKING: 0, SERVED: 0 } as Record<string, number>,
+    );
+  }, [cart]);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -312,18 +371,58 @@ export default function ProductOrderPage() {
       <OrderRight
         isMinimized={isMinimized}
         setIsMinimized={setIsMinimized}
-        onPaymentOpen={onOpen}
+        filteredCart={filteredCart}
+        selectedCartItems={selectedCartItems}
+        setSelectedCartItems={setSelectedCartItems}
+        setItemToRemove={setItemToRemove}
+        onRemoveItemOpen={onRemoveItemOpen}
+        expandedNotes={expandedNotes}
+        toggleNote={toggleNote}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+        statusTotals={statusTotals}
+        onPaymentOpen={onPaymentOpen}
+        onClearCartOpen={onClearCartOpen}
       />
 
       <PaymentModal
-        isOpen={isOpen}
-        onOpenChange={onOpenChange}
+        isOpen={isPaymentOpen}
+        onOpenChange={onPaymentOpenChange}
         total={subtotal}
         items={cart}
         onPaymentSuccess={() => {
           clearCart();
           refetchProducts();
         }}
+      />
+
+      <ConfirmModal
+        isOpen={isRemoveItemOpen}
+        onOpenChange={onRemoveItemOpenChange}
+        title="ຢືນຢັນການລົບ?"
+        message="ທ່ານຕ້ອງການລົບລາຍການນີ້ອອກຈາກກະຕ່າແທ້ຫຼືບໍ່?"
+        onConfirm={() => {
+          if (itemToRemove) {
+            removeFromCart(
+              itemToRemove.id,
+              itemToRemove.status,
+              itemToRemove.note,
+            );
+            setItemToRemove(null);
+          }
+        }}
+        color="danger"
+      />
+
+      <ConfirmModal
+        isOpen={isClearCartOpen}
+        onOpenChange={onClearCartOpenChange}
+        title="ຢືນຢັນການລ້າງຕະກ້າ?"
+        message="ທ່ານຕ້ອງການລ້າງລາຍການທັງໝົດໃນຕະກ້າແທ້ຫຼືບໍ່?"
+        onConfirm={() => {
+          clearCart();
+        }}
+        color="danger"
       />
 
       {/* Flying Animation Layer */}
