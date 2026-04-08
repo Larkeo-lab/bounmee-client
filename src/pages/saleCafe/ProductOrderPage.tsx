@@ -1,0 +1,370 @@
+import { useState, useEffect } from "react";
+import clsx from "clsx";
+import {
+  Card,
+  CardBody,
+  CardFooter,
+  Image,
+  Button,
+  Input,
+  Badge,
+  ScrollShadow,
+  Tabs,
+  Tab,
+  useDisclosure,
+} from "@heroui/react";
+import { Search, Plus, ShoppingCart, Barcode, LayoutGrid } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import EmptyState from "@/components/common/empty-state";
+
+import { useCart } from "@/provider";
+import PaymentModal from "@/components/common/payment-modal";
+import { useAuth } from "@/routes/AuthContext";
+import { useGetCategories, Category } from "@/services/category/useCategory";
+import {
+  useGetProducts,
+  Product,
+  getProductByBarcode,
+} from "@/services/product/useProduct";
+import { getDisplayImageUrl } from "@/lib/utils";
+import { socket } from "@/lib/socket";
+import { formatNumber } from "@/utils/numberFormat";
+import { toast } from "react-hot-toast";
+import { OrderRight } from "./orderRight";
+
+interface FlyingItem {
+  id: string;
+  src: string;
+  startX: number;
+  startY: number;
+}
+
+export default function ProductOrderPage() {
+  const { user } = useAuth();
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const [isMinimized, setIsMinimized] = useState(true);
+  const [flyingItems, setFlyingItems] = useState<FlyingItem[]>([]);
+
+  const { cart, addToCart, clearCart, subtotal, setActiveTableId } = useCart();
+
+  useEffect(() => {
+    setActiveTableId(null);
+  }, [setActiveTableId]);
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+
+  useEffect(() => {
+    const handler = setTimeout(() => setSearchQuery(searchQuery), 500);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    if (!user?.user?.storeId) return;
+    if (!socket.connected) socket.connect();
+    const onConnect = () => socket.emit("JOIN:STORE", user.user.storeId);
+    const onScanned = (product: Product) => {
+      addToCart(product);
+      toast.success(`ຍິງບາໂຄດ: ເພີ່ມ ${product.name} ສຳເລັດ`, {
+        duration: 1000,
+      });
+    };
+    socket.on("SETUP", onConnect);
+    socket.on("PRODUCT:SCANNED", onScanned);
+    if (socket.connected) onConnect();
+    return () => {
+      socket.off("SETUP", onConnect);
+      socket.off("PRODUCT:SCANNED", onScanned);
+    };
+  }, [user?.user?.storeId, addToCart]);
+
+  const { data: categoryResponse } = useGetCategories(
+    user?.user?.storeId || "",
+  );
+  const {
+    data: productResponse,
+    refetch: refetchProducts,
+    isPending: isLoadingProducts,
+  } = useGetProducts(
+    user?.user?.storeId || "",
+    selectedCategory === "all" ? undefined : selectedCategory,
+    true,
+    debouncedSearch,
+  );
+
+  const products = productResponse?.data || [];
+
+  const handleBarcodeSearch = async (barcode: string) => {
+    if (!barcode || !user?.user?.storeId) return;
+    try {
+      const product = await getProductByBarcode(barcode, user.user.storeId);
+      if (product) {
+        addToCart(product);
+        setSearchQuery("");
+        // No animation for barcode scan as we don't have click coordinates usually,
+        // but it shows toast.
+      }
+    } catch (error) {
+      setDebouncedSearch(barcode);
+    }
+  };
+
+  const handleAddToCart = (product: Product, event: any) => {
+    addToCart(product);
+
+    // Get position from event target (supporting HeroUI's PressEvent which doesn't have currentTarget)
+    const target = event?.target as HTMLElement;
+    if (!target) {
+      toast.success(`ເພີ່ມ ${product.name}`, {
+        duration: 800,
+        position: "top-center",
+      });
+      return;
+    }
+
+    const rect = target.getBoundingClientRect();
+    const newItem: FlyingItem = {
+      id: Math.random().toString(36).substring(7),
+      src: getDisplayImageUrl(product.image),
+      startX: rect.left,
+      startY: rect.top,
+    };
+
+    setFlyingItems((prev) => [...prev, newItem]);
+    setTimeout(() => {
+      setFlyingItems((prev) => prev.filter((item) => item.id !== newItem.id));
+    }, 1000);
+
+    toast.success(`ເພີ່ມ ${product.name}`, {
+      duration: 800,
+      position: "top-center",
+    });
+  };
+
+  const categories = [
+    { id: "all", label: "ທັງໝົດ" },
+    ...(categoryResponse?.data?.map((cat: Category) => ({
+      id: cat.id,
+      label: cat.name,
+    })) || []),
+  ];
+
+  return (
+    <div className="flex flex-col lg:flex-row h-[calc(100vh-100px)] gap-0 lg:gap-4 overflow-hidden sm:m-4 relative">
+      <div className="flex-grow flex flex-col min-h-0 lg:h-full">
+        {/* Header */}
+        <div className="flex flex-col gap-2 lg:gap-4 bg-white dark:bg-gray-800 p-2 lg:p-4 rounded-xl shadow-sm border-b lg:border border-divider z-10">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary/10 rounded-lg lg:hidden">
+              <LayoutGrid className="text-primary" size={20} />
+            </div>
+            <div className="flex-grow">
+              <Input
+                isClearable
+                size="sm"
+                variant="bordered"
+                className="w-full lg:max-w-[400px]"
+                placeholder="ຄົ້ນຫາລາຍການ ຫຼື ຍິງບາໂຄດ..."
+                startContent={<Search className="text-default-400" size={18} />}
+                endContent={<Barcode className="text-default-400" size={18} />}
+                value={searchQuery}
+                onValueChange={setSearchQuery}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleBarcodeSearch(searchQuery);
+                }}
+              />
+            </div>
+            <div className="font-black text-lg text-primary lg:block hidden">
+              Dee POS
+            </div>
+            <Badge
+              color="danger"
+              content={cart.length}
+              isInvisible={cart.length === 0}
+              shape="circle"
+              size="md"
+              className="lg:hidden"
+            >
+              <div
+                className="p-2 bg-primary/10 rounded-full cursor-pointer"
+                onClick={() => setIsMinimized(false)}
+              >
+                <ShoppingCart size={22} className="text-primary" />
+              </div>
+            </Badge>
+          </div>
+
+          <ScrollShadow
+            size={40}
+            orientation="horizontal"
+            className="max-w-full w-0 min-w-full overflow-x-auto scrollbar-hide"
+            hideScrollBar
+          >
+            <Tabs
+              aria-label="Product Categories"
+              color="primary"
+              variant="underlined"
+              selectedKey={selectedCategory}
+              onSelectionChange={(key) => setSelectedCategory(key as string)}
+              classNames={{
+                tabList:
+                  "gap-4 lg:gap-6 flex-nowrap p-0 min-w-max border-b-2 border-divider",
+                cursor: "w-full bg-primary",
+                tab: "max-w-fit px-1 h-10 lg:h-12 flex-shrink-0",
+                tabContent:
+                  "group-data-[selected=true]:text-primary font-medium text-xs lg:text-sm whitespace-nowrap",
+              }}
+            >
+              {categories.map((cat) => (
+                <Tab key={cat.id} title={cat.label} />
+              ))}
+            </Tabs>
+          </ScrollShadow>
+        </div>
+
+        {/* Product Grid Area */}
+        <div
+          className={clsx(
+            "flex-grow overflow-y-auto scrollbar-hide p-3 lg:p-1 transition-all duration-300",
+            cart.length > 0 && !isMinimized
+              ? "pb-[45vh] lg:pb-1"
+              : "pb-[80px] lg:pb-1",
+          )}
+        >
+          {!isLoadingProducts && products.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full py-10">
+              <EmptyState
+                message="ບໍ່ພົບລາຍການສິນຄ້າ"
+                description="ລອງຄົ້ນຫາດ້ວຍຄຳສັບອື່ນ ຫຼື ປ່ຽນໝວດໝູ່"
+              />
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2 lg:gap-4">
+              {products.map((product) => (
+                <Card
+                  isPressable
+                  key={product.id}
+                  onPress={(e) => handleAddToCart(product, e as any)}
+                  className="group relative border-none bg-white/70 dark:bg-gray-800/70 backdrop-blur-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+                >
+                  <CardBody className="p-0 relative overflow-hidden h-[100px] sm:h-[120px] lg:h-[140px]">
+                    <div className="absolute top-1.5 right-1.5 z-20">
+                      <div
+                        className={clsx(
+                          "px-2 py-0.5 rounded-full text-[9px] lg:text-[10px] font-bold text-white shadow-lg backdrop-blur-md",
+                          product.stockQty > 10
+                            ? "bg-green-500/80"
+                            : product.stockQty > 0
+                              ? "bg-orange-500/80"
+                              : "bg-red-500/80",
+                        )}
+                      >
+                        {product.stockQty > 0 ? `${product.stockQty}` : `ໝົດ`}
+                      </div>
+                    </div>
+                    <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 flex items-center justify-center">
+                      <div className="bg-white/90 text-primary rounded-full p-2 lg:p-3 shadow-xl transform scale-50 group-hover:scale-100 transition-transform duration-300">
+                        <Plus size={24} strokeWidth={3} />
+                      </div>
+                    </div>
+                    <Image
+                      shadow="none"
+                      radius="none"
+                      width="100%"
+                      alt={product.name}
+                      className="w-full object-cover h-full group-hover:scale-110 transition-transform duration-500"
+                      src={getDisplayImageUrl(product.image)}
+                    />
+                  </CardBody>
+                  <CardFooter className="flex flex-col items-start gap-0.5 p-2 bg-white/40 dark:bg-gray-900/40 backdrop-blur-sm">
+                    <b className="text-[11px] lg:text-[12px] font-bold text-default-700 w-full truncate group-hover:text-primary transition-colors">
+                      {product.name}
+                    </b>
+                    <p className="text-primary font-black text-[12px] lg:text-[14px] whitespace-nowrap">
+                      {formatNumber(product.price)}{" "}
+                      <span className="text-[8px] lg:text-[9px] font-medium text-default-400">
+                        ກີບ
+                      </span>
+                    </p>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Floating Action Button for Mobile Cart (only shows when minimized and cart not empty) */}
+      {cart.length > 0 && isMinimized && (
+        <Button
+          color="primary"
+          className="fixed bottom-6 right-6 lg:hidden z-50 rounded-full h-14 w-14 shadow-2xl animate-in zoom-in duration-300 min-w-0 p-0"
+          onClick={() => setIsMinimized(false)}
+        >
+          <Badge color="danger" content={cart.length} shape="circle" size="md">
+            <ShoppingCart size={24} strokeWidth={2.5} />
+          </Badge>
+        </Button>
+      )}
+
+      {/* Cart Sidebar / Bottom Sheet */}
+      <OrderRight
+        isMinimized={isMinimized}
+        setIsMinimized={setIsMinimized}
+        onPaymentOpen={onOpen}
+      />
+
+      <PaymentModal
+        isOpen={isOpen}
+        onOpenChange={onOpenChange}
+        total={subtotal}
+        items={cart}
+        onPaymentSuccess={() => {
+          clearCart();
+          refetchProducts();
+        }}
+      />
+
+      {/* Flying Animation Layer */}
+      <div className="fixed inset-0 pointer-events-none z-[9999] overflow-hidden">
+        <AnimatePresence>
+          {flyingItems.map((item) => (
+            <motion.div
+              key={item.id}
+              initial={{
+                x: item.startX,
+                y: item.startY,
+                scale: 0.8,
+                opacity: 1,
+              }}
+              animate={{
+                x:
+                  window.innerWidth > 1024
+                    ? window.innerWidth - 100
+                    : window.innerWidth - 60,
+                y:
+                  window.innerWidth > 1024
+                    ? window.innerHeight / 2
+                    : window.innerHeight - 60,
+                scale: 0.2,
+                opacity: 0,
+                rotate: 720,
+              }}
+              transition={{ duration: 0.8, ease: "anticipate" }}
+              style={{ position: "fixed", left: 0, top: 0 }}
+            >
+              <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-primary shadow-2xl bg-white p-1">
+                <img
+                  src={item.src}
+                  className="w-full h-full object-cover rounded-xl"
+                  alt="flying"
+                />
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}

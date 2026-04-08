@@ -31,6 +31,7 @@ type PermissionType = "read" | "create" | "update" | "delete" | "full_access";
 
 type PermissionId =
   | "pos"
+  | "cafe"
   | "order"
   | "ordering"
   | "kitchen"
@@ -97,6 +98,13 @@ export default function AddRoleUser() {
         // update: false,
         // delete: false,
         // full_access: false,
+      },
+    },
+    {
+      id: "cafe",
+      name: "sidebar.menu.cafe",
+      permissions: {
+        read: false,
       },
     },
     {

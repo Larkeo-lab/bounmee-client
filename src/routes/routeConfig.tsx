@@ -28,6 +28,7 @@ import OrderingPage from "@/pages/ordering/OrderingPage";
 import KitchenPage from "@/pages/kitchen/KitchenPage";
 import ChatPage from "@/pages/chat/ChatPage";
 import ProductOrderPage from "@/pages/saleGeneral/ProductOrderPage";
+import CafeOrderPage from "@/pages/saleCafe/ProductOrderPage";
 
 export interface AppRoute {
   path: string;
@@ -60,6 +61,13 @@ export const appRoutes: AppRoute[] = [
     element: <ProductOrderPage />,
     isPrivate: true,
     requiresLayout: true,
+  },
+  {
+    path: "/cafe-order",
+    element: <CafeOrderPage />,
+    isPrivate: true,
+    requiresLayout: true,
+    permissionKey: "cafe",
   },
   {
     path: "/dashboard",

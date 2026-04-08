@@ -74,6 +74,12 @@ const sidebarGroups: MenuGroup[] = [
         permissionKey: "pos",
       },
       {
+        labelKey: "sidebar.menu.cafe",
+        href: "/cafe-order",
+        icon: ShoppingCart,
+        permissionKey: "cafe",
+      },
+      {
         labelKey: "sidebar.menu.statisticsReport",
         href: "/dashboard",
         icon: BarChart3,
@@ -138,7 +144,7 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
         setIsDesktopExpanded(true);
       }
     };
-    
+
     // Initial check
     handleResize();
 
