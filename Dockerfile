@@ -1,25 +1,13 @@
-# Build Stage
-FROM node:20-alpine AS builder
+# ใช้ Nginx เป็น Web Server
+FROM nginx:alpine
 
-# Enable corepack for pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# ตั้งค่าให้ Nginx รันบน Port 4173
+RUN sed -i 's/listen       80;/listen       4173;/g' /etc/nginx/conf.d/default.conf
 
-WORKDIR /app
+# ก๊อปปี้โฟลเดอร์ dist ที่คุณ Build จากเครื่องตัวเองเข้าไปใน Nginx
+COPY dist /usr/share/nginx/html
 
-# Copy package files
-COPY package.json pnpm-lock.yaml ./
-
-# Install dependencies using pnpm
-RUN pnpm install --frozen-lockfile
-
-# Copy source code
-COPY . .
-
-# Build the application
-RUN pnpm run build
-
-# Expose the port the app runs on
+# เปิด Port 4173
 EXPOSE 4173
 
-# Start the application
-CMD ["pnpm", "run", "preview"]
+CMD ["nginx", "-g", "daemon off;"]
