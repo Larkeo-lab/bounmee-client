@@ -1,4 +1,4 @@
-name: smart odsc admin ci/cd [development]
+name: dee-pos-store ci/cd [development]
 
 on:
   push:
@@ -20,6 +20,6 @@ jobs:
           port: 22023
           script: |
             set -e
-            cd smart-odsc-admin 
+            cd dee-pos-store 
             git pull origin development
             /usr/libexec/docker/cli-plugins/docker-compose up -d --build
