@@ -8,14 +8,8 @@ import {
   TableCell,
   Input,
   Button,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
   useDisclosure,
   Chip,
-  Divider,
   Image,
   Card,
   CardBody,
@@ -34,11 +28,13 @@ import {
   Filter,
   Search,
   Calendar,
-  User,
   ShoppingBag,
   Landmark,
-  Banknote,
+  LayoutGrid,
+  Coffee,
+  Armchair,
 } from "lucide-react";
+import { OrderDetail } from "./OrderDetail";
 import { useAuth } from "@/routes/AuthContext";
 import { useGetOrders, Order } from "@/services/order/useOrder";
 import dayjs from "dayjs";
@@ -101,12 +97,26 @@ export default function OrderPage() {
     }));
   }, [orders, page, limit]);
 
+  const sourceCounts = useMemo(() => {
+    return ordersWithIndex.reduce(
+      (acc: Record<string, number>, o: any) => {
+        if (o.businessType === "CAFE") acc.CAFE++;
+        else if (o.tableId || o.table) acc.TABLE++;
+        else acc.DIRECT++;
+        return acc;
+      },
+      { TABLE: 0, DIRECT: 0, CAFE: 0 },
+    );
+  }, [ordersWithIndex]);
+
   const filteredOrders = useMemo(() => {
     let result = ordersWithIndex;
     if (selectedSource === "TABLE") {
-      result = result.filter((o: any) => o.tableId || o.table);
+      result = result.filter((o: any) => (o.tableId || o.table) && o.businessType !== "CAFE");
     } else if (selectedSource === "DIRECT") {
-      result = result.filter((o: any) => !o.tableId && !o.table);
+      result = result.filter((o: any) => !o.tableId && !o.table && o.businessType !== "CAFE");
+    } else if (selectedSource === "CAFE") {
+      result = result.filter((o: any) => o.businessType === "CAFE");
     }
     return result;
   }, [ordersWithIndex, selectedSource]);
@@ -343,38 +353,81 @@ export default function OrderPage() {
         </div>
       </div>
 
-      <div className="flex-shrink-0 -mb-2">
+      <div className="flex-shrink-0 -mb-1">
         <Tabs
           aria-label="Order Source"
           color="primary"
           variant="underlined"
           selectedKey={selectedSource}
           onSelectionChange={(key) => setSelectedSource(key as string)}
-          size="sm"
+          size="md"
           classNames={{
-            tabList: "gap-2 sm:gap-4",
-            cursor: "w-full bg-primary",
+            base: "w-full",
+            tabList: "gap-6 sm:gap-8 px-2 border-b-2 border-divider/40 w-full",
+            cursor: "w-full bg-primary h-[3px] -bottom-[2px]",
+            tab: "h-12 px-1",
             tabContent:
-              "group-data-[selected=true]:text-primary font-black text-[11px] sm:text-xs",
+              "group-data-[selected=true]:text-primary text-default-450 font-bold transition-all duration-300",
           }}
         >
           <Tab
             key="ALL"
             title={
-              <div className="flex items-center gap-1.5">
-                <span>ທັງໝົດ</span>
+              <div className="flex items-center gap-2">
+                <LayoutGrid size={18} className={selectedSource === "ALL" ? "text-primary" : "text-default-400"} />
+                <span className="text-sm">ທັງໝົດ</span>
                 <Chip
                   size="sm"
                   variant="flat"
-                  className="h-4 sm:h-5 text-[9px]"
+                  className="h-5 text-[10px] font-black bg-primary/10 text-primary border-none"
                 >
                   {totalOrders}
                 </Chip>
               </div>
             }
           />
-          <Tab key="TABLE" title="ມາຈາກໂຕະ" />
-          <Tab key="DIRECT" title="ມາຈາກໜ້າຮ້ານ" />
+          <Tab
+            key="TABLE"
+            title={
+              <div className="flex items-center gap-2">
+                <Armchair size={18} className={selectedSource === "TABLE" ? "text-primary" : "text-default-400"} />
+                <span className="text-sm">ມາຈາກໂຕະ</span>
+                {sourceCounts.TABLE > 0 && (
+                  <Chip size="sm" variant="flat" className="h-4 text-[9px] font-bold">
+                    {sourceCounts.TABLE}
+                  </Chip>
+                )}
+              </div>
+            }
+          />
+          <Tab
+            key="DIRECT"
+            title={
+              <div className="flex items-center gap-2">
+                <ShoppingBag size={18} className={selectedSource === "DIRECT" ? "text-primary" : "text-default-400"} />
+                <span className="text-sm">ມາຈາກໜ້າຮ້ານ</span>
+                {sourceCounts.DIRECT > 0 && (
+                  <Chip size="sm" variant="flat" className="h-4 text-[9px] font-bold">
+                    {sourceCounts.DIRECT}
+                  </Chip>
+                )}
+              </div>
+            }
+          />
+          <Tab
+            key="CAFE"
+            title={
+              <div className="flex items-center gap-2">
+                <Coffee size={18} className={selectedSource === "CAFE" ? "text-primary" : "text-default-400"} />
+                <span className="text-sm">ມາຈາກ Cafe</span>
+                {sourceCounts.CAFE > 0 && (
+                  <Chip size="sm" variant="flat" className="h-4 text-[9px] font-bold">
+                    {sourceCounts.CAFE}
+                  </Chip>
+                )}
+              </div>
+            }
+          />
         </Tabs>
       </div>
 
@@ -427,7 +480,11 @@ export default function OrderPage() {
                         ໂຕະ / ພະນັກງານ
                       </span>
                       <div className="flex items-center gap-1.5 text-[10px] font-bold text-default-700">
-                        {item.table?.name ? (
+                        {item.businessType === "CAFE" ? (
+                          <span className="bg-warning-100 text-warning-700 px-2 py-0.5 rounded-full">
+                            Cafe
+                          </span>
+                        ) : item.table?.name ? (
                           <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-full">
                             {item.table.name}
                           </span>
@@ -516,7 +573,7 @@ export default function OrderPage() {
                     {item.items.length} ລາຍການ
                   </TableCell>
                   <TableCell className="font-bold text-primary text-xs">
-                    {item.table?.name || "-"}
+                    {item.businessType === "CAFE" ? "Cafe" : (item.table?.name || "-")}
                   </TableCell>
                   <TableCell className="text-[10px] font-medium text-default-500">
                     {dayjs(item.createdAt).format("DD/MM/YYYY HH:mm")}
@@ -555,158 +612,11 @@ export default function OrderPage() {
         </div>
       </div>
 
-      {/* Order Detail Modal - Mobile Optimized */}
-      <Modal
+      <OrderDetail
         isOpen={isOpen}
         onOpenChange={onOpenChange}
-        size="2xl"
-        scrollBehavior="inside"
-        placement="center"
-        className="mx-0 sm:mx-2"
-        backdrop="blur"
-      >
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader className="flex flex-col gap-0.5 border-b bg-default-50/50">
-                <span className="text-primary font-black text-xl uppercase tracking-tighter leading-tight">
-                  ບິນ #{selectedOrder?.orderNumber}
-                </span>
-                <span className="text-[10px] sm:text-xs font-bold text-default-400">
-                  {dayjs(selectedOrder?.createdAt).format(
-                    "DD/MM/YYYY HH:mm:ss",
-                  )}
-                </span>
-              </ModalHeader>
-              <ModalBody className="p-0 sm:p-4">
-                <div className="p-4 space-y-4">
-                  {/* Summary Row */}
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="bg-default-100 p-2 rounded-xl flex flex-col items-center">
-                      <User size={14} className="text-default-400 mb-1" />
-                      <span className="text-[9px] font-bold text-default-400 uppercase">
-                        ພະນັກງານ
-                      </span>
-                      <span className="text-[10px] font-black truncate w-full text-center">
-                        {selectedOrder?.employee?.name || "ເຈົ້າຂອງ"}
-                      </span>
-                    </div>
-                    <div className="bg-default-100 p-2 rounded-xl flex flex-col items-center">
-                      <ShoppingBag
-                        size={14}
-                        className="text-default-400 mb-1"
-                      />
-                      <span className="text-[9px] font-bold text-default-400 uppercase">
-                        ໂຕະ
-                      </span>
-                      <span className="text-[10px] font-black text-primary">
-                        {selectedOrder?.table?.name || "ໜ້າຮ້ານ"}
-                      </span>
-                    </div>
-                    <div className="bg-default-100 p-2 rounded-xl flex flex-col items-center">
-                      <Banknote size={14} className="text-default-400 mb-1" />
-                      <span className="text-[9px] font-bold text-default-400 uppercase">
-                        ການຊຳລະ
-                      </span>
-                      <Chip
-                        size="sm"
-                        color={getPaymentMethodColor(
-                          selectedOrder?.paymentMethod || "",
-                        )}
-                        variant="flat"
-                        className="h-4 text-[8px] font-black"
-                      >
-                        {getPaymentMethodLabel(
-                          selectedOrder?.paymentMethod || "",
-                        )}
-                      </Chip>
-                    </div>
-                  </div>
-
-                  {/* Items List */}
-                  <div className="space-y-2">
-                    <p className="font-black text-sm flex items-center gap-2 text-default-700">
-                      <Receipt size={16} className="text-primary" />
-                      ລາຍການສິນຄ້າ ({selectedOrder?.items.length})
-                    </p>
-                    <div className="space-y-1.5 border border-divider rounded-2xl overflow-hidden p-1 bg-default-50/30">
-                      {selectedOrder?.items.map((item, idx) => (
-                        <div
-                          key={idx}
-                          className="flex items-center gap-3 bg-white p-2 rounded-xl border border-divider/50 shadow-sm"
-                        >
-                          <Image
-                            src={getDisplayImageUrl(item.product.image)}
-                            className="w-10 h-10 min-w-[40px] object-cover"
-                            radius="md"
-                          />
-                          <div className="flex-grow flex flex-col min-w-0">
-                            <span className="font-bold text-xs truncate">
-                              {item.product.name}
-                            </span>
-                            <div className="flex justify-between items-center mt-0.5">
-                              <span className="text-[10px] text-default-400 font-bold">
-                                x{item.qty} @ {formatNumber(item.unitPrice)}
-                              </span>
-                              <span className="text-xs font-black text-primary">
-                                {formatNumber(item.subTotal)}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Totals Section */}
-                  <div className="bg-gradient-to-br from-primary to-primary-700 p-4 rounded-3xl text-white shadow-lg shadow-primary/30 space-y-2 relative overflow-hidden">
-                    <div className="absolute right-0 top-0 opacity-10 rotate-12 -mr-6 -mt-4">
-                      <Landmark size={120} />
-                    </div>
-                    <div className="flex justify-between items-center text-xs text-white/70 font-bold uppercase tracking-widest">
-                      <span>ລາຄາລວມ:</span>
-                      <span>
-                        {formatNumber(selectedOrder?.totalAmount)} ກີບ
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center text-xs text-white/70 font-bold uppercase tracking-widest">
-                      <span>ຮັບເງິນມາ:</span>
-                      <span>
-                        {formatNumber(selectedOrder?.receivedAmount)} ກີບ
-                      </span>
-                    </div>
-                    <Divider className="bg-white/20" />
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-black uppercase tracking-tighter">
-                        ເງິນທອນ:
-                      </span>
-                      <span className="text-xl font-black">
-                        {formatNumber(selectedOrder?.change)} ກີບ
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </ModalBody>
-              <ModalFooter className="border-t bg-default-50 p-4">
-                <Button
-                  variant="flat"
-                  onPress={onClose}
-                  className="font-bold flex-grow sm:flex-grow-0"
-                >
-                  ປິດໜ້າຕ່າງ
-                </Button>
-                <Button
-                  color="primary"
-                  className="font-black flex-grow sm:flex-grow-0 shadow-md shadow-primary/20"
-                  startContent={<Download size={18} />}
-                >
-                  ພິມບິນຄືນ
-                </Button>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
+        selectedOrder={selectedOrder}
+      />
     </div>
   );
 }

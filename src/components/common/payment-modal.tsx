@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/routes/AuthContext";
 import { useGetBanks, Bank } from "@/services/bank/useBank";
-import { useCreateOrder, OrderItemInput } from "@/services/order/useOrder";
+import { useCreateOrder } from "@/services/order/useOrder";
 import toast from "react-hot-toast";
 import { useGetMoneyRates } from "@/services/moneyRate/useMoneyRate";
 import { getDisplayImageUrl } from "@/lib/utils";
@@ -38,6 +38,7 @@ interface PaymentModalProps {
   total: number;
   items: CartItem[];
   tableId?: string | null;
+  businessType?: "RETAIL" | "CAFE";
   onPaymentSuccess: (order?: any) => void;
 }
 
@@ -47,6 +48,7 @@ export default function PaymentModal({
   total,
   items,
   tableId,
+  businessType,
   onPaymentSuccess,
 }: PaymentModalProps) {
   const { user } = useAuth();
@@ -96,13 +98,6 @@ export default function PaymentModal({
     }
 
     try {
-      const orderItems: OrderItemInput[] = items.map((item) => ({
-        productId: item.id,
-        qty: Number(item.quantity),
-        unitPrice: Number(item.price),
-        subTotal: Number(item.price) * Number(item.quantity),
-      }));
-
       const result = await createOrderMutation.mutateAsync({
         totalAmount: Number(total),
         receivedAmount: Number(receivedAmountInLAK),
@@ -112,7 +107,15 @@ export default function PaymentModal({
         employeeId: user.user.employee?.id || null,
         bankId: selectedBank,
         tableId: tableId,
-        items: orderItems,
+        businessType: businessType,
+        items: items.map((item: any) => ({
+          productId: item.id,
+          qty: Number(item.quantity),
+          unitPrice: Number(item.price),
+          subTotal: Number(item.price) * Number(item.quantity),
+          status: item.status,
+          note: item.note,
+        })),
       });
 
       toast.success("ຊຳລະເງິນສຳເລັດແລ້ວ!");

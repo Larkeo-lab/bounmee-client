@@ -7,7 +7,7 @@ import {
   Chip,
   Button,
 } from "@heroui/react";
-import { CheckCircle2, Download } from "lucide-react";
+import { CheckCircle2, Download, X } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { formatNumber } from "@/utils/numberFormat";
 import { getDisplayImageUrl } from "@/lib/utils";
@@ -274,8 +274,8 @@ export default function BillModal({
     <Modal
       isOpen={isOpen}
       onOpenChange={onOpenChange}
-      isDismissable={false}
-      hideCloseButton
+      isDismissable
+      hideCloseButton={false}
       backdrop="blur"
       size="md"
       placement="top"
@@ -457,17 +457,28 @@ export default function BillModal({
             </Card>
           </div>
 
-          <Button
-            color="primary"
-            variant="shadow"
-            size="lg"
-            className="mt-8 w-full max-w-sm rounded-2xl font-black h-14 text-lg animate-pulse"
-            startContent={!isDownloading && <Download size={24} />}
-            onClick={handleDownloadBill}
-            isLoading={isDownloading}
-          >
-            ດາວໂຫຼດບິນ (DOWNLOAD BILL)
-          </Button>
+          <div className="mt-8 w-full max-w-sm flex flex-col gap-3">
+            <Button
+              color="primary"
+              variant="shadow"
+              size="lg"
+              className="w-full rounded-2xl font-black h-14 text-lg animate-pulse"
+              startContent={!isDownloading && <Download size={24} />}
+              onClick={handleDownloadBill}
+              isLoading={isDownloading}
+            >
+              ດາວໂຫຼດບິນ (DOWNLOAD BILL)
+            </Button>
+            <Button
+              variant="flat"
+              size="lg"
+              className="w-full rounded-2xl font-bold h-12 text-white bg-white/20 backdrop-blur-md hover:bg-white/30"
+              startContent={<X size={20} />}
+              onPress={() => onOpenChange(false)}
+            >
+              ປິດ
+            </Button>
+          </div>
         </div>
       </ModalContent>
     </Modal>

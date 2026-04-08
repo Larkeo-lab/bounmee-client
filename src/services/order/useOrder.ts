@@ -7,6 +7,8 @@ export interface OrderItemInput {
   qty: number;
   unitPrice: number;
   subTotal: number;
+  status?: string;
+  note?: string;
 }
 
 export interface CreateOrderInput {
@@ -18,6 +20,7 @@ export interface CreateOrderInput {
   employeeId: string | null;
   bankId?: string | null;
   tableId?: string | null;
+  businessType?: "RETAIL" | "CAFE";
   items: OrderItemInput[];
 }
 
@@ -54,6 +57,7 @@ export interface Order {
   table?: {
     name: string;
   };
+  businessType?: "RETAIL" | "CAFE";
   items: OrderItem[];
   createdAt: string;
   updatedAt: string;

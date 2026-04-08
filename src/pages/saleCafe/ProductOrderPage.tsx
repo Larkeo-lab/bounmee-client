@@ -42,10 +42,21 @@ interface FlyingItem {
 
 export default function ProductOrderPage() {
   const { user } = useAuth();
-  const { isOpen: isPaymentOpen, onOpen: onPaymentOpen, onOpenChange: onPaymentOpenChange } = useDisclosure();
+  const {
+    isOpen: isPaymentOpen,
+    onOpen: onPaymentOpen,
+    onOpenChange: onPaymentOpenChange,
+  } = useDisclosure();
   const [isMinimized, setIsMinimized] = useState(true);
   const [flyingItems, setFlyingItems] = useState<FlyingItem[]>([]);
-  const { cart, addToCart, removeFromCart, updateQuantity, updateStatus, clearCart, subtotal, setActiveTableId } = useCart();
+  const {
+    cart,
+    addToCart,
+    removeFromCart,
+    clearCart,
+    subtotal,
+    setActiveTableId,
+  } = useCart();
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [selectedCartItems, setSelectedCartItems] = useState<string[]>([]);
   const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
@@ -94,7 +105,7 @@ export default function ProductOrderPage() {
       if (statusFilter === "ALL") return true;
       const itemStatus = item.status?.toUpperCase() || "PENDING";
       return itemStatus === statusFilter;
-    }, [cart, statusFilter]);
+    });
   }, [cart, statusFilter]);
 
   const statusTotals = useMemo(() => {
@@ -390,6 +401,7 @@ export default function ProductOrderPage() {
         onOpenChange={onPaymentOpenChange}
         total={subtotal}
         items={cart}
+        businessType="CAFE"
         onPaymentSuccess={() => {
           clearCart();
           refetchProducts();

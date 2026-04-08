@@ -457,7 +457,7 @@ export default function CustomerMenuPage() {
             <Spinner color="primary" />
           </div>
         ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3">
             {filteredProducts?.map((product: any) => {
               const currentInCart =
                 cart.find((i: any) => i.id === product.id)?.quantity || 0;
@@ -489,23 +489,23 @@ export default function CustomerMenuPage() {
                         </div>
                       )}
                     </div>
-                    <div className="p-3 flex-grow flex flex-col justify-between gap-2">
-                      <h3 className="font-bold text-sm line-clamp-2 leading-tight">
+                    <div className="p-2 sm:p-3 flex-grow flex flex-col justify-between gap-1.5 sm:gap-2">
+                      <h3 className="font-bold text-[10px] sm:text-sm line-clamp-2 leading-tight h-7 sm:h-10">
                         {product.name}
                       </h3>
-                      <p className="text-primary font-black text-sm">
-                        {formatNumber(product.price)} ₭
+                      <p className="text-primary font-black text-xs sm:text-sm">
+                        {formatNumber(product.price)} <span className="text-[10px]">₭</span>
                       </p>
                       <Button
                         color="primary"
                         variant="solid"
-                        className="w-full font-bold text-xs h-9"
+                        className="w-full font-bold text-[10px] sm:text-xs h-8 sm:h-9 min-w-0"
                         onClick={(e) => addToCart(product, e)}
                         isDisabled={
                           totalUsed >= (product.stockQty || 0) || isTableClosed
                         }
                       >
-                        <Plus size={16} className="mr-1" /> ເພີ່ມລົງກະຕ່າ
+                        <Plus size={14} className="mr-0.5 sm:mr-1" /> ເພີ່ມ
                       </Button>
                     </div>
                   </CardBody>
