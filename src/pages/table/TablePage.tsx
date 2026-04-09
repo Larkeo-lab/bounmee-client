@@ -147,16 +147,26 @@ export default function TablePage() {
   useEffect(() => {
     if (
       selectedTable?.id &&
-      syncedTableRef.current !== selectedTable.id &&
       Array.isArray(selectedTable.activeCart)
     ) {
-      syncedTableRef.current = selectedTable.id;
-      setTableCart(selectedTable.id, selectedTable.activeCart, selectedTable.status);
+      // ถ้าเปลี่ยนโต๊ะ หรือ โต๊ะเดิมแต่สถานะเป็น AVAILABLE (เพิ่งเปิดใหม่)
+      // ให้ซิงค์ข้อมูลจากเซิร์ฟเวอร์ทุกครั้ง
+      const isNewSelection = syncedTableRef.current !== selectedTable.id;
+      const isAvailable = selectedTable.status === "AVAILABLE";
+
+      if (isNewSelection || isAvailable) {
+        syncedTableRef.current = selectedTable.id;
+        // ถ้าโต๊ะเป็น AVAILABLE ให้ล้างข้อมูลเก่าออกก่อนแล้วค่อยซิงค์
+        if (isAvailable) {
+          clearTableCart(selectedTable.id);
+        }
+        setTableCart(selectedTable.id, selectedTable.activeCart, selectedTable.status);
+      }
     }
     if (!selectedTable) {
       syncedTableRef.current = null;
     }
-  }, [selectedTable?.id, setTableCart, selectedTable?.status, selectedTable?.activeCart]);
+  }, [selectedTable?.id, setTableCart, clearTableCart, selectedTable?.status, selectedTable?.activeCart]);
 
   // useEffect: อัปเดต ID โต๊ะที่กำลังใช้งานใน Cart context เพื่อให้จัดการตะกร้าได้ถูกโต๊ะ
   useEffect(() => {
@@ -261,6 +271,10 @@ export default function TablePage() {
 
             // 3. Clear local cart state for this table
             clearTableCart(closingTableId);
+
+            // 4. Reset sync ref เพื่อให้เวลาเปิดโต๊ะเดิมอีกครั้ง มันจะซิงค์ข้อมูลใหม่จากเซิร์ฟเวอร์
+            syncedTableRef.current = null;
+
             setSelectedTable(null);
           },
         },
