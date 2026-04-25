@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, type ChangeEvent } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Modal,
   ModalContent,
@@ -44,6 +45,7 @@ export default function AddAndEdit({
   onSuccess,
   storeId,
 }: AddAndEditProps) {
+  const { t } = useTranslation();
   const [previewImage, setPreviewImage] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -199,7 +201,7 @@ export default function AddAndEdit({
           ) : (
             <div className="flex flex-col items-center gap-1 text-default-400">
               <Upload size={20} />
-              <span className="text-[10px]">ຮູບພາບ</span>
+              <span className="text-[10px]">{t("settings.common.image")}</span>
             </div>
           )}
           <input
@@ -219,15 +221,15 @@ export default function AddAndEdit({
             onPress={removeImage}
             className="h-7 min-w-0"
           >
-            ລົບຮູບ
+            {t("settings.common.remove")}
           </Button>
         )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Input
-          label="ຊື່ພະນັກງານ"
-          placeholder="ລະບຸຊື່ພະນັກງານ"
+          label={t("employee.name")}
+          placeholder={t("employee.name")}
           variant="bordered"
           value={formData.name}
           onValueChange={(val) => setFormData({ ...formData, name: val })}
@@ -235,7 +237,7 @@ export default function AddAndEdit({
           startContent={<User size={18} className="text-default-400" />}
         />
         <Input
-          label="ເບີໂທລະສັບ"
+          label={t("employee.phone")}
           placeholder="20XXXXXXXX"
           variant="bordered"
           value={formData.phone}
@@ -244,8 +246,8 @@ export default function AddAndEdit({
           startContent={<Phone size={18} className="text-default-400" />}
         />
         <Input
-          label="ຊື່ຜູ້ໃຊ້ (Username)"
-          placeholder="ລະບຸ Username"
+          label={t("employee.username")}
+          placeholder={t("employee.username")}
           variant="bordered"
           value={formData.userName}
           onValueChange={(val) => setFormData({ ...formData, userName: val })}
@@ -254,8 +256,8 @@ export default function AddAndEdit({
         />
         {!selectedEmployee && (
           <Input
-            label="ລະຫັດຜ່ານ"
-            placeholder="ລະບຸລະຫັດຜ່ານ"
+            label={t("employee.password")}
+            placeholder={t("employee.password")}
             type="password"
             variant="bordered"
             value={formData.password}
@@ -265,8 +267,8 @@ export default function AddAndEdit({
           />
         )}
         <Select
-          label="ສິດທິການເຂົ້າເຖິງ"
-          placeholder="ເລືອກສິດທິການເຂົ້າເຖິງ"
+          label={t("employee.permissions")}
+          placeholder={t("employee.permissions")}
           variant="bordered"
           className="md:col-span-2"
           selectedKeys={formData.permissionId ? [formData.permissionId] : []}
@@ -296,7 +298,7 @@ export default function AddAndEdit({
         {(onClose) => (
           <>
             <ModalHeader className="flex flex-col gap-1">
-              {selectedEmployee ? "ແກ້ໄຂຂໍ້ມູນພະນັກງານ" : "ເພີ່ມພະນັກງານໃໝ່"}
+              {selectedEmployee ? t("employee.editTitle") : t("employee.addTitle")}
             </ModalHeader>
             <ModalBody>{employeeForm}</ModalBody>
             <ModalFooter>
@@ -322,7 +324,7 @@ export default function AddAndEdit({
                   (!selectedEmployee && !formData.password)
                 }
               >
-                {selectedEmployee ? "ອັບເດດ" : "ບັນທຶກ"}
+                {selectedEmployee ? t("settings.common.update") : t("settings.common.save")}
               </Button>
             </ModalFooter>
           </>

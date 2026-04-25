@@ -133,7 +133,7 @@ const SettingsPage = () => {
           {t("sidebar.menu.setting")}
         </h1>
         <p className="text-default-500">
-          ຈັດການข้อมูลพื้นฐานและตั้งค่าระบบของท่าน
+          {t("settings.description.main")}
         </p>
       </div>
 
@@ -156,7 +156,7 @@ const SettingsPage = () => {
                   {t(item.titleKey)}
                 </h3>
                 <p className="text-sm text-default-500 line-clamp-1">
-                  {t(item.descriptionKey) || "ตั้งค่าและจัดการข้อมูลของคุณ"}
+                  {t(item.descriptionKey)}
                 </p>
               </div>
               <div className="text-default-300 group-hover:text-primary transition-colors">

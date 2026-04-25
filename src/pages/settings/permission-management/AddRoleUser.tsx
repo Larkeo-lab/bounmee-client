@@ -62,8 +62,8 @@ type PermissionRow = {
 };
 
 // Zod validation schema
-const roleSchema = z.object({
-  roleName: z.string().min(1, "ກະລຸນາປ້ອນຊື່ສິດການເຂົ້າເຖິງ"),
+const roleSchema = (t: any) => z.object({
+  roleName: z.string().min(1, t("permission.roleNameRequired")),
 });
 
 export default function AddRoleUser() {
@@ -314,7 +314,7 @@ export default function AddRoleUser() {
     setErrors({});
 
     // Validate using Zod
-    const validation: any = roleSchema.safeParse({ roleName });
+    const validation: any = roleSchema(t).safeParse({ roleName });
 
     if (!validation.success) {
       const fieldErrors: { roleName?: string } = {};
@@ -398,8 +398,8 @@ export default function AddRoleUser() {
   };
 
   const breadcrumbItems: BreadcrumbItemType[] = [
-    { label: "ຕັ້ງຄ່າກຳນົດສິດ", href: "/permission-manage" },
-    { label: isEditMode ? "ແກ້ໄຂສິດ" : "ເພີ່ມສິດ" },
+    { label: t("permission.title"), href: "/permission-manage" },
+    { label: isEditMode ? t("permission.editTitle") : t("permission.addTitle") },
   ];
 
   return (
@@ -411,10 +411,10 @@ export default function AddRoleUser() {
           {/* Role Info */}
           <div className="w-1/3">
             <Input
-              placeholder="ປ້ອນຊື່ສິດນຳໃຊ້..."
+              placeholder={t("permission.enterRoleName")}
               value={roleName}
               onChange={(e) => setRoleName(e.target.value)}
-              label="ຊື່ສິດນຳໃຊ້"
+              label={t("permission.permissionName")}
               labelPlacement="outside"
               variant="bordered"
               isRequired
@@ -426,13 +426,13 @@ export default function AddRoleUser() {
           </div>
           <div>
             <Textarea
-              placeholder="ປ້ອນຄຳອະທິບາຍສິດການເຂົ້າເຖິງ"
+              placeholder={t("permission.enterDescription")}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               minRows={3}
               labelPlacement="outside"
               variant="bordered"
-              label="ຄຳອະທິບາຍ (ຖ້າມີ)"
+              label={t("permission.descriptionLabel")}
             />
           </div>
 
@@ -455,10 +455,10 @@ export default function AddRoleUser() {
                     isSelected={isAllPermissionsChecked()}
                     onValueChange={toggleAllPermissions}
                   />
-                  <span>ເຂົ້າເຖິງທັງໝົດໃນລະບົບ</span>
+                  <span>{t("permission.fullAccess")}</span>
                 </div>
               </TableColumn>
-              <TableColumn key="read">ສະແດງ</TableColumn>
+              <TableColumn key="read">{t("permission.show")}</TableColumn>
               {/* <TableColumn key="create">ສ້າງຂໍ້ມູນ</TableColumn>
               <TableColumn key="update">ແກ້ໄຂຂໍ້ມູນ</TableColumn>
               <TableColumn key="delete">ລົບຂໍ້ມູນ</TableColumn> */}
@@ -542,7 +542,7 @@ export default function AddRoleUser() {
               updatePermissionMutation.isPending
             }
           >
-            <span>ຍົກເລີກ</span>
+            <span>{t("settings.common.cancel")}</span>
           </Button>
           <Button
             color="primary"
@@ -554,7 +554,7 @@ export default function AddRoleUser() {
             }
           >
             <Save size={16} />
-            <span>ບັນທຶກຂໍ້ມູນ</span>
+            <span>{t("settings.common.save")}</span>
           </Button>
         </CardFooter>
       </Card>

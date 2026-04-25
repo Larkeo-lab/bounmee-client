@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/routes/AuthContext";
 import { useGetTables, useUpdateTable } from "@/services/table/useTable";
 import { useGetZones } from "@/services/table/useZone";
@@ -22,7 +23,6 @@ import {
   ModalBody,
   ScrollShadow,
 } from "@heroui/react";
-import CloseTableConfirm from "./components/poupConfirm";
 import EmptyState from "@/components/common/empty-state";
 import { TableCart } from "./components/TableCart";
 import { OrderRight } from "./components/OrderRight";
@@ -39,6 +39,7 @@ import {
   Settings,
   ShoppingCart,
   Utensils,
+  Trash2, // Added Trash2
 } from "lucide-react";
 import { useCart } from "@/provider";
 import PaymentModal from "@/components/common/payment-modal";
@@ -47,6 +48,7 @@ export default function TablePage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const targetTableId = searchParams.get("tableId");
+  const { t } = useTranslation();
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const {
     isOpen: isCloseTableOpen,
@@ -310,10 +312,10 @@ export default function TablePage() {
           <div>
             <h1 className="text-xl md:text-2xl font-black text-primary flex items-center gap-2 md:gap-3">
               <Armchair className="w-4 h-4 md:w-6 md:h-6" />
-              ໂຕະອາຫານ
+              {t("table.title")}
             </h1>
             <p className="text-[10px] md:text-xs text-default-500 font-medium ml-6 md:ml-9">
-              ບໍລິຫານຈັດການພື້ນທີ່ ແລະ ໂຕະພາຍໃນຮ້ານຂອງທ່ານ
+              {t("table.subtitle")}
             </p>
           </div>
         </div>
@@ -332,7 +334,7 @@ export default function TablePage() {
               </div>
               <div>
                 <p className="text-[9px] md:text-[10px] font-extrabold uppercase">
-                  ທັງໝົດ
+                  {t("table.stats.total")}
                 </p>
                 <p className="text-lg md:text-xl font-black">{stats.total}</p>
               </div>
@@ -346,7 +348,7 @@ export default function TablePage() {
               </div>
               <div>
                 <p className="text-[9px] md:text-[10px] font-extrabold uppercase">
-                  ໂຕະຫວ່າງ
+                  {t("table.stats.available")}
                 </p>
                 <p className="text-lg md:text-xl font-black">
                   {stats.available}
@@ -362,7 +364,7 @@ export default function TablePage() {
               </div>
               <div>
                 <p className="text-[9px] md:text-[10px] font-extrabold uppercase">
-                  ມີລູກຄ້າ
+                  {t("table.stats.occupied")}
                 </p>
                 <p className="text-lg md:text-xl font-black">
                   {stats.occupied}
@@ -378,7 +380,7 @@ export default function TablePage() {
               </div>
               <div>
                 <p className="text-[9px] md:text-[10px] font-extrabold uppercase">
-                  ຈອງແລ້ວ
+                  {t("table.stats.reserved")}
                 </p>
                 <p className="text-lg md:text-xl font-black">
                   {stats.reserved}
@@ -394,7 +396,7 @@ export default function TablePage() {
               {isSelectingMenu ? (
                 <div className="flex items-center justify-between w-full">
                   <h2 className="text-xl md:text-2xl font-black text-primary flex items-center gap-3">
-                    <Utensils size={24} /> ເລືອກເມນູອາຫານ
+                    <Utensils size={24} /> {t("table.selectMenu")}
                   </h2>
                   <Button
                     variant="flat"
@@ -403,7 +405,7 @@ export default function TablePage() {
                     onPress={() => setIsSelectingMenu(false)}
                     className="font-bold"
                   >
-                    ກັບຄືນ
+                    {t("table.back")}
                   </Button>
                 </div>
               ) : (
@@ -427,7 +429,7 @@ export default function TablePage() {
                           <div className="flex items-center gap-1.5 whitespace-nowrap">
                             <LayoutGrid size={14} />
                             <span className="text-[11px] md:text-xs">
-                              ທັງໝົດ
+                              {t("table.allZones")}
                             </span>
                           </div>
                         }
@@ -447,7 +449,7 @@ export default function TablePage() {
 
                   <div className="flex items-center gap-2 w-full md:w-auto">
                     <Input
-                      placeholder="ຄົ້ນຫາໂຕະ..."
+                      placeholder={t("table.searchPlaceholder")}
                       size="sm"
                       startContent={
                         <Search size={16} className="text-default-400" />
@@ -534,7 +536,7 @@ export default function TablePage() {
                       ))}
                     </div>
                   ) : (
-                    <EmptyState message="ບໍ່ພົບຂໍ້ມູນໂຕະ" />
+                    <EmptyState message={t("table.menu.emptyProducts")} />
                   )}
                 </>
               )}
@@ -589,7 +591,7 @@ export default function TablePage() {
           <div className="hidden sm:flex w-full sm:w-[320px] md:w-[350px] lg:w-[400px] h-full flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 border-l border-divider">
             <div className="flex flex-col items-center gap-4 opacity-40">
               <ShoppingCart size={80} strokeWidth={1} />
-              <p className="font-bold text-lg">ກະລຸນາເລືອກໂຕະ</p>
+              <p className="font-bold text-lg">{t("table.cart.selectPrompt")}</p>
             </div>
           </div>
         )}
@@ -598,7 +600,7 @@ export default function TablePage() {
       {/* Modals */}
       <Modal isOpen={isQrOpen} onOpenChange={onQrOpenChange} placement="center" size="md">
         <ModalContent>
-          <ModalHeader>QR Code ໂຕະ {selectedTable?.name}</ModalHeader>
+          <ModalHeader>{t("table.modal.qrTitle", { name: selectedTable?.name })}</ModalHeader>
           <ModalBody className="flex flex-col items-center pb-8 pt-4">
             {selectedTable?.qrCode && (
               <QRCodeSVG
@@ -622,19 +624,23 @@ export default function TablePage() {
         onPaymentSuccess={handleCloseTable}
       />
 
-      <CloseTableConfirm
+      <ConfirmModal
         isOpen={isCloseTableOpen}
         onOpenChange={onCloseTableOpenChange}
-        tableName={selectedTable?.name}
-        isLoading={updateTable.isPending}
+        title={t("table.modal.closeTableTitle")}
+        message={t("table.modal.closeTableMsg", { name: selectedTable?.name })}
+        confirmText={t("table.cart.closeTable")}
+        cancelText={t("common.cancel")}
         onConfirm={handleCloseTable}
+        color="danger"
+        icon={<Trash2 size={24} />}
       />
 
       <ConfirmModal
         isOpen={isRemoveItemOpen}
         onOpenChange={onRemoveItemOpenChange}
-        title="ຢືນຢັນການລົບ?"
-        message="ທ່ານຕ້ອງການລົບລາຍການນີ້ອອກຈາກກະຕ່າແທ້ຫຼືບໍ່?"
+        title={t("table.modal.confirmRemove")}
+        message={t("table.modal.confirmRemoveMsg")}
         onConfirm={() => {
           if (itemToRemove) {
             removeFromCart(

@@ -15,6 +15,7 @@ import {
   useDisclosure,
   Switch,
 } from "@heroui/react";
+import { useTranslation } from "react-i18next";
 import {
   Search,
   Plus,
@@ -45,6 +46,7 @@ import CreateProduct from "./CreateProduct";
 import EditProduct from "./EditProduct";
 
 export default function ProductPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const {
     isOpen: isCreateOpen,
@@ -159,10 +161,10 @@ export default function ProductPage() {
         <div>
           <h1 className="text-2xl font-bold text-primary flex items-center gap-2">
             <Package size={28} />
-            ຈັດການສິນຄ້າ
+            {t("product.title")}
           </h1>
           <p className="text-default-500">
-            ຄວບຄຸມ ແລະ ຈັດການລາຍການສິນຄ້າທັງໝົດໃນຮ້ານຂອງທ່ານ
+            {t("product.subtitle")}
           </p>
         </div>
         <Button
@@ -171,7 +173,7 @@ export default function ProductPage() {
           onPress={handleAddProductOpen}
           className="font-bold h-12 px-6 shadow-lg shadow-primary/30"
         >
-          ເພີ່ມສິນຄ້າໃໝ່
+          {t("product.addTitle")}
         </Button>
       </div>
 
@@ -180,14 +182,14 @@ export default function ProductPage() {
           <Input
             isClearable
             className="w-full sm:max-w-md"
-            placeholder="ຄົ້ນຫາຕາມຊື່ ຫຼື ບາໂຄດ..."
+            placeholder={t("product.searchPlaceholder")}
             startContent={<Search className="text-default-400" size={18} />}
             value={filterValue}
             onValueChange={setFilterValue}
             variant="bordered"
           />
           <Select
-            placeholder="ເລືອກປະເພດ"
+            placeholder={t("product.category")}
             className="w-full md:w-[200px]"
             selectedKeys={selectedCategory ? [selectedCategory] : ["all"]}
             onSelectionChange={(keys) => {
@@ -197,14 +199,14 @@ export default function ProductPage() {
             variant="bordered"
             startContent={<Filter size={18} className="text-default-400" />}
           >
-            <SelectItem key="all">ທັງໝົດ</SelectItem>
+            <SelectItem key="all">{t("settings.common.all")}</SelectItem>
             {categories.map((cat: Category) => (
               <SelectItem key={cat.id}>{cat.name}</SelectItem>
             ))}
           </Select>
         </div>
         <div className="text-default-400 text-sm">
-          ທັງໝົດ {products.length} ລາຍການ
+          {t("settings.common.total", { count: products.length })}
         </div>
       </div>
 
@@ -232,32 +234,32 @@ export default function ProductPage() {
       >
         <TableHeader>
           <TableColumn key="no" className="h-12 text-small">
-            ລຳດັບ
+            {t("settings.common.no")}
           </TableColumn>
           <TableColumn key="name" className="h-12 text-small">
-            ຊື່ສິນຄ້າ
+            {t("settings.common.nameLabel")}
           </TableColumn>
           <TableColumn key="price" className="h-12 text-small">
-            ລາຄາ
+            {t("product.price")}
           </TableColumn>
           <TableColumn key="stockQty" className="h-12 text-small">
-            ຈຳນວນໃນສາງ
+            {t("product.stockQty")}
           </TableColumn>
           <TableColumn key="isActive" className="h-12 text-small">
-            ສະຖານະ
+            {t("settings.common.status")}
           </TableColumn>
           <TableColumn key="actions" align="end" className="h-12 text-small">
-            ຈັດການ
+            {t("settings.common.actions")}
           </TableColumn>
         </TableHeader>
         <TableBody
-          loadingContent={<Spinner label="ກຳລັງໂຫຼດຂໍ້ມູນ..." />}
+          loadingContent={<Spinner label={t("settings.common.loading")} />}
           isLoading={isLoading}
           emptyContent={
             !isLoading && (
               <EmptyState
-                message="ບໍ່ພົບຂໍ້ມູນສິນຄ້າ"
-                description="ລອງຄົ້ນຫາດ້ວຍຄຳສັບອື່ນ ຫຼື ປ່ຽນໝວດໝູ່"
+                message={t("product.emptyTitle")}
+                description={t("product.emptyDesc")}
               />
             )
           }
@@ -380,9 +382,9 @@ export default function ProductPage() {
       <ConfirmModal
         isOpen={isDeleteOpen}
         onOpenChange={onDeleteOpenChange}
-        title="ຢືນຢັນການລຶບ"
-        message={`ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບສິນຄ້າ ${selectedProduct?.name}? ການກະທຳນີ້ບໍ່ສາມາດກັບຄືນໄດ້.`}
-        confirmText="ລຶບສິນຄ້າ"
+        title={t("settings.common.confirmDelete")}
+        message={t("product.deleteConfirmMsg", { name: selectedProduct?.name })}
+        confirmText={t("settings.common.delete")}
         onConfirm={() => handleDeleteSubmit(onDeleteClose)}
         icon={<Trash2 size={24} />}
         color="danger"
@@ -392,9 +394,9 @@ export default function ProductPage() {
       <ConfirmModal
         isOpen={isPendingOpen}
         onOpenChange={onPendingOpenChange}
-        title="ບໍ່ສາມາດເພີ່ມໄດ້"
-        message="ທ່ານຍັງບໍ່ໄດ້ຍ້ອມຮັບຈາກເຈົ້າຂອງກະລູນາຕິດຕໍ່ຫາເບີ 2099999999"
-        confirmText="ຕົກລົງ"
+        title={t("settings.common.pendingTitle")}
+        message={t("settings.common.pendingMsg")}
+        confirmText={t("settings.common.ok")}
         onConfirm={onPendingClose}
         color="warning"
       />
@@ -403,9 +405,9 @@ export default function ProductPage() {
       <ConfirmModal
         isOpen={isRejectedOpen}
         onOpenChange={onRejectedOpenChange}
-        title="ບໍ່ສາມາດສ້າງໄດ້"
-        message="ການສະໝັກຂອງທ່ານຖືກປະຕິເສດ"
-        confirmText="ຕົກລົງ"
+        title={t("settings.common.rejectedTitle")}
+        message={t("settings.common.rejectedMsg")}
+        confirmText={t("settings.common.ok")}
         onConfirm={onRejectedClose}
         color="danger"
       />

@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import {
   Modal,
   ModalContent,
@@ -43,6 +44,7 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({
   onOpenChange,
   selectedOrder,
 }) => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const {
     isOpen: isBillOpen,
@@ -64,9 +66,9 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({
   const getPaymentMethodLabel = (method: string) => {
     switch (method) {
       case "CASH":
-        return "ເງິນສົດ";
+        return t("order.paymentCash") || "ເງິນສົດ";
       case "TRANSFER":
-        return "ເງິນໂອນ";
+        return t("order.paymentTransfer") || "ເງິນໂອນ";
       default:
         return method;
     }
@@ -90,7 +92,7 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({
             <>
               <ModalHeader className="flex flex-col gap-0.5 border-b bg-default-50/50">
                 <span className="text-primary font-black text-xl uppercase tracking-tighter leading-tight">
-                  ບິນ #{selectedOrder?.orderNumber}
+                  {t("order.billNo")} {selectedOrder?.orderNumber}
                 </span>
                 <span className="text-[10px] sm:text-xs font-bold text-default-400">
                   {dayjs(selectedOrder?.createdAt).format(
@@ -105,10 +107,10 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({
                     <div className="bg-default-100 p-2 rounded-xl flex flex-col items-center">
                       <User size={14} className="text-default-400 mb-1" />
                       <span className="text-[9px] font-bold text-default-400 uppercase">
-                        ພະນັກງານ
+                        {t("order.tableEmployeeCol")}
                       </span>
                       <span className="text-[10px] font-black truncate w-full text-center">
-                        {selectedOrder?.employee?.name || "ເຈົ້າຂອງ"}
+                        {selectedOrder?.employee?.name || t("order.owner")}
                       </span>
                     </div>
                     <div className="bg-default-100 p-2 rounded-xl flex flex-col items-center">
@@ -117,18 +119,18 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({
                         className="text-default-400 mb-1"
                       />
                       <span className="text-[9px] font-bold text-default-400 uppercase">
-                        ໂຕະ
+                        {t("order.tableTable")}
                       </span>
                       <span className="text-[10px] font-black text-primary">
                         {selectedOrder?.businessType === "CAFE"
                           ? "Cafe"
-                          : selectedOrder?.table?.name || "ໜ້າຮ້ານ"}
+                          : selectedOrder?.table?.name || t("order.shopFloor")}
                       </span>
                     </div>
                     <div className="bg-default-100 p-2 rounded-xl flex flex-col items-center">
                       <Banknote size={14} className="text-default-400 mb-1" />
                       <span className="text-[9px] font-bold text-default-400 uppercase">
-                        ການຊຳລະ
+                        {t("order.tablePayment")}
                       </span>
                       <Chip
                         size="sm"
@@ -149,7 +151,7 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({
                   <div className="space-y-3">
                     <p className="font-black text-sm flex items-center gap-2 text-default-700">
                       <Receipt size={16} className="text-primary" />
-                      ລາຍການສິນຄ້າ ({selectedOrder?.items.length})
+                      {t("order.tableItems")} ({selectedOrder?.items.length})
                     </p>
                     <Table
                       aria-label="Order items table"
@@ -163,12 +165,12 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({
                     >
                       <TableHeader>
                         <TableColumn width={40} align="center">
-                          ລຳດັບ
+                          {t("order.tableRank")}
                         </TableColumn>
-                        <TableColumn>ຮູບ ແລະ ຊື່</TableColumn>
-                        <TableColumn align="end">ລາຄາ/ຊິ້ນ</TableColumn>
-                        <TableColumn align="center">ຈຳນວນ</TableColumn>
-                        <TableColumn align="end">ລວມ</TableColumn>
+                        <TableColumn>{t("order.imageName")}</TableColumn>
+                        <TableColumn align="end">{t("order.priceUnit")}</TableColumn>
+                        <TableColumn align="center">{t("order.qty")}</TableColumn>
+                        <TableColumn align="end">{t("order.subtotal")}</TableColumn>
                       </TableHeader>
                       <TableBody>
                         {(selectedOrder?.items || []).map((item, idx) => (
@@ -219,25 +221,25 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({
                       <Landmark size={120} />
                     </div>
                     <div className="flex justify-between items-center text-xs text-white/70 font-bold uppercase tracking-widest">
-                      <span>ລາຄາລວມ:</span>
+                      <span>{t("order.subtotal")}:</span>
                       <span>
-                        {formatNumber(Number(selectedOrder?.totalAmount))} ກີບ
+                        {formatNumber(Number(selectedOrder?.totalAmount))} {t("order.kip") || "ກີບ"}
                       </span>
                     </div>
                     <div className="flex justify-between items-center text-xs text-white/70 font-bold uppercase tracking-widest">
-                      <span>ຮັບເງິນມາ:</span>
+                      <span>{t("order.received")}</span>
                       <span>
                         {formatNumber(Number(selectedOrder?.receivedAmount))}{" "}
-                        ກີບ
+                        {t("order.kip") || "ກີບ"}
                       </span>
                     </div>
                     <Divider className="bg-white/20" />
                     <div className="flex justify-between items-center">
                       <span className="text-sm font-black uppercase tracking-tighter">
-                        ເງິນທອນ:
+                        {t("order.change")}
                       </span>
                       <span className="text-xl font-black">
-                        {formatNumber(Number(selectedOrder?.change))} ກີບ
+                        {formatNumber(Number(selectedOrder?.change))} {t("order.kip") || "ກີບ"}
                       </span>
                     </div>
                   </div>
@@ -249,7 +251,7 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({
                   onPress={onClose}
                   className="font-bold flex-grow sm:flex-grow-0"
                 >
-                  ປິດໜ້າຕ່າງ
+                  {t("order.close")}
                 </Button>
                 <Button
                   color="primary"
@@ -257,7 +259,7 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({
                   startContent={<Download size={18} />}
                   onPress={onBillOpen}
                 >
-                  ພິມບິນຄືນ
+                  {t("order.reprint")}
                 </Button>
               </ModalFooter>
             </>
@@ -271,7 +273,7 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({
           onOpenChange={onBillOpenChange}
           tableData={{
             store: user?.user?.store,
-            name: selectedOrder?.table?.name || "ໜ້າຮ້ານ",
+            name: selectedOrder?.table?.name || t("order.shopFloor"),
           }}
           finalOrder={selectedOrder}
           paymentMethod={selectedOrder.paymentMethod}

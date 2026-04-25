@@ -1,5 +1,6 @@
 import React from "react";
 import { Button, Checkbox, Image, ScrollShadow, Chip } from "@heroui/react";
+import { useTranslation } from "react-i18next";
 import {
   ShoppingCart,
   Trash2,
@@ -41,18 +42,18 @@ interface OrderRightProps {
   updateTablePending: boolean;
 }
 
-const getStatusDisplay = (status: string) => {
+const getStatusDisplay = (status: string, t: any) => {
   switch (status?.toUpperCase()) {
     case "PENDING":
-      return { label: "ລໍຖ້າ", color: "warning" as const };
+      return { label: t("table.cart.pending"), color: "warning" as const };
     case "COOKING":
-      return { label: "ກຳລັງຄົວ", color: "primary" as const };
+      return { label: t("table.cart.cooking"), color: "primary" as const };
     case "SERVED":
-      return { label: "ເສີບແລ້ວ", color: "success" as const };
+      return { label: t("table.cart.served"), color: "success" as const };
     case "CANCEL":
-      return { label: "ຍົກເລີກ", color: "danger" as const };
+      return { label: t("table.cart.cancel"), color: "danger" as const };
     default:
-      return { label: status || "ລໍຖ້າ", color: "default" as const };
+      return { label: status || t("table.cart.pending"), color: "default" as const };
   }
 };
 
@@ -76,6 +77,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
   onCloseTableOpen,
   updateTablePending,
 }) => {
+  const { t } = useTranslation();
   const {
     cart,
     updateQuantity,
@@ -101,11 +103,11 @@ export const OrderRight: React.FC<OrderRightProps> = ({
         <div className="flex flex-col flex-grow">
           <div className="flex items-center gap-2 font-bold text-base md:text-lg">
             <ShoppingCart size={18} className="text-primary" />
-            <span>ໂຕະ {selectedTable?.name}</span>
+            <span>{t("table.cart.title", { name: selectedTable?.name })}</span>
           </div>
           <div className="flex items-center gap-4 ml-8 mt-1">
             <p className="text-xs text-default-500">
-              {selectedTable?.capacity} ບ່ອນນັ່ງ
+              {t("table.seats", { count: selectedTable?.capacity })}
             </p>
           </div>
         </div>
@@ -167,15 +169,15 @@ export const OrderRight: React.FC<OrderRightProps> = ({
             isDisabled={filteredCart.length === 0}
           >
             <span className="text-xs font-bold text-default-700">
-              ເລືອກທັງໝົດ
+              {t("table.cart.selectAll")}
             </span>
           </Checkbox>
           <div className="flex flex-wrap items-center gap-1 lg:gap-1.5 ml-2 lg:ml-3">
             {[
-              { value: "ALL", label: "ທັງໝົດ" },
-              { value: "PENDING", label: "ລໍຖ້າ" },
-              { value: "COOKING", label: "ກຳລັງຄົວ" },
-              { value: "SERVED", label: "ເສີບແລ້ວ" },
+              { value: "ALL", label: t("table.cart.total") },
+              { value: "PENDING", label: t("table.cart.pending") },
+              { value: "COOKING", label: t("table.cart.cooking") },
+              { value: "SERVED", label: t("table.cart.served") },
             ].map((status) => (
               <button
                 key={status.value}
@@ -199,7 +201,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
       {selectedCartItems.length > 0 && (
         <div className="px-3 py-1 bg-primary/10 border-b border-primary/20 animate-in fade-in slide-in-from-top-1 duration-300">
           <span className="text-[10px] sm:text-xs text-primary font-bold">
-            ເລືອກແລ້ວ: {selectedCartItems.length} ລາຍການ
+            {t("table.cart.selectedCount", { count: selectedCartItems.length })}
           </span>
         </div>
       )}
@@ -238,7 +240,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                     </span>
                     <div className="flex justify-between items-center mt-1">
                       <span className="text-primary font-black text-xs lg:text-sm">
-                        {formatNumber(item.price * item.quantity)} ກີບ
+                        {formatNumber(item.price * item.quantity)} {t("table.cart.kip")}
                       </span>
 
                       <div className="flex items-center gap-2">
@@ -258,7 +260,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                           )}
 
                           {(() => {
-                            const statusConfig = getStatusDisplay(item.status);
+                            const statusConfig = getStatusDisplay(item.status, t);
                             return (
                               <Chip
                                 size="sm"
@@ -324,7 +326,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                     <div className="mt-2 px-2.5 py-2 bg-warning-50 border border-warning-100 rounded-xl">
                       <p className="text-[10px] text-warning-700 font-bold flex items-center gap-1">
                         <MessageSquare size={12} />
-                        <span>ໝາຍເຫດ:</span>
+                        <span>{t("table.cart.noteLabel")}</span>
                       </p>
                       <p className="text-[10px] text-warning-600 mt-0.5">
                         {item.note}
@@ -356,7 +358,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
         ) : (
           <div className="flex flex-col items-center justify-center h-full text-default-400 gap-2 opacity-60">
             <ShoppingCart size={40} strokeWidth={1} />
-            <p className="text-xs font-bold">ບໍ່ມີລາຍການອາຫານ</p>
+            <p className="text-xs font-bold">{t("table.cart.empty")}</p>
           </div>
         )}
       </ScrollShadow>
@@ -370,7 +372,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
             onClick={() => setIsSelectingMenu(!isSelectingMenu)}
             startContent={<Utensils size={12} />}
           >
-            {isSelectingMenu ? "ປິດເມນູ" : "ເປີດເມນູ"}
+            {isSelectingMenu ? t("table.cart.closeMenu") : t("table.cart.openMenu")}
           </Button>
           <Button
             color="warning"
@@ -378,21 +380,17 @@ export const OrderRight: React.FC<OrderRightProps> = ({
             onClick={() => {
               if (!isConnected) {
                 toast.error(
-                  "⚠️ ຕອນນີ້ Offline! ອໍເດີ້ຈະຖືກສົ່ງໄປຄົວທັນທີເມື່ອເນັດກັບມາ.",
+                  t("table.cart.offlineOrderWarning"),
                   {
                     duration: 4000,
                     style: { fontWeight: "bold" },
                   },
                 );
               }
-              console.log(
-                "🚀 Clicked Send to Kitchen. selectedCartItems:",
-                selectedCartItems,
-              );
               try {
                 updateStatus(selectedCartItems, "COOKING");
                 setSelectedCartItems([]);
-                toast.success("ອັບເດດສະຖານະສຳເລັດ");
+                toast.success(t("table.cart.updateSuccess"));
 
                 // Play notification sound
                 try {
@@ -402,7 +400,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                     .catch((e) => console.log("Audio play blocked:", e));
                 } catch (e) {}
               } catch (error) {
-                toast.error("ເກີດຂໍ້ຜິດພາດໃນການອັບເດດ");
+                toast.error(t("table.cart.updateError"));
               }
             }}
             startContent={<ChefHat size={12} />}
@@ -416,7 +414,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
               })
             }
           >
-            ສົ່ງໄປຄົວ
+            {t("table.cart.sendToKitchen")}
           </Button>
           <Button
             color="primary"
@@ -424,7 +422,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
             onClick={() => {
               if (!isConnected) {
                 toast.error(
-                  "⚠️ ຕອນນີ້ Offline! ຂໍ້ມູນຈະອັບເດດໄປຍັງເຄື່ອງອື່ນເມື່ອເນັດກັບມາ.",
+                  t("table.cart.offlineSyncWarning"),
                   {
                     duration: 4000,
                     style: { fontWeight: "bold" },
@@ -434,9 +432,9 @@ export const OrderRight: React.FC<OrderRightProps> = ({
               try {
                 updateStatus(selectedCartItems, "SERVED");
                 setSelectedCartItems([]);
-                toast.success("ອັບເດດສະຖານະສຳເລັດ");
+                toast.success(t("table.cart.updateSuccess"));
               } catch (error) {
-                toast.error("ເກີດຂໍ້ຜິດພາດໃນການອັບເດດ");
+                toast.error(t("table.cart.updateError"));
               }
             }}
             startContent={<ChefHat size={12} />}
@@ -450,7 +448,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
               })
             }
           >
-            ເສີບອາຫານ
+            {t("table.cart.serveFood")}
           </Button>
           <Button
             color="secondary"
@@ -467,22 +465,22 @@ export const OrderRight: React.FC<OrderRightProps> = ({
       <div className="px-2 py-2 md:px-3 md:py-2.5 border-t border-divider bg-white mt-auto flex-shrink-0">
         <div className="flex flex-col gap-1 mb-2">
           <div className="flex justify-between items-center text-[10px] lg:text-xs text-warning-600 font-bold">
-            <span>ລໍຖ້າ:</span>
-            <span>{formatNumber(statusTotals.PENDING)} ກີບ</span>
+            <span>{t("table.cart.pending")}:</span>
+            <span>{formatNumber(statusTotals.PENDING)} {t("table.cart.kip")}</span>
           </div>
           <div className="flex justify-between items-center text-[10px] lg:text-xs text-primary-600 font-bold">
-            <span>ກຳລັງຄົວ:</span>
-            <span>{formatNumber(statusTotals.COOKING)} ກີບ</span>
+            <span>{t("table.cart.cooking")}:</span>
+            <span>{formatNumber(statusTotals.COOKING)} {t("table.cart.kip")}</span>
           </div>
           <div className="flex justify-between items-center text-[10px] md:text-xs text-success-600 font-bold">
-            <span>ເສີບແລ້ວ:</span>
-            <span>{formatNumber(statusTotals.SERVED)} ກີບ</span>
+            <span>{t("table.cart.served")}:</span>
+            <span>{formatNumber(statusTotals.SERVED)} {t("table.cart.kip")}</span>
           </div>
           <div className="flex justify-between items-center font-black pt-1 border-t border-divider mt-1">
-            <span className="text-xs md:text-sm text-default-700">ທັງໝົດ:</span>
+            <span className="text-xs md:text-sm text-default-700">{t("table.cart.total")}:</span>
             <div className="text-right">
               <span className="text-primary text-base md:text-lg">
-                {formatNumber(subtotal)} ກີບ
+                {formatNumber(subtotal)} {t("table.cart.kip")}
               </span>
             </div>
           </div>
@@ -497,7 +495,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
             onClick={() => {
               if (cart.length > 0) {
                 toast.error(
-                  "ບໍ່ສາມາດປິດໂຕະໄດ້! ກະລຸນາເຄຼຍລາຍການອາຫານໃນກະຕ່າອອກໃຫ້ໝົດກ່ອນ.",
+                  t("table.cart.closeTableError"),
                   {
                     style: {
                       fontWeight: "bold",
@@ -511,7 +509,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
             }}
             startContent={<Trash2 size={14} />}
           >
-            ປິດໂຕະ
+            {t("table.cart.closeTable")}
           </Button>
           <Button
             color="primary"
@@ -527,7 +525,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
               )
             }
           >
-            ຕໍ່ໄປ
+            {t("table.cart.next")}
           </Button>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   useUpdateTable,
   useDeleteTable,
@@ -30,22 +31,23 @@ import { useGetZones } from "@/services/table/useZone";
 import ConfirmModal from "@/components/common/popup-confirm";
 import CreateAndEdit from "./CreateAndEdit";
 
-const columns = [
-  { name: "ລຳດັບ", uid: "id", sortable: true },
-  { name: "ຊື່ໂຕະ", uid: "name", sortable: true },
-  { name: "ໂຊນ", uid: "zoneId", sortable: true },
-  { name: "ຈຳນວນບ່ອນນັ່ງ", uid: "capacity", sortable: true },
-  { name: "QR Code", uid: "qrCode" },
-  { name: "ຈັດການ", uid: "actions" },
+const columns = (t: any) => [
+  { name: t("settings.common.no"), uid: "id", sortable: true },
+  { name: t("settings.table.tableName"), uid: "name", sortable: true },
+  { name: t("settings.table.zone"), uid: "zoneId", sortable: true },
+  { name: t("settings.table.seats"), uid: "capacity", sortable: true },
+  { name: t("settings.table.qrCode"), uid: "qrCode" },
+  { name: t("settings.common.actions"), uid: "actions" },
 ];
 
-const zoneColumns = [
-  { name: "ລຳດັບ", uid: "id", sortable: true },
-  { name: "ຊື່ໂຊນ", uid: "name", sortable: true },
-  { name: "ຈັດການ", uid: "actions" },
+const zoneColumns = (t: any) => [
+  { name: t("settings.common.no"), uid: "id", sortable: true },
+  { name: t("settings.table.zoneName"), uid: "name", sortable: true },
+  { name: t("settings.common.actions"), uid: "actions" },
 ];
 
 export default function TableSettingsPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const storeId = user?.user?.storeId;
 
@@ -100,8 +102,8 @@ export default function TableSettingsPage() {
   const hasSearchFilter = Boolean(filterValue);
 
   const headerColumns = useMemo(() => {
-    return selectedTab === "table" ? columns : zoneColumns;
-  }, [selectedTab]);
+    return selectedTab === "table" ? columns(t) : zoneColumns(t);
+  }, [selectedTab, t]);
 
   const filteredItems = useMemo(() => {
     let filteredList = selectedTab === "table" ? [...tables] : [...zones];
@@ -204,7 +206,7 @@ export default function TableSettingsPage() {
         return (
           <div className="flex items-center gap-2">
             <Users size={16} className="text-default-400" />
-            <span className="text-small font-medium">{cellValue} ຄົນ</span>
+            <span className="text-small font-medium">{cellValue} {t("ordering.seats")}</span>
           </div>
         );
       case "qrCode":
@@ -225,7 +227,7 @@ export default function TableSettingsPage() {
             onPress={() => handleGenerateQrForTable(table)}
             isLoading={isUpdatingTable}
           >
-            <QrCode size={14} className="mr-1" /> ສ້າງລະຫັດ
+            <QrCode size={14} className="mr-1" /> {t("settings.common.upload")}
           </Button>
         );
       case "actions":
@@ -268,7 +270,7 @@ export default function TableSettingsPage() {
           <Input
             isClearable
             className="w-full sm:max-w-[44%]"
-            placeholder={`ຄົ້ນຫາຊື່${isTable ? "ໂຕະ" : "ໂຊນ"}...`}
+            placeholder={isTable ? t("settings.common.search") : t("settings.common.search")}
             startContent={<Search size={18} />}
             value={filterValue}
             onClear={() => setFilterValue("")}
@@ -281,7 +283,7 @@ export default function TableSettingsPage() {
               className="font-bold h-12"
               onPress={() => handleOpenModal(selectedTab as "table" | "zone")}
             >
-              ເພີ່ມ{isTable ? "ໂຕະ" : "ໂຊນ"}ໃໝ່
+              {t("settings.common.addNew")}
             </Button>
           </div>
         </div>
@@ -292,9 +294,9 @@ export default function TableSettingsPage() {
   return (
     <div className="space-y-6 m-4">
       <div className="flex flex-col gap-1">
-        <h1 className="text-3xl font-black text-primary">ຫນ້າໂຕະອາຫານ</h1>
+        <h1 className="text-3xl font-black text-primary">{t("settings.table.title")}</h1>
         <p className="text-default-500">
-          ເພີ່ມ, ແກ້ໄຂ ຫຼື ລົບ ຂໍ້ມູນໂຕະອາຫານ ແລະ ໂຊນ
+          {t("settings.table.subtitle")}
         </p>
       </div>
 
@@ -316,8 +318,8 @@ export default function TableSettingsPage() {
             "font-bold text-default-500 group-data-[selected=true]:text-white",
         }}
       >
-        <Tab key="table" title="ຈັດການໂຕະ" />
-        <Tab key="zone" title="ຈັດການໂຊນ" />
+        <Tab key="table" title={t("settings.table.title")} />
+        <Tab key="zone" title={t("settings.table.zone")} />
       </Tabs>
 
       <Table
@@ -358,7 +360,7 @@ export default function TableSettingsPage() {
           )}
         </TableHeader>
         <TableBody
-          emptyContent={"ບໍ່ມີຂໍ້ມູນ"}
+          emptyContent={t("settings.common.noData")}
           items={sortedItems}
           isLoading={isLoading}
         >
@@ -384,10 +386,10 @@ export default function TableSettingsPage() {
       <ConfirmModal
         isOpen={isDeleteOpen}
         onOpenChange={onDeleteOpenChange}
-        title="ຢືນຢັນການລົບ?"
-        message="ທ່ານແນ່ໃຈຫລືບໍ່ວ່າຕ້ອງການລົບຂໍ້ມູນນີ້? ການລົບຈະບໍ່ສາມາດກູ້ຄືນໄດ້."
-        confirmText="ຢືນຢັນລົບ"
-        cancelText="ຍົກເລີກ"
+        title={t("settings.common.confirmDelete")}
+        message={t("settings.common.confirmDeleteMsg")}
+        confirmText={t("settings.common.delete")}
+        cancelText={t("settings.common.cancel")}
         onConfirm={confirmDelete}
         color="danger"
         icon={<Trash2 size={24} />}
@@ -397,9 +399,9 @@ export default function TableSettingsPage() {
       <ConfirmModal
         isOpen={isPendingOpen}
         onOpenChange={onPendingOpenChange}
-        title="ບໍ່ສາມາດເພີ່ມໄດ້"
-        message="ທ່ານຍັງບໍ່ໄດ້ຍ້ອມຮັບຈາກເຈົ້າຂອງກະລູນາຕິດຕໍ່ຫາເບີ 2099999999"
-        confirmText="ຕົກລົງ"
+        title={t("settings.common.pendingTitle")}
+        message={t("settings.common.pendingMsg")}
+        confirmText={t("settings.common.ok")}
         onConfirm={onPendingClose}
         color="warning"
       />
@@ -408,9 +410,9 @@ export default function TableSettingsPage() {
       <ConfirmModal
         isOpen={isRejectedOpen}
         onOpenChange={onRejectedOpenChange}
-        title="ບໍ່ສາມາດສ້າງໄດ້"
-        message="ການສະໝັກຂອງທ່ານຖືກປະຕິເສດ"
-        confirmText="ຕົກລົງ"
+        title={t("settings.common.rejectedTitle")}
+        message={t("settings.common.rejectedMsg")}
+        confirmText={t("settings.common.ok")}
         onConfirm={onRejectedClose}
         color="danger"
       />

@@ -199,9 +199,9 @@ export default function Register() {
               Dee POS
             </h1>
             <p className="text-xl lg:text-2xl font-light opacity-90 max-w-lg mx-auto">
-              ລະບົບຈັດການການຂາຍອັດສະລິຍະ
+              {t("auth.welcomeMessage")}
               <span className="block text-sm mt-2 opacity-70">
-                Smart POS Management System
+                {t("auth.subtitle")}
               </span>
             </p>
           </div>
@@ -236,20 +236,18 @@ export default function Register() {
               </div>
             </div>
             <p className="text-white/70 text-xs">
-              {step === 1
-                ? t("auth.step1") || "ຂັ້ນຕອນ 1: ເລືອກປະເພດຮ້ານ"
-                : t("auth.step2") || "ຂັ້ນຕອນ 2: ຂໍ້ມູນບັນຊີ"}
+              {step === 1 ? t("auth.step1") : t("auth.step2")}
             </p>
           </div>
 
           <div className="pt-4 grid grid-cols-2 gap-4 w-full max-w-md">
             <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20">
               <p className="text-2xl font-bold italic">PRO</p>
-              <p className="text-xs opacity-70">Enterprise Edition</p>
+              <p className="text-xs opacity-70">{t("auth.enterpriseEdition")}</p>
             </div>
             <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20">
               <p className="text-2xl font-bold italic">FAST</p>
-              <p className="text-xs opacity-70">One-Step Setup</p>
+              <p className="text-xs opacity-70">{t("auth.oneStepSetup")}</p>
             </div>
           </div>
         </div>
@@ -268,22 +266,21 @@ export default function Register() {
             onPress={handleBack}
             className="font-semibold text-primary hover:bg-primary/5 p-0 h-auto"
           >
-            {step === 2 ? t("common.back") || "ກັບຄືນ" : t("auth.backToLogin")}
+            {step === 2 ? t("common.back") : t("auth.backToLogin")}
           </Button>
           <LanguageSwitch />
         </div>
 
         <div className="w-full px-4 md:px-12 py-4 space-y-6">
-
           {/* ========== STEP 1: Choose Store Type ========== */}
           {step === 1 && (
             <>
               <div className="text-center lg:text-left space-y-2">
                 <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-                  {t("auth.chooseStoreType") || "ເລືອກປະເພດຮ້ານ"}
+                  {t("auth.chooseStoreType")}
                 </h2>
                 <p className="text-gray-500 dark:text-gray-400">
-                  {t("auth.chooseStoreTypeDesc") || "ກະລຸນາເລືອກປະເພດທຸລະກິດຂອງທ່ານ"}
+                  {t("auth.chooseStoreTypeDesc")}
                 </p>
               </div>
 
@@ -313,10 +310,10 @@ export default function Register() {
                       </div>
 
                       <p className="text-lg font-bold text-gray-900 dark:text-white">
-                        {t(option.labelKey) || option.defaultLabel}
+                        {t(option.labelKey)}
                       </p>
                       <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                        {t(option.descriptionKey) || option.defaultDesc}
+                        {t(option.descriptionKey)}
                       </p>
 
                       {isSelected && (
@@ -340,13 +337,13 @@ export default function Register() {
                 endContent={<ArrowRight size={20} />}
                 onPress={handleNextStep}
               >
-                {t("common.next") || "ຕໍ່ໄປ"}
+                {t("common.next")}
                 {selectedTypeOption && (
                   <Chip
                     size="sm"
                     className="ml-2 bg-white/20 text-white text-xs font-semibold"
                   >
-                    {t(selectedTypeOption.labelKey) || selectedTypeOption.defaultLabel}
+                    {t(selectedTypeOption.labelKey)}
                   </Chip>
                 )}
               </Button>

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import {
   Search,
@@ -39,6 +40,7 @@ import {
 import { useAuth } from "@/routes/AuthContext";
 
 export default function PermissionManagement() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const storeId = user?.user?.store?.id || "";
@@ -77,7 +79,7 @@ export default function PermissionManagement() {
     isActive:
       !selectedStatus || selectedStatus === "all"
         ? undefined
-        : selectedStatus === "ເປີດໃຊ້ງານ",
+        : selectedStatus === t("settings.common.active"),
   });
 
   const deleteMutation = useDeletePermission();
@@ -147,7 +149,7 @@ export default function PermissionManagement() {
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-medium font-bold text-gray-500">
-          ຕັ້ງຄ່າກຳນົດສິດແອັດມິນ
+          {t("permission.title")}
         </h1>
       </div>
 
@@ -156,10 +158,10 @@ export default function PermissionManagement() {
         <CardHeader>
           <div className="flex flex-col gap-1">
             <h2 className="text-lg font-semibold text-gray-900">
-              ຕັ້ງຄ່າກຳນົດສິດແອັດມິນ
+              {t("permission.title")}
             </h2>
             <p className="text-sm text-default-500">
-              ລາຍການແອັດມິນໃນການຕັ້ງຄ່າກຳນົດສິດແອັດມິນ
+              {t("permission.subtitle")}
             </p>
           </div>
         </CardHeader>
@@ -174,7 +176,7 @@ export default function PermissionManagement() {
                 ref={searchInputRef}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="ຄົ້ນຫາ..."
+                placeholder={t("settings.common.search")}
                 aria-label="Search permissions"
                 startContent={<Search size={18} />}
               />
@@ -190,16 +192,16 @@ export default function PermissionManagement() {
                       className="w-full justify-between text-sm"
                       endContent={<ChevronDown size={16} />}
                     >
-                      {selectedStatus || "ສະຖານະ"}
+                      {selectedStatus || t("settings.common.status")}
                     </Button>
                   </DropdownTrigger>
                   <DropdownMenu
                     aria-label="Status selection"
                     onAction={(key) => setSelectedStatus(key as string)}
                   >
-                    <DropdownItem key="all">ທັງໝົດ</DropdownItem>
-                    <DropdownItem key="ເປີດໃຊ້ງານ">ເປີດໃຊ້ງານ</DropdownItem>
-                    <DropdownItem key="ປິດໃຊ້ງານ">ປິດໃຊ້ງານ</DropdownItem>
+                    <DropdownItem key="all">{t("settings.common.all")}</DropdownItem>
+                    <DropdownItem key={t("settings.common.active")}>{t("settings.common.active")}</DropdownItem>
+                    <DropdownItem key={t("settings.common.inactive")}>{t("settings.common.inactive")}</DropdownItem>
                   </DropdownMenu>
                 </Dropdown>
               </div>
@@ -211,7 +213,7 @@ export default function PermissionManagement() {
                 onPress={handleAddUser}
               >
                 <PlusCircle size={14} />
-                <span>ເພີ່ມສິດຜູ້ໃຊ້</span>
+                <span>{t("permission.addTitle")}</span>
               </Button>
             </div>
           </div>
@@ -222,19 +224,19 @@ export default function PermissionManagement() {
               isLoading={isLoading}
               emptyContent={<EmptyState />}
               header={[
-                "ລຳດັບ",
-                "ຊື່ສິດໃນການນຳໃຊ້",
-                "ລາຍລະອຽດ",
-                "ຈຳນວນຜູ້ໃຊ້",
-                "ສະຖານະໃຊ້ງານ",
+                t("settings.common.no"),
+                t("permission.permissionName"),
+                t("settings.common.description"),
+                t("permission.userCount"),
+                t("settings.common.status"),
                 <div
                   key="date"
                   className="flex items-center justify-center gap-1"
                 >
-                  ວັນທີສ້າງ{" "}
+                  {t("permission.createdDate")}{" "}
                   <ChevronsUpDown size={14} className="text-gray-600" />
                 </div>,
-                "ຈັດການ",
+                t("settings.common.actions"),
               ]}
             >
               {permissions.map((permission: PermissionData, index: number) => (
@@ -316,11 +318,11 @@ export default function PermissionManagement() {
           {/* Delete / Success Modals (render once) */}
           <ModalConfirm
             icon={<Trash2 size={32} color="red" />}
-            title="ຢືນຢັນການລືບສິດ"
-            content={`ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລືບສິດ ${selectedPermission?.name}?`}
+            title={t("permission.deleteConfirmTitle")}
+            content={t("permission.deleteConfirmMsg", { name: selectedPermission?.name })}
             confirmColor="danger"
-            confirmText="ລືບ"
-            cancelText="ຍົກເລີກ"
+            confirmText={t("settings.common.delete")}
+            cancelText={t("settings.common.cancel")}
             onConfirm={handleDeleteConfirm}
             isOpen={isDeleteModalOpen}
             onOpenChange={setIsDeleteModalOpen}
@@ -329,8 +331,8 @@ export default function PermissionManagement() {
           <SuccessModal
             isOpen={isSuccessModalOpen}
             onOpenChange={setIsSuccessModalOpen}
-            title="ລືບສຳເລັດ!"
-            message={`ສິດ ${selectedPermission?.name} ຖືກລືບອອກຈາກລະບົບແລ້ວ`}
+            title={t("permission.deleteSuccessTitle")}
+            message={t("permission.deleteSuccessMsg", { name: selectedPermission?.name })}
             onClose={handleSuccessModalClose}
           />
         </CardBody>
@@ -359,8 +361,7 @@ export default function PermissionManagement() {
 
         <CardFooter className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
           <div className="text-sm text-gray-600">
-            ສະແດງ {permissions.length > 0 ? 1 : 0}-{permissions.length} ຈາກ{" "}
-            {permissions.length}
+            {t("settings.common.total", { count: permissions.length })}
           </div>
           <div className="flex justify-center items-center">
             <GlobalPagination

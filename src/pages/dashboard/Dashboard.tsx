@@ -20,6 +20,7 @@ import clsx from "clsx";
 import { getDisplayImageUrl } from "@/lib/utils";
 import DateRangePickerComponent from "@/components/common/date-range-picker";
 import { useState, useMemo, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   today,
   getLocalTimeZone,
@@ -103,6 +104,7 @@ const StatCard = ({ title, value, icon, color }: StatCardProps) => {
 // ... (existing helper components)
 
 export default function Dashboard() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [dateRange, setDateRange] = useState<DateRange | null>({
     start: startOfMonth(today(getLocalTimeZone())),
@@ -178,8 +180,8 @@ export default function Dashboard() {
         .filter((p) => p.method !== "CASH")
         .map((p) => {
           let name = p.method;
-          if (p.method === "TRANSFER") name = "ໂອນເງິນ";
-          if (p.method === "TRANSFER_CASH") name = "ເງິນສົດ + ໂອນ";
+          if (p.method === "TRANSFER") name = t("dashboard.transfer");
+          if (p.method === "TRANSFER_CASH") name = t("dashboard.cashTransfer");
 
           return {
             name,
@@ -210,10 +212,10 @@ export default function Dashboard() {
         <div>
           <h1 className="text-3xl font-black text-primary flex items-center gap-3">
             <LayoutDashboard size={32} />
-            ພາບລວມສະຖິຕິ
+            {t("dashboard.title")}
           </h1>
           <p className="text-default-500 mt-1 font-medium">
-            ສະຫຼຸບຂໍ້ມູນການຂາຍ ແລະ ຜົນປະກອບການທັງໝົດ
+            {t("dashboard.desc")}
           </p>
         </div>
         <div className="flex items-center gap-3 bg-white dark:bg-default-50 p-2 rounded-2xl shadow-sm border border-divider">
@@ -236,7 +238,7 @@ export default function Dashboard() {
               </Button>
             </DropdownTrigger>
             <DropdownMenu
-              aria-label="ລະຍະເວລາ"
+              aria-label={t("dashboard.filterAria")}
               onAction={(key: any) => {
                 const todayVal = dayjs().format("YYYY-MM-DD");
                 let start = todayVal;
@@ -279,13 +281,13 @@ export default function Dashboard() {
                   <div className="w-2 h-2 rounded-full bg-success" />
                 }
               >
-                ມື້ນີ້
+                {t("dashboard.today")}
               </DropdownItem>
-              <DropdownItem key="yesterday">ມື້ວານ</DropdownItem>
-              <DropdownItem key="3days">3 ມື້ຜ່ານມາ</DropdownItem>
-              <DropdownItem key="7days">7 ມື້ຜ່ານມາ</DropdownItem>
-              <DropdownItem key="1month">1 ເດືອນຜ່ານມາ</DropdownItem>
-              <DropdownItem key="1year">1 ປີຜ່ານມາ</DropdownItem>
+              <DropdownItem key="yesterday">{t("dashboard.yesterday")}</DropdownItem>
+              <DropdownItem key="3days">{t("dashboard.last3Days")}</DropdownItem>
+              <DropdownItem key="7days">{t("dashboard.last7Days")}</DropdownItem>
+              <DropdownItem key="1month">{t("dashboard.lastMonth")}</DropdownItem>
+              <DropdownItem key="1year">{t("dashboard.lastYear")}</DropdownItem>
             </DropdownMenu>
           </Dropdown>
           <Button
@@ -302,31 +304,31 @@ export default function Dashboard() {
       {/* Main Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
         <StatCard
-          title="ຍອດຂາຍທັງໝົດ"
+          title={t("dashboard.totalSales")}
           value={summary?.totalSales || 0}
-          icon={<span className="font-black text-lg">ກີບ</span>}
+          icon={<span className="font-black text-lg">{t("dashboard.kip")}</span>}
           color="success"
         />
         <StatCard
-          title="ລາຍຈ່າຍທັງໝົດ"
+          title={t("dashboard.totalExpenses")}
           value={summary?.totalExpenses || 0}
-          icon={<span className="font-black text-lg">ກີບ</span>}
+          icon={<span className="font-black text-lg">{t("dashboard.kip")}</span>}
           color="danger"
         />
         <StatCard
-          title="ກຳໄລ່ທັງຫມົດ"
+          title={t("dashboard.totalProfit")}
           value={summary?.totalProfit || 0}
-          icon={<span className="font-black text-lg">ກີບ</span>}
+          icon={<span className="font-black text-lg">{t("dashboard.kip")}</span>}
           color="primary"
         />
         <StatCard
-          title="ຈຳນວນພະນັກງານ"
+          title={t("dashboard.totalEmployees")}
           value={summary?.totalEmployee || 0}
           icon={<Users size={24} />}
           color="warning"
         />
         <StatCard
-          title="ຈຳນວນເມນູ"
+          title={t("dashboard.totalMenus")}
           value={summary?.totalMenu || 0}
           icon={<Package size={24} />}
           color="warning"
@@ -339,27 +341,27 @@ export default function Dashboard() {
         <Card className="p-6 border-none shadow-sm">
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h3 className="text-lg font-bold">ທ່າອ່ຽງລາຍຮັບ</h3>
+              <h3 className="text-lg font-bold">{t("dashboard.revenueTrend")}</h3>
               <p className="text-sm text-default-400 font-medium">
-                ສະຖິຕິການຂາຍທີຜ່ານມາ
+                {t("dashboard.salesStats")}
               </p>
             </div>
             <div className="flex gap-4">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-primary" />
                 <span className="text-xs font-bold text-default-500">
-                  ລາຍຮັບ
+                  {t("dashboard.revenue")}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-pink-400" />
                 <span className="text-xs font-bold text-default-500">
-                  ຕົ້ນທຶນ
+                  {t("dashboard.cost")}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-success" />
-                <span className="text-xs font-bold text-default-500">ກຳໄລ</span>
+                <span className="text-xs font-bold text-default-500">{t("dashboard.profit")}</span>
               </div>
             </div>
           </div>
@@ -409,7 +411,7 @@ export default function Dashboard() {
                     border: "none",
                     boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
                   }}
-                  formatter={(value: any) => [formatNumber(value) + " ກີບ"]}
+                  formatter={(value: any) => [formatNumber(value) + " " + t("dashboard.kip")]}
                 />
                 <Area
                   type="monotone"
@@ -418,7 +420,7 @@ export default function Dashboard() {
                   strokeWidth={3}
                   fillOpacity={1}
                   fill="url(#colorRevenue)"
-                  name="ລາຍຮັບ"
+                  name={t("dashboard.revenue")}
                 />
                 <Area
                   type="monotone"
@@ -427,7 +429,7 @@ export default function Dashboard() {
                   strokeWidth={2}
                   strokeDasharray="5 5"
                   fill="transparent"
-                  name="ຕົ້ນທຶน"
+                  name={t("dashboard.cost")}
                 />
                 <Area
                   type="monotone"
@@ -446,9 +448,9 @@ export default function Dashboard() {
         {/* Payment Methods - Full Width with Chart/Details split */}
         <Card className="p-8 border-none shadow-sm flex flex-col ring-1 ring-divider/50">
           <div>
-            <h3 className="text-xl font-bold mb-1">ຊ່ອງທາງການຊຳລະ</h3>
+            <h3 className="text-xl font-bold mb-1">{t("dashboard.paymentChannels")}</h3>
             <p className="text-sm text-default-400 font-medium mb-4">
-              ແບ່ງຕາມປະເພດການຮັບເງິນ
+              {t("dashboard.paymentTypeDesc")}
             </p>
           </div>
 

@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Table,
   TableHeader,
@@ -38,6 +39,7 @@ import EmptyState from "@/components/common/empty-state";
 import ConfirmModal from "@/components/common/popup-confirm";
 
 export default function MoneyRatePage() {
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
 
   const {
@@ -194,8 +196,8 @@ export default function MoneyRatePage() {
   const rateForm = (
     <div className="space-y-4 py-2">
       <Input
-        label="ຊື່ (Name)"
-        placeholder="ຊື່ອັດຕາແລກປ່ຽນ"
+        label={`${t("settings.common.nameLabel")} (Name)`}
+        placeholder={t("settings.moneyRate.title")}
         variant="bordered"
         value={formData.name}
         onValueChange={(val) => setFormData({ ...formData, name: val })}
@@ -204,7 +206,7 @@ export default function MoneyRatePage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Input
-          label="ອັດຕາຂາຍ (Sell Rate)"
+          label={t("settings.moneyRate.sellRate")}
           placeholder="0.00"
           variant="bordered"
           value={formData.rateSell}
@@ -235,9 +237,9 @@ export default function MoneyRatePage() {
         <div>
           <h1 className="text-2xl font-bold text-primary flex items-center gap-2">
             <JapaneseYen size={28} />
-            ຈັດການອັດຕາແລກປ່ຽນ
+            {t("settings.moneyRate.title")}
           </h1>
-          <p className="text-default-500">ຈັດການຂໍ້ມູນອັດຕາແລກປ່ຽນເງິນຕາ</p>
+          <p className="text-default-500">{t("settings.moneyRate.subtitle")}</p>
         </div>
         <Button
           color="primary"
@@ -245,7 +247,7 @@ export default function MoneyRatePage() {
           onPress={handleCreateOpen}
           className="font-bold h-12 px-6 shadow-lg shadow-primary/30"
         >
-          ເພີ່ມອັດຕາແລກປ່ຽນໃໝ່
+          {t("settings.moneyRate.addTitle")}
         </Button>
       </div>
 
@@ -253,14 +255,14 @@ export default function MoneyRatePage() {
         <Input
           isClearable
           className="w-full sm:max-w-md"
-          placeholder="ຄົ້ນຫາຊື່ອັດຕາແລກປ່ຽນ..."
+          placeholder={t("settings.common.search")}
           startContent={<Search className="text-default-400" size={18} />}
           value={searchQuery}
           onValueChange={setSearchQuery}
           variant="bordered"
         />
         <div className="text-default-400 text-sm">
-          ທັງໝົດ {filteredItems.length} ລາຍການ
+          {t("settings.common.total", { count: filteredItems.length })}
         </div>
       </div>
 
@@ -287,11 +289,11 @@ export default function MoneyRatePage() {
         }
       >
         <TableHeader>
-          <TableColumn>ຊື່ອັດຕາແລກປ່ຽນ</TableColumn>
-          <TableColumn>ອັດຕາຂາຍ (Sell)</TableColumn>
-          <TableColumn>ອັດຕາຊື້ (Buy)</TableColumn>
-          <TableColumn>ອັບເດດຫຼ້າສຸດ</TableColumn>
-          <TableColumn className="text-center">ຈັດການ</TableColumn>
+          <TableColumn>{t("settings.common.nameLabel")}</TableColumn>
+          <TableColumn>{t("settings.moneyRate.sellRate")} (Sell)</TableColumn>
+          <TableColumn>{t("settings.moneyRate.buyRate")} (Buy)</TableColumn>
+          <TableColumn>{t("settings.moneyRate.lastUpdated")}</TableColumn>
+          <TableColumn className="text-center">{t("settings.common.actions")}</TableColumn>
         </TableHeader>
         <TableBody isLoading={isLoading} emptyContent={<EmptyState />}>
           {items.map((item) => (
@@ -315,7 +317,7 @@ export default function MoneyRatePage() {
                 </span>
               </TableCell>
               <TableCell>
-                {new Date(item.updatedAt).toLocaleString("lo-LA")}
+                {new Date(item.updatedAt).toLocaleString(i18n.language === "en" ? "en-US" : i18n.language === "lo" ? "lo-LA" : "th-TH")}
               </TableCell>
               <TableCell>
                 <div className="flex items-center justify-center gap-2">
@@ -361,7 +363,7 @@ export default function MoneyRatePage() {
               <ModalBody>{rateForm}</ModalBody>
               <ModalFooter>
                 <Button variant="light" onPress={onClose}>
-                  ຍົກເລີກ
+                  {t("settings.common.cancel")}
                 </Button>
                 <Button
                   color="primary"
@@ -371,7 +373,7 @@ export default function MoneyRatePage() {
                     !formData.name || !formData.rateSell || !formData.rateBuy
                   }
                 >
-                  ບັນທຶກ
+                  {t("settings.common.save")}
                 </Button>
               </ModalFooter>
             </>
@@ -391,12 +393,12 @@ export default function MoneyRatePage() {
           {(onClose) => (
             <>
               <ModalHeader className="flex flex-col gap-1">
-                ແກ້ໄຂອັດຕາແລກປ່ຽນ
+                {t("settings.moneyRate.editTitle")}
               </ModalHeader>
               <ModalBody>{rateForm}</ModalBody>
               <ModalFooter>
                 <Button variant="light" onPress={onClose}>
-                  ຍົກເລີກ
+                  {t("settings.common.cancel")}
                 </Button>
                 <Button
                   color="primary"
@@ -406,7 +408,7 @@ export default function MoneyRatePage() {
                     !formData.name || !formData.rateSell || !formData.rateBuy
                   }
                 >
-                  ອັບເດດ
+                  {t("settings.common.update")}
                 </Button>
               </ModalFooter>
             </>
@@ -418,9 +420,9 @@ export default function MoneyRatePage() {
       <ConfirmModal
         isOpen={isDeleteOpen}
         onOpenChange={onDeleteOpenChange}
-        title="ຢືນຢັນການລຶບ"
-        message={`ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບອັດຕາແລກປ່ຽນຂອງ ${selectedRate?.name}?`}
-        confirmText="ລຶບຂໍ້ມູນ"
+        title={t("settings.common.confirmDelete")}
+        message={t("settings.common.confirmDeleteMsg")}
+        confirmText={t("settings.common.delete")}
         onConfirm={() => handleDeleteSubmit(onDeleteClose)}
         icon={<Trash2 size={24} />}
         color="danger"
@@ -430,9 +432,9 @@ export default function MoneyRatePage() {
       <ConfirmModal
         isOpen={isPendingOpen}
         onOpenChange={onPendingOpenChange}
-        title="ບໍ່ສາມາດເພີ່ມໄດ້"
-        message="ທ່ານຍັງບໍ່ໄດ້ຍ້ອມຮັບຈາກເຈົ້າຂອງກະລູນາຕິດຕໍ່ຫາເບີ 2099999999"
-        confirmText="ຕົກລົງ"
+        title={t("settings.common.pendingTitle")}
+        message={t("settings.common.pendingMsg")}
+        confirmText={t("settings.common.ok")}
         onConfirm={onPendingClose}
         color="warning"
       />
@@ -441,9 +443,9 @@ export default function MoneyRatePage() {
       <ConfirmModal
         isOpen={isRejectedOpen}
         onOpenChange={onRejectedOpenChange}
-        title="ບໍ່ສາມາດສ້າງໄດ້"
-        message="ການສະໝັກຂອງທ່ານຖືກປະຕິເສດ"
-        confirmText="ຕົກລົງ"
+        title={t("settings.common.rejectedTitle")}
+        message={t("settings.common.rejectedMsg")}
+        confirmText={t("settings.common.ok")}
         onConfirm={onRejectedClose}
         color="danger"
       />

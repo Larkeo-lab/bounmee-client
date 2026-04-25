@@ -1,4 +1,5 @@
 import { useUpdateTable } from "@/services/table/useTable";
+import { useTranslation } from "react-i18next";
 import { QRCodeSVG } from "qrcode.react";
 import {
   Card,
@@ -39,6 +40,7 @@ export const TableCart = ({
   const updateTable = useUpdateTable();
   const { carts } = useCart();
 
+  const { t } = useTranslation();
   const tableCart = carts[table.id] || [];
 
   const pendingCount = (tableCart as any[])
@@ -89,13 +91,13 @@ export const TableCart = ({
   const getStatusLabel = (status: TableStatus) => {
     switch (status) {
       case "AVAILABLE":
-        return "ຫວ່າງ";
+        return t("table.stats.available");
       case "OCCUPIED":
-        return "ມີຄົນນັ່ງແລ້ວ";
+        return t("table.stats.occupied");
       case "RESERVED":
-        return "ຈອງແລ້ວ";
+        return t("table.stats.reserved");
       case "DIRTY":
-        return "ລໍຖ້າອະນາໄມ";
+        return t("table.stats.dirty");
       default:
         return status;
     }
@@ -147,7 +149,7 @@ export const TableCart = ({
                 >
                   <Users size={12} strokeWidth={2.5} />
                   <span className="text-[11px] font-bold tracking-wide">
-                    {table.capacity} ບ່ອນນັ່ງ
+                    {t("table.seats", { count: table.capacity })}
                   </span>
                 </div>
               </div>
@@ -157,7 +159,7 @@ export const TableCart = ({
             <div className="flex flex-col gap-0.5 md:gap-1 mb-2 md:mb-3 mt-1">
               <div className="flex items-center justify-between bg-white/50 dark:bg-black/20 backdrop-blur-sm border border-white/60 dark:border-white/10 px-2 md:px-2.5 py-1 md:py-1.5 rounded-lg md:rounded-xl shadow-sm">
                 <span className="text-[9px] md:text-[10px] font-bold text-default-600 uppercase tracking-widest text-left">
-                  ທັງໝົດ:
+                  {t("table.cart.total")}:
                 </span>
                 <span className="text-xs md:text-sm font-black text-primary">
                   {tableCart.reduce(
@@ -171,7 +173,7 @@ export const TableCart = ({
                 <div className="flex items-center justify-between text-[10px] md:text-[11px]">
                   <span className="flex items-center gap-2 text-default-500 font-bold">
                     <div className="w-1.5 h-1.5 rounded-full bg-default-400" />
-                    ລໍຖ້າ:
+                    {t("table.cart.pending")}:
                   </span>
                   <span className="font-black text-default-700">
                     {pendingCount}{" "}
@@ -181,7 +183,7 @@ export const TableCart = ({
                 <div className="flex items-center justify-between text-[10px] md:text-[11px]">
                   <span className="flex items-center gap-2 text-warning-600 font-bold">
                     <div className="w-1.5 h-1.5 rounded-full bg-warning-500 animate-pulse" />
-                    ກຳລັງຄົວ:
+                    {t("table.cart.cooking")}:
                   </span>
                   <span className="font-black text-warning-700">
                     {cookingCount}{" "}
@@ -191,7 +193,7 @@ export const TableCart = ({
                 <div className="flex items-center justify-between text-[10px] md:text-[11px]">
                   <span className="flex items-center gap-2 text-success-600 font-bold">
                     <div className="w-1.5 h-1.5 rounded-full bg-success-500" />
-                    ເສີບແລ້ວ:
+                    {t("table.cart.served")}:
                   </span>
                   <span className="font-black text-success-700">
                     {servedCount}{" "}
@@ -236,11 +238,11 @@ export const TableCart = ({
       >
         <ModalContent>
           <ModalHeader className="flex flex-col gap-1 text-center">
-            <span className="text-lg font-bold">ໂຕະ {table.name}</span>
+            <span className="text-lg font-bold">{t("navigation.table")} {table.name}</span>
           </ModalHeader>
           <ModalBody className="flex flex-col items-center py-4 gap-4">
             <p className="text-center text-lg font-medium text-default-600">
-              ຕ້ອງການເປີດໂຕະບໍ?
+              {t("table.modal.openTableConfirm")}
             </p>
             {table.qrCode && (
               <div className="flex flex-col items-center gap-2 p-4 bg-default-50 rounded-xl border border-default-200 w-full">
@@ -253,7 +255,7 @@ export const TableCart = ({
                 </div>
                 <div className="text-center">
                   <span className="text-[11px] text-default-400 font-medium block uppercase tracking-widest mb-0.5">
-                    ລະຫັດໂຕະ (Table Code)
+                    {t("table.modal.tableCode")}
                   </span>
                   <span className="text-xl font-black tracking-wider text-primary">
                     {table.qrCode}
@@ -268,7 +270,7 @@ export const TableCart = ({
               variant="light"
               onPress={() => onOpenChange()}
             >
-              ຍົກເລີກ
+              {t("common.cancel")}
             </Button>
             <Button
               color="primary"
@@ -285,7 +287,7 @@ export const TableCart = ({
                 );
               }}
             >
-              ເປີດໂຕະ
+              {t("table.modal.openTable")}
             </Button>
           </ModalFooter>
         </ModalContent>

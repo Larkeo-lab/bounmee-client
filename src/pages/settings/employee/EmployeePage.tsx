@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Table,
   TableHeader,
@@ -34,6 +35,7 @@ import ConfirmModal from "@/components/common/popup-confirm";
 import AddAndEdit from "./AddAndEdit";
 
 export default function EmployeePage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
 
   const {
@@ -177,10 +179,10 @@ export default function EmployeePage() {
         <div>
           <h1 className="text-2xl font-bold text-primary flex items-center gap-2">
             <Users size={28} />
-            ຈັດການພະນັກງານ {store ? `(${store.name})` : ""}
+            {t("employee.title")} {store ? `(${store.name})` : ""}
           </h1>
           <p className="text-default-500">
-            ຈັດການຂໍ້ມູນພະນັກງານ ແລະ ການເຂົ້າເຖິງລະບົບ
+            {t("employee.subtitle")}
           </p>
         </div>
         <Button
@@ -189,7 +191,7 @@ export default function EmployeePage() {
           onPress={handleCreateOpen}
           className="font-bold h-12 px-6 shadow-lg shadow-primary/30"
         >
-          ເພີ່ມພະນັກງານໃໝ່
+          {t("employee.addTitle")}
         </Button>
       </div>
 
@@ -197,14 +199,14 @@ export default function EmployeePage() {
         <Input
           isClearable
           className="w-full sm:max-w-md"
-          placeholder="ຄົ້ນຫາຊື່, Username ຫຼື ເບີໂທ..."
+          placeholder={t("employee.searchPlaceholder")}
           startContent={<Search className="text-default-400" size={18} />}
           value={searchQuery}
           onValueChange={setSearchQuery}
           variant="bordered"
         />
         <div className="text-default-400 text-sm">
-          ທັງໝົດ {filteredItems.length} ລາຍການ
+          {t("settings.common.total", { count: filteredItems.length })}
         </div>
       </div>
 
@@ -231,11 +233,11 @@ export default function EmployeePage() {
         }
       >
         <TableHeader>
-          <TableColumn>ພະນັກງານ</TableColumn>
-          <TableColumn>ເບີໂທ</TableColumn>
-          <TableColumn>Username</TableColumn>
-          <TableColumn>ບົດບາດ</TableColumn>
-          <TableColumn className="text-center">ຈັດການ</TableColumn>
+          <TableColumn>{t("employee.name")}</TableColumn>
+          <TableColumn>{t("employee.phone")}</TableColumn>
+          <TableColumn>{t("employee.username")}</TableColumn>
+          <TableColumn>{t("employee.role")}</TableColumn>
+          <TableColumn className="text-center">{t("settings.common.actions")}</TableColumn>
         </TableHeader>
         <TableBody isLoading={isLoading} emptyContent={<EmptyState />}>
           {items.map((item) => (
@@ -266,7 +268,7 @@ export default function EmployeePage() {
                   color={item.role === "STORE_ADMIN" ? "warning" : "primary"}
                   variant="flat"
                 >
-                  {item.role === "STORE_ADMIN" ? "ເຈົ້າຂອງຮ້ານ" : "ພະນັກງານ"}
+                  {item.role === "STORE_ADMIN" ? t("employee.admin") : t("employee.staff")}
                 </Chip>
               </TableCell>
               <TableCell>
@@ -313,9 +315,9 @@ export default function EmployeePage() {
       <ConfirmModal
         isOpen={isDeleteOpen}
         onOpenChange={onDeleteOpenChange}
-        title="ຢືນຢັນການລຶບ"
-        message={`ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບພະນັກງານ ${selectedEmployee?.name}? ຂໍ້ມູນການເຂົ້າລະບົບຂອງພະນັກງານຄົນນີ້ຈະຖືກລຶບອອກເຊັ່ນກັນ.`}
-        confirmText="ລຶບຂໍ້ມູນ"
+        title={t("settings.common.confirmDelete")}
+        message={t("employee.deleteConfirmMsg", { name: selectedEmployee?.name })}
+        confirmText={t("settings.common.delete")}
         onConfirm={() => handleDeleteSubmit(onDeleteClose)}
         icon={<Trash2 size={24} />}
         color="danger"
@@ -325,9 +327,9 @@ export default function EmployeePage() {
       <ConfirmModal
         isOpen={isPendingOpen}
         onOpenChange={onPendingOpenChange}
-        title="ບໍ່ສາມາດເພີ່ມໄດ້"
-        message="ທ່ານຍັງບໍ່ໄດ້ຍ້ອມຮັບຈາກເຈົ້າຂອງກະລູນາຕິດຕໍ່ຫາເບີ 2099999999"
-        confirmText="ຕົກລົງ"
+        title={t("settings.common.pendingTitle")}
+        message={t("settings.common.pendingMsg")}
+        confirmText={t("settings.common.ok")}
         onConfirm={onPendingClose}
         color="warning"
       />
@@ -336,9 +338,9 @@ export default function EmployeePage() {
       <ConfirmModal
         isOpen={isRejectedOpen}
         onOpenChange={onRejectedOpenChange}
-        title="ບໍ່ສາມາດສ້າງໄດ້"
-        message="ການສະໝັກຂອງທ່ານຖືກປະຕິເສດ"
-        confirmText="ຕົກລົງ"
+        title={t("settings.common.rejectedTitle")}
+        message={t("settings.common.rejectedMsg")}
+        confirmText={t("settings.common.ok")}
         onConfirm={onRejectedClose}
         color="danger"
       />

@@ -10,6 +10,7 @@ import {
   SelectItem,
 } from "@heroui/react";
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useCreateTable, useUpdateTable } from "@/services/table/useTable";
 import { useCreateZone, useUpdateZone } from "@/services/table/useZone";
 import { toast } from "react-hot-toast";
@@ -33,6 +34,7 @@ export default function CreateAndEdit({
   zones,
   storeId,
 }: CreateAndEditProps) {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState<any>({});
 
   const { mutateAsync: createTable, isPending: isCreatingTable } =
@@ -63,7 +65,7 @@ export default function CreateAndEdit({
     try {
       if (modalType === "table") {
         if (!formData.zoneId) {
-          toast.error("ກະລຸນາເລືອກໂຊນກ່ອນບັນທຶກ");
+          toast.error(t("settings.table.selectZoneError"));
           return;
         }
         const payload = {
@@ -102,16 +104,16 @@ export default function CreateAndEdit({
           <>
             <ModalHeader className="flex flex-col gap-1">
               <h2 className="text-2xl font-black text-primary">
-                {isEditing ? "ແກ້ໄຂ" : "ເພີ່ມ"}{" "}
-                {modalType === "table" ? "ໂຕະອາຫານ" : "ໂຊນ"}
+                {isEditing ? t("settings.common.edit") : t("settings.common.addNew")}{" "}
+                {modalType === "table" ? t("settings.table.title") : t("settings.table.zone")}
               </h2>
             </ModalHeader>
             <ModalBody className="gap-4 pb-8">
               {modalType === "table" ? (
                 <>
                   <Input
-                    label="ຊື່ໂຕະ"
-                    placeholder="T-01"
+                    label={t("settings.table.tableName")}
+                    placeholder={t("settings.table.tableName")}
                     variant="bordered"
                     labelPlacement="outside"
                     value={formData.name || ""}
@@ -120,7 +122,7 @@ export default function CreateAndEdit({
                     }
                   />
                   <Input
-                    label="ຈຳນວນບ່ອນນັ່ງ"
+                    label={t("settings.table.seats")}
                     placeholder="4"
                     variant="bordered"
                     type="number"
@@ -131,8 +133,8 @@ export default function CreateAndEdit({
                     }
                   />
                   <Select
-                    label="ໂຊນ"
-                    placeholder="ເລືອກໂຊນ"
+                    label={t("settings.table.zone")}
+                    placeholder={t("settings.table.zone")}
                     variant="bordered"
                     labelPlacement="outside"
                     selectedKeys={formData.zoneId ? [formData.zoneId] : []}
@@ -151,8 +153,8 @@ export default function CreateAndEdit({
               ) : (
                 <>
                   <Input
-                    label="ຊື່ໂຊນ"
-                    placeholder="VIP Zone"
+                    label={t("settings.table.zoneName")}
+                    placeholder={t("settings.table.zoneName")}
                     variant="bordered"
                     labelPlacement="outside"
                     value={formData.name || ""}
@@ -165,10 +167,10 @@ export default function CreateAndEdit({
             </ModalBody>
             <ModalFooter>
               <Button color="danger" variant="light" onPress={onClose}>
-                ຍົກເລີກ
+                {t("settings.common.cancel")}
               </Button>
               <Button color="primary" isLoading={isPending} onPress={() => handleSave(onClose)}>
-                ບັນທຶກ
+                {t("settings.common.save")}
               </Button>
             </ModalFooter>
           </>

@@ -11,6 +11,7 @@ import {
   Spinner,
 } from "@heroui/react";
 import { Barcode, Tag, DollarSign, Package, Upload, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useState, useRef, useEffect } from "react";
 import { useUpdateProduct, Product } from "@/services/product/useProduct";
 import { useUploadImage } from "@/services/storage";
@@ -34,6 +35,7 @@ export default function EditProduct({
   storeId,
   categories,
 }: EditProductProps) {
+  const { t } = useTranslation();
   const updateProductMutation = useUpdateProduct();
   const uploadImageMutation = useUploadImage();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -121,13 +123,13 @@ export default function EditProduct({
         {(onModalClose) => (
           <>
             <ModalHeader className="flex flex-col gap-1 text-xl font-bold text-primary">
-              ແກ້ໄຂສິນຄ້າ
+              {t("product.editTitle")}
             </ModalHeader>
             <ModalBody>
               <div className="flex flex-col gap-6 py-2">
                 <div className="flex flex-col gap-2">
                   <label className="text-small font-medium text-default-700">
-                    ຮູບພາບສິນຄ້າ
+                    {t("product.image")}
                   </label>
                   <div
                     onClick={() => fileInputRef.current?.click()}
@@ -150,7 +152,7 @@ export default function EditProduct({
                     {uploadImageMutation.isPending ? (
                       <div className="flex flex-col items-center gap-2">
                         <Spinner size="lg" color="primary" />
-                        <p className="text-small text-default-500">ກຳລັງອັບໂຫຼດ...</p>
+                        <p className="text-small text-default-500">{t("settings.common.uploading")}</p>
                       </div>
                     ) : previewImage || formData.image ? (
                       <>
@@ -180,10 +182,10 @@ export default function EditProduct({
                         </div>
                         <div className="text-center">
                           <p className="text-small font-semibold">
-                            ຄລິກ ຫຼື ລາກຮູບມາວາງໃສ່ນີ້
+                            {t("product.dragAndDrop")}
                           </p>
                           <p className="text-tiny text-default-400">
-                            ຮອງຮັບ PNG, JPG ຂະໜາດບໍ່ເກີນ 5MB
+                            {t("product.imageHint")}
                           </p>
                         </div>
                       </>
@@ -200,8 +202,8 @@ export default function EditProduct({
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Input
-                    label="ຊື່ສິນຄ້າ"
-                    placeholder="ປ້ອນຊື່ສິນຄ້າ"
+                    label={t("settings.common.nameLabel")}
+                    placeholder={t("settings.common.nameLabel")}
                     variant="bordered"
                     labelPlacement="outside"
                     className="col-span-1 md:col-span-2"
@@ -212,8 +214,8 @@ export default function EditProduct({
                     isRequired
                   />
                   <Select
-                    label="ປະເພດບາໂຄດ"
-                    placeholder="ເລືອກປະເພດບาໂຄດ"
+                    label={t("product.barcodeType")}
+                    placeholder={t("product.barcodeType")}
                     variant="bordered"
                     labelPlacement="outside"
                     selectedKeys={formData.isBarcode ? ["yes"] : ["no"]}
@@ -226,12 +228,12 @@ export default function EditProduct({
                       }));
                     }}
                   >
-                    <SelectItem key={"yes"}>ມີบາໂຄດ</SelectItem>
-                    <SelectItem key={"no"}>ບໍ່ມີບາໂຄດ</SelectItem>
+                    <SelectItem key={"yes"}>{t("product.hasBarcode")}</SelectItem>
+                    <SelectItem key={"no"}>{t("product.noBarcode")}</SelectItem>
                   </Select>
                   <Input
-                    label="ບາໂຄດ"
-                    placeholder="ປ້ອນບາໂຄດ"
+                    label={t("product.barcode")}
+                    placeholder={t("product.barcode")}
                     variant="bordered"
                     labelPlacement="outside"
                     startContent={<Barcode size={18} className="text-default-400" />}
@@ -242,8 +244,8 @@ export default function EditProduct({
                     isDisabled={!formData.isBarcode}
                   />
                   <Select
-                    label="ໝວດໝູ່"
-                    placeholder="ເລືອກໝວດໝູ່"
+                    label={t("product.category")}
+                    placeholder={t("product.category")}
                     variant="bordered"
                     labelPlacement="outside"
                     startContent={<Tag size={18} className="text-default-400" />}
@@ -261,7 +263,7 @@ export default function EditProduct({
                     ))}
                   </Select>
                   <Input
-                    label="ຕົ້ນທຶນ"
+                    label={t("product.cost")}
                     placeholder="0"
                     type="text"
                     variant="bordered"
@@ -273,7 +275,7 @@ export default function EditProduct({
                     }
                   />
                   <Input
-                    label="ລາຄาຂາຍ"
+                    label={t("product.price")}
                     placeholder="0"
                     type="text"
                     variant="bordered"
@@ -286,7 +288,7 @@ export default function EditProduct({
                     isRequired
                   />
                   <Input
-                    label="ຈຳນວນໃນສາງ"
+                    label={t("product.stockQty")}
                     placeholder="0"
                     type="text"
                     variant="bordered"
@@ -302,7 +304,7 @@ export default function EditProduct({
             </ModalBody>
             <ModalFooter>
               <Button variant="flat" color="danger" onPress={onModalClose}>
-                ຍົກເລີກ
+                {t("settings.common.cancel")}
               </Button>
               <Button
                 color="primary"

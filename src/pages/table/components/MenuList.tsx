@@ -1,5 +1,6 @@
 import React from "react";
 import { Card, CardBody, CardFooter, Image } from "@heroui/react";
+import { useTranslation } from "react-i18next";
 import { Plus } from "lucide-react";
 import clsx from "clsx";
 import EmptyState from "@/components/common/empty-state";
@@ -22,11 +23,13 @@ export const MenuList: React.FC<MenuListProps> = ({
   addToCart,
   cart,
 }) => {
+  const { t } = useTranslation();
+
   if (!isLoadingProducts && products.length === 0) {
     return (
       <EmptyState
-        message="ບໍ່ພົບລາຍການສິນຄ້າ"
-        description="ລອງຄົ້ນຫາດ້ວຍຄຳສັບອື່ນ"
+        message={t("table.menu.emptyProducts")}
+        description={t("table.menu.emptyProductsDesc")}
       />
     );
   }
@@ -71,8 +74,8 @@ export const MenuList: React.FC<MenuListProps> = ({
                   )}
                 >
                   {product.stockQty > 0
-                    ? `ຍັງເຫຼືອ: ${product.stockQty}`
-                    : "ໝົດແລ້ວ"}
+                    ? t("table.menu.remaining", { count: product.stockQty })
+                    : t("table.menu.outOfStock")}
                 </div>
               </div>
               <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 flex items-center justify-center">
@@ -97,7 +100,7 @@ export const MenuList: React.FC<MenuListProps> = ({
                 <p className="text-primary font-black text-[11px] lg:text-xs whitespace-nowrap">
                   {formatNumber(product.price)}{" "}
                   <span className="text-[8px] lg:text-[9px] font-medium text-default-400">
-                    ກີບ
+                    {t("table.cart.kip")}
                   </span>
                 </p>
               </div>

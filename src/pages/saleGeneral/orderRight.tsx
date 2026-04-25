@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import clsx from "clsx";
 import {
   Button,
@@ -31,6 +32,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
   setIsMinimized,
   onPaymentOpen,
 }) => {
+  const { t } = useTranslation();
   const {
     cart,
     removeFromCart,
@@ -80,7 +82,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
         <div className="px-4 py-2 border-b border-divider flex items-center justify-between bg-primary/5">
           <div className="flex items-center gap-2 font-black text-base lg:text-lg text-primary">
             <ShoppingCart size={20} />
-            <span>ລາຍການທີ່ເລືອກ</span>
+            <span>{t("sale.selectedItems")}</span>
             <Chip color="primary" size="sm" variant="flat" className="font-bold">
               {cart.length}
             </Chip>
@@ -126,7 +128,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                 </div>
                 <div className="flex justify-between items-center mt-1">
                   <span className="text-primary font-black text-xs lg:text-sm">
-                    {formatNumber(item.price * item.quantity)} <span className="text-[10px] font-normal">ກີບ</span>
+                    {formatNumber(item.price * item.quantity)} <span className="text-[10px] font-normal">{t("sale.kip")}</span>
                   </span>
                   <div className="flex items-center gap-1 bg-default-100 rounded-lg p-0.5 border border-default-200">
                     <Button
@@ -168,7 +170,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
           {isEmpty && (
             <div className="flex flex-col items-center justify-center h-full opacity-40 py-10">
               <ShoppingCart size={48} className="mb-2" />
-              <p className="font-bold">ຍັງບໍ່ມີລາຍການ</p>
+              <p className="font-bold">{t("sale.noItems")}</p>
             </div>
           )}
         </ScrollShadow>
@@ -176,9 +178,9 @@ export const OrderRight: React.FC<OrderRightProps> = ({
         <div className="p-4 border-t border-divider bg-default-50/80 backdrop-blur-md">
           <div className="space-y-2 mb-4">
             <div className="flex justify-between items-center font-black">
-              <span className="text-default-700">ທັງໝົດ:</span>
+              <span className="text-default-700">{t("sale.totalSummary")}</span>
               <span className="text-primary text-xl lg:text-2xl">
-                {formatNumber(subtotal)} <span className="text-xs font-normal">ກີບ</span>
+                {formatNumber(subtotal)} <span className="text-xs font-normal">{t("sale.kip")}</span>
               </span>
             </div>
           </div>
@@ -192,7 +194,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
               startContent={<Trash2 size={18} />}
               isDisabled={isEmpty}
             >
-              ຍົກເລີກ
+              {t("sale.cancel")}
             </Button>
             <Button
               color="primary"
@@ -201,7 +203,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
               onPress={onPaymentOpen}
               isDisabled={isEmpty}
             >
-              ຕໍ່ໄປ
+              {t("sale.next")}
             </Button>
           </div>
         </div>
@@ -219,8 +221,8 @@ export const OrderRight: React.FC<OrderRightProps> = ({
       <ConfirmModal
         isOpen={isRemoveOpen}
         onOpenChange={onRemoveOpenChange}
-        title="ຢືນຢັນການລົບ?"
-        message={`ທ່ານຕ້ອງການລົບລາຍການ "${itemToRemove?.name}" ອອກແທ້ຫຼືບໍ່?`}
+        title={t("sale.confirmRemove")}
+        message={t("sale.confirmRemoveItem", { name: itemToRemove?.name })}
         onConfirm={confirmRemove}
         color="danger"
         icon={<Trash2 size={24} />}
@@ -230,8 +232,8 @@ export const OrderRight: React.FC<OrderRightProps> = ({
       <ConfirmModal
         isOpen={isClearOpen}
         onOpenChange={onClearOpenChange}
-        title="ຢືນຢັນການລ້າງຕະກ້າ?"
-        message="ທ່ານຕ້ອງການລ້າງລາຍການທັງໝົດໃນຕະກ້າແທ້ຫຼືບໍ່?"
+        title={t("sale.confirmClear")}
+        message={t("sale.confirmClearMsg")}
         onConfirm={confirmClear}
         color="danger"
         icon={<Trash2 size={24} />}

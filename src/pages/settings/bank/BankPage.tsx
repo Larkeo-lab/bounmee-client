@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef, type ChangeEvent } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Table,
   TableHeader,
@@ -34,6 +35,7 @@ import EmptyState from "@/components/common/empty-state";
 import ConfirmModal from "@/components/common/popup-confirm";
 
 export default function BankPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const {
     isOpen: isCreateOpen,
@@ -232,7 +234,7 @@ export default function BankPage() {
       <div className="flex justify-center gap-8 mb-4">
         {/* Logo Upload */}
         <div className="flex flex-col items-center gap-2">
-          <p className="text-tiny text-default-500 font-medium">ຮູບໂລໂກ້</p>
+          <p className="text-tiny text-default-500 font-medium">{t("settings.bank.logo")}</p>
           <div
             onClick={() => fileInputRef.current?.click()}
             className={`
@@ -259,7 +261,7 @@ export default function BankPage() {
             ) : (
               <div className="flex flex-col items-center gap-1 text-default-400">
                 <Upload size={20} />
-                <span className="text-tiny">ອັບໂຫລດ</span>
+                <span className="text-tiny">{t("settings.common.upload")}</span>
               </div>
             )}
             <input
@@ -278,14 +280,14 @@ export default function BankPage() {
               startContent={<X size={14} />}
               onPress={removeImage}
             >
-              ລົບຮູບ
+              {t("settings.common.remove")}
             </Button>
           )}
         </div>
 
         {/* QR Code Upload */}
         <div className="flex flex-col items-center gap-2">
-          <p className="text-tiny text-default-500 font-medium">QR Code ຮັບເງິນ</p>
+          <p className="text-tiny text-default-500 font-medium">{t("settings.bank.qr")}</p>
           <label className="cursor-pointer">
             <div
               className={`
@@ -312,7 +314,7 @@ export default function BankPage() {
               ) : (
                 <div className="flex flex-col items-center gap-1 text-default-400">
                   <Upload size={20} />
-                  <span className="text-tiny">ອັບໂຫລດ QR</span>
+                  <span className="text-tiny">{t("settings.common.upload")} QR</span>
                 </div>
               )}
               <input
@@ -331,15 +333,15 @@ export default function BankPage() {
               startContent={<X size={14} />}
               onPress={removeQrCode}
             >
-              ລົບ QR
+              {t("settings.common.remove")} QR
             </Button>
           )}
         </div>
       </div>
 
       <Input
-        label="ຊື່ທະນາຄານ"
-        placeholder="ລະບຸຊື່ທະນາຄານ"
+        label={t("settings.bank.bankName")}
+        placeholder={t("settings.bank.bankNamePlaceholder")}
         variant="bordered"
         value={formData.name}
         onValueChange={(val) => setFormData({ ...formData, name: val })}
@@ -347,7 +349,7 @@ export default function BankPage() {
       />
 
       <div className="flex items-center justify-between px-1">
-        <span className="text-small font-medium">ເປີດນຳໃຊ້</span>
+        <span className="text-small font-medium">{t("settings.common.active")}</span>
         <Switch
           isSelected={formData.isActive}
           onValueChange={(val) => setFormData({ ...formData, isActive: val })}
@@ -362,10 +364,10 @@ export default function BankPage() {
         <div>
           <h1 className="text-2xl font-bold text-primary flex items-center gap-2">
             <Landmark size={28} />
-            ຈັດການທະນາຄານ
+            {t("settings.bank.title")}
           </h1>
           <p className="text-default-500">
-            ຈັດການຂໍ້ມູນທະນາຄານສຳລັບຮັບຜ່ານ QR Code
+            {t("settings.bank.subtitle")}
           </p>
         </div>
         <Button
@@ -374,7 +376,7 @@ export default function BankPage() {
           onPress={handleCreateOpen}
           className="font-bold h-12 px-6 shadow-lg shadow-primary/30"
         >
-          ເພີ່ມທະນາຄານໃໝ່
+          {t("settings.bank.addTitle")}
         </Button>
       </div>
 
@@ -382,14 +384,14 @@ export default function BankPage() {
         <Input
           isClearable
           className="w-full sm:max-w-md"
-          placeholder="ຄົ້ນຫາທະນາຄານ..."
+          placeholder={t("settings.common.search")}
           startContent={<Search className="text-default-400" size={18} />}
           value={searchQuery}
           onValueChange={setSearchQuery}
           variant="bordered"
         />
         <div className="text-default-400 text-sm">
-          ທັງໝົດ {filteredItems.length} ລາຍການ
+          {t("settings.common.total", { count: filteredItems.length })}
         </div>
       </div>
 
@@ -416,10 +418,10 @@ export default function BankPage() {
         }
       >
         <TableHeader>
-          <TableColumn>ຮູບໂລໂກ້</TableColumn>
-          <TableColumn>ຊື່ທະນາຄານ</TableColumn>
-          <TableColumn>ສະຖານະ</TableColumn>
-          <TableColumn className="text-center">ຈັດການ</TableColumn>
+          <TableColumn>{t("settings.bank.logo")}</TableColumn>
+          <TableColumn>{t("settings.bank.bankName")}</TableColumn>
+          <TableColumn>{t("settings.common.status")}</TableColumn>
+          <TableColumn className="text-center">{t("settings.common.actions")}</TableColumn>
         </TableHeader>
         <TableBody isLoading={isLoading} emptyContent={<EmptyState />}>
           {items.map((bank) => (
@@ -495,12 +497,12 @@ export default function BankPage() {
           {(onClose) => (
             <>
               <ModalHeader className="flex flex-col gap-1">
-                ເພີ່ມທະນາຄານໃໝ່
+                {t("settings.bank.addTitle")}
               </ModalHeader>
               <ModalBody>{bankForm}</ModalBody>
               <ModalFooter>
                 <Button variant="light" onPress={onClose}>
-                  ຍົກເລີກ
+                  {t("settings.common.cancel")}
                 </Button>
                 <Button
                   color="primary"
@@ -511,7 +513,7 @@ export default function BankPage() {
                   }
                   isDisabled={!formData.name}
                 >
-                  ບັນທຶກ
+                  {t("settings.common.save")}
                 </Button>
               </ModalFooter>
             </>
@@ -530,12 +532,12 @@ export default function BankPage() {
           {(onClose) => (
             <>
               <ModalHeader className="flex flex-col gap-1">
-                ແກ້ໄຂຂໍ້ມູນທະນາຄານ
+                {t("settings.bank.editTitle")}
               </ModalHeader>
               <ModalBody>{bankForm}</ModalBody>
               <ModalFooter>
                 <Button variant="light" onPress={onClose}>
-                  ຍົກເລີກ
+                  {t("settings.common.cancel")}
                 </Button>
                 <Button
                   color="primary"
@@ -546,7 +548,7 @@ export default function BankPage() {
                   }
                   isDisabled={!formData.name}
                 >
-                  ອັບເດດ
+                  {t("settings.common.update")}
                 </Button>
               </ModalFooter>
             </>
@@ -558,9 +560,9 @@ export default function BankPage() {
       <ConfirmModal
         isOpen={isDeleteOpen}
         onOpenChange={onDeleteOpenChange}
-        title="ຢືນຢັນການລຶບ"
-        message={`ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບທະນາຄານ ${selectedBank?.name}? ການກະທຳນີ້ບໍ່ສາມາດກັບຄືນໄດ້.`}
-        confirmText="ລຶບຂໍ້ມູນ"
+        title={t("settings.common.confirmDelete")}
+        message={t("settings.common.confirmDeleteMsg")}
+        confirmText={t("settings.common.delete")}
         onConfirm={() => handleDeleteSubmit(onDeleteClose)}
         icon={<Trash2 size={24} />}
         color="danger"
@@ -570,9 +572,9 @@ export default function BankPage() {
       <ConfirmModal
         isOpen={isPendingOpen}
         onOpenChange={onPendingOpenChange}
-        title="ບໍ່ສາມາດເພີ່ມໄດ້"
-        message="ທ່ານຍັງບໍ່ໄດ້ຍ້ອມຮັບຈາກເຈົ້າຂອງກະລູນາຕິດຕໍ່ຫາເບີ 2099999999"
-        confirmText="ຕົກລົງ"
+        title={t("settings.common.pendingTitle")}
+        message={t("settings.common.pendingMsg")}
+        confirmText={t("settings.common.ok")}
         onConfirm={onPendingClose}
         color="warning"
       />
@@ -581,9 +583,9 @@ export default function BankPage() {
       <ConfirmModal
         isOpen={isRejectedOpen}
         onOpenChange={onRejectedOpenChange}
-        title="ບໍ່ສາມາດສ້າງໄດ້"
-        message="ການສະໝັກຂອງທ່ານຖືກປະຕິເສດ"
-        confirmText="ຕົກລົງ"
+        title={t("settings.common.rejectedTitle")}
+        message={t("settings.common.rejectedMsg")}
+        confirmText={t("settings.common.ok")}
         onConfirm={onRejectedClose}
         color="danger"
       />

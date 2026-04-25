@@ -8,10 +8,12 @@ import {
   DropdownItem,
 } from "@heroui/react";
 import ModalConfirm from "./common/modal-confirm";
+import { useTranslation } from "react-i18next";
 import { Info, LogOut } from "lucide-react";
 import { getDisplayImageUrl } from "@/lib/utils";
 
 export default function ProfileDropdown() {
+  const { t } = useTranslation();
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const { logout, user: userProfile } = useAuth();
 
@@ -35,6 +37,10 @@ export default function ProfileDropdown() {
               size: "sm",
             }}
             className="transition-transform cursor-pointer"
+            classNames={{
+              name: "hidden sm:block",
+              description: "hidden sm:block",
+            }}
             description={userProfile?.user?.email}
             name={
               <p className="font-bold">
@@ -64,7 +70,7 @@ export default function ProfileDropdown() {
             onPress={() => setTimeout(onOpen, 100)}
             startContent={<LogOut size={18} />}
           >
-            ອອກຈາກລະບົບ
+            {t("navigation.logout")}
           </DropdownItem>
         </DropdownMenu>
       </Dropdown>
@@ -74,10 +80,10 @@ export default function ProfileDropdown() {
         isOpen={isOpen}
         onOpenChange={onOpenChange}
         onConfirm={handleLogout}
-        confirmText="ຕ້ອງການອອກ"
-        cancelText="ບໍ່ຕ້ອງການ"
-        content="ທ່ານຕ້ອງການອອກຈາກລະບົບແທ້ບໍ່?"
-        title="ຢືນຢັນອອກຈາກລະບົບ"
+        confirmText={t("auth.logoutConfirm")}
+        cancelText={t("auth.logoutCancel")}
+        content={t("auth.logoutConfirmMsg")}
+        title={t("auth.logoutConfirmTitle")}
         icon={<Info size={28} />}
       />
     </>

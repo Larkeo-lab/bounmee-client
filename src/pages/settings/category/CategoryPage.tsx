@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Table,
   TableHeader,
@@ -29,6 +30,7 @@ import EmptyState from "@/components/common/empty-state";
 import ConfirmModal from "@/components/common/popup-confirm";
 
 export default function CategoryPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const {
     isOpen: isCreateOpen,
@@ -174,10 +176,10 @@ export default function CategoryPage() {
         <div>
           <h1 className="text-2xl font-bold text-primary flex items-center gap-2">
             <LayoutGrid size={28} />
-            ຈັດການປະເພດສິນຄ້າ
+            {t("settings.category.title")}
           </h1>
           <p className="text-default-500">
-            ຈັດການໝວດໝູ່ສິນຄ້າທັງໝົດໃນຮ້ານຂອງທ່ານ
+            {t("settings.category.subtitle")}
           </p>
         </div>
         <Button
@@ -186,7 +188,7 @@ export default function CategoryPage() {
           onPress={handleCreateOpen}
           className="font-bold h-12 px-6 shadow-lg shadow-primary/30"
         >
-          ເພີ່ມປະເພດສິນຄ້າໃໝ່
+          {t("settings.category.addTitle")}
         </Button>
       </div>
 
@@ -194,14 +196,14 @@ export default function CategoryPage() {
         <Input
           isClearable
           className="w-full sm:max-w-md"
-          placeholder="ຄົ້ນຫາປະເພດສິນຄ້າ..."
+          placeholder={t("settings.common.search")}
           startContent={<Search className="text-default-400" size={18} />}
           value={searchQuery}
           onValueChange={setSearchQuery}
           variant="bordered"
         />
         <div className="text-default-400 text-sm">
-          ທັງໝົດ {filteredItems.length} ລາຍການ
+          {t("settings.common.total", { count: filteredItems.length })}
         </div>
       </div>
 
@@ -228,10 +230,9 @@ export default function CategoryPage() {
         }
       >
         <TableHeader>
-          <TableColumn>#</TableColumn>
-          <TableColumn>ຊື່ປະເພດສິນຄ້າ</TableColumn>
-          {/* <TableColumn>ຄຳອະທິບາຍ</TableColumn> */}
-          <TableColumn className="text-center">ຈັດການ</TableColumn>
+          <TableColumn>{t("settings.common.no")}</TableColumn>
+          <TableColumn>{t("settings.common.nameLabel")}</TableColumn>
+          <TableColumn className="text-center">{t("settings.common.actions")}</TableColumn>
         </TableHeader>
         <TableBody isLoading={isLoading} emptyContent={<EmptyState />}>
           {items.map((category,index) => (
@@ -278,13 +279,13 @@ export default function CategoryPage() {
           {(onClose) => (
             <>
               <ModalHeader className="flex flex-col gap-1">
-                ເພີ່ມປະເພດສິນຄ້າໃໝ່
+                {t("settings.category.addTitle")}
               </ModalHeader>
               <ModalBody>
                 <div className="space-y-4">
                   <Input
-                    label="ຊື່ປະເພດສິນຄ້າ"
-                    placeholder="ລະບຸຊື່ປະເພດສິນຄ້າ"
+                    label={t("settings.category.nameLabel")}
+                    placeholder={t("settings.category.namePlaceholder")}
                     variant="bordered"
                     value={formData.name}
                     onValueChange={(val) =>
@@ -304,7 +305,7 @@ export default function CategoryPage() {
               </ModalBody>
               <ModalFooter>
                 <Button variant="light" onPress={onClose}>
-                  ຍົກເລີກ
+                  {t("settings.common.cancel")}
                 </Button>
                 <Button
                   color="primary"
@@ -312,7 +313,7 @@ export default function CategoryPage() {
                   isLoading={createCategoryMutation.isPending}
                   isDisabled={!formData.name}
                 >
-                  ບັນທຶກ
+                  {t("settings.common.save")}
                 </Button>
               </ModalFooter>
             </>
@@ -331,13 +332,13 @@ export default function CategoryPage() {
           {(onClose) => (
             <>
               <ModalHeader className="flex flex-col gap-1">
-                ແກ້ໄຂປະເພດສິນຄ້າ
+                {t("settings.category.editTitle")}
               </ModalHeader>
               <ModalBody>
                 <div className="space-y-4">
                   <Input
-                    label="ຊື່ປະເພດສິນຄ້າ"
-                    placeholder="ລະບຸຊື່ປະເພດສິນຄ້າ"
+                    label={t("settings.common.nameLabel")}
+                    placeholder={t("settings.common.namePlaceholder")}
                     variant="bordered"
                     value={formData.name}
                     onValueChange={(val) =>
@@ -357,7 +358,7 @@ export default function CategoryPage() {
               </ModalBody>
               <ModalFooter>
                 <Button variant="light" onPress={onClose}>
-                  ຍົກເລີກ
+                  {t("settings.common.cancel")}
                 </Button>
                 <Button
                   color="primary"
@@ -365,7 +366,7 @@ export default function CategoryPage() {
                   isLoading={updateCategoryMutation.isPending}
                   isDisabled={!formData.name}
                 >
-                  ອັບເດດ
+                  {t("settings.common.update")}
                 </Button>
               </ModalFooter>
             </>
@@ -377,9 +378,9 @@ export default function CategoryPage() {
       <ConfirmModal
         isOpen={isDeleteOpen}
         onOpenChange={onDeleteOpenChange}
-        title="ຢືນຢັນການລຶບ"
-        message={`ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບປະເພດສິນຄ້າ ${selectedCategory?.name}? ການກະທຳນີ້ບໍ່ສາມາດກັບຄືນໄດ້.`}
-        confirmText="ລຶບຂໍ້ມູນ"
+        title={t("settings.common.confirmDelete")}
+        message={t("settings.common.confirmDeleteMsg")}
+        confirmText={t("settings.common.delete")}
         onConfirm={() => handleDeleteSubmit(onDeleteClose)}
         icon={<Trash2 size={24} />}
         color="danger"
@@ -389,9 +390,9 @@ export default function CategoryPage() {
       <ConfirmModal
         isOpen={isPendingOpen}
         onOpenChange={onPendingOpenChange}
-        title="ບໍ່ສາມາດເພີ່ມໄດ້"
-        message="ທ່ານຍັງບໍ່ໄດ້ຍ້ອມຮັບຈາກເຈົ້າຂອງກະລູນາຕິດຕໍ່ຫາເບີ 2099999999"
-        confirmText="ຕົກລົງ"
+        title={t("settings.common.pendingTitle")}
+        message={t("settings.common.pendingMsg")}
+        confirmText={t("settings.common.ok")}
         onConfirm={onPendingClose}
         color="warning"
       />

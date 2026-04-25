@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import clsx from "clsx";
 import {
   Card,
@@ -40,6 +41,7 @@ interface FlyingItem {
 }
 
 export default function ProductOrderPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [isMinimized, setIsMinimized] = useState(true);
@@ -66,7 +68,7 @@ export default function ProductOrderPage() {
     const onConnect = () => socket.emit("JOIN:STORE", user.user.storeId);
     const onScanned = (product: Product) => {
       addToCart(product);
-      toast.success(`ຍິງບາໂຄດ: ເພີ່ມ ${product.name} ສຳເລັດ`, {
+      toast.success(t("sale.barcodeAdded", { name: product.name }), {
         duration: 1000,
       });
     };
@@ -116,7 +118,7 @@ export default function ProductOrderPage() {
     // Get position from event target (supporting HeroUI's PressEvent which doesn't have currentTarget)
     const target = event?.target as HTMLElement;
     if (!target) {
-      toast.success(`ເພີ່ມ ${product.name}`, {
+      toast.success(t("sale.itemAdded", { name: product.name }), {
         duration: 800,
         position: "top-center",
       });
@@ -136,14 +138,14 @@ export default function ProductOrderPage() {
       setFlyingItems((prev) => prev.filter((item) => item.id !== newItem.id));
     }, 1000);
 
-    toast.success(`ເພີ່ມ ${product.name}`, {
+    toast.success(t("sale.itemAdded", { name: product.name }), {
       duration: 800,
       position: "top-center",
     });
   };
 
   const categories = [
-    { id: "all", label: "ທັງໝົດ" },
+    { id: "all", label: t("sale.categoryAll") },
     ...(categoryResponse?.data?.map((cat: Category) => ({
       id: cat.id,
       label: cat.name,
@@ -165,7 +167,7 @@ export default function ProductOrderPage() {
                 size="sm"
                 variant="bordered"
                 className="w-full lg:max-w-[400px]"
-                placeholder="ຄົ້ນຫາລາຍການ ຫຼື ຍິງບາໂຄດ..."
+                placeholder={t("sale.searchPlaceholder")}
                 startContent={<Search className="text-default-400" size={18} />}
                 endContent={<Barcode className="text-default-400" size={18} />}
                 value={searchQuery}
@@ -235,8 +237,8 @@ export default function ProductOrderPage() {
           {!isLoadingProducts && products.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full py-10">
               <EmptyState
-                message="ບໍ່ພົບລາຍການສິນຄ້າ"
-                description="ລອງຄົ້ນຫາດ້ວຍຄຳສັບອື່ນ ຫຼື ປ່ຽນໝວດໝູ່"
+                message={t("sale.emptyProducts")}
+                description={t("sale.emptyProductsDesc")}
               />
             </div>
           ) : (
@@ -260,7 +262,7 @@ export default function ProductOrderPage() {
                               : "bg-red-500/80",
                         )}
                       >
-                        {product.stockQty > 0 ? `${product.stockQty}` : `ໝົດ`}
+                        {product.stockQty > 0 ? `${product.stockQty}` : t("sale.outOfStock")}
                       </div>
                     </div>
                     <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 flex items-center justify-center">
@@ -284,7 +286,7 @@ export default function ProductOrderPage() {
                     <p className="text-primary font-black text-[12px] lg:text-[14px] whitespace-nowrap">
                       {formatNumber(product.price)}{" "}
                       <span className="text-[8px] lg:text-[9px] font-medium text-default-400">
-                        ກີບ
+                        {t("sale.kip")}
                       </span>
                     </p>
                   </CardFooter>

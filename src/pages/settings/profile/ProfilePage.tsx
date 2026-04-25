@@ -26,7 +26,7 @@ import { getDisplayImageUrl } from "@/lib/utils";
 
 export default function ProfilePage() {
   const { user } = useAuth();
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { data: storeResponse, isLoading } = useGetStoreDetail(
     user?.user?.store?.id,
   );
@@ -115,8 +115,6 @@ export default function ProfilePage() {
     );
   }
 
-  console.log("formData", formData);
-
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center gap-3 mb-6">
@@ -124,8 +122,8 @@ export default function ProfilePage() {
           <StoreIcon size={28} />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-primary">ຈັດການໂປຟາຍຮ້ານ</h1>
-          <p className="text-default-500">ອັບເດດຂໍ້ມູນພື້ນຖານຂອງຮ້านທ່ານ</p>
+          <h1 className="text-2xl font-bold text-primary">{t("settings.storeProfile.title")}</h1>
+          <p className="text-default-500">{t("settings.storeProfile.subtitle")}</p>
         </div>
       </div>
 
@@ -135,7 +133,7 @@ export default function ProfilePage() {
             {/* Logo Section */}
             <div className="flex flex-col items-center gap-4">
               <label className="text-sm font-medium text-default-700 w-full text-center md:text-left">
-                ໂລໂກ້ຮ້ານ
+                {t("settings.bank.logo")}
               </label>
               <div
                 onClick={() => fileInputRef.current?.click()}
@@ -163,7 +161,7 @@ export default function ProfilePage() {
                 ) : (
                   <div className="flex flex-col items-center gap-2 text-default-400">
                     <Upload size={32} />
-                    <span className="text-sm">ອັບໂຫຼດໂລໂກ້</span>
+                    <span className="text-sm">{t("settings.common.upload")} {t("settings.bank.logo")}</span>
                   </div>
                 )}
                 <input
@@ -182,7 +180,7 @@ export default function ProfilePage() {
                   startContent={<X size={16} />}
                   onPress={removeImage}
                 >
-                  ລົບຮູບ
+                  {t("settings.common.remove")}
                 </Button>
               )}
             </div>
@@ -191,8 +189,8 @@ export default function ProfilePage() {
             <div className="flex-1 space-y-6">
               <div className="grid grid-cols-1 gap-6">
                 <Input
-                  label="ຊື່ຮ້ານ"
-                  placeholder="ລະບຸຊື່ຮ້ານຂອງທ່ານ"
+                  label={t("auth.storeName")}
+                  placeholder={t("auth.storeNamePlaceholder")}
                   variant="bordered"
                   labelPlacement="outside"
                   value={formData.name}
@@ -205,8 +203,8 @@ export default function ProfilePage() {
                 />
 
                 <Input
-                  label="ເບີໂທລະສັບ"
-                  placeholder="ລະບຸເບີໂທຕິດຕໍ່"
+                  label={t("auth.phone")}
+                  placeholder={t("auth.phonePlaceholder")}
                   variant="bordered"
                   labelPlacement="outside"
                   value={formData.phone}
@@ -219,8 +217,8 @@ export default function ProfilePage() {
                 />
 
                 <Input
-                  label="ອີເມວ"
-                  placeholder="ລະບຸອີເມວຂອງທ່ານ"
+                  label={t("auth.email")}
+                  placeholder={t("auth.emailOrUsernamePlaceholder")}
                   variant="bordered"
                   labelPlacement="outside"
                   value={formData.email}
@@ -231,8 +229,8 @@ export default function ProfilePage() {
                 />
 
                 <Input
-                  label="ແຂວງ (Province)"
-                  placeholder="ແຂວງ"
+                  label={t("auth.province")}
+                  placeholder={t("auth.province")}
                   variant="bordered"
                   labelPlacement="outside"
                   value={formData.province}
@@ -243,8 +241,8 @@ export default function ProfilePage() {
                 />
 
                 <Input
-                  label="ເມືອງ (District)"
-                  placeholder="ເມືອງ"
+                  label={t("auth.district")}
+                  placeholder={t("auth.district")}
                   variant="bordered"
                   labelPlacement="outside"
                   value={formData.district}
@@ -255,8 +253,8 @@ export default function ProfilePage() {
                 />
 
                 <Textarea
-                  label="ລາຍລະອຽດທີ່ຢູ່"
-                  placeholder="ລະບຸທີ່ຢູ່ຂອງຮ້ານ"
+                  label={t("auth.address")}
+                  placeholder={t("auth.addressPlaceholder")}
                   variant="bordered"
                   labelPlacement="outside"
                   value={formData.address}
@@ -279,7 +277,7 @@ export default function ProfilePage() {
                   onPress={handleSubmit}
                   isLoading={updateStoreMutation.isPending}
                 >
-                  ບັນທຶກการป່ຽນແປງ
+                  {t("settings.common.save")}
                 </Button>
               </div>
             </div>

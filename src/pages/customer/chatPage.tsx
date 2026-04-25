@@ -11,6 +11,7 @@ import {
   ScrollShadow,
   Image,
 } from "@heroui/react";
+import { useTranslation } from "react-i18next";
 import { Send, MessageCircle, Clock, Check, CheckCheck } from "lucide-react";
 import { socket } from "@/config/socket";
 import { API_ENDPOINTS } from "@/config/api";
@@ -33,6 +34,7 @@ export default function ChatPage({
   tableId,
   logoUrl,
 }: ChatPageProps) {
+  const { t } = useTranslation();
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<any[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -283,10 +285,10 @@ export default function ChatPage({
                 )}
                 <div className="text-left">
                   <h3 className="text-lg font-black text-default-900 tracking-tight">
-                    ຕິດຕໍ່ພະນັກງານ
+                    {t("customer.contactStaff")}
                   </h3>
                   <p className="text-[10px] text-default-500 font-bold uppercase tracking-widest text-left">
-                    Table: {tableName}
+                    {t("chat.tablePrefix")}: {tableName}
                   </p>
                 </div>
               </div>
@@ -302,10 +304,10 @@ export default function ChatPage({
                       <MessageCircle size={48} className="text-default-400" />
                     </div>
                     <p className="text-base font-black text-default-600 mb-1 line-clamp-1">
-                      ເລີ່ມການສົນທະນາຂອງທ່ານ
+                      {t("customer.startChat")}
                     </p>
                     <p className="text-xs text-default-400 max-w-[200px] leading-relaxed line-clamp-2">
-                      ທ່ານສາມາດສົ່ງຂໍ້ຄວາມເພື່ອຕິດຕໍ່ພະນັກງານໄດ້ທີ່ນີ້
+                      {t("customer.chatDesc")}
                     </p>
                   </div>
                 ) : (
@@ -357,7 +359,7 @@ export default function ChatPage({
                       <span className="w-1.5 h-1.5 bg-default-400 rounded-full animate-bounce delay-150"></span>
                     </div>
                     <span className="text-[10px] text-default-400 mt-1 font-medium ml-1">
-                      ພະນັກງານກຳລັງພິມ...
+                      {t("customer.staffTyping")}
                     </span>
                   </div>
                 )}
@@ -367,7 +369,7 @@ export default function ChatPage({
               <div className="w-full flex gap-3 items-center">
                 <Input
                   fullWidth
-                  placeholder="ຂຽນຂໍ້ຄວາມຫາພະນັກງານ..."
+                  placeholder={t("customer.inputPlaceholder")}
                   value={message}
                   onChange={(e) => handleInputChange(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && sendMessage()}

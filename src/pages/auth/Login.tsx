@@ -125,9 +125,9 @@ export default function Login() {
               Dee POS
             </h1>
             <p className="text-xl sm:text-2xl font-light opacity-90 max-w-lg mx-auto">
-              ລະບົບຈັດການການຂາຍອັດສະລິຍະ
+              {t("auth.welcomeMessage")}
               <span className="block text-sm mt-2 opacity-70">
-                Smart POS Management System
+                {t("auth.subtitle")}
               </span>
             </p>
           </div>
@@ -135,11 +135,11 @@ export default function Login() {
           <div className="pt-8 grid grid-cols-2 gap-4 w-full max-w-md">
             <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20">
               <p className="text-2xl font-bold">100%</p>
-              <p className="text-xs opacity-70">Security</p>
+              <p className="text-xs opacity-70">{t("auth.security")}</p>
             </div>
             <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20">
               <p className="text-2xl font-bold">Fast</p>
-              <p className="text-xs opacity-70">Transactions</p>
+              <p className="text-xs opacity-70">{t("auth.fastTransactions")}</p>
             </div>
           </div>
         </div>
@@ -229,7 +229,7 @@ export default function Login() {
                       type="checkbox"
                       className="rounded border-gray-300 text-primary focus:ring-primary"
                     />
-                    <span>Remember me</span>
+                    <span>{t("auth.rememberMe")}</span>
                   </label>
                   <Button
                     variant="light"
@@ -256,7 +256,7 @@ export default function Login() {
 
           <div className="text-center space-y-4">
             <p className="text-sm text-gray-500">
-              Don't have an account?{" "}
+              {t("auth.noAccount")}{" "}
               <Button
                 variant="light"
                 color="primary"

@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import {
   Card,
@@ -33,6 +34,7 @@ const getStatusColor = (status: string) => {
 };
 
 export default function OrderingPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const storeId = user?.user?.storeId;
@@ -40,8 +42,6 @@ export default function OrderingPage() {
   const { data: tablesResponse } = useGetTables(storeId);
   const tables = tablesResponse?.data || [];
 
-  console.log("Current Carts:", carts);
-  console.log("Dismissed Carts:", dismissedCarts);
 
   const activeOrders = useMemo(() => {
     return Object.entries(carts)
@@ -113,17 +113,17 @@ export default function OrderingPage() {
         <div>
           <h1 className="text-2xl font-bold text-primary flex items-center gap-2">
             <Receipt size={28} />
-            ລາຍການອໍເດີ (Ordering)
+            {t("ordering.title")}
           </h1>
           <p className="text-default-500">
-            ເບິ່ງລາຍການສັ່ງຊື້ທັງໝົດທີ່ກຳລັງດຳເນີນການ
+            {t("ordering.desc")}
           </p>
         </div>
 
         <div className="flex items-center gap-4 bg-white dark:bg-gray-800 p-2 pl-5 rounded-2xl border border-divider shadow-sm">
           <div className="flex flex-col items-end">
             <span className="text-[10px] uppercase tracking-wider font-bold text-default-400">
-              ລາຍການລວມ
+              {t("ordering.totalActive")}
             </span>
             <span className="text-xl font-black text-primary leading-none">
               {activeOrders.length}
@@ -140,8 +140,8 @@ export default function OrderingPage() {
         {activeOrders.length === 0 ? (
           <div className="mt-20">
             <EmptyState
-              message="ບໍ່ມີອໍເດີທີ່ກຳລັງເຄື່ອນໄຫວ"
-              description="ເມື່ອມີການສັ່ງອາຫານໃໝ່, ລາຍການຈະປາກົດຢູ່ນີ້"
+              message={t("ordering.noOrders")}
+              description={t("ordering.noOrdersDesc")}
             />
           </div>
         ) : (
@@ -171,10 +171,10 @@ export default function OrderingPage() {
                       </div>
                       <div className="md:hidden flex-grow">
                         <h3 className="font-bold text-lg text-default-800">
-                          ໂຕະ {order.tableName}
+                          {t("ordering.table")} {order.tableName}
                         </h3>
                         <div className="flex items-center gap-1 text-default-400 text-xs font-bold uppercase tracking-wider">
-                          <User size={12} /> {order.capacity} ບ່ອນນັ່ງ
+                          <User size={12} /> {order.capacity} {t("ordering.seats")}
                         </div>
                       </div>
                     </div>
@@ -182,11 +182,11 @@ export default function OrderingPage() {
                     {/* Desktop Table Info */}
                     <div className="hidden md:flex flex-col min-w-[140px]">
                       <h3 className="font-bold text-lg text-default-800 tracking-tight">
-                        ໂຕະ {order.tableName}
+                        {t("ordering.table")} {order.tableName}
                       </h3>
                       <div className="flex items-center gap-1.5 text-default-400 text-[11px] font-bold uppercase tracking-widest mt-0.5">
                         <User size={12} />{" "}
-                        <span>{order.capacity} ບ່ອນນັ່ງ</span>
+                        <span>{order.capacity} {t("ordering.seats")}</span>
                       </div>
                     </div>
 
@@ -217,7 +217,7 @@ export default function OrderingPage() {
                               color="default"
                               className="font-bold text-[10px] h-6"
                             >
-                              +{order.items.length - 5} items
+                              +{order.items.length - 5} {t("ordering.items")}
                             </Chip>
                           )}
                         </div>
@@ -240,12 +240,12 @@ export default function OrderingPage() {
                     <div className="flex items-center justify-between md:justify-end gap-3 md:min-w-[280px] ml-auto">
                       <div className="text-right">
                         <p className="text-[10px] text-default-400 font-bold uppercase tracking-widest leading-tight">
-                          ຍອດລວມ
+                          {t("ordering.total")}
                         </p>
                         <p className="text-xl font-bold text-primary tracking-tight leading-tight">
                           {formatNumber(order.totalAmount)}
                           <span className="text-[10px] ml-1 font-bold opacity-60">
-                            ກີບ
+                            {t("ordering.kip")}
                           </span>
                         </p>
                       </div>
@@ -266,7 +266,7 @@ export default function OrderingPage() {
                             dismissTable(order.tableId);
                           }}
                         >
-                          ປິດການສະແດງ
+                          {t("ordering.dismiss")}
                         </Button>
 
                         <div className="w-10 h-10 bg-default-50 rounded-full flex items-center justify-center text-default-300 group-hover:bg-primary group-hover:text-white transition-all duration-300">

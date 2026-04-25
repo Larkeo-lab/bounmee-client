@@ -74,7 +74,7 @@ export default function KitchenPage() {
         const table = tables.find((t: any) => t.id === tableId);
         tableOrders.push({
           tableId,
-          tableName: table?.name || "ໜ້າຮ້ານ",
+          tableName: table?.name || t("kitchen.shopFloor"),
           items: cookingItems,
         });
       }
@@ -99,13 +99,10 @@ export default function KitchenPage() {
 
   const handleServeItem = (tableId: string, item: CartItem) => {
     if (!isConnected) {
-      toast.error(
-        "⚠️ ຕອນນີ້ Offline! ຂໍ້ມູນການເສີບຈະອັບເດດໄປຍັງเครื่องอื่นເມື່ອເນັດກັບມາ.",
-        {
-          duration: 4000,
-          style: { fontWeight: "bold" },
-        },
-      );
+      toast.error(t("kitchen.offlineWarning"), {
+        duration: 4000,
+        style: { fontWeight: "bold" },
+      });
     }
     const uId = `${item.id}-${item.status}-${item.note || ""}-${tableId}`;
     if (isServing === uId) return;

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { axiosInstance } from "@/lib/axios";
 import { useAuth } from "@/routes/AuthContext";
 import { useGetTables, TableItem } from "@/services/table/useTable";
+import { useTranslation } from "react-i18next";
 import {
   Card,
   CardBody,
@@ -39,6 +40,7 @@ interface Message {
 }
 
 export default function ChatPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { unreadCounts, lastMessages, markAsRead } = useChat();
   const storeId = user?.user?.storeId;
@@ -280,11 +282,11 @@ export default function ChatPage() {
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent flex items-center gap-2">
                 <MessageCircle size={28} className="text-primary" />
-                ສົນທະນາ
+                {t("chat.title")}
               </h2>
             </div>
             <Input
-              placeholder="ຄົ້ນຫາໂຕະ..."
+              placeholder={t("chat.searchPlaceholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               startContent={<Search size={18} className="text-default-400" />}
@@ -331,7 +333,7 @@ export default function ChatPage() {
                         <p
                           className={`font-semibold text-sm ${isSelected ? "text-white" : "text-default-900"}`}
                         >
-                          ໂຕະ {table.name}
+                          {t("chat.tablePrefix")} {table.name}
                         </p>
                         {lastMsg && (
                           <span
@@ -354,7 +356,7 @@ export default function ChatPage() {
                                 : "text-default-400"
                           } ${typingStatus[table.id] ? "text-primary italic animate-pulse" : ""}`}
                         >
-                          {typingStatus[table.id] ? "ລູກຄ້າກຳລັງພິມ..." : (lastMsg?.text || "ບໍ່ມີຂໍ້ຄວາມໃໝ່")}
+                          {typingStatus[table.id] ? t("chat.typing") : (lastMsg?.text || t("chat.noMessages"))}
                         </p>
                         {unreadCount > 0 && !typingStatus[table.id] && (
                           <span
@@ -395,7 +397,7 @@ export default function ChatPage() {
                   </div>
                   <div>
                     <h3 className="font-bold text-lg text-default-900 tracking-tight flex items-center gap-2">
-                      ໂຕະ {selectedTable.name}
+                      {t("chat.tablePrefix")} {selectedTable.name}
                     </h3>
                     <p className="text-xs text-default-500 font-medium flex items-center gap-1">
                       <Hash size={12} /> ID: {selectedTable.id}
@@ -422,11 +424,10 @@ export default function ChatPage() {
                       />
                     </div>
                     <p className="font-bold text-2xl text-default-800 mb-2">
-                      ເລີ່ມການສົນທະນາ
+                      {t("chat.startChat")}
                     </p>
                     <p className="text-sm text-default-500 max-w-[250px]">
-                      ສົ່ງຂໍ້ຄວາມທັກທາຍລູກຄ້າທີ່ໂຕະ {selectedTable.name}{" "}
-                      ໄດ້ເລີຍ!
+                      {t("chat.sendGreeting", { name: selectedTable.name })}
                     </p>
                   </div>
                 ) : (
@@ -525,7 +526,7 @@ export default function ChatPage() {
                 <div className="flex gap-3 items-end mx-auto">
                   <div className="flex-grow relative">
                     <textarea
-                      placeholder="ພິມຂໍ້ຄວາມຂອງທ່ານທີ່ນີ້..."
+                      placeholder={t("chat.inputPlaceholder")}
                       value={inputText}
                       onChange={(e) => handleInputChange(e.target.value)}
                       onKeyDown={(e) => {
@@ -572,7 +573,7 @@ export default function ChatPage() {
                 </div>
                 <div className="text-center mt-2">
                   <p className="text-[10px] text-default-400 font-medium">
-                    ກົດ Enter ເພື່ອສົ່ງ, Shift + Enter ເພື່ອລົງແຖວໃໝ່
+                    {t("chat.inputHint")}
                   </p>
                 </div>
               </div>
@@ -588,11 +589,10 @@ export default function ChatPage() {
                   <LayoutGrid size={48} className="text-primary/70" />
                 </div>
                 <h2 className="text-2xl font-bold bg-gradient-to-br from-default-800 to-default-500 bg-clip-text text-transparent mb-3">
-                  ເລືອກໂຕະເພື່ອເລີ່ມການສົນທະນາ
+                  {t("chat.selectPrompt")}
                 </h2>
                 <p className="text-sm font-medium text-default-500 max-w-[300px] leading-relaxed">
-                  ກະລຸນາເລືອກລາຍການໂຕະຈາກແຖບດ້ານຊ້າຍເພື່ອເບິ່ງຂໍ້ຄວາມ ຫຼື
-                  ຕອບກັບລູກຄ້າ
+                  {t("chat.selectDesc")}
                 </p>
               </div>
             </div>

@@ -1,5 +1,6 @@
 import React from "react";
 import { Button, Checkbox, Image, ScrollShadow, Chip, Input, Tooltip } from "@heroui/react";
+import { useTranslation } from "react-i18next";
 import {
   ShoppingCart,
   Trash2,
@@ -36,18 +37,18 @@ interface OrderRightProps {
   onClearCartOpen: () => void;
 }
 
-const getStatusDisplay = (status: string) => {
+const getStatusDisplay = (status: string, t: any) => {
   switch (status?.toUpperCase()) {
     case "PENDING":
-      return { label: "ລໍຖ້າ", color: "warning" as const };
+      return { label: t("sale.statusPending"), color: "warning" as const };
     case "COOKING":
-      return { label: "ກຳລັງຄົວ", color: "primary" as const };
+      return { label: t("sale.statusCooking"), color: "primary" as const };
     case "SERVED":
-      return { label: "ເສີບແລ້ວ", color: "success" as const };
+      return { label: t("sale.statusServed"), color: "success" as const };
     case "CANCEL":
-      return { label: "ຍົກເລີກ", color: "danger" as const };
+      return { label: t("sale.statusCancel"), color: "danger" as const };
     default:
-      return { label: status || "ລໍຖ້າ", color: "default" as const };
+      return { label: status || t("sale.statusPending"), color: "default" as const };
   }
 };
 
@@ -67,6 +68,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
   onPaymentOpen,
   onClearCartOpen,
 }) => {
+  const { t } = useTranslation();
   const {
     cart,
     updateQuantity,
@@ -160,15 +162,15 @@ export const OrderRight: React.FC<OrderRightProps> = ({
               isDisabled={filteredCart.length === 0}
             >
               <span className="text-xs font-bold text-default-700">
-                ເລືອກທັງໝົດ
+                {t("sale.selectAll")}
               </span>
             </Checkbox>
             <div className="flex flex-wrap items-center gap-1 ml-2">
               {[
-                { value: "ALL", label: "ທັງໝົດ" },
-                { value: "PENDING", label: "ລໍຖ້າ" },
-                { value: "COOKING", label: "ກຳລັງຄົວ" },
-                { value: "SERVED", label: "ເສີບແລ້ວ" },
+                { value: "ALL", label: t("sale.categoryAll") },
+                { value: "PENDING", label: t("sale.statusPending") },
+                { value: "COOKING", label: t("sale.statusCooking") },
+                { value: "SERVED", label: t("sale.statusServed") },
               ].map((status) => (
                 <button
                   key={status.value}
@@ -193,7 +195,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
         {selectedCartItems.length > 0 && (
           <div className="px-3 py-1 bg-primary/10 border-b border-primary/20 animate-in fade-in slide-in-from-top-1 duration-300 flex justify-between items-center">
             <span className="text-xs text-primary font-bold">
-              ເລືອກແລ້ວ: {selectedCartItems.length} ລາຍການ
+              {t("sale.selectedCount", { count: selectedCartItems.length })}
             </span>
           </div>
         )}
@@ -233,11 +235,11 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                     <div className="flex justify-between items-center mt-1">
                       <div className="flex flex-col">
                         <span className="text-primary font-black text-xs lg:text-sm">
-                          {formatNumber(item.price * item.quantity)} <span className="text-[10px] font-normal">ກີບ</span>
+                          {formatNumber(item.price * item.quantity)} <span className="text-[10px] font-normal">{t("sale.kip")}</span>
                         </span>
                         <div className="flex items-center gap-2 mt-1">
                           {(item.status !== "SERVED" || item.note) && (
-                            <Tooltip content={item.status === "SERVED" ? "ເບິ່ງໝາຍເຫດ" : (item.note ? "ແກ້ໄຂໝາຍເຫດ" : "ເພີ່ມໝາຍເຫດ")}>
+                            <Tooltip content={item.status === "SERVED" ? t("sale.viewNote") : (item.note ? t("sale.editNote") : t("sale.addNote"))}>
                               <div
                                 className={clsx(
                                   "p-1 rounded-full cursor-pointer transition-all border",
@@ -254,7 +256,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                             </Tooltip>
                           )}
                           {(() => {
-                            const statusConfig = getStatusDisplay(item.status);
+                            const statusConfig = getStatusDisplay(item.status, t);
                             return (
                               <Chip
                                 size="sm"
@@ -298,17 +300,17 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                           <div className="px-2.5 py-2 bg-warning-50 border border-warning-100 rounded-xl">
                             <p className="text-[10px] text-warning-700 font-bold flex items-center gap-1">
                               <MessageSquare size={12} />
-                              <span>ໝາຍເຫດ:</span>
+                              <span>{t("sale.noteLabel")}</span>
                             </p>
                             <p className="text-[10px] text-warning-600 mt-0.5">
-                              {item.note || "ບໍ່ມີໝາຍເຫດ"}
+                              {item.note || t("sale.noNote")}
                             </p>
                           </div>
                         ) : (
                           <Input
                             size="sm"
                             variant="bordered"
-                            placeholder="ເພີ່ມໝາຍເຫດທີ່ນີ້..."
+                            placeholder={t("sale.notePlaceholder")}
                             defaultValue={item.note || ""}
                             onBlur={(e) => {
                               const val = e.target.value;
@@ -353,7 +355,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
           ) : (
             <div className="flex flex-col items-center justify-center h-full opacity-40 py-10">
               <ShoppingCart size={48} className="mb-2" />
-              <p className="font-bold">ຍັງບໍ່ມີລາຍການ</p>
+              <p className="font-bold">{t("sale.noItems")}</p>
             </div>
           )}
         </ScrollShadow>
@@ -366,7 +368,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
               onClick={() => {
                 if (!isConnected) {
                   toast.error(
-                    "⚠️ ຕອນນີ້ Offline! ອໍເດີ້ຈະຖືກສົ່ງໄປຄົວທັນທີເມື່ອເນັດກັບມາ.",
+                    t("sale.offlineKitchen"),
                     {
                       duration: 4000,
                       style: { fontWeight: "bold" },
@@ -380,7 +382,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                 try {
                   updateStatus(selectedCartItems, "COOKING");
                   setSelectedCartItems([]);
-                  toast.success("ອັບເດດສະຖານະສຳເລັດ");
+                  toast.success(t("sale.updateSuccess"));
 
                   // Play notification sound
                   try {
@@ -404,7 +406,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                 })
               }
             >
-              ສົ່ງໄປຄົວ
+              {t("sale.sendToKitchen")}
             </Button>
             <Button
               color="primary"
@@ -412,7 +414,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
               onClick={() => {
                 if (!isConnected) {
                   toast.error(
-                    "⚠️ ຕອນນີ້ Offline! ຂໍ້ມູນຈະອັບເດດໄປຍັງເຄື່ອງອື່ນເມື່ອເນັດກັບມາ.",
+                    t("sale.offlineSync"),
                     {
                       duration: 4000,
                       style: { fontWeight: "bold" },
@@ -422,7 +424,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                 try {
                   updateStatus(selectedCartItems, "SERVED");
                   setSelectedCartItems([]);
-                  toast.success("ອັບເດດສະຖານະສຳເລັດ");
+                  toast.success(t("sale.updateSuccess"));
                 } catch (error) {
                   toast.error("ເກີດຂໍ້ຜິດພາດໃນການອັບເດດ");
                 }
@@ -438,7 +440,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                 })
               }
             >
-              ເສີບອາຫານ
+              {t("sale.serveFood")}
             </Button>
           </div>
         </div>
@@ -446,21 +448,21 @@ export const OrderRight: React.FC<OrderRightProps> = ({
         <div className="p-4 border-t border-divider bg-default-50/80 backdrop-blur-md">
           <div className="flex flex-col gap-1 mb-3">
              <div className="flex justify-between items-center text-xs text-warning-600 font-bold">
-                <span>ລໍຖ້າ:</span>
-                <span>{formatNumber(statusTotals.PENDING)} ກີບ</span>
+                <span>{t("sale.totalPending")}</span>
+                <span>{formatNumber(statusTotals.PENDING)} {t("sale.kip")}</span>
              </div>
              <div className="flex justify-between items-center text-xs text-primary-600 font-bold">
-                <span>ກຳລັງຄົວ:</span>
-                <span>{formatNumber(statusTotals.COOKING)} ກີບ</span>
+                <span>{t("sale.totalCooking")}</span>
+                <span>{formatNumber(statusTotals.COOKING)} {t("sale.kip")}</span>
              </div>
              <div className="flex justify-between items-center text-xs text-success-600 font-bold">
-                <span>ເສີບແລ້ວ:</span>
-                <span>{formatNumber(statusTotals.SERVED)} ກີບ</span>
+                <span>{t("sale.totalServed")}</span>
+                <span>{formatNumber(statusTotals.SERVED)} {t("sale.kip")}</span>
              </div>
              <div className="flex justify-between items-center font-black pt-2 border-t border-divider mt-1">
-                <span className="text-default-700">ທັງໝົດ:</span>
+                <span className="text-default-700">{t("sale.totalSummary")}</span>
                 <span className="text-primary text-xl lg:text-2xl">
-                  {formatNumber(subtotal)} <span className="text-xs font-normal">ກີບ</span>
+                  {formatNumber(subtotal)} <span className="text-xs font-normal">{t("sale.kip")}</span>
                 </span>
              </div>
           </div>
@@ -474,7 +476,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
               startContent={<Trash2 size={18} />}
               isDisabled={isEmpty}
             >
-              ຍົກເລີກ
+              {t("sale.cancel")}
             </Button>
             <Button
               color="primary"
@@ -483,7 +485,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
               onPress={onPaymentOpen}
               isDisabled={isEmpty || !cart.every(i => i.status === "SERVED" || i.status === "CANCEL")}
             >
-              ຕໍ່ໄປ
+              {t("sale.next")}
             </Button>
           </div>
         </div>

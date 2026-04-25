@@ -13,6 +13,7 @@ import {
   Badge,
   useDisclosure,
 } from "@heroui/react";
+import { useTranslation } from "react-i18next";
 import { Plus, ShoppingCart, MessageCircle } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getDisplayImageUrl } from "@/lib/utils";
@@ -23,6 +24,7 @@ import { socket } from "@/config/socket";
 import ChatPage from "./chatPage";
 
 export default function CustomerMenuPage() {
+  const { t } = useTranslation();
   const { qrCode } = useParams<{ qrCode: string }>();
 
   useEffect(() => {
@@ -224,17 +226,17 @@ export default function CustomerMenuPage() {
     onSuccess: () => {
       setCart([]);
       onCloseCart();
-      toast.success("ສົ່ງອໍເດີສຳເລັດ! ກະລຸນາລໍຖ້າອາຫານຈັກໜ້ອຍ.");
+      toast.success(t("customer.orderSuccess"));
     },
     onError: () => {
-      toast.error("ເກີດຂໍ້ຜິດພາດໃນການສົ່ງອໍເດີ. ລອງໃໝ່ອີກຄັ້ງ!");
+      toast.error(t("customer.orderError"));
     },
   });
 
   const addToCart = (product: any, e?: React.MouseEvent) => {
     console.log("addToCart triggered", { product, hasEvent: !!e });
     if (isTableClosed) {
-      toast.error("ໂຕະຖືກປິດແລ້ວ, ບໍ່ສາມາດສັ່ງອາຫານໄດ້.");
+      toast.error(t("customer.tableClosed"));
       return;
     }
     const existing = cart.find((item) => item.id === product.id);
@@ -242,7 +244,7 @@ export default function CustomerMenuPage() {
 
     if (existingQty >= (product.stockQty || 999)) {
       toast.error(
-        `ຂໍອະໄພ, ສິນຄ້າ "${product.name}" ມີໃນສາງພຽງ ${product.stockQty} ລາຍການ`,
+        t("customer.stockWarning", { name: product.name, qty: product.stockQty }),
       );
       return;
     }
@@ -296,7 +298,7 @@ export default function CustomerMenuPage() {
       }, 1000);
     }
 
-    toast.success(`ເພີ່ມ ${product.name} ລົງກະຕ່າແລ້ວ!`, {
+    toast.success(t("customer.addedToCart", { name: product.name }), {
       duration: 1500,
     });
   };
@@ -309,7 +311,7 @@ export default function CustomerMenuPage() {
           if (item.id === id) {
             if (delta > 0 && item.quantity >= (item.stockQty || 999)) {
               toast.error(
-                `ຂໍອະໄພ, ສິນຄ້າ "${item.name}" ມີໃນສາງພຽງ ${item.stockQty} ລາຍການ`,
+                t("customer.stockWarning", { name: item.name, qty: item.stockQty }),
               );
               return item;
             }
@@ -356,10 +358,10 @@ export default function CustomerMenuPage() {
           <Plus size={40} className="rotate-45" />
         </div>
         <h2 className="text-2xl font-black text-danger uppercase">
-          ບໍ່ພົບຂໍ້ມູນໂຕະ (404)
+          {t("customer.tableNotFound")}
         </h2>
         <p className="text-default-500 mt-2 font-medium">
-          ກະລຸນາກວດສອບ QR Code ຄືນໃໝ່.
+          {t("customer.checkQr")}
         </p>
       </div>
     );
@@ -373,10 +375,10 @@ export default function CustomerMenuPage() {
         </div>
         <div className="space-y-3">
           <h2 className="text-3xl font-black text-danger uppercase tracking-tight">
-            ໂຕະໄດ້ຖືກປິດແລ້ວ
+            {t("customer.tableClosedTitle")}
           </h2>
           <p className="text-default-500 font-medium max-w-xs mx-auto">
-            ຂໍອະໄພ, ໂຕະນີ້ໄດ້ຖືກປິດການບໍລິການແລ້ວ.
+            {t("customer.tableClosedDesc")}
             ກະລຸນາຕິດຕໍ່ພะນັກງານເພື່ອເປີດໂຕະໃໝ່.
           </p>
         </div>
@@ -414,7 +416,7 @@ export default function CustomerMenuPage() {
             {tableData.store?.name}
           </h1>
           <div className="mt-3 bg-primary text-white text-sm font-black px-4 py-1.5 rounded-full shadow-md">
-            ໂຕະ {tableData.name}
+            {t("chat.tablePrefix")} {tableData.name}
           </div>
         </div>
       </header>
@@ -434,7 +436,7 @@ export default function CustomerMenuPage() {
               onPress={() => setSelectedCategory("ALL")}
               className="font-bold"
             >
-              ທັງໝົດ
+              {t("customer.all")}
             </Button>
             {categories.map((cat: any) => (
               <Button
@@ -484,7 +486,7 @@ export default function CustomerMenuPage() {
                       {product.stockQty <= 0 && (
                         <div className="absolute inset-0 bg-black/40 z-10 flex items-center justify-center">
                           <span className="text-white font-bold bg-danger/90 px-2 py-0.5 rounded text-xs">
-                            ໝົດແລ້ວ
+                            {t("customer.soldOut")}
                           </span>
                         </div>
                       )}
@@ -505,7 +507,7 @@ export default function CustomerMenuPage() {
                           totalUsed >= (product.stockQty || 0) || isTableClosed
                         }
                       >
-                        <Plus size={14} className="mr-0.5 sm:mr-1" /> ເພີ່ມ
+                        <Plus size={14} className="mr-0.5 sm:mr-1" /> {t("customer.add")}
                       </Button>
                     </div>
                   </CardBody>

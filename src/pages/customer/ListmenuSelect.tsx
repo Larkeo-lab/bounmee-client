@@ -11,6 +11,7 @@ import {
   Divider,
   Input,
 } from "@heroui/react";
+import { useTranslation } from "react-i18next";
 import { Plus, Minus, CheckCircle, Clock, Utensils, MessageSquare } from "lucide-react";
 import { formatNumber } from "@/utils/numberFormat";
 import { getDisplayImageUrl } from "@/lib/utils";
@@ -29,18 +30,18 @@ interface ListmenuSelectProps {
   updateNote: (id: string, note: string) => void;
 }
 
-const getStatusDisplay = (status: string) => {
+const getStatusDisplay = (status: string, t: any) => {
   switch (status?.toUpperCase()) {
     case "PENDING":
-      return { label: "ລໍຖ້າ (Pending)", color: "warning" as const };
+      return { label: t("customer.status.pending"), color: "warning" as const };
     case "COOKING":
-      return { label: "ກຳລັງຄົວ (Cooking)", color: "primary" as const };
+      return { label: t("customer.status.cooking"), color: "primary" as const };
     case "SERVED":
-      return { label: "ເສີບແລ້ວ (Served)", color: "success" as const };
+      return { label: t("customer.status.served"), color: "success" as const };
     case "CANCEL":
-      return { label: "ຍົກເລີກ (Cancel)", color: "danger" as const };
+      return { label: t("customer.status.cancel"), color: "danger" as const };
     default:
-      return { label: status || "ລໍຖ້າ", color: "default" as const };
+      return { label: status || t("customer.status.pending"), color: "default" as const };
   }
 };
 
@@ -56,6 +57,7 @@ export default function ListmenuSelect({
   isPending,
   updateNote,
 }: ListmenuSelectProps) {
+  const { t } = useTranslation();
   const [activeNoteIds, setActiveNoteIds] = useState<Set<string>>(new Set());
 
   const toggleNote = (id: string) => {
@@ -88,7 +90,7 @@ export default function ListmenuSelect({
           <>
             <ModalHeader className="flex flex-col gap-1 border-b border-gray-100 p-5 pb-4">
               <h3 className="font-black text-xl flex items-center justify-between text-default-800">
-                ລາຍການສັ່ງອາຫານ
+                {t("customer.orderList")}
                 <span className="text-primary text-sm px-3 py-1 bg-primary/10 rounded-full w-auto">
                   ທັງໝົດ {cartTotalItems + (placedOrders?.length || 0)} ລายການ
                 </span>
@@ -99,7 +101,7 @@ export default function ListmenuSelect({
                 {cart.length > 0 && (
                   <div className="flex flex-col gap-3">
                     <h4 className="font-bold text-sm text-default-500 uppercase tracking-widest flex items-center gap-2">
-                      <CheckCircle size={16} /> ລາຍການທີ່ກຳລັງເລືອກ
+                      <CheckCircle size={16} /> {t("customer.selecting")}
                     </h4>
                     <div className="flex flex-col gap-4">
                       {cart.map((item) => (
@@ -151,7 +153,7 @@ export default function ListmenuSelect({
                                         item.quantity >= (item.stockQty || 999)
                                       ) {
                                         toast.error(
-                                          `ຂໍອະໄພ, ສິນຄ້າ "${item.name}" ມີໃນສາງພຽງ ${item.stockQty} ລາຍການ`,
+                                          t("customer.stockWarning", { name: item.name, qty: item.stockQty }),
                                         );
                                         return;
                                       }
@@ -172,7 +174,7 @@ export default function ListmenuSelect({
                                     onPress={() => toggleNote(item.id)}
                                     startContent={<MessageSquare size={12} />}
                                   >
-                                    ເພີ່ມໝາຍເຫດ
+                                    {t("customer.addNote")}
                                   </Button>
                                 </div>
                               )}
@@ -182,7 +184,7 @@ export default function ListmenuSelect({
                             <div className="flex flex-col gap-1.5 mt-1">
                               <Input
                                 size="sm"
-                                placeholder="ໝາຍເຫດ (ເຊັ່ນ: ບໍ່ເຜັດ...)"
+                                placeholder={t("customer.notePlaceholder")}
                                 value={item.note || ""}
                                 onValueChange={(val) => updateNote(item.id, val)}
                                 variant="flat"
@@ -226,12 +228,11 @@ export default function ListmenuSelect({
                 {Array.isArray(placedOrders) && placedOrders.length > 0 && (
                   <div className="flex flex-col gap-3">
                     <h4 className="font-bold text-sm text-success uppercase tracking-widest flex items-center gap-2">
-                      <Clock size={16} /> ລາຍການທີ່ສັ່ງໄປແລ້ວ (
-                      {placedOrders.length})
+                      <Clock size={16} /> {t("customer.alreadyOrdered", { count: placedOrders.length })}
                     </h4>
                     <div className="flex flex-col gap-4">
                       {placedOrders.map((item, index) => {
-                        const statusInfo = getStatusDisplay(item.status);
+                        const statusInfo = getStatusDisplay(item.status, t);
                         return (
                           <div
                             key={`ord-${item.id || index}-${index}`}
@@ -282,7 +283,7 @@ export default function ListmenuSelect({
                 {cart.length === 0 && placedOrders.length === 0 && (
                   <div className="py-12 flex flex-col items-center justify-center text-default-400 gap-3">
                     <Utensils size={48} strokeWidth={1} />
-                    <p className="font-bold">ຍັງບໍ່ມີລາຍການອາຫານ</p>
+                    <p className="font-bold">{t("customer.noOrders")}</p>
                   </div>
                 )}
               </div>
@@ -290,7 +291,7 @@ export default function ListmenuSelect({
             <ModalFooter className="flex-col gap-3 p-5 pt-3 border-t border-gray-100 shadow-[0_-10px_20px_rgba(0,0,0,0.03)] bg-gray-50/50">
               <div className="w-full flex justify-between items-center px-1">
                 <span className="text-default-500 font-semibold text-sm">
-                  ຍອດລວມທັງໝົດ:
+                  {t("customer.grandTotal")}:
                 </span>
                 <div className="text-right">
                   {placedOrders.length > 0 && (
@@ -311,7 +312,7 @@ export default function ListmenuSelect({
                   isLoading={isPending}
                   onPress={submitOrder}
                 >
-                  ຍືນຍັນການສັ່ງອາຫານ
+                  {t("customer.confirmOrder")}
                 </Button>
               )}
             </ModalFooter>

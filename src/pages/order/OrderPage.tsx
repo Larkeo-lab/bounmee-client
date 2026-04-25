@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Table,
   TableHeader,
@@ -45,6 +46,7 @@ import { exportOrdersToExcel } from "@/utils/exportOrder";
 import EmptyState from "@/components/common/empty-state";
 
 export default function OrderPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -146,9 +148,9 @@ export default function OrderPage() {
   const getPaymentMethodLabel = (method: string) => {
     switch (method) {
       case "CASH":
-        return "ເງິນສົດ";
+        return t("order.paymentCash") || "ເງິນສົດ";
       case "TRANSFER":
-        return "ເງິນໂອນ";
+        return t("order.paymentTransfer") || "ເງິນໂອນ";
       default:
         return method;
     }
@@ -161,10 +163,10 @@ export default function OrderPage() {
         <div>
           <h1 className="text-lg sm:text-2xl font-black text-primary flex items-center gap-2">
             <Receipt size={22} className="sm:size-7" />
-            ລາຍການການຂາຍ
+            {t("order.title")}
           </h1>
           <p className="text-[10px] sm:text-xs text-default-500 font-medium">
-            ເບິ່ງປະຫວັດການຂາຍ ແລະ ລາຍລະອຽດແຕ່ລະບິນ
+            {t("order.desc")}
           </p>
         </div>
         <Button
@@ -175,7 +177,7 @@ export default function OrderPage() {
           className="font-bold hidden sm:flex"
           onPress={() => exportOrdersToExcel(orders)}
         >
-          ສົ່ງອອກ (Excel)
+          {t("order.exportExcel")}
         </Button>
       </div>
 
@@ -186,7 +188,7 @@ export default function OrderPage() {
             <CardBody className="p-3 sm:p-4 overflow-hidden relative">
               <div className="relative z-10">
                 <p className="text-blue-100 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider mb-0.5">
-                  ຈຳນວນ Order
+                  {t("order.statTotalOrders")}
                 </p>
                 <h2 className="text-xl sm:text-2xl font-black">
                   {totalOrders}
@@ -204,10 +206,10 @@ export default function OrderPage() {
             <CardBody className="p-3 sm:p-4 overflow-hidden relative">
               <div className="relative z-10">
                 <p className="text-emerald-100 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider mb-0.5">
-                  ລາຍຮັບທັງໝົດ
+                  {t("order.statTotalRevenue")}
                 </p>
                 <h2 className="text-xl sm:text-2xl font-black truncate">
-                  {formatNumber(totalRevenue)} ກີບ
+                  {formatNumber(totalRevenue)} {t("order.kip") || "ກີບ"}
                 </h2>
               </div>
               <Landmark
@@ -222,7 +224,7 @@ export default function OrderPage() {
             <CardBody className="p-2 sm:p-3">
               <div className="flex justify-between items-center mb-1.5">
                 <p className="text-default-400 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider">
-                  ແບ່ງຕາມການຊຳລະ
+                  {t("order.byPayment")}
                 </p>
                 <div className="flex gap-2">
                   <div className="flex items-center gap-1">
@@ -270,7 +272,7 @@ export default function OrderPage() {
         <div className="flex gap-2">
           <Input
             isClearable
-            placeholder="ຄົ້ນຫາເລກທີບິນ..."
+            placeholder={t("order.searchPlaceholder")}
             value={search}
             onValueChange={setSearch}
             startContent={<Search size={16} className="text-primary/60" />}
@@ -317,12 +319,12 @@ export default function OrderPage() {
                 key="today"
                 startContent={<Calendar size={14} className="text-success" />}
               >
-                ມື້ນີ້
+                {t("order.today")}
               </DropdownItem>
-              <DropdownItem key="yesterday">ມື້ວານ</DropdownItem>
-              <DropdownItem key="3days">3 ມື້ຜ່ານມາ</DropdownItem>
-              <DropdownItem key="7days">7 ມື້ຜ່ານມາ</DropdownItem>
-              <DropdownItem key="1month">1 ເດືອນຜ່ານມາ</DropdownItem>
+              <DropdownItem key="yesterday">{t("order.yesterday")}</DropdownItem>
+              <DropdownItem key="3days">{t("order.last3Days")}</DropdownItem>
+              <DropdownItem key="7days">{t("order.last7Days")}</DropdownItem>
+              <DropdownItem key="1month">{t("order.lastMonth")}</DropdownItem>
             </DropdownMenu>
           </Dropdown>
         </div>
@@ -330,7 +332,7 @@ export default function OrderPage() {
         <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-0.5">
           <div className="flex-shrink-0 flex items-center gap-1.5 bg-default-100 p-1 rounded-lg border border-divider">
             <span className="text-[9px] font-black text-default-400 px-1 uppercase">
-              ເລີ່ມ
+              {t("order.start")}
             </span>
             <input
               type="date"
@@ -341,7 +343,7 @@ export default function OrderPage() {
           </div>
           <div className="flex-shrink-0 flex items-center gap-1.5 bg-default-100 p-1 rounded-lg border border-divider">
             <span className="text-[9px] font-black text-default-400 px-1 uppercase">
-              ຈົບ
+              {t("order.end")}
             </span>
             <input
               type="date"
@@ -375,7 +377,7 @@ export default function OrderPage() {
             title={
               <div className="flex items-center gap-2">
                 <LayoutGrid size={18} className={selectedSource === "ALL" ? "text-primary" : "text-default-400"} />
-                <span className="text-sm">ທັງໝົດ</span>
+                <span className="text-sm">{t("order.all")}</span>
                 <Chip
                   size="sm"
                   variant="flat"
@@ -393,7 +395,7 @@ export default function OrderPage() {
               title={
                 <div className="flex items-center gap-2">
                   <Armchair size={18} className={selectedSource === "TABLE" ? "text-primary" : "text-default-400"} />
-                  <span className="text-sm">ມາຈາກໂຕະ</span>
+                  <span className="text-sm">{t("order.fromTable")}</span>
                   {sourceCounts.TABLE > 0 && (
                     <Chip size="sm" variant="flat" className="h-4 text-[9px] font-bold">
                       {sourceCounts.TABLE}
@@ -411,7 +413,7 @@ export default function OrderPage() {
               title={
                 <div className="flex items-center gap-2">
                   <ShoppingBag size={18} className={selectedSource === "DIRECT" ? "text-primary" : "text-default-400"} />
-                  <span className="text-sm">ມາຈາກໜ້າຮ້ານ</span>
+                  <span className="text-sm">{t("order.fromShop")}</span>
                   {sourceCounts.DIRECT > 0 && (
                     <Chip size="sm" variant="flat" className="h-4 text-[9px] font-bold">
                       {sourceCounts.DIRECT}
@@ -429,7 +431,7 @@ export default function OrderPage() {
               title={
                 <div className="flex items-center gap-2">
                   <Coffee size={18} className={selectedSource === "CAFE" ? "text-primary" : "text-default-400"} />
-                  <span className="text-sm">ມາຈາກ Cafe</span>
+                  <span className="text-sm">{t("order.fromCafe")}</span>
                   {sourceCounts.CAFE > 0 && (
                     <Chip size="sm" variant="flat" className="h-4 text-[9px] font-bold">
                       {sourceCounts.CAFE}
@@ -448,7 +450,7 @@ export default function OrderPage() {
         <div className="sm:hidden space-y-0.5 -mx-2">
           {isLoading ? (
             <div className="flex justify-center py-10 px-4">
-              <EmptyState message="ກຳລັງໂຫຼດຮາງ..." />
+              <EmptyState message={t("order.loading")} />
             </div>
           ) : filteredOrders.length > 0 ? (
             filteredOrders.map((item: any) => (
@@ -480,15 +482,15 @@ export default function OrderPage() {
                   <div className="flex justify-between items-center bg-default-50/50 p-2.5 rounded-2xl border border-divider/50">
                     <div className="flex flex-col">
                       <span className="text-[9px] text-default-400 font-black uppercase tracking-wider">
-                        ຍອດລວມທັງໝົດ
+                        {t("order.grandTotal")}
                       </span>
                       <span className="text-base font-black text-primary">
-                        {formatNumber(item.totalAmount)} ກີບ
+                        {formatNumber(item.totalAmount)} {t("order.kip") || "ກີບ"}
                       </span>
                     </div>
                     <div className="text-right flex flex-col items-end">
                       <span className="text-[9px] text-default-400 font-black uppercase tracking-wider">
-                        ໂຕະ / ພະນັກງານ
+                        {t("order.tableEmployee")}
                       </span>
                       <div className="flex items-center gap-1.5 text-[10px] font-bold text-default-700">
                         {item.businessType === "CAFE" ? (
@@ -501,12 +503,12 @@ export default function OrderPage() {
                           </span>
                         ) : (
                           <span className="bg-default-100 text-default-600 px-2 py-0.5 rounded-full">
-                            ໜ້າຮ້ານ
+                            {t("order.shopFloor")}
                           </span>
                         )}
                         <span className="text-default-300">|</span>
                         <span className="text-default-600">
-                          {item.employee?.name || "ເຈົ້າຂອງ"}
+                          {item.employee?.name || t("order.owner")}
                         </span>
                       </div>
                     </div>
@@ -553,15 +555,15 @@ export default function OrderPage() {
             }
           >
             <TableHeader>
-              <TableColumn key="no">ລຳດັບ</TableColumn>
-              <TableColumn key="orderNumber">ເລກທີບິນ</TableColumn>
-              <TableColumn key="itemsCount">ລາຍການ</TableColumn>
-              <TableColumn key="table">ໂຕະ</TableColumn>
-              <TableColumn key="date">ວັນທີ/ເວລາ</TableColumn>
-              <TableColumn key="employee">ພະນັກງານ</TableColumn>
-              <TableColumn key="payment">ຊຳລະດ້ວຍ</TableColumn>
-              <TableColumn key="total">ຍອດລວມ</TableColumn>
-              <TableColumn key="actions">ຈັດການ</TableColumn>
+              <TableColumn key="no">{t("order.tableRank")}</TableColumn>
+              <TableColumn key="orderNumber">{t("order.tableOrder")}</TableColumn>
+              <TableColumn key="itemsCount">{t("order.tableItems")}</TableColumn>
+              <TableColumn key="table">{t("order.tableTable")}</TableColumn>
+              <TableColumn key="date">{t("order.tableDateTime")}</TableColumn>
+              <TableColumn key="employee">{t("order.tableEmployeeCol")}</TableColumn>
+              <TableColumn key="payment">{t("order.tablePayment")}</TableColumn>
+              <TableColumn key="total">{t("order.tableTotal")}</TableColumn>
+              <TableColumn key="actions">{t("order.tableAction")}</TableColumn>
             </TableHeader>
             <TableBody
               isLoading={isLoading}
@@ -581,7 +583,7 @@ export default function OrderPage() {
                     #{item.orderNumber}
                   </TableCell>
                   <TableCell className="font-bold text-xs">
-                    {item.items.length} ລາຍການ
+                    {item.items.length} {t("order.tableItems")}
                   </TableCell>
                   <TableCell className="font-bold text-primary text-xs">
                     {item.businessType === "CAFE" ? "Cafe" : (item.table?.name || "-")}
@@ -590,7 +592,7 @@ export default function OrderPage() {
                     {dayjs(item.createdAt).format("DD/MM/YYYY HH:mm")}
                   </TableCell>
                   <TableCell className="text-xs font-semibold">
-                    {item.employee?.name || "ເຈົ້າຂອງຮ້ານ"}
+                    {item.employee?.name || t("order.owner")}
                   </TableCell>
                   <TableCell>
                     <Chip
@@ -603,7 +605,7 @@ export default function OrderPage() {
                     </Chip>
                   </TableCell>
                   <TableCell className="font-black text-sm text-primary">
-                    {formatNumber(item.totalAmount)} ກີບ
+                    {formatNumber(item.totalAmount)} {t("order.kip") || "ກີບ"}
                   </TableCell>
                   <TableCell>
                     <Button
