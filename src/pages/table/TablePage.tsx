@@ -43,8 +43,10 @@ import {
 } from "lucide-react";
 import { useCart } from "@/provider";
 import PaymentModal from "@/components/common/payment-modal";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function TablePage() {
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const targetTableId = searchParams.get("tableId");
@@ -158,11 +160,15 @@ export default function TablePage() {
 
       if (isNewSelection || isAvailable) {
         syncedTableRef.current = selectedTable.id;
-        // ถ้าโต๊ะเป็น AVAILABLE ให้ล้างข้อมูลเก่าออกก่อนแล้วค่อยซิงค์
+        
+        // บังคับล้างข้อมูลถ้าสถานะเป็น AVAILABLE เพื่อป้องกันออเดอร์เก่าค้าง
         if (isAvailable) {
           clearTableCart(selectedTable.id);
+          // ถ้าเป็น AVAILABLE ออเดอร์ในเครื่องควรเป็นว่างเสมอ
+          setTableCart(selectedTable.id, [], selectedTable.status);
+        } else {
+          setTableCart(selectedTable.id, selectedTable.activeCart, selectedTable.status);
         }
-        setTableCart(selectedTable.id, selectedTable.activeCart, selectedTable.status);
       }
     }
     if (!selectedTable) {
@@ -249,35 +255,35 @@ export default function TablePage() {
   const handleCloseTable = (order?: any) => {
     if (selectedTable) {
       const closingTableId = selectedTable.id;
+      const closingStoreId = selectedTable.storeId || storeId;
+
+      // 1. ล้างข้อมูลในเครื่องทันทีเพื่อให้ UI ตอบสนองไว (Immediate Local Clear)
+      clearTableCart(closingTableId);
+      setSelectedTable(null);
+      syncedTableRef.current = null;
+
+      // 2. อัปเดตสถานะบนเซิร์ฟเวอร์ในพื้นหลัง
       updateTable.mutate(
         {
           id: closingTableId,
-          storeId: selectedTable.storeId || storeId,
+          storeId: closingStoreId,
           status: "AVAILABLE",
-          activeCart: [], // Explicitly clear via REST Too
+          activeCart: [],
         },
         {
           onSuccess: () => {
             if (socket.connected) {
-              // 1. Sync empty cart to clear server-side activeCart and other POS devices
               socket.emit("SYNC_TABLE_CART", {
-                storeId,
+                storeId: closingStoreId,
                 tableId: closingTableId,
-                cart: [], // Clear!
+                cart: [],
                 tableStatus: "AVAILABLE",
                 order,
               });
-              // 2. Notify session ended
               socket.emit("TABLE_SESSION_ENDED", { tableId: closingTableId });
             }
-
-            // 3. Clear local cart state for this table
-            clearTableCart(closingTableId);
-
-            // 4. Reset sync ref เพื่อให้เวลาเปิดโต๊ะเดิมอีกครั้ง มันจะซิงค์ข้อมูลใหม่จากเซิร์ฟเวอร์
-            syncedTableRef.current = null;
-
-            setSelectedTable(null);
+            // Invalidate query to get fresh data
+            queryClient.invalidateQueries({ queryKey: ["tables"] });
           },
         },
       );
