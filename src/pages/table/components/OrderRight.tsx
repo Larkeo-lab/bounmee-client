@@ -79,6 +79,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
   const {
     cart,
     updateQuantity,
+    setQuantity,
     updateStatus,
     subtotal,
     isConnected, // 🌐 Get connection status
@@ -288,9 +289,20 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                           >
                             <Minus size={10} />
                           </Button>
-                          <span className="w-6 text-center font-bold text-xs">
-                            {item.quantity}
-                          </span>
+                          <input
+                            type="text"
+                            value={item.quantity}
+                            onChange={(e) =>
+                              setQuantity(
+                                item.id,
+                                item.status,
+                                e.target.value,
+                                item.note,
+                              )
+                            }
+                            className="w-8 text-center font-bold text-xs bg-transparent outline-none border-none focus:ring-0"
+                            onFocus={(e) => e.target.select()}
+                          />
                           <Button
                             isIconOnly
                             size="sm"

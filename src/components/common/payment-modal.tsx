@@ -114,7 +114,7 @@ export default function PaymentModal({
           unitPrice: Number(item.price),
           subTotal: Number(item.price) * Number(item.quantity),
           status: item.status,
-          note: item.note,
+          note: item.note || "",
         })),
       });
 
