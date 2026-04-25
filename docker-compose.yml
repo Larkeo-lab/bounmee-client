@@ -1,9 +1,10 @@
 services:
   web:
+    image: pos-store-dev
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: pos-store
+    container_name: pos-store-dev
     restart: always
     ports:
       - "4173:4173"
