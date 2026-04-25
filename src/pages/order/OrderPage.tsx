@@ -386,48 +386,59 @@ export default function OrderPage() {
               </div>
             }
           />
-          <Tab
-            key="TABLE"
-            title={
-              <div className="flex items-center gap-2">
-                <Armchair size={18} className={selectedSource === "TABLE" ? "text-primary" : "text-default-400"} />
-                <span className="text-sm">ມາຈາກໂຕະ</span>
-                {sourceCounts.TABLE > 0 && (
-                  <Chip size="sm" variant="flat" className="h-4 text-[9px] font-bold">
-                    {sourceCounts.TABLE}
-                  </Chip>
-                )}
-              </div>
-            }
-          />
-          <Tab
-            key="DIRECT"
-            title={
-              <div className="flex items-center gap-2">
-                <ShoppingBag size={18} className={selectedSource === "DIRECT" ? "text-primary" : "text-default-400"} />
-                <span className="text-sm">ມາຈາກໜ້າຮ້ານ</span>
-                {sourceCounts.DIRECT > 0 && (
-                  <Chip size="sm" variant="flat" className="h-4 text-[9px] font-bold">
-                    {sourceCounts.DIRECT}
-                  </Chip>
-                )}
-              </div>
-            }
-          />
-          <Tab
-            key="CAFE"
-            title={
-              <div className="flex items-center gap-2">
-                <Coffee size={18} className={selectedSource === "CAFE" ? "text-primary" : "text-default-400"} />
-                <span className="text-sm">ມາຈາກ Cafe</span>
-                {sourceCounts.CAFE > 0 && (
-                  <Chip size="sm" variant="flat" className="h-4 text-[9px] font-bold">
-                    {sourceCounts.CAFE}
-                  </Chip>
-                )}
-              </div>
-            }
-          />
+          {/* Only show Table tab for Restaurants */}
+          {(user?.user?.store?.type === "RESTAURANT") && (
+            <Tab
+              key="TABLE"
+              title={
+                <div className="flex items-center gap-2">
+                  <Armchair size={18} className={selectedSource === "TABLE" ? "text-primary" : "text-default-400"} />
+                  <span className="text-sm">ມາຈາກໂຕະ</span>
+                  {sourceCounts.TABLE > 0 && (
+                    <Chip size="sm" variant="flat" className="h-4 text-[9px] font-bold">
+                      {sourceCounts.TABLE}
+                    </Chip>
+                  )}
+                </div>
+              }
+            />
+          )}
+
+          {/* Only show Direct tab for General stores and Restaurants */}
+          {(user?.user?.store?.type === "GENERAL_STORE") && (
+            <Tab
+              key="DIRECT"
+              title={
+                <div className="flex items-center gap-2">
+                  <ShoppingBag size={18} className={selectedSource === "DIRECT" ? "text-primary" : "text-default-400"} />
+                  <span className="text-sm">ມາຈາກໜ້າຮ້ານ</span>
+                  {sourceCounts.DIRECT > 0 && (
+                    <Chip size="sm" variant="flat" className="h-4 text-[9px] font-bold">
+                      {sourceCounts.DIRECT}
+                    </Chip>
+                  )}
+                </div>
+              }
+            />
+          )}
+
+          {/* Only show Cafe tab for Cafes and Restaurants */}
+          {(user?.user?.store?.type === "CAFE" || user?.user?.store?.type === "RESTAURANT") && (
+            <Tab
+              key="CAFE"
+              title={
+                <div className="flex items-center gap-2">
+                  <Coffee size={18} className={selectedSource === "CAFE" ? "text-primary" : "text-default-400"} />
+                  <span className="text-sm">ມາຈາກ Cafe</span>
+                  {sourceCounts.CAFE > 0 && (
+                    <Chip size="sm" variant="flat" className="h-4 text-[9px] font-bold">
+                      {sourceCounts.CAFE}
+                    </Chip>
+                  )}
+                </div>
+              }
+            />
+          )}
         </Tabs>
       </div>
 

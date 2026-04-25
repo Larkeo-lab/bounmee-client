@@ -35,6 +35,7 @@ import {
 } from "@/services/moneyRate/useMoneyRate";
 import { formatNumber, parseNumber } from "@/utils/numberFormat";
 import EmptyState from "@/components/common/empty-state";
+import ConfirmModal from "@/components/common/popup-confirm";
 
 export default function MoneyRatePage() {
   const { user } = useAuth();
@@ -52,7 +53,14 @@ export default function MoneyRatePage() {
   const {
     isOpen: isDeleteOpen,
     onOpen: onDeleteOpen,
+    onClose: onDeleteClose,
     onOpenChange: onDeleteOpenChange,
+  } = useDisclosure();
+  const {
+    isOpen: isPendingOpen,
+    onOpen: onPendingOpen,
+    onClose: onPendingClose,
+    onOpenChange: onPendingOpenChange,
   } = useDisclosure();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -165,6 +173,15 @@ export default function MoneyRatePage() {
     onDeleteOpen();
   };
 
+  const handleCreateOpen = () => {
+    // @ts-ignore
+    if (user?.user?.store?.status === "PENDING") {
+      onPendingOpen();
+    } else {
+      onCreateOpen();
+    }
+  };
+
   const rateForm = (
     <div className="space-y-4 py-2">
       <Input
@@ -216,7 +233,7 @@ export default function MoneyRatePage() {
         <Button
           color="primary"
           startContent={<Plus size={20} />}
-          onPress={onCreateOpen}
+          onPress={handleCreateOpen}
           className="font-bold h-12 px-6 shadow-lg shadow-primary/30"
         >
           ເພີ່ມອັດຕາແລກປ່ຽນໃໝ່
@@ -389,39 +406,27 @@ export default function MoneyRatePage() {
       </Modal>
 
       {/* Delete Modal */}
-      <Modal
+      <ConfirmModal
         isOpen={isDeleteOpen}
         onOpenChange={onDeleteOpenChange}
-        placement="center"
-      >
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader className="flex flex-col gap-1">
-                ຢືນຢັນການລຶບ
-              </ModalHeader>
-              <ModalBody>
-                <p>
-                  ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບອັດຕາແລກປ່ຽນຂອງ{" "}
-                  <strong>{selectedRate?.name}</strong>?
-                </p>
-              </ModalBody>
-              <ModalFooter>
-                <Button variant="light" onPress={onClose}>
-                  ຍົກເລີກ
-                </Button>
-                <Button
-                  color="danger"
-                  onPress={() => handleDeleteSubmit(onClose)}
-                  isLoading={deleteRateMutation.isPending}
-                >
-                  ລຶບຂໍ້ມູນ
-                </Button>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
+        title="ຢືນຢັນການລຶບ"
+        message={`ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບອັດຕາແລກປ່ຽນຂອງ ${selectedRate?.name}?`}
+        confirmText="ລຶບຂໍ້ມູນ"
+        onConfirm={() => handleDeleteSubmit(onDeleteClose)}
+        icon={<Trash2 size={24} />}
+        color="danger"
+      />
+
+      {/* Pending Status Modal */}
+      <ConfirmModal
+        isOpen={isPendingOpen}
+        onOpenChange={onPendingOpenChange}
+        title="ບໍ່ສາມາດເພີ່ມໄດ້"
+        message="ທ່ານຍັງບໍ່ໄດ້ຍ້ອມຮັບຈາກເຈົ້າຂອງກະລູນາຕິດຕໍ່ຫາເບີ 2099999999"
+        confirmText="ຕົກລົງ"
+        onConfirm={onPendingClose}
+        color="warning"
+      />
     </div>
   );
 }

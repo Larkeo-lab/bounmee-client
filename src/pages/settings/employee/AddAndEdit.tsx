@@ -1,0 +1,333 @@
+import { useState, useRef, useEffect, type ChangeEvent } from "react";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Button,
+  Input,
+  Select,
+  SelectItem,
+  Spinner,
+  Image,
+} from "@heroui/react";
+import {
+  User,
+  Phone,
+  Lock,
+  Shield,
+  Upload,
+  X,
+  Edit2,
+} from "lucide-react";
+import {
+  useCreateEmployee,
+  useUpdateEmployee,
+} from "@/services/employee/useEmployee";
+import { useUploadImage } from "@/services/storage";
+import { getDisplayImageUrl } from "@/lib/utils";
+import { useGetPermissions } from "@/services/role-permission";
+
+interface AddAndEditProps {
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
+  selectedEmployee: any | null;
+  onSuccess: () => void;
+  storeId: string;
+}
+
+export default function AddAndEdit({
+  isOpen,
+  onOpenChange,
+  selectedEmployee,
+  onSuccess,
+  storeId,
+}: AddAndEditProps) {
+  const [previewImage, setPreviewImage] = useState<string>("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [formData, setFormData] = useState({
+    name: "",
+    logoUrl: "",
+    phone: "",
+    userName: "",
+    password: "",
+    language: "LA" as "LA" | "EN",
+    permissionId: "",
+    businessType: "RESTAURANT" as "RETAIL" | "RESTAURANT" | "ONLINE" | "CAFE",
+  });
+
+  const createEmployeeMutation = useCreateEmployee();
+  const updateEmployeeMutation = useUpdateEmployee();
+  const uploadImageMutation = useUploadImage();
+  const { data: permissionResponse } = useGetPermissions();
+  const permissionsData = permissionResponse?.data || [];
+
+  useEffect(() => {
+    if (selectedEmployee) {
+      setFormData({
+        name: selectedEmployee.name || "",
+        logoUrl: selectedEmployee.logoUrl || "",
+        phone: selectedEmployee.phone || "",
+        userName: selectedEmployee.userName || "",
+        language: selectedEmployee.language || "LA",
+        password: "",
+        permissionId: selectedEmployee.permissionId || "",
+        businessType: selectedEmployee.businessType || "RESTAURANT",
+      });
+      setPreviewImage(selectedEmployee.logoUrl || "");
+    } else {
+      resetForm();
+    }
+  }, [selectedEmployee, isOpen]);
+
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      logoUrl: "",
+      phone: "",
+      userName: "",
+      password: "",
+      language: "LA",
+      permissionId: "",
+      businessType: "RESTAURANT",
+    });
+    setPreviewImage("");
+  };
+
+  const handleImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      try {
+        const previewUrl = URL.createObjectURL(file);
+        setPreviewImage(previewUrl);
+
+        const imageName = await uploadImageMutation.mutateAsync(file);
+        setFormData((prev) => ({ ...prev, logoUrl: imageName }));
+      } catch (error) {
+        console.error("Failed to upload image:", error);
+      }
+    }
+  };
+
+  const removeImage = () => {
+    setFormData((prev) => ({ ...prev, logoUrl: "" }));
+    setPreviewImage("");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleCreateSubmit = async (onClose: () => void) => {
+    try {
+      await createEmployeeMutation.mutateAsync({
+        ...formData,
+        storeId: storeId,
+      });
+      onSuccess();
+      onClose();
+    } catch (error) {
+      console.error("Failed to create employee:", error);
+    }
+  };
+
+  const handleUpdateSubmit = async (onClose: () => void) => {
+    if (!selectedEmployee) return;
+
+    const updateData: any = {
+      id: selectedEmployee.id,
+      storeId: storeId,
+    };
+
+    if (formData.name !== selectedEmployee.name)
+      updateData.name = formData.name;
+    if (formData.logoUrl !== selectedEmployee.logoUrl)
+      updateData.logoUrl = formData.logoUrl;
+    if (formData.phone !== selectedEmployee.phone)
+      updateData.phone = formData.phone;
+    if (formData.userName !== selectedEmployee.userName)
+      updateData.userName = formData.userName;
+    if (formData.language !== selectedEmployee.language)
+      updateData.language = formData.language;
+    if (formData.password) updateData.password = formData.password;
+    if (formData.permissionId !== selectedEmployee.permissionId)
+      updateData.permissionId = formData.permissionId;
+    if (formData.businessType !== selectedEmployee.businessType)
+      updateData.businessType = formData.businessType;
+
+    if (Object.keys(updateData).length <= 2) {
+      onClose();
+      return;
+    }
+
+    try {
+      await updateEmployeeMutation.mutateAsync(updateData);
+      onSuccess();
+      onClose();
+    } catch (error) {
+      console.error("Failed to update employee:", error);
+    }
+  };
+
+  const employeeForm = (
+    <div className="space-y-4 py-2">
+      <div className="flex flex-col items-center gap-2 mb-2">
+        <div
+          onClick={() => fileInputRef.current?.click()}
+          className={`
+            relative group cursor-pointer
+            w-24 h-24 rounded-full border-2 border-dashed 
+            transition-all duration-200 ease-in-out
+            flex items-center justify-center overflow-hidden
+            ${previewImage || formData.logoUrl ? "border-primary bg-primary/5" : "border-default-200 hover:border-primary hover:bg-default-50"}
+          `}
+        >
+          {uploadImageMutation.isPending ? (
+            <Spinner color="primary" />
+          ) : previewImage || formData.logoUrl ? (
+            <>
+              <Image
+                src={getDisplayImageUrl(previewImage || formData.logoUrl)}
+                alt="Preview"
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                <Edit2 size={20} className="text-white" />
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-col items-center gap-1 text-default-400">
+              <Upload size={20} />
+              <span className="text-[10px]">ຮູບພາບ</span>
+            </div>
+          )}
+          <input
+            type="file"
+            ref={fileInputRef}
+            className="hidden"
+            accept="image/*"
+            onChange={handleImageChange}
+          />
+        </div>
+        {(previewImage || formData.logoUrl) && (
+          <Button
+            size="sm"
+            color="danger"
+            variant="light"
+            startContent={<X size={14} />}
+            onPress={removeImage}
+            className="h-7 min-w-0"
+          >
+            ລົບຮູບ
+          </Button>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Input
+          label="ຊື່ພະນັກງານ"
+          placeholder="ລະບຸຊື່ພະນັກງານ"
+          variant="bordered"
+          value={formData.name}
+          onValueChange={(val) => setFormData({ ...formData, name: val })}
+          isRequired
+          startContent={<User size={18} className="text-default-400" />}
+        />
+        <Input
+          label="ເບີໂທລະສັບ"
+          placeholder="20XXXXXXXX"
+          variant="bordered"
+          value={formData.phone}
+          onValueChange={(val) => setFormData({ ...formData, phone: val })}
+          isRequired
+          startContent={<Phone size={18} className="text-default-400" />}
+        />
+        <Input
+          label="ຊື່ຜູ້ໃຊ້ (Username)"
+          placeholder="ລະບຸ Username"
+          variant="bordered"
+          value={formData.userName}
+          onValueChange={(val) => setFormData({ ...formData, userName: val })}
+          isRequired
+          startContent={<User size={18} className="text-default-400" />}
+        />
+        {!selectedEmployee && (
+          <Input
+            label="ລະຫັດຜ່ານ"
+            placeholder="ລະບຸລະຫັດຜ່ານ"
+            type="password"
+            variant="bordered"
+            value={formData.password}
+            onValueChange={(val) => setFormData({ ...formData, password: val })}
+            isRequired
+            startContent={<Lock size={18} className="text-default-400" />}
+          />
+        )}
+        <Select
+          label="ສິດທິການເຂົ້າເຖິງ"
+          placeholder="ເລືອກສິດທິການເຂົ້າເຖິງ"
+          variant="bordered"
+          className="md:col-span-2"
+          selectedKeys={formData.permissionId ? [formData.permissionId] : []}
+          onSelectionChange={(keys) => {
+            const val = Array.from(keys)[0] as string;
+            setFormData({ ...formData, permissionId: val });
+          }}
+          startContent={<Shield size={18} className="text-default-400" />}
+        >
+          {permissionsData.map((perm: any) => (
+            <SelectItem key={perm.id}>{perm.name}</SelectItem>
+          ))}
+        </Select>
+      </div>
+    </div>
+  );
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onOpenChange={onOpenChange}
+      placement="center"
+      onClose={resetForm}
+      size="2xl"
+    >
+      <ModalContent>
+        {(onClose) => (
+          <>
+            <ModalHeader className="flex flex-col gap-1">
+              {selectedEmployee ? "ແກ້ໄຂຂໍ້ມູນພະນັກງານ" : "ເພີ່ມພະນັກງານໃໝ່"}
+            </ModalHeader>
+            <ModalBody>{employeeForm}</ModalBody>
+            <ModalFooter>
+              <Button variant="light" onPress={onClose}>
+                ຍົກເລີກ
+              </Button>
+              <Button
+                color="primary"
+                onPress={() => 
+                  selectedEmployee 
+                    ? handleUpdateSubmit(onClose) 
+                    : handleCreateSubmit(onClose)
+                }
+                isLoading={
+                  (selectedEmployee 
+                    ? updateEmployeeMutation.isPending 
+                    : createEmployeeMutation.isPending) ||
+                  uploadImageMutation.isPending
+                }
+                isDisabled={
+                  !formData.name ||
+                  !formData.userName ||
+                  (!selectedEmployee && !formData.password)
+                }
+              >
+                {selectedEmployee ? "ອັບເດດ" : "ບັນທຶກ"}
+              </Button>
+            </ModalFooter>
+          </>
+        )}
+      </ModalContent>
+    </Modal>
+  );
+}

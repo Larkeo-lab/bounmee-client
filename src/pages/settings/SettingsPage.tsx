@@ -107,7 +107,14 @@ const SettingsPage = () => {
   const userRole = user?.user?.role;
   const userPermissions = user?.user?.employee?.permission?.permissions || {};
 
+  const storeType = user?.user?.store?.type;
+
   const canAccess = (key?: string) => {
+    // StoreType Filtering logic
+    if (storeType !== "RESTAURANT" && key === "table_settings") {
+      return false;
+    }
+
     if (!key) return true;
     if (userRole === "SUPER_ADMIN" || userRole === "STORE_ADMIN") return true;
     const modulePerms = userPermissions[key] as string[] | undefined;

@@ -31,6 +31,7 @@ import {
 import { useUploadImage } from "@/services/storage";
 import { getDisplayImageUrl } from "@/lib/utils";
 import EmptyState from "@/components/common/empty-state";
+import ConfirmModal from "@/components/common/popup-confirm";
 
 export default function BankPage() {
   const { user } = useAuth();
@@ -47,7 +48,14 @@ export default function BankPage() {
   const {
     isOpen: isDeleteOpen,
     onOpen: onDeleteOpen,
+    onClose: onDeleteClose,
     onOpenChange: onDeleteOpenChange,
+  } = useDisclosure();
+  const {
+    isOpen: isPendingOpen,
+    onOpen: onPendingOpen,
+    onClose: onPendingClose,
+    onOpenChange: onPendingOpenChange,
   } = useDisclosure();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -156,6 +164,15 @@ export default function BankPage() {
   const handleDeleteOpen = (bank: Bank) => {
     setSelectedBank(bank);
     onDeleteOpen();
+  };
+
+  const handleCreateOpen = () => {
+    // @ts-ignore
+    if (user?.user?.store?.status === "PENDING") {
+      onPendingOpen();
+    } else {
+      onCreateOpen();
+    }
   };
 
   const handleImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
@@ -345,7 +362,7 @@ export default function BankPage() {
         <Button
           color="primary"
           startContent={<Plus size={20} />}
-          onPress={onCreateOpen}
+          onPress={handleCreateOpen}
           className="font-bold h-12 px-6 shadow-lg shadow-primary/30"
         >
           ເພີ່ມທະນາຄານໃໝ່
@@ -529,40 +546,27 @@ export default function BankPage() {
       </Modal>
 
       {/* Delete Modal */}
-      <Modal
+      <ConfirmModal
         isOpen={isDeleteOpen}
         onOpenChange={onDeleteOpenChange}
-        placement="center"
-      >
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader className="flex flex-col gap-1">
-                ຢືນຢັນການລຶບ
-              </ModalHeader>
-              <ModalBody>
-                <p>
-                  ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບທະນາຄານ{" "}
-                  <strong>{selectedBank?.name}</strong>?
-                  ການກະທຳນີ້ບໍ່ສາມາດກັບຄືນໄດ້.
-                </p>
-              </ModalBody>
-              <ModalFooter>
-                <Button variant="light" onPress={onClose}>
-                  ຍົກເລີກ
-                </Button>
-                <Button
-                  color="danger"
-                  onPress={() => handleDeleteSubmit(onClose)}
-                  isLoading={deleteBankMutation.isPending}
-                >
-                  ລຶບຂໍ້ມູນ
-                </Button>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
+        title="ຢືນຢັນການລຶບ"
+        message={`ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບທະນາຄານ ${selectedBank?.name}? ການກະທຳນີ້ບໍ່ສາມາດກັບຄືນໄດ້.`}
+        confirmText="ລຶບຂໍ້ມູນ"
+        onConfirm={() => handleDeleteSubmit(onDeleteClose)}
+        icon={<Trash2 size={24} />}
+        color="danger"
+      />
+
+      {/* Pending Status Modal */}
+      <ConfirmModal
+        isOpen={isPendingOpen}
+        onOpenChange={onPendingOpenChange}
+        title="ບໍ່ສາມາດເພີ່ມໄດ້"
+        message="ທ່ານຍັງບໍ່ໄດ້ຍ້ອມຮັບຈາກເຈົ້າຂອງກະລູນາຕິດຕໍ່ຫາເບີ 2099999999"
+        confirmText="ຕົກລົງ"
+        onConfirm={onPendingClose}
+        color="warning"
+      />
     </div>
   );
 }

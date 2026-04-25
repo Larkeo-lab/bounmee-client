@@ -27,6 +27,8 @@
     "forgotPassword": "ลืมรหัสผ่าน",
     "resetPassword": "ตั้งรหัสผ่านใหม่",
     "email": "อีเมล",
+    "emailOrUsername": "อีเมลหรือชื่อผู้ใช้",
+    "emailOrUsernamePlaceholder": "ป้อนอีเมลหรือชื่อผู้ใช้",
     "password": "รหัสผ่าน",
     "confirmPassword": "ยืนยันรหัสผ่าน",
     "welcomeMessage": "ยินดีต้อนรับ",
@@ -51,7 +53,21 @@
     "registerButton": "ลงทะเบียน",
     "registering": "กำลังลงทะเบียน...",
     "registrationSuccess": "ลงทะเบียนสำเร็จ",
-    "lastUpdated": "อัปเดตล่าสุด"
+    "lastUpdated": "อัปเดตล่าสุด",
+    "storeType": {
+      "restaurant": "ร้านอาหาร",
+      "restaurantDesc": "ร้านอาหารและเครื่องดื่ม",
+      "online": "ร้านค้าออนไลน์",
+      "onlineDesc": "ขายของผ่านระบบออนไลน์",
+      "cafe": "คาเฟ่",
+      "cafeDesc": "ร้านกาแฟและเบเกอรี่",
+      "bar": "บาร์",
+      "barDesc": "ร้านอาหารกลางคืนและบาร์",
+      "other": "อื่น ๆ",
+      "otherDesc": "ธุรกิจประเภทอื่น ๆ",
+      "generalStore": "ร้านค้าทั่วไป",
+      "generalStoreDesc": "ร้านค้าปลีกและส่งทั่วไป"
+    }
   },
   "language": {
     "english": "English",

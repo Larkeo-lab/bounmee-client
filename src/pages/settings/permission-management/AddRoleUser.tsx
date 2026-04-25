@@ -77,205 +77,125 @@ export default function AddRoleUser() {
   );
   const [errors, setErrors] = useState<{ roleName?: string }>({});
 
-  const [permissions, setPermissions] = useState<PermissionRow[]>([
+  const allPermissions: PermissionRow[] = [
     {
       id: "table",
       name: "sidebar.menu.table",
-      permissions: {
-        read: false,
-        // create: false,
-        // update: false,
-        // delete: false,
-        // full_access: false,
-      },
+      permissions: { read: false },
     },
     {
       id: "pos",
       name: "sidebar.menu.pos",
-      permissions: {
-        read: false,
-        // create: false,
-        // update: false,
-        // delete: false,
-        // full_access: false,
-      },
+      permissions: { read: false },
     },
     {
       id: "cafe",
       name: "sidebar.menu.cafe",
-      permissions: {
-        read: false,
-      },
+      permissions: { read: false },
     },
     {
       id: "dashboard",
       name: "sidebar.menu.statisticsReport",
-      permissions: {
-        read: false,
-        // create: false,
-        // update: false,
-        // delete: false,
-        // full_access: false,
-      },
+      permissions: { read: false },
     },
     {
       id: "order",
       name: "sidebar.menu.order",
-      permissions: {
-        read: false,
-        // create: false,
-        // update: false,
-        // delete: false,
-        // full_access: false,
-      },
+      permissions: { read: false },
     },
     {
       id: "ordering",
       name: "sidebar.menu.ordering",
-      permissions: {
-        read: false,
-        // create: false,
-        // update: false,
-        // delete: false,
-        // full_access: false,
-      },
+      permissions: { read: false },
     },
     {
       id: "kitchen",
       name: "sidebar.menu.kitchen",
-      permissions: {
-        read: false,
-        // create: false,
-        // update: false,
-        // delete: false,
-        // full_access: false,
-      },
+      permissions: { read: false },
     },
     {
       id: "chat",
       name: "sidebar.menu.chat",
-      permissions: {
-        read: false,
-        // create: false,
-        // update: false,
-        // delete: false,
-        // full_access: false,
-      },
+      permissions: { read: false },
     },
-
     {
       id: "settings",
       name: "sidebar.menu.setting",
-      permissions: {
-        read: false,
-        // create: false,
-        // update: false,
-        // delete: false,
-        // full_access: false,
-      },
+      permissions: { read: false },
     },
     {
       id: "product",
       name: "sidebar.menu.manageProduct",
-      permissions: {
-        read: false,
-        // create: false,
-        // update: false,
-        // delete: false,
-        // full_access: false,
-      },
+      permissions: { read: false },
     },
     {
       id: "category",
       name: "sidebar.menu.manageCategory",
-      permissions: {
-        read: false,
-        // create: false,
-        // update: false,
-        // delete: false,
-        // full_access: false,
-      },
+      permissions: { read: false },
     },
     {
       id: "bank",
       name: "sidebar.menu.manageBank",
-      permissions: {
-        read: false,
-        // create: false,
-        // update: false,
-        // delete: false,
-        // full_access: false,
-      },
+      permissions: { read: false },
     },
     {
       id: "employee",
       name: "sidebar.menu.manageEmployee",
-      permissions: {
-        read: false,
-        // create: false,
-        // update: false,
-        // delete: false,
-        // full_access: false,
-      },
+      permissions: { read: false },
     },
     {
       id: "printer",
       name: "sidebar.menu.managePrinter",
-      permissions: {
-        read: false,
-        // create: false,
-        // update: false,
-        // delete: false,
-        // full_access: false,
-      },
+      permissions: { read: false },
     },
     {
       id: "profile",
       name: "sidebar.menu.manageProfile",
-      permissions: {
-        read: false,
-        // create: false,
-        // update: false,
-        // delete: false,
-        // full_access: false,
-      },
+      permissions: { read: false },
     },
     {
       id: "money_rate",
       name: "sidebar.menu.manageMoneyRate",
-      permissions: {
-        read: false,
-        // create: false,
-        // update: false,
-        // delete: false,
-        // full_access: false,
-      },
+      permissions: { read: false },
     },
     {
       id: "role_permission",
       name: "sidebar.menu.managePermission",
-      permissions: {
-        read: false,
-        // create: false,
-        // update: false,
-        // delete: false,
-        // full_access: false,
-      },
+      permissions: { read: false },
     },
     {
       id: "table_settings",
       name: "sidebar.menu.manageTable",
-      permissions: {
-        read: false,
-        // create: false,
-        // update: false,
-        // delete: false,
-        // full_access: false,
-      },
+      permissions: { read: false },
     },
-  ]);
+  ];
 
   const { user } = useAuth();
+  const storeType = user?.user?.store?.type;
+
+  const filteredPermissions = useMemo(() => {
+    if (storeType === "GENERAL_STORE") {
+      return allPermissions.filter(
+        (p) =>
+          !["table", "cafe", "ordering", "kitchen", "chat", "table_settings"].includes(p.id)
+      );
+    }
+    if (storeType === "CAFE") {
+      return allPermissions.filter(
+        (p) =>
+          !["table", "pos", "ordering", "kitchen", "chat", "table_settings"].includes(p.id)
+      );
+    }
+    return allPermissions;
+  }, [storeType]);
+
+  const [permissions, setPermissions] = useState<PermissionRow[]>(filteredPermissions);
+
+  // Sync state if filteredPermissions changes (e.g. after user loads)
+  useEffect(() => {
+    setPermissions(filteredPermissions);
+  }, [filteredPermissions]);
+
   const storeId = user?.user?.store?.id || "";
   const queryClient = useQueryClient();
 

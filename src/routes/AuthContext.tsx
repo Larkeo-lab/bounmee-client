@@ -102,7 +102,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     checkAuthStatus();
   }, []);
 
-  const login = async (userData: { userName: string; password: string }) => {
+  const login = async (userData: { identifier: string; password: string }) => {
     const response: any = await useAuthService(userData);
     if (response?.status === false) {
       throw new Error(response.message || 'Login failed');

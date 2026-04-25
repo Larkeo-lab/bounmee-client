@@ -3,7 +3,7 @@ import { AuthResponse } from "@/types";
 import { API_ENDPOINTS } from "@/config/api";
 
 export const useAuthService = async (data: {
-  userName: string;
+  identifier: string;
   password: string;
 }) => {
   try {

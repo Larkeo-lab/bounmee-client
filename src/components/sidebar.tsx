@@ -158,11 +158,33 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
     0,
   );
 
+  console.log("user", user);
+
   // Permission Logic
   const userRole = user?.user?.role;
   const userPermissions = user?.user?.employee?.permission?.permissions || {};
 
-  const canAccess = (key?: string) => {
+  const canAccess = (key?: string, href?: string) => {
+    const storeType = user?.user?.store?.type;
+
+    // StoreType Filtering logic
+    if (storeType === "GENERAL_STORE") {
+      if (
+        href === "/tables" ||
+        href === "/cafe-order" ||
+        href === "/ordering" ||
+        href === "/kitchen" ||
+        href === "/chat"
+      )
+        return false;
+    } else if (storeType === "RESTAURANT") {
+      // Restaurant can see both tables and cafe
+      if (href === "/product-order") return false;
+    } else if (storeType === "CAFE") {
+      if (href === "/tables" || href === "/product-order" || href === "/chat") return false;
+    }
+
+    // Permission logic
     if (!key) return true;
     if (userRole === "SUPER_ADMIN" || userRole === "STORE_ADMIN") return true;
     const modulePerms = userPermissions[key] as string[] | undefined;
@@ -186,7 +208,7 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
           }
           return item;
         })
-        .filter((item) => canAccess(item.permissionKey)),
+        .filter((item) => canAccess(item.permissionKey, item.href)),
     }))
     .filter((group) => group.items.length > 0);
 

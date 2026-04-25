@@ -10,6 +10,7 @@ import {
   Select,
   SelectItem,
   Divider,
+  Chip,
 } from "@heroui/react";
 import { EyeFilledIcon, EyeSlashFilledIcon } from "@/components/icons";
 import { useNavigate } from "react-router-dom";
@@ -25,8 +26,11 @@ import {
   MapPin,
   Mail,
   Lock,
-  Phone,
   ArrowLeft,
+  Utensils,
+  Coffee,
+  ArrowRight,
+  CheckCircle2,
 } from "lucide-react";
 import oneDoorLogo from "/assets/logo.png";
 import version from "../../../package.json";
@@ -38,10 +42,60 @@ import {
 
 const bgLineName = "/line-nam-bg.png";
 
+type StoreType = "RESTAURANT" | "CAFE" | "GENERAL_STORE";
+
+interface StoreTypeOption {
+  value: StoreType;
+  labelKey: string;
+  defaultLabel: string;
+  descriptionKey: string;
+  defaultDesc: string;
+  icon: React.ReactNode;
+  gradient: string;
+  border: string;
+}
+
+const STORE_TYPE_OPTIONS: StoreTypeOption[] = [
+  {
+    value: "RESTAURANT",
+    labelKey: "auth.storeType.restaurant",
+    defaultLabel: "ຮ້ານອາຫານ",
+    descriptionKey: "auth.storeType.restaurantDesc",
+    defaultDesc: "Restaurant & Food",
+    icon: <Utensils size={32} />,
+    gradient: "from-orange-500 to-red-500",
+    border: "border-orange-400",
+  },
+  {
+    value: "CAFE",
+    labelKey: "auth.storeType.cafe",
+    defaultLabel: "ຄາເຟ",
+    descriptionKey: "auth.storeType.cafeDesc",
+    defaultDesc: "Café & Beverage",
+    icon: <Coffee size={32} />,
+    gradient: "from-amber-500 to-yellow-600",
+    border: "border-amber-400",
+  },
+  {
+    value: "GENERAL_STORE",
+    labelKey: "auth.storeType.generalStore",
+    defaultLabel: "ຮ້ານຄ້າທົ່ວໄປ",
+    descriptionKey: "auth.storeType.generalStoreDesc",
+    defaultDesc: "General Store",
+    icon: <Store size={32} />,
+    gradient: "from-gray-500 to-slate-600",
+    border: "border-gray-400",
+  },
+];
+
 export default function Register() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { register: registerStore } = useAuth();
+
+  // Step state: 1 = pick store type, 2 = fill form
+  const [step, setStep] = React.useState<1 | 2>(1);
+  const [selectedType, setSelectedType] = React.useState<StoreType | null>(null);
 
   const [isVisible, setIsVisible] = React.useState(false);
   const [isConfirmVisible, setIsConfirmVisible] = React.useState(false);
@@ -57,10 +111,26 @@ export default function Register() {
     trackPageView("/register", "POS Register Page");
   }, []);
 
-  console.log('districts', districts)
-
   const toggleVisibility = () => setIsVisible(!isVisible);
   const toggleConfirmVisibility = () => setIsConfirmVisible(!isConfirmVisible);
+
+  const handleSelectType = (type: StoreType) => {
+    setSelectedType(type);
+  };
+
+  const handleNextStep = () => {
+    if (!selectedType) return;
+    trackButtonClick("register-select-type", `Selected store type: ${selectedType}`);
+    setStep(2);
+  };
+
+  const handleBack = () => {
+    if (step === 2) {
+      setStep(1);
+    } else {
+      navigate("/");
+    }
+  };
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,22 +147,23 @@ export default function Register() {
       }
 
       const payload = {
-        name: data.storeName,
-        address: data.address,
-        provinceId: data.provinceId,
-        districtId: data.districtId,
-        userName: data.username,
-        email: data.email,
-        phone: data.phone,
-        password: data.password,
+        name: data.storeName as string,
+        address: data.address as string,
+        provinceId: data.provinceId as string,
+        districtId: data.districtId as string,
+        userName: data.username as string,
+        email: data.email as string,
+        phone: data.phone as string,
+        password: data.password as string,
         role: "STORE_ADMIN",
+        type: selectedType!,
       };
 
       await registerStore(payload);
 
       trackFormSubmit("pos-register", true);
       toast.success(t("auth.registrationSuccess"));
-      navigate("/"); // Redirect to login
+      navigate("/");
     } catch (err: any) {
       trackFormSubmit("pos-register", false);
       showErrorToast(err, "", "danger");
@@ -101,9 +172,13 @@ export default function Register() {
     }
   };
 
+  const selectedTypeOption = STORE_TYPE_OPTIONS.find(
+    (o) => o.value === selectedType
+  );
+
   return (
-    <div className="flex flex-col lg:flex-row w-full h-screen bg-background text-foreground overflow-hidden">
-      {/* Brand Section (LHS) - Exactly like Login.tsx */}
+    <div className="flex flex-col lg:flex-row w-full lg:h-screen bg-background text-foreground lg:overflow-hidden">
+      {/* Brand Section (LHS) */}
       <div
         className="w-full lg:w-1/2 relative flex flex-col items-center justify-center p-8 overflow-hidden bg-primary shrink-0 lg:h-full"
         style={{
@@ -131,7 +206,43 @@ export default function Register() {
             </p>
           </div>
 
-          <div className="pt-8 grid grid-cols-2 gap-4 w-full max-w-md">
+          {/* Step Indicator */}
+          <div className="pt-4 flex flex-col items-center gap-3">
+            <div className="flex items-center gap-3">
+              {/* Step 1 */}
+              <div
+                className={`flex items-center justify-center w-9 h-9 rounded-full font-bold text-sm transition-all ${
+                  step === 1
+                    ? "bg-white text-primary shadow-lg scale-110"
+                    : "bg-white/30 text-white"
+                }`}
+              >
+                {step === 2 ? <CheckCircle2 size={18} /> : "1"}
+              </div>
+              <div
+                className={`h-0.5 w-12 rounded-full transition-all ${
+                  step === 2 ? "bg-white" : "bg-white/30"
+                }`}
+              />
+              {/* Step 2 */}
+              <div
+                className={`flex items-center justify-center w-9 h-9 rounded-full font-bold text-sm transition-all ${
+                  step === 2
+                    ? "bg-white text-primary shadow-lg scale-110"
+                    : "bg-white/30 text-white"
+                }`}
+              >
+                2
+              </div>
+            </div>
+            <p className="text-white/70 text-xs">
+              {step === 1
+                ? t("auth.step1") || "ຂັ້ນຕອນ 1: ເລືອກປະເພດຮ້ານ"
+                : t("auth.step2") || "ຂັ້ນຕອນ 2: ຂໍ້ມູນບັນຊີ"}
+            </p>
+          </div>
+
+          <div className="pt-4 grid grid-cols-2 gap-4 w-full max-w-md">
             <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20">
               <p className="text-2xl font-bold italic">PRO</p>
               <p className="text-xs opacity-70">Enterprise Edition</p>
@@ -143,253 +254,363 @@ export default function Register() {
           </div>
         </div>
 
-        {/* Decorative elements from Login.tsx */}
         <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-white/10 rounded-full blur-3xl text-white/5" />
         <div className="absolute -top-20 -right-20 w-80 h-80 bg-primary-400/20 rounded-full blur-3xl text-white/5" />
       </div>
 
-      {/* Register Section (RHS) - Compacted consistent with Login.tsx */}
-      <div className="relative w-full lg:w-1/2 h-full flex flex-col items-center bg-gray-50 dark:bg-gray-950 overflow-y-auto scroll-smooth">
+      {/* RHS */}
+      <div className="relative w-full lg:w-1/2 lg:h-full flex flex-col items-center bg-gray-50 dark:bg-gray-950 lg:overflow-y-auto scroll-smooth">
         {/* Top Header Bar */}
         <div className="sticky top-0 w-full z-30 flex items-center justify-between p-4 bg-gray-50/80 dark:bg-gray-950/80 backdrop-blur-xl">
           <Button
             variant="light"
             startContent={<ArrowLeft size={18} />}
-            onPress={() => navigate("/")}
+            onPress={handleBack}
             className="font-semibold text-primary hover:bg-primary/5 p-0 h-auto"
           >
-            {t("auth.backToLogin")}
+            {step === 2 ? t("common.back") || "ກັບຄືນ" : t("auth.backToLogin")}
           </Button>
           <LanguageSwitch />
         </div>
 
         <div className="w-full px-4 md:px-12 py-4 space-y-6">
-          <div className="text-center lg:text-left space-y-2">
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-              {t("auth.register")}
-            </h2>
-            <p className="text-gray-500 dark:text-gray-400">
-              {t("auth.registerSubtitle")}
-            </p>
-          </div>
 
-          <Card className="w-full border-none bg-white/70 dark:bg-white/5 backdrop-blur-xl shadow-2xl">
-            <CardBody className="p-6 md:p-8">
-              <Form onSubmit={onSubmit} className="w-full flex flex-col gap-6">
-                {/* Store Info */}
-                <div className="w-full space-y-4">
-                  <div className="flex items-center gap-2 text-primary font-bold border-b border-divider pb-1">
-                    <Store size={18} />
-                    <span className="text-sm uppercase tracking-wider">{t("sidebar.groups.management")}</span>
-                  </div>
+          {/* ========== STEP 1: Choose Store Type ========== */}
+          {step === 1 && (
+            <>
+              <div className="text-center lg:text-left space-y-2">
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
+                  {t("auth.chooseStoreType") || "ເລືອກປະເພດຮ້ານ"}
+                </h2>
+                <p className="text-gray-500 dark:text-gray-400">
+                  {t("auth.chooseStoreTypeDesc") || "ກະລຸນາເລືອກປະເພດທຸລະກິດຂອງທ່ານ"}
+                </p>
+              </div>
 
-                  <Input
-                    name="storeName"
-                    label={t("auth.storeName")}
-                    labelPlacement="outside"
-                    placeholder={t("auth.storeNamePlaceholder")}
-                    variant="bordered"
-                    size="lg"
-                    isRequired
-                    className="w-full"
-                    classNames={{
-                      label: "font-semibold text-gray-700 dark:text-gray-300",
-                      inputWrapper: "w-full h-14 border-2 border-default-200 hover:border-primary transition-colors",
-                    }}
-                  />
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Select
-                      name="provinceId"
-                      label={t("auth.province")}
-                      labelPlacement="outside"
-                      placeholder={t("auth.province")}
-                      variant="bordered"
-                      size="lg"
-                      isLoading={isLoadingProvinces}
-                      isRequired
-                      classNames={{
-                        label: "font-semibold text-gray-700 dark:text-gray-300",
-                        trigger: "h-14 border-2 border-default-200 hover:border-primary transition-colors",
-                      }}
-                      onSelectionChange={(keys) => {
-                        const provinceId = Array.from(keys)[0] as string;
-                        const province = provinces.find((p: any) => p.id === provinceId);
-                        if (province) setSelectedProvince(province.code);
-                      }}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {STORE_TYPE_OPTIONS.map((option) => {
+                  const isSelected = selectedType === option.value;
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => handleSelectType(option.value)}
+                      className={`relative w-full text-left rounded-2xl border-2 p-5 transition-all duration-200 cursor-pointer group
+                        ${
+                          isSelected
+                            ? `${option.border} bg-white dark:bg-gray-900 shadow-xl scale-[1.02]`
+                            : "border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-700 hover:shadow-md hover:scale-[1.01]"
+                        }
+                      `}
                     >
-                      {provinces.map((prov: any) => (
-                        <SelectItem key={prov.id} textValue={prov.nameLo}>
-                          {i18n.language === "en" ? prov.nameEn : prov.nameLo}
-                        </SelectItem>
-                      ))}
-                    </Select>
+                      {/* Icon circle */}
+                      <div
+                        className={`w-14 h-14 rounded-xl flex items-center justify-center text-white mb-4 bg-gradient-to-br ${option.gradient} shadow-lg transition-all ${
+                          isSelected ? "scale-110" : "group-hover:scale-105"
+                        }`}
+                      >
+                        {option.icon}
+                      </div>
 
-                    <Select
-                      name="districtId"
-                      label={t("auth.district")}
-                      labelPlacement="outside"
-                      placeholder={t("auth.district")}
-                      variant="bordered"
-                      size="lg"
-                      isLoading={isLoadingDistricts}
-                      isRequired
-                      isDisabled={!selectedProvince}
-                      classNames={{
-                        label: "font-semibold text-gray-700 dark:text-gray-300",
-                        trigger: "h-14 border-2 border-default-200 hover:border-primary transition-colors",
-                      }}
+                      <p className="text-lg font-bold text-gray-900 dark:text-white">
+                        {t(option.labelKey) || option.defaultLabel}
+                      </p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                        {t(option.descriptionKey) || option.defaultDesc}
+                      </p>
+
+                      {isSelected && (
+                        <div className="absolute top-3 right-3">
+                          <CheckCircle2
+                            size={22}
+                            className="text-primary fill-primary/10"
+                          />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <Button
+                color="primary"
+                size="lg"
+                className="w-full h-14 font-bold text-lg shadow-lg shadow-primary/30"
+                isDisabled={!selectedType}
+                endContent={<ArrowRight size={20} />}
+                onPress={handleNextStep}
+              >
+                {t("common.next") || "ຕໍ່ໄປ"}
+                {selectedTypeOption && (
+                  <Chip
+                    size="sm"
+                    className="ml-2 bg-white/20 text-white text-xs font-semibold"
+                  >
+                    {t(selectedTypeOption.labelKey) || selectedTypeOption.defaultLabel}
+                  </Chip>
+                )}
+              </Button>
+            </>
+          )}
+
+          {/* ========== STEP 2: Fill Registration Form ========== */}
+          {step === 2 && (
+            <>
+              <div className="text-center lg:text-left space-y-2">
+                <div className="flex items-center gap-3 mb-1">
+                  <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
+                    {t("auth.register")}
+                  </h2>
+                  {selectedTypeOption && (
+                    <div
+                      className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-white text-xs font-bold bg-gradient-to-r ${selectedTypeOption.gradient}`}
                     >
-                      {districts.map((dist: any) => (
-                        <SelectItem key={dist.id} textValue={dist.nameLo}>
-                          {i18n.language === "en" ? dist.nameEn : dist.nameLo}
-                        </SelectItem>
-                      ))}
-                    </Select>
-                  </div>
-
-                  <Input
-                    name="address"
-                    label={t("auth.address")}
-                    labelPlacement="outside"
-                    placeholder={t("auth.addressPlaceholder")}
-                    variant="bordered"
-                    size="lg"
-                    className="w-full"
-                    startContent={<MapPin className="text-default-400" size={20} />}
-                    classNames={{
-                      label: "font-semibold text-gray-700 dark:text-gray-300",
-                      inputWrapper: "w-full h-14 border-2 border-default-200 hover:border-primary transition-colors",
-                    }}
-                  />
+                      {React.cloneElement(selectedTypeOption.icon as React.ReactElement, {
+                        size: 14,
+                      })}
+                      {t(selectedTypeOption.labelKey) || selectedTypeOption.defaultLabel}
+                    </div>
+                  )}
                 </div>
+                <p className="text-gray-500 dark:text-gray-400">
+                  {t("auth.registerSubtitle")}
+                </p>
+              </div>
 
-                {/* Account Info */}
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-primary font-bold border-b border-divider pb-1">
-                    <UserIcon size={18} />
-                    <span className="text-sm uppercase tracking-wider">{t("navigation.profile")}</span>
-                  </div>
+              <Card className="w-full border-none bg-white/70 dark:bg-white/5 backdrop-blur-xl shadow-2xl">
+                <CardBody className="p-6 md:p-8">
+                  <Form onSubmit={onSubmit} className="w-full flex flex-col gap-6">
+                    {/* Store Info */}
+                    <div className="w-full space-y-4">
+                      <div className="flex items-center gap-2 text-primary font-bold border-b border-divider pb-1">
+                        <Store size={18} />
+                        <span className="text-sm uppercase tracking-wider">
+                          {t("sidebar.groups.management")}
+                        </span>
+                      </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Input
-                      name="username"
-                      label={t("auth.username")}
-                      labelPlacement="outside"
-                      placeholder={t("auth.usernameePlaceholder")}
-                      variant="bordered"
+                      <Input
+                        name="storeName"
+                        label={t("auth.storeName")}
+                        labelPlacement="outside"
+                        placeholder={t("auth.storeNamePlaceholder")}
+                        variant="bordered"
+                        size="lg"
+                        isRequired
+                        className="w-full"
+                        classNames={{
+                          label: "font-semibold text-gray-700 dark:text-gray-300",
+                          inputWrapper:
+                            "w-full h-14 border-2 border-default-200 hover:border-primary transition-colors",
+                        }}
+                      />
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Select
+                          name="provinceId"
+                          label={t("auth.province")}
+                          labelPlacement="outside"
+                          placeholder={t("auth.province")}
+                          variant="bordered"
+                          size="lg"
+                          isLoading={isLoadingProvinces}
+                          isRequired
+                          classNames={{
+                            label: "font-semibold text-gray-700 dark:text-gray-300",
+                            trigger:
+                              "h-14 border-2 border-default-200 hover:border-primary transition-colors",
+                          }}
+                          onSelectionChange={(keys) => {
+                            const provinceId = Array.from(keys)[0] as string;
+                            const province = provinces.find(
+                              (p: any) => p.id === provinceId
+                            );
+                            if (province) setSelectedProvince(province.code);
+                          }}
+                        >
+                          {provinces.map((prov: any) => (
+                            <SelectItem key={prov.id} textValue={prov.nameLo}>
+                              {prov.nameLo}
+                            </SelectItem>
+                          ))}
+                        </Select>
+
+                        <Select
+                          name="districtId"
+                          label={t("auth.district")}
+                          labelPlacement="outside"
+                          placeholder={t("auth.district")}
+                          variant="bordered"
+                          size="lg"
+                          isLoading={isLoadingDistricts}
+                          isRequired
+                          isDisabled={!selectedProvince}
+                          classNames={{
+                            label: "font-semibold text-gray-700 dark:text-gray-300",
+                            trigger:
+                              "h-14 border-2 border-default-200 hover:border-primary transition-colors",
+                          }}
+                        >
+                          {districts.map((dist: any) => (
+                            <SelectItem key={dist.id} textValue={dist.nameLo}>
+                              {dist.nameLo}
+                            </SelectItem>
+                          ))}
+                        </Select>
+                      </div>
+
+                      <Input
+                        name="address"
+                        label={t("auth.address")}
+                        labelPlacement="outside"
+                        placeholder={t("auth.addressPlaceholder")}
+                        variant="bordered"
+                        size="lg"
+                        className="w-full"
+                        startContent={<MapPin className="text-default-400" size={20} />}
+                        classNames={{
+                          label: "font-semibold text-gray-700 dark:text-gray-300",
+                          inputWrapper:
+                            "w-full h-14 border-2 border-default-200 hover:border-primary transition-colors",
+                        }}
+                      />
+                    </div>
+
+                    {/* Account Info */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 text-primary font-bold border-b border-divider pb-1">
+                        <UserIcon size={18} />
+                        <span className="text-sm uppercase tracking-wider">
+                          {t("navigation.profile")}
+                        </span>
+                      </div>
+
+                      {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Input
+                          name="username"
+                          label={t("auth.username")}
+                          labelPlacement="outside"
+                          placeholder={t("auth.usernameePlaceholder")}
+                          variant="bordered"
+                          size="lg"
+                          isRequired
+                          startContent={<UserIcon className="text-default-400" size={20} />}
+                          classNames={{
+                            label: "font-semibold text-gray-700 dark:text-gray-300",
+                            inputWrapper:
+                              "h-14 border-2 border-default-200 hover:border-primary transition-colors",
+                          }}
+                        />
+                        <Input
+                          name="phone"
+                          label={t("auth.phone")}
+                          labelPlacement="outside"
+                          placeholder={t("auth.phonePlaceholder")}
+                          variant="bordered"
+                          size="lg"
+                          isRequired
+                          startContent={<Phone className="text-default-400" size={20} />}
+                          classNames={{
+                            label: "font-semibold text-gray-700 dark:text-gray-300",
+                            inputWrapper:
+                              "h-14 border-2 border-default-200 hover:border-primary transition-colors",
+                          }}
+                        />
+                      </div> */}
+
+                      <Input
+                        name="email"
+                        type="email"
+                        label={t("auth.email")}
+                        labelPlacement="outside"
+                        placeholder="example@gmail.com"
+                        variant="bordered"
+                        size="lg"
+                        isRequired
+                        className="w-full"
+                        startContent={<Mail className="text-default-400" size={20} />}
+                        classNames={{
+                          label: "font-semibold text-gray-700 dark:text-gray-300",
+                          inputWrapper:
+                            "w-full h-14 border-2 border-default-200 hover:border-primary transition-colors",
+                        }}
+                      />
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Input
+                          name="password"
+                          label={t("auth.password")}
+                          labelPlacement="outside"
+                          placeholder={t("auth.passwordPlaceholder")}
+                          variant="bordered"
+                          size="lg"
+                          isRequired
+                          startContent={<Lock className="text-default-400" size={20} />}
+                          endContent={
+                            <button type="button" onClick={toggleVisibility}>
+                              {isVisible ? (
+                                <EyeSlashFilledIcon className="text-2xl text-default-400" />
+                              ) : (
+                                <EyeFilledIcon className="text-2xl text-default-400" />
+                              )}
+                            </button>
+                          }
+                          type={isVisible ? "text" : "password"}
+                          classNames={{
+                            label: "font-semibold text-gray-700 dark:text-gray-300",
+                            inputWrapper:
+                              "h-14 border-2 border-default-200 hover:border-primary transition-colors",
+                          }}
+                        />
+                        <Input
+                          name="confirmPassword"
+                          label={t("auth.confirmPassword")}
+                          labelPlacement="outside"
+                          placeholder={t("auth.passwordPlaceholder")}
+                          variant="bordered"
+                          size="lg"
+                          isRequired
+                          startContent={<Lock className="text-default-400" size={20} />}
+                          endContent={
+                            <button type="button" onClick={toggleConfirmVisibility}>
+                              {isConfirmVisible ? (
+                                <EyeSlashFilledIcon className="text-2xl text-default-400" />
+                              ) : (
+                                <EyeFilledIcon className="text-2xl text-default-400" />
+                              )}
+                            </button>
+                          }
+                          type={isConfirmVisible ? "text" : "password"}
+                          classNames={{
+                            label: "font-semibold text-gray-700 dark:text-gray-300",
+                            inputWrapper:
+                              "h-14 border-2 border-default-200 hover:border-primary transition-colors",
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    <Button
+                      type="submit"
+                      color="primary"
                       size="lg"
-                      isRequired
-                      startContent={<UserIcon className="text-default-400" size={20} />}
-                      classNames={{
-                        label: "font-semibold text-gray-700 dark:text-gray-300",
-                        inputWrapper: "h-14 border-2 border-default-200 hover:border-primary transition-colors",
-                      }}
-                    />
-                    <Input
-                      name="phone"
-                      label={t("auth.phone")}
-                      labelPlacement="outside"
-                      placeholder={t("auth.phonePlaceholder")}
-                      variant="bordered"
-                      size="lg"
-                      isRequired
-                      startContent={<Phone className="text-default-400" size={20} />}
-                      classNames={{
-                        label: "font-semibold text-gray-700 dark:text-gray-300",
-                        inputWrapper: "h-14 border-2 border-default-200 hover:border-primary transition-colors",
-                      }}
-                    />
-                  </div>
+                      className="w-full h-14 font-bold text-lg shadow-lg shadow-primary/30 mt-2"
+                      isLoading={isLoading}
+                    >
+                      {isLoading ? t("auth.registering") : t("auth.registerButton")}
+                    </Button>
+                  </Form>
+                </CardBody>
+              </Card>
 
-                  <Input
-                    name="email"
-                    type="email"
-                    label={t("auth.email")}
-                    labelPlacement="outside"
-                    placeholder="example@gmail.com"
-                    variant="bordered"
-                    size="lg"
-                    isRequired
-                    className="w-full"
-                    startContent={<Mail className="text-default-400" size={20} />}
-                    classNames={{
-                      label: "font-semibold text-gray-700 dark:text-gray-300",
-                      inputWrapper: "w-full h-14 border-2 border-default-200 hover:border-primary transition-colors",
-                    }}
-                  />
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Input
-                      name="password"
-                      label={t("auth.password")}
-                      labelPlacement="outside"
-                      placeholder={t("auth.passwordPlaceholder")}
-                      variant="bordered"
-                      size="lg"
-                      isRequired
-                      startContent={<Lock className="text-default-400" size={20} />}
-                      endContent={
-                        <button type="button" onClick={toggleVisibility}>
-                          {isVisible ? (
-                            <EyeSlashFilledIcon className="text-2xl text-default-400" />
-                          ) : (
-                            <EyeFilledIcon className="text-2xl text-default-400" />
-                          )}
-                        </button>
-                      }
-                      type={isVisible ? "text" : "password"}
-                      classNames={{
-                        label: "font-semibold text-gray-700 dark:text-gray-300",
-                        inputWrapper: "h-14 border-2 border-default-200 hover:border-primary transition-colors",
-                      }}
-                    />
-                    <Input
-                      name="confirmPassword"
-                      label={t("auth.confirmPassword")}
-                      labelPlacement="outside"
-                      placeholder={t("auth.passwordPlaceholder")}
-                      variant="bordered"
-                      size="lg"
-                      isRequired
-                      startContent={<Lock className="text-default-400" size={20} />}
-                      endContent={
-                        <button type="button" onClick={toggleConfirmVisibility}>
-                          {isConfirmVisible ? (
-                            <EyeSlashFilledIcon className="text-2xl text-default-400" />
-                          ) : (
-                            <EyeFilledIcon className="text-2xl text-default-400" />
-                          )}
-                        </button>
-                      }
-                      type={isConfirmVisible ? "text" : "password"}
-                      classNames={{
-                        label: "font-semibold text-gray-700 dark:text-gray-300",
-                        inputWrapper: "h-14 border-2 border-default-200 hover:border-primary transition-colors",
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <Button
-                  type="submit"
-                  color="primary"
-                  size="lg"
-                  className="w-full h-14 font-bold text-lg shadow-lg shadow-primary/30 mt-2"
-                  isLoading={isLoading}
-                >
-                  {isLoading ? t("auth.registering") : t("auth.registerButton")}
-                </Button>
-              </Form>
-            </CardBody>
-          </Card>
-
-          <footer className="text-center space-y-4 pt-2">
-            <Divider className="my-4" />
-            <p className="text-[10px] text-gray-400 font-mono uppercase tracking-[0.2em]">
-              Dee POS System &bull; Version {version.version}
-            </p>
-          </footer>
+              <footer className="text-center space-y-4 pt-2">
+                <Divider className="my-4" />
+                <p className="text-[10px] text-gray-400 font-mono uppercase tracking-[0.2em]">
+                  Dee POS System &bull; Version {version.version}
+                </p>
+              </footer>
+            </>
+          )}
         </div>
       </div>
 

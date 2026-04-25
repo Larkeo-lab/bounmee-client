@@ -15,7 +15,6 @@ import {
   ModalBody,
   ModalFooter,
   useDisclosure,
-  Textarea,
 } from "@heroui/react";
 import { Plus, Search, Edit2, Trash2, LayoutGrid } from "lucide-react";
 import { useAuth } from "@/routes/AuthContext";
@@ -27,6 +26,7 @@ import {
   Category,
 } from "@/services/category/useCategory";
 import EmptyState from "@/components/common/empty-state";
+import ConfirmModal from "@/components/common/popup-confirm";
 
 export default function CategoryPage() {
   const { user } = useAuth();
@@ -43,7 +43,14 @@ export default function CategoryPage() {
   const {
     isOpen: isDeleteOpen,
     onOpen: onDeleteOpen,
+    onClose: onDeleteClose,
     onOpenChange: onDeleteOpenChange,
+  } = useDisclosure();
+  const {
+    isOpen: isPendingOpen,
+    onOpen: onPendingOpen,
+    onClose: onPendingClose,
+    onOpenChange: onPendingOpenChange,
   } = useDisclosure();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -143,6 +150,15 @@ export default function CategoryPage() {
     onDeleteOpen();
   };
 
+  const handleCreateOpen = () => {
+    // @ts-ignore
+    if (user?.user?.store?.status === "PENDING") {
+      onPendingOpen();
+    } else {
+      onCreateOpen();
+    }
+  };
+
   return (
     <div className="space-y-6 m-4">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -158,7 +174,7 @@ export default function CategoryPage() {
         <Button
           color="primary"
           startContent={<Plus size={20} />}
-          onPress={onCreateOpen}
+          onPress={handleCreateOpen}
           className="font-bold h-12 px-6 shadow-lg shadow-primary/30"
         >
           ເພີ່ມປະເພດສິນຄ້າໃໝ່
@@ -203,17 +219,19 @@ export default function CategoryPage() {
         }
       >
         <TableHeader>
+          <TableColumn>#</TableColumn>
           <TableColumn>ຊື່ປະເພດສິນຄ້າ</TableColumn>
-          <TableColumn>ຄຳອະທິບາຍ</TableColumn>
+          {/* <TableColumn>ຄຳອະທິບາຍ</TableColumn> */}
           <TableColumn className="text-center">ຈັດການ</TableColumn>
         </TableHeader>
         <TableBody isLoading={isLoading} emptyContent={<EmptyState />}>
-          {items.map((category) => (
+          {items.map((category,index) => (
             <TableRow key={category.id}>
+              <TableCell className="font-semibold">{index + 1}</TableCell>
               <TableCell className="font-semibold">{category.name}</TableCell>
-              <TableCell className="text-default-500 max-w-xs truncate">
+              {/* <TableCell className="text-default-500 max-w-xs truncate">
                 {category.description || "-"}
-              </TableCell>
+              </TableCell> */}
               <TableCell>
                 <div className="flex items-center justify-center gap-2">
                   <Button
@@ -264,7 +282,7 @@ export default function CategoryPage() {
                       setFormData({ ...formData, name: val })
                     }
                   />
-                  <Textarea
+                  {/* <Textarea
                     label="ຄຳອະທິບາຍ"
                     placeholder="ລະບຸຄຳອະທິບາຍເພີ່ມເຕີມ"
                     variant="bordered"
@@ -272,7 +290,7 @@ export default function CategoryPage() {
                     onValueChange={(val) =>
                       setFormData({ ...formData, description: val })
                     }
-                  />
+                  /> */}
                 </div>
               </ModalBody>
               <ModalFooter>
@@ -317,7 +335,7 @@ export default function CategoryPage() {
                       setFormData({ ...formData, name: val })
                     }
                   />
-                  <Textarea
+                  {/* <Textarea
                     label="ຄຳອະທິບາຍ"
                     placeholder="ລະບຸຄຳອະທິບາຍເພີ່ມເຕີມ"
                     variant="bordered"
@@ -325,7 +343,7 @@ export default function CategoryPage() {
                     onValueChange={(val) =>
                       setFormData({ ...formData, description: val })
                     }
-                  />
+                  /> */}
                 </div>
               </ModalBody>
               <ModalFooter>
@@ -347,40 +365,27 @@ export default function CategoryPage() {
       </Modal>
 
       {/* Delete Modal */}
-      <Modal
+      <ConfirmModal
         isOpen={isDeleteOpen}
         onOpenChange={onDeleteOpenChange}
-        placement="center"
-      >
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader className="flex flex-col gap-1">
-                ຢືນຢັນການລຶບ
-              </ModalHeader>
-              <ModalBody>
-                <p>
-                  ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບປະເພດສິນຄ້າ{" "}
-                  <strong>{selectedCategory?.name}</strong>?
-                  ການກະທຳນີ້ບໍ່ສາມາດກັບຄືນໄດ້.
-                </p>
-              </ModalBody>
-              <ModalFooter>
-                <Button variant="light" onPress={onClose}>
-                  ຍົກເລີກ
-                </Button>
-                <Button
-                  color="danger"
-                  onPress={() => handleDeleteSubmit(onClose)}
-                  isLoading={deleteCategoryMutation.isPending}
-                >
-                  ລຶບຂໍ້ມູນ
-                </Button>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
+        title="ຢືນຢັນການລຶບ"
+        message={`ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບປະເພດສິນຄ້າ ${selectedCategory?.name}? ການກະທຳນີ້ບໍ່ສາມາດກັບຄືນໄດ້.`}
+        confirmText="ລຶບຂໍ້ມູນ"
+        onConfirm={() => handleDeleteSubmit(onDeleteClose)}
+        icon={<Trash2 size={24} />}
+        color="danger"
+      />
+
+      {/* Pending Status Modal */}
+      <ConfirmModal
+        isOpen={isPendingOpen}
+        onOpenChange={onPendingOpenChange}
+        title="ບໍ່ສາມາດເພີ່ມໄດ້"
+        message="ທ່ານຍັງບໍ່ໄດ້ຍ້ອມຮັບຈາກເຈົ້າຂອງກະລູນາຕິດຕໍ່ຫາເບີ 2099999999"
+        confirmText="ຕົກລົງ"
+        onConfirm={onPendingClose}
+        color="warning"
+      />
     </div>
   );
 }

@@ -27,6 +27,8 @@
     "forgotPassword": "ລືມລະຫັດຜ່ານ",
     "resetPassword": "ຕັ້ງລະຫັດຜ່ານໃໝ່",
     "email": "ອີເມວ",
+    "emailOrUsername": "ອີເມວ ຫຼື ຊື່ຜູ້ໃຊ້",
+    "emailOrUsernamePlaceholder": "ປ້ອນອີເມວ ຫຼື ຊື່ຜູ້ໃຊ້",
     "password": "ລະຫັດຜ່ານ",
     "confirmPassword": "ຢືນຢັນລະຫັດຜ່ານ",
     "welcomeMessage": "ຍິນດີຕ້ອນຮັບ",
@@ -51,7 +53,21 @@
     "registerButton": "ລົງທະບຽນ",
     "registering": "ກຳລັງລົງທະບຽນ...",
     "registrationSuccess": "ລົງທະບຽນສຳເລັດ",
-    "lastUpdated": "ອັບເດດລ່າສຸດ"
+    "lastUpdated": "ອັບເດດລ່າສຸດ",
+    "storeType": {
+      "restaurant": "ຮ້ານອາຫານ",
+      "restaurantDesc": "ຮ້ານອາຫານ ແລະ ເຄື່ອງດື່ມ",
+      "online": "ຮ້ານຄ້າອອນລາຍ",
+      "onlineDesc": "ຂາຍເຄື່ອງຜ່ານລະບົບອອນລາຍ",
+      "cafe": "ຄາເຟ",
+      "cafeDesc": "ຮ້ານກາເຟ ແລະ ເບເກີຣີ",
+      "bar": "ບາ ແລະ ບັບ",
+      "barDesc": "ຮ້ານອາຫານກາງຄືນ ແລະ ບັບ",
+      "other": "ອື່ນໆ",
+      "otherDesc": "ທຸລະກິດປະເພດອື່ນໆ",
+      "generalStore": "ຮ້ານຄ້າທົ່ວໄປ",
+      "generalStoreDesc": "ຮ້ານຄ້າຂາຍຍ່ອຍ ແລະ ຂາຍຍົກທົ່ວໄປ"
+    }
   },
   "language": {
     "english": "English",

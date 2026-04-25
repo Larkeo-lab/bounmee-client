@@ -27,6 +27,8 @@
     "forgotPassword": "Forgot Password",
     "resetPassword": "Reset Password",
     "email": "Email",
+    "emailOrUsername": "Email or Username",
+    "emailOrUsernamePlaceholder": "Enter email or username",
     "password": "Password",
     "confirmPassword": "Confirm Password",
     "welcomeMessage": "Welcome",
@@ -39,7 +41,21 @@
     "invalidCredentials": "Invalid credentials. Use admin/admin123 to login.",
     "missingCredentials": "Please enter both username and password",
     "loginFailed": "Login failed. Please try again.",
-    "lastUpdated": "Last updated"
+    "lastUpdated": "Last updated",
+    "storeType": {
+      "restaurant": "Restaurant",
+      "restaurantDesc": "Restaurant & Food",
+      "online": "Online Store",
+      "onlineDesc": "Online Business",
+      "cafe": "Café",
+      "cafeDesc": "Café & Bakery",
+      "bar": "Bar",
+      "barDesc": "Bar & Nightclub",
+      "other": "Other",
+      "otherDesc": "Other Business",
+      "generalStore": "General Store",
+      "generalStoreDesc": "Retail and wholesale general stores"
+    }
   },
   "language": {
     "english": "English",

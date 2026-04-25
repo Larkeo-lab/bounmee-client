@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, type ChangeEvent } from "react";
+import { useState, useMemo } from "react";
 import {
   Table,
   TableHeader,
@@ -9,17 +9,9 @@ import {
   Input,
   Button,
   Pagination,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
   useDisclosure,
-  Spinner,
   Image,
   Chip,
-  Select,
-  SelectItem,
 } from "@heroui/react";
 import {
   Plus,
@@ -27,64 +19,45 @@ import {
   Edit2,
   Trash2,
   Users,
-  Upload,
-  X,
-  Phone,
   User,
-  Lock,
-  Shield,
 } from "lucide-react";
 import { useAuth } from "@/routes/AuthContext";
 import {
   useGetEmployees,
-  useCreateEmployee,
-  useUpdateEmployee,
   useDeleteEmployee,
   Employee,
 } from "@/services/employee/useEmployee";
-import { useUploadImage } from "@/services/storage";
 import { getDisplayImageUrl } from "@/lib/utils";
 import { useGetStoreDetail } from "@/services/store/useStore";
-import { useGetPermissions } from "@/services/role-permission";
 import EmptyState from "@/components/common/empty-state";
+import ConfirmModal from "@/components/common/popup-confirm";
+import AddAndEdit from "./AddAndEdit";
 
 export default function EmployeePage() {
   const { user } = useAuth();
 
   const {
-    isOpen: isCreateOpen,
-    onOpen: onCreateOpen,
-    onOpenChange: onCreateOpenChange,
-  } = useDisclosure();
-  const {
-    isOpen: isUpdateOpen,
-    onOpen: onUpdateOpen,
-    onOpenChange: onUpdateOpenChange,
+    isOpen: isFormOpen,
+    onOpen: onFormOpen,
+    onOpenChange: onFormOpenChange,
   } = useDisclosure();
   const {
     isOpen: isDeleteOpen,
     onOpen: onDeleteOpen,
+    onClose: onDeleteClose,
     onOpenChange: onDeleteOpenChange,
+  } = useDisclosure();
+  const {
+    isOpen: isPendingOpen,
+    onOpen: onPendingOpen,
+    onClose: onPendingClose,
+    onOpenChange: onPendingOpenChange,
   } = useDisclosure();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
   const [page, setPage] = useState(1);
   const rowsPerPage = 10;
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [previewImage, setPreviewImage] = useState<string>("");
-
-  const [formData, setFormData] = useState({
-    name: "",
-    logoUrl: "",
-    phone: "",
-    userName: "",
-    password: "",
-    language: "LA" as "LA" | "EN",
-    permissionId: "",
-    businessType: "RESTAURANT" as "RETAIL" | "RESTAURANT" | "ONLINE" | "CAFE",
-  });
 
   const {
     data: storeResponse,
@@ -100,12 +73,7 @@ export default function EmployeePage() {
   } = useGetEmployees(user?.user?.storeId);
   const employees: Employee[] = employeeResponse?.data || [];
 
-  const createEmployeeMutation = useCreateEmployee();
-  const updateEmployeeMutation = useUpdateEmployee();
   const deleteEmployeeMutation = useDeleteEmployee(user?.user?.storeId);
-  const uploadImageMutation = useUploadImage();
-  const { data: permissionResponse } = useGetPermissions();
-  const permissionsData = permissionResponse?.data || [];
 
   const combinedEmployees = useMemo(() => {
     if (!store?.users) return [];
@@ -156,63 +124,6 @@ export default function EmployeePage() {
     return filteredItems.slice(start, end);
   }, [page, filteredItems]);
 
-  const handleCreateSubmit = async (onClose: () => void) => {
-    try {
-      await createEmployeeMutation.mutateAsync({
-        ...formData,
-        storeId: user?.user?.storeId || "",
-      });
-      resetForm();
-      onClose();
-      getEmployees();
-      getStore();
-    } catch (error) {
-      console.error("Failed to create employee:", error);
-    }
-  };
-
-  const handleUpdateSubmit = async (onClose: () => void) => {
-    if (!selectedEmployee) return;
-
-    // Only send fields that have changed
-    const employeeUser =
-      (selectedEmployee as any).users?.[0] || selectedEmployee; // handle both types
-    const updateData: any = {
-      id: selectedEmployee.id,
-      storeId: user?.user?.storeId,
-    };
-
-    if (formData.name !== selectedEmployee.name)
-      updateData.name = formData.name;
-    if (formData.logoUrl !== selectedEmployee.logoUrl)
-      updateData.logoUrl = formData.logoUrl;
-    if (formData.phone !== employeeUser?.phone)
-      updateData.phone = formData.phone;
-    if (formData.userName !== employeeUser?.userName)
-      updateData.userName = formData.userName;
-    if (formData.language !== employeeUser?.language)
-      updateData.language = formData.language;
-    if (formData.password) updateData.password = formData.password;
-    if (formData.permissionId !== selectedEmployee.permissionId)
-      updateData.permissionId = formData.permissionId;
-    if (formData.businessType !== selectedEmployee.businessType)
-      updateData.businessType = formData.businessType;
-
-    if (Object.keys(updateData).length <= 2) {
-      onClose();
-      return;
-    }
-
-    try {
-      await updateEmployeeMutation.mutateAsync(updateData);
-      resetForm();
-      onClose();
-      getEmployees();
-      getStore();
-    } catch (error) {
-      console.error("Failed to update employee:", error);
-    }
-  };
 
   const handleDeleteSubmit = async (onClose: () => void) => {
     if (!selectedEmployee) return;
@@ -226,35 +137,20 @@ export default function EmployeePage() {
     }
   };
 
-  const resetForm = () => {
-    setFormData({
-      name: "",
-      logoUrl: "",
-      phone: "",
-      userName: "",
-      password: "",
-      language: "LA",
-      permissionId: "",
-      businessType: "RESTAURANT",
-    });
-    setPreviewImage("");
-    setSelectedEmployee(null);
-  };
 
   const handleEditOpen = (item: any) => {
     setSelectedEmployee(item.originalEmployee || item);
-    setFormData({
-      name: item.name,
-      logoUrl: item.logoUrl || "",
-      phone: item.phone || "",
-      userName: item.userName || "",
-      language: item.language || "LA",
-      password: "",
-      permissionId: item.permissionId || "",
-      businessType: "RESTAURANT",
-    });
-    setPreviewImage(item.logoUrl || "");
-    onUpdateOpen();
+    onFormOpen();
+  };
+
+  const handleCreateOpen = () => {
+    // @ts-ignore
+    if (user?.user?.store?.status === "PENDING") {
+      onPendingOpen();
+    } else {
+      setSelectedEmployee(null);
+      onFormOpen();
+    }
   };
 
   const handleDeleteOpen = (item: any) => {
@@ -264,157 +160,7 @@ export default function EmployeePage() {
     }
   };
 
-  const handleImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      try {
-        const previewUrl = URL.createObjectURL(file);
-        setPreviewImage(previewUrl);
 
-        const imageName = await uploadImageMutation.mutateAsync(file);
-        setFormData((prev) => ({ ...prev, logoUrl: imageName }));
-      } catch (error) {
-        console.error("Failed to upload image:", error);
-      }
-    }
-  };
-
-  const removeImage = () => {
-    setFormData((prev) => ({ ...prev, logoUrl: "" }));
-    setPreviewImage("");
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
-
-  const employeeForm = (
-    <div className="space-y-4 py-2">
-      <div className="flex flex-col items-center gap-2 mb-2">
-        <div
-          onClick={() => fileInputRef.current?.click()}
-          className={`
-            relative group cursor-pointer
-            w-24 h-24 rounded-full border-2 border-dashed 
-            transition-all duration-200 ease-in-out
-            flex items-center justify-center overflow-hidden
-            ${previewImage || formData.logoUrl ? "border-primary bg-primary/5" : "border-default-200 hover:border-primary hover:bg-default-50"}
-          `}
-        >
-          {uploadImageMutation.isPending ? (
-            <Spinner color="primary" />
-          ) : previewImage || formData.logoUrl ? (
-            <>
-              <Image
-                src={getDisplayImageUrl(previewImage || formData.logoUrl)}
-                alt="Preview"
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                <Edit2 size={20} className="text-white" />
-              </div>
-            </>
-          ) : (
-            <div className="flex flex-col items-center gap-1 text-default-400">
-              <Upload size={20} />
-              <span className="text-[10px]">ຮູບພາບ</span>
-            </div>
-          )}
-          <input
-            type="file"
-            ref={fileInputRef}
-            className="hidden"
-            accept="image/*"
-            onChange={handleImageChange}
-          />
-        </div>
-        {(previewImage || formData.logoUrl) && (
-          <Button
-            size="sm"
-            color="danger"
-            variant="light"
-            startContent={<X size={14} />}
-            onPress={removeImage}
-            className="h-7 min-w-0"
-          >
-            ລົບຮູບ
-          </Button>
-        )}
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Input
-          label="ຊື່ພະນັກງານ"
-          placeholder="ລະບຸຊື່ພະນັກງານ"
-          variant="bordered"
-          value={formData.name}
-          onValueChange={(val) => setFormData({ ...formData, name: val })}
-          isRequired
-          startContent={<User size={18} className="text-default-400" />}
-        />
-        <Input
-          label="ເບີໂທລະສັບ"
-          placeholder="20XXXXXXXX"
-          variant="bordered"
-          value={formData.phone}
-          onValueChange={(val) => setFormData({ ...formData, phone: val })}
-          isRequired
-          startContent={<Phone size={18} className="text-default-400" />}
-        />
-        <Input
-          label="ຊື່ຜູ້ໃຊ້ (Username)"
-          placeholder="ລະບຸ Username"
-          variant="bordered"
-          value={formData.userName}
-          onValueChange={(val) => setFormData({ ...formData, userName: val })}
-          isRequired
-          startContent={<User size={18} className="text-default-400" />}
-        />
-        {!selectedEmployee && (
-          <Input
-            label="ລະຫັດຜ່ານ"
-            placeholder="ລະບຸລະຫັດຜ່ານ"
-            type="password"
-            variant="bordered"
-            value={formData.password}
-            onValueChange={(val) => setFormData({ ...formData, password: val })}
-            isRequired
-            startContent={<Lock size={18} className="text-default-400" />}
-          />
-        )}
-        <Select
-          label="ສິດທິການເຂົ້າເຖິງ"
-          placeholder="ເລືອກສິດທິການເຂົ້າເຖິງ"
-          variant="bordered"
-          selectedKeys={formData.permissionId ? [formData.permissionId] : []}
-          onSelectionChange={(keys) => {
-            const val = Array.from(keys)[0] as string;
-            setFormData({ ...formData, permissionId: val });
-          }}
-          startContent={<Shield size={18} className="text-default-400" />}
-        >
-          {permissionsData.map((perm: any) => (
-            <SelectItem key={perm.id}>{perm.name}</SelectItem>
-          ))}
-        </Select>
-        {/* <Select
-          label="ຮູບແບບຮ້ານ (Business Type)"
-          placeholder="ເລືອກຮູບແບບຮ້ານ"
-          variant="bordered"
-          selectedKeys={[formData.businessType]}
-          onSelectionChange={(keys) => {
-            const val = Array.from(keys)[0] as any;
-            if (val) setFormData({ ...formData, businessType: val });
-          }}
-          startContent={<StoreIcon size={18} className="text-default-400" />}
-        >
-          <SelectItem key="RETAIL">ຮ້ານຄ້າທົວໄປ</SelectItem>
-          <SelectItem key="RESTAURANT">ຮ້ານອາຫານ (Restaurant)</SelectItem>
-          <SelectItem key="CAFE">ຮ້ານກາເຟ (Cafe)</SelectItem>
-          <SelectItem key="ONLINE">ອອນໄລນ໌ (Online)</SelectItem>
-        </Select> */}
-      </div>
-    </div>
-  );
 
   return (
     <div className="space-y-6 m-4">
@@ -431,7 +177,7 @@ export default function EmployeePage() {
         <Button
           color="primary"
           startContent={<Plus size={20} />}
-          onPress={onCreateOpen}
+          onPress={handleCreateOpen}
           className="font-bold h-12 px-6 shadow-lg shadow-primary/30"
         >
           ເພີ່ມພະນັກງານໃໝ່
@@ -543,117 +289,39 @@ export default function EmployeePage() {
         </TableBody>
       </Table>
 
-      {/* Create Modal */}
-      <Modal
-        isOpen={isCreateOpen}
-        onOpenChange={onCreateOpenChange}
-        placement="center"
-        onClose={resetForm}
-        size="2xl"
-      >
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader className="flex flex-col gap-1">
-                ເພີ່ມພະນັກງານໃໝ່
-              </ModalHeader>
-              <ModalBody>{employeeForm}</ModalBody>
-              <ModalFooter>
-                <Button variant="light" onPress={onClose}>
-                  ຍົກເລີກ
-                </Button>
-                <Button
-                  color="primary"
-                  onPress={() => handleCreateSubmit(onClose)}
-                  isLoading={
-                    createEmployeeMutation.isPending ||
-                    uploadImageMutation.isPending
-                  }
-                  isDisabled={
-                    !formData.name ||
-                    !formData.userName ||
-                    (!selectedEmployee && !formData.password)
-                  }
-                >
-                  ບັນທຶກ
-                </Button>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
-
-      {/* Update Modal */}
-      <Modal
-        isOpen={isUpdateOpen}
-        onOpenChange={onUpdateOpenChange}
-        placement="center"
-        onClose={resetForm}
-        size="2xl"
-      >
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader className="flex flex-col gap-1">
-                ແກ້ໄຂຂໍ້ມູນພະນັກງານ
-              </ModalHeader>
-              <ModalBody>{employeeForm}</ModalBody>
-              <ModalFooter>
-                <Button variant="light" onPress={onClose}>
-                  ຍົກເລີກ
-                </Button>
-                <Button
-                  color="primary"
-                  onPress={() => handleUpdateSubmit(onClose)}
-                  isLoading={
-                    updateEmployeeMutation.isPending ||
-                    uploadImageMutation.isPending
-                  }
-                  isDisabled={!formData.name || !formData.userName}
-                >
-                  ອັບເດດ
-                </Button>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
+      <AddAndEdit
+        isOpen={isFormOpen}
+        onOpenChange={onFormOpenChange}
+        selectedEmployee={selectedEmployee}
+        storeId={user?.user?.storeId || ""}
+        onSuccess={() => {
+          getEmployees();
+          getStore();
+        }}
+      />
 
       {/* Delete Modal */}
-      <Modal
+      <ConfirmModal
         isOpen={isDeleteOpen}
         onOpenChange={onDeleteOpenChange}
-        placement="center"
-      >
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader className="flex flex-col gap-1">
-                ຢືນຢັນການລຶບ
-              </ModalHeader>
-              <ModalBody>
-                <p>
-                  ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບພະນັກງານ{" "}
-                  <strong>{selectedEmployee?.name}</strong>?
-                  ຂໍ້ມູນການເຂົ້າລະບົບຂອງພະນັກງານຄົນນີ້ຈະຖືກລຶບອອກເຊັ່ນກັນ.
-                </p>
-              </ModalBody>
-              <ModalFooter>
-                <Button variant="light" onPress={onClose}>
-                  ຍົກເລີກ
-                </Button>
-                <Button
-                  color="danger"
-                  onPress={() => handleDeleteSubmit(onClose)}
-                  isLoading={deleteEmployeeMutation.isPending}
-                >
-                  ລຶບຂໍ້ມູນ
-                </Button>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
+        title="ຢືນຢັນການລຶບ"
+        message={`ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບພະນັກງານ ${selectedEmployee?.name}? ຂໍ້ມູນການເຂົ້າລະບົບຂອງພະນັກງານຄົນນີ້ຈະຖືກລຶບອອກເຊັ່ນກັນ.`}
+        confirmText="ລຶບຂໍ້ມູນ"
+        onConfirm={() => handleDeleteSubmit(onDeleteClose)}
+        icon={<Trash2 size={24} />}
+        color="danger"
+      />
+
+      {/* Pending Status Modal */}
+      <ConfirmModal
+        isOpen={isPendingOpen}
+        onOpenChange={onPendingOpenChange}
+        title="ບໍ່ສາມາດເພີ່ມໄດ້"
+        message="ທ່ານຍັງບໍ່ໄດ້ຍ້ອມຮັບຈາກເຈົ້າຂອງກະລູນາຕິດຕໍ່ຫາເບີ 2099999999"
+        confirmText="ຕົກລົງ"
+        onConfirm={onPendingClose}
+        color="warning"
+      />
     </div>
   );
 }

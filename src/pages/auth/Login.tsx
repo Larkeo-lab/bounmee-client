@@ -28,7 +28,7 @@ import {
   trackLogin,
   trackPageView,
 } from "@/lib/analytics";
-import { Lock, User } from "lucide-react";
+import { Lock, Mail } from "lucide-react";
 
 export default function Login() {
   const [isVisible, setIsVisible] = React.useState(false);
@@ -56,17 +56,17 @@ export default function Login() {
       const data = Object.fromEntries(
         new FormData(e.currentTarget as HTMLFormElement),
       );
-      const { username = "", password = "" } = data as {
-        username: string;
+      const { identifier = "", password = "" } = data as {
+        identifier: string;
         password: string;
       };
 
       const userData = {
-        userName: username,
+        identifier: identifier,
         password: password,
       };
 
-      trackLogin("username", username);
+      trackLogin("identifier", identifier);
       trackFormSubmit("pos-login", true);
 
       const authData = await login(userData);
@@ -170,14 +170,14 @@ export default function Login() {
               <Form onSubmit={onSubmit} className="flex flex-col gap-6">
                 <Input
                   type="text"
-                  label={t("auth.username")}
+                  label={t("auth.emailOrUsername")}
                   labelPlacement="outside"
-                  name="username"
-                  placeholder={t("auth.usernameePlaceholder")}
+                  name="identifier"
+                  placeholder={t("auth.emailOrUsernamePlaceholder")}
                   variant="bordered"
                   className="w-full"
                   size="lg"
-                  startContent={<User className="text-default-400" size={20} />}
+                  startContent={<Mail className="text-default-400" size={20} />}
                   classNames={{
                     label: "font-semibold text-gray-700 dark:text-gray-300",
                     inputWrapper:

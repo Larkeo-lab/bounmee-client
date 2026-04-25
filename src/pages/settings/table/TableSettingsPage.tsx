@@ -1,12 +1,9 @@
 import { useState, useMemo } from "react";
 import {
-  useCreateTable,
   useUpdateTable,
   useDeleteTable,
 } from "@/services/table/useTable";
 import {
-  useCreateZone,
-  useUpdateZone,
   useDeleteZone,
 } from "@/services/table/useZone";
 import {
@@ -22,25 +19,19 @@ import {
   Pagination,
   SortDescriptor,
   useDisclosure,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
   Tabs,
   Tab,
-  Select,
-  SelectItem,
 } from "@heroui/react";
 import { Plus, Edit, Trash2, Search, Users, QrCode } from "lucide-react";
 import { useAuth } from "@/routes/AuthContext";
 import { v4 as uuidv4 } from "uuid";
 import { useGetTables } from "@/services/table/useTable";
 import { useGetZones } from "@/services/table/useZone";
-import { toast } from "react-hot-toast";
 import ConfirmModal from "@/components/common/popup-confirm";
+import CreateAndEdit from "./CreateAndEdit";
 
 const columns = [
+  { name: "ລຳດັບ", uid: "id", sortable: true },
   { name: "ຊື່ໂຕະ", uid: "name", sortable: true },
   { name: "ໂຊນ", uid: "zoneId", sortable: true },
   { name: "ຈຳນວນບ່ອນນັ່ງ", uid: "capacity", sortable: true },
@@ -49,6 +40,7 @@ const columns = [
 ];
 
 const zoneColumns = [
+  { name: "ລຳດັບ", uid: "id", sortable: true },
   { name: "ຊື່ໂຊນ", uid: "name", sortable: true },
   { name: "ຈັດການ", uid: "actions" },
 ];
@@ -66,7 +58,7 @@ export default function TableSettingsPage() {
   const [page, setPage] = useState(1);
   const [selectedTab, setSelectedTab] = useState("table");
   const [modalType, setModalType] = useState<"table" | "zone">("table");
-  const [formData, setFormData] = useState<any>({});
+  const [selectedItem, setSelectedItem] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const {
@@ -78,17 +70,16 @@ export default function TableSettingsPage() {
     type: "table" | "zone";
     id: string;
   } | null>(null);
+  const {
+    isOpen: isPendingOpen,
+    onOpen: onPendingOpen,
+    onClose: onPendingClose,
+    onOpenChange: onPendingOpenChange,
+  } = useDisclosure();
 
-  const { mutateAsync: createTable, isPending: isCreatingTable } =
-    useCreateTable();
   const { mutateAsync: updateTable, isPending: isUpdatingTable } =
     useUpdateTable();
   const { mutateAsync: deleteTable } = useDeleteTable(storeId);
-
-  const { mutateAsync: createZone, isPending: isCreatingZone } =
-    useCreateZone();
-  const { mutateAsync: updateZone, isPending: isUpdatingZone } =
-    useUpdateZone();
   const { mutateAsync: deleteZone } = useDeleteZone(storeId);
 
   const { data: tablesResponse, isLoading: isLoadingTables } =
@@ -138,18 +129,14 @@ export default function TableSettingsPage() {
   }, [sortDescriptor, items]);
 
   const handleOpenModal = (type: "table" | "zone", item: any = null) => {
-    setModalType(type);
-    if (item) {
-      setFormData(item);
-      setIsEditing(true);
-    } else {
-      if (type === "table") {
-        setFormData({ name: "", capacity: 4, zoneId: "" });
-      } else {
-        setFormData({ name: "", description: "" });
-      }
-      setIsEditing(false);
+    // @ts-ignore
+    if (!item && user?.user?.store?.status === "PENDING") {
+      onPendingOpen();
+      return;
     }
+    setModalType(type);
+    setSelectedItem(item);
+    setIsEditing(!!item);
     onOpen();
   };
 
@@ -178,46 +165,17 @@ export default function TableSettingsPage() {
     });
   };
 
-  const handleSave = async (onClose: () => void) => {
-    try {
-      if (modalType === "table") {
-        if (!formData.zoneId) {
-          toast.error("ກະລຸນາເລືອກໂຊນກ່ອນບັນທຶກ");
-          return;
-        }
-        const payload = {
-          storeId: storeId!,
-          name: formData.name,
-          capacity: Number(formData.capacity) || 0,
-          zoneId: formData.zoneId,
-        };
-        if (isEditing) {
-          await updateTable({ id: formData.id, ...payload });
-        } else {
-          await createTable(payload);
-        }
-      } else {
-        const payload = {
-          storeId: storeId!,
-          name: formData.name,
-          description: formData.description,
-        };
-        if (isEditing) {
-          await updateZone({ id: formData.id, ...payload });
-        } else {
-          await createZone(payload);
-        }
-      }
-      onClose();
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
   const renderCell = (table: any, columnKey: React.Key) => {
     const cellValue = table[columnKey as keyof typeof table];
 
     switch (columnKey) {
+      case "id":
+        const index = sortedItems.findIndex((item: any) => item.id === table.id);
+        return (
+          <span className="text-small font-medium">
+            {(page - 1) * rowsPerPage + index + 1}
+          </span>
+        );
       case "name":
         return (
           <div className="flex flex-col">
@@ -403,104 +361,15 @@ export default function TableSettingsPage() {
         </TableBody>
       </Table>
 
-      <Modal isOpen={isOpen} onOpenChange={onOpenChange} size="lg">
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader className="flex flex-col gap-1">
-                <h2 className="text-2xl font-black text-primary">
-                  {isEditing ? "ແກ້ໄຂ" : "ເພີ່ມ"}{" "}
-                  {modalType === "table" ? "ໂຕະອາຫານ" : "ໂຊນ"}
-                </h2>
-              </ModalHeader>
-              <ModalBody className="gap-4 pb-8">
-                {modalType === "table" ? (
-                  <>
-                    <Input
-                      label="ຊື່ໂຕະ"
-                      placeholder="T-01"
-                      variant="bordered"
-                      labelPlacement="outside"
-                      value={formData.name || ""}
-                      onValueChange={(val) =>
-                        setFormData({ ...formData, name: val })
-                      }
-                    />
-                    <Input
-                      label="ຈຳນວນບ່ອນນັ່ງ"
-                      placeholder="4"
-                      variant="bordered"
-                      type="number"
-                      labelPlacement="outside"
-                      value={formData.capacity?.toString() || ""}
-                      onValueChange={(val) =>
-                        setFormData({ ...formData, capacity: val })
-                      }
-                    />
-                    <Select
-                      label="ໂຊນ"
-                      placeholder="ເລືອກໂຊນ"
-                      variant="bordered"
-                      labelPlacement="outside"
-                      selectedKeys={formData.zoneId ? [formData.zoneId] : []}
-                      onSelectionChange={(keys) =>
-                        setFormData({
-                          ...formData,
-                          zoneId: Array.from(keys)[0] as string,
-                        })
-                      }
-                    >
-                      {zones.map((zone: any) => (
-                        <SelectItem key={zone.id}>{zone.name}</SelectItem>
-                      ))}
-                    </Select>
-                  </>
-                ) : (
-                  <>
-                    <Input
-                      label="ຊື່ໂຊນ"
-                      placeholder="VIP Zone"
-                      variant="bordered"
-                      labelPlacement="outside"
-                      value={formData.name || ""}
-                      onValueChange={(val) =>
-                        setFormData({ ...formData, name: val })
-                      }
-                    />
-                    <Input
-                      label="ລາຍລະອຽດ"
-                      placeholder="ລາຍລະອຽດເພີ່ມເຕີມ..."
-                      variant="bordered"
-                      labelPlacement="outside"
-                      value={formData.description || ""}
-                      onValueChange={(val) =>
-                        setFormData({ ...formData, description: val })
-                      }
-                    />
-                  </>
-                )}
-              </ModalBody>
-              <ModalFooter>
-                <Button color="danger" variant="light" onPress={onClose}>
-                  ຍົກເລີກ
-                </Button>
-                <Button
-                  color="primary"
-                  isLoading={
-                    isCreatingTable ||
-                    isUpdatingTable ||
-                    isCreatingZone ||
-                    isUpdatingZone
-                  }
-                  onPress={() => handleSave(onClose)}
-                >
-                  ບັນທຶກ
-                </Button>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
+      <CreateAndEdit
+        isOpen={isOpen}
+        onOpenChange={onOpenChange}
+        isEditing={isEditing}
+        modalType={modalType}
+        item={selectedItem}
+        zones={zones}
+        storeId={storeId!}
+      />
       <ConfirmModal
         isOpen={isDeleteOpen}
         onOpenChange={onDeleteOpenChange}
@@ -511,6 +380,17 @@ export default function TableSettingsPage() {
         onConfirm={confirmDelete}
         color="danger"
         icon={<Trash2 size={24} />}
+      />
+
+      {/* Pending Status Modal */}
+      <ConfirmModal
+        isOpen={isPendingOpen}
+        onOpenChange={onPendingOpenChange}
+        title="ບໍ່ສາມາດເພີ່ມໄດ້"
+        message="ທ່ານຍັງບໍ່ໄດ້ຍ້ອມຮັບຈາກເຈົ້າຂອງກະລູນາຕິດຕໍ່ຫາເບີ 2099999999"
+        confirmText="ຕົກລົງ"
+        onConfirm={onPendingClose}
+        color="warning"
       />
     </div>
   );

@@ -21,6 +21,7 @@ import {
   TableRow,
   TableCell,
   Switch,
+  useDisclosure,
 } from "@heroui/react";
 import GlobalTableCustom from "@/components/common/globle-table-custom";
 import GlobalPagination from "@/components/common/globle-pagination";
@@ -29,6 +30,7 @@ import SuccessModal from "@/components/common/success-modal";
 import { PermissionData } from "@/types";
 import { Input } from "@heroui/input";
 import EmptyState from "@/components/common/empty-state";
+import ConfirmModal from "@/components/common/popup-confirm";
 import {
   useGetPermissions,
   useDeletePermission,
@@ -49,6 +51,12 @@ export default function PermissionManagement() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [debouncedSearch, setDebouncedSearch] = useState<string>("");
   const [selectedStatus, setSelectedStatus] = useState<string>("");
+  const {
+    isOpen: isPendingOpen,
+    onOpen: onPendingOpen,
+    onClose: onPendingClose,
+    onOpenChange: onPendingOpenChange,
+  } = useDisclosure();
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -102,6 +110,15 @@ export default function PermissionManagement() {
   const handleSuccessModalClose = () => {
     setSelectedPermission(null);
     setIsSuccessModalOpen(false);
+  };
+
+  const handleAddUser = () => {
+    // @ts-ignore
+    if (user?.user?.store?.status === "PENDING") {
+      onPendingOpen();
+    } else {
+      navigate("/permission/add");
+    }
   };
 
   // Handle delete success
@@ -182,7 +199,7 @@ export default function PermissionManagement() {
                 variant="solid"
                 color="primary"
                 type="button"
-                onPress={() => navigate("/permission/add")}
+                onPress={handleAddUser}
               >
                 <PlusCircle size={14} />
                 <span>ເພີ່ມສິດຜູ້ໃຊ້</span>
@@ -308,6 +325,17 @@ export default function PermissionManagement() {
             onClose={handleSuccessModalClose}
           />
         </CardBody>
+
+        {/* Pending Status Modal */}
+        <ConfirmModal
+          isOpen={isPendingOpen}
+          onOpenChange={onPendingOpenChange}
+          title="ບໍ່ສາມາດເພີ່ມໄດ້"
+          message="ທ່ານຍັງບໍ່ໄດ້ຍ້ອມຮັບຈາກເຈົ້າຂອງກະລູນາຕິດຕໍ່ຫາເບີ 2099999999"
+          confirmText="ຕົກລົງ"
+          onConfirm={onPendingClose}
+          color="warning"
+        />
 
         <CardFooter className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
           <div className="text-sm text-gray-600">

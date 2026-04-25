@@ -28,7 +28,7 @@ export default function ConfirmModal({
   cancelText = "ຍົກເລີກ",
   onConfirm,
   icon,
-  color = "danger"
+  color = "primary"
 }: ConfirmModalProps) {
   return (
     <Modal
