@@ -76,6 +76,12 @@ export default function TableSettingsPage() {
     onClose: onPendingClose,
     onOpenChange: onPendingOpenChange,
   } = useDisclosure();
+  const {
+    isOpen: isRejectedOpen,
+    onOpen: onRejectedOpen,
+    onClose: onRejectedClose,
+    onOpenChange: onRejectedOpenChange,
+  } = useDisclosure();
 
   const { mutateAsync: updateTable, isPending: isUpdatingTable } =
     useUpdateTable();
@@ -130,8 +136,13 @@ export default function TableSettingsPage() {
 
   const handleOpenModal = (type: "table" | "zone", item: any = null) => {
     // @ts-ignore
-    if (!item && user?.user?.store?.status === "PENDING") {
+    const storeStatus = user?.user?.store?.status;
+    if (!item && storeStatus === "PENDING") {
       onPendingOpen();
+      return;
+    }
+    if (!item && storeStatus === "REJECTED") {
+      onRejectedOpen();
       return;
     }
     setModalType(type);
@@ -391,6 +402,17 @@ export default function TableSettingsPage() {
         confirmText="ຕົກລົງ"
         onConfirm={onPendingClose}
         color="warning"
+      />
+
+      {/* Rejected Status Modal */}
+      <ConfirmModal
+        isOpen={isRejectedOpen}
+        onOpenChange={onRejectedOpenChange}
+        title="ບໍ່ສາມາດສ້າງໄດ້"
+        message="ການສະໝັກຂອງທ່ານຖືກປະຕິເສດ"
+        confirmText="ຕົກລົງ"
+        onConfirm={onRejectedClose}
+        color="danger"
       />
     </div>
   );

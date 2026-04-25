@@ -62,6 +62,12 @@ export default function MoneyRatePage() {
     onClose: onPendingClose,
     onOpenChange: onPendingOpenChange,
   } = useDisclosure();
+  const {
+    isOpen: isRejectedOpen,
+    onOpen: onRejectedOpen,
+    onClose: onRejectedClose,
+    onOpenChange: onRejectedOpenChange,
+  } = useDisclosure();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRate, setSelectedRate] = useState<MoneyRate | null>(null);
@@ -175,8 +181,11 @@ export default function MoneyRatePage() {
 
   const handleCreateOpen = () => {
     // @ts-ignore
-    if (user?.user?.store?.status === "PENDING") {
+    const storeStatus = user?.user?.store?.status;
+    if (storeStatus === "PENDING") {
       onPendingOpen();
+    } else if (storeStatus === "REJECTED") {
+      onRejectedOpen();
     } else {
       onCreateOpen();
     }
@@ -426,6 +435,17 @@ export default function MoneyRatePage() {
         confirmText="ຕົກລົງ"
         onConfirm={onPendingClose}
         color="warning"
+      />
+
+      {/* Rejected Status Modal */}
+      <ConfirmModal
+        isOpen={isRejectedOpen}
+        onOpenChange={onRejectedOpenChange}
+        title="ບໍ່ສາມາດສ້າງໄດ້"
+        message="ການສະໝັກຂອງທ່ານຖືກປະຕິເສດ"
+        confirmText="ຕົກລົງ"
+        onConfirm={onRejectedClose}
+        color="danger"
       />
     </div>
   );

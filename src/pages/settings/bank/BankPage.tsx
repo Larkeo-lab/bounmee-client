@@ -57,6 +57,12 @@ export default function BankPage() {
     onClose: onPendingClose,
     onOpenChange: onPendingOpenChange,
   } = useDisclosure();
+  const {
+    isOpen: isRejectedOpen,
+    onOpen: onRejectedOpen,
+    onClose: onRejectedClose,
+    onOpenChange: onRejectedOpenChange,
+  } = useDisclosure();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedBank, setSelectedBank] = useState<Bank | null>(null);
@@ -168,8 +174,11 @@ export default function BankPage() {
 
   const handleCreateOpen = () => {
     // @ts-ignore
-    if (user?.user?.store?.status === "PENDING") {
+    const storeStatus = user?.user?.store?.status;
+    if (storeStatus === "PENDING") {
       onPendingOpen();
+    } else if (storeStatus === "REJECTED") {
+      onRejectedOpen();
     } else {
       onCreateOpen();
     }
@@ -566,6 +575,17 @@ export default function BankPage() {
         confirmText="ຕົກລົງ"
         onConfirm={onPendingClose}
         color="warning"
+      />
+
+      {/* Rejected Status Modal */}
+      <ConfirmModal
+        isOpen={isRejectedOpen}
+        onOpenChange={onRejectedOpenChange}
+        title="ບໍ່ສາມາດສ້າງໄດ້"
+        message="ການສະໝັກຂອງທ່ານຖືກປະຕິເສດ"
+        confirmText="ຕົກລົງ"
+        onConfirm={onRejectedClose}
+        color="danger"
       />
     </div>
   );

@@ -52,6 +52,12 @@ export default function CategoryPage() {
     onClose: onPendingClose,
     onOpenChange: onPendingOpenChange,
   } = useDisclosure();
+  const {
+    isOpen: isRejectedOpen,
+    onOpen: onRejectedOpen,
+    onClose: onRejectedClose,
+    onOpenChange: onRejectedOpenChange,
+  } = useDisclosure();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(
@@ -152,8 +158,11 @@ export default function CategoryPage() {
 
   const handleCreateOpen = () => {
     // @ts-ignore
-    if (user?.user?.store?.status === "PENDING") {
+    const storeStatus = user?.user?.store?.status;
+    if (storeStatus === "PENDING") {
       onPendingOpen();
+    } else if (storeStatus === "REJECTED") {
+      onRejectedOpen();
     } else {
       onCreateOpen();
     }
@@ -385,6 +394,17 @@ export default function CategoryPage() {
         confirmText="ຕົກລົງ"
         onConfirm={onPendingClose}
         color="warning"
+      />
+
+      {/* Rejected Status Modal */}
+      <ConfirmModal
+        isOpen={isRejectedOpen}
+        onOpenChange={onRejectedOpenChange}
+        title="ບໍ່ສາມາດສ້າງໄດ້"
+        message="ການສະໝັກຂອງທ່ານຖືກປະຕิເສດ"
+        confirmText="ຕົກລົງ"
+        onConfirm={onRejectedClose}
+        color="danger"
       />
     </div>
   );

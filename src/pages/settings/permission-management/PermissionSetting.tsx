@@ -57,6 +57,12 @@ export default function PermissionManagement() {
     onClose: onPendingClose,
     onOpenChange: onPendingOpenChange,
   } = useDisclosure();
+  const {
+    isOpen: isRejectedOpen,
+    onOpen: onRejectedOpen,
+    onClose: onRejectedClose,
+    onOpenChange: onRejectedOpenChange,
+  } = useDisclosure();
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -114,8 +120,11 @@ export default function PermissionManagement() {
 
   const handleAddUser = () => {
     // @ts-ignore
-    if (user?.user?.store?.status === "PENDING") {
+    const storeStatus = user?.user?.store?.status;
+    if (storeStatus === "PENDING") {
       onPendingOpen();
+    } else if (storeStatus === "REJECTED") {
+      onRejectedOpen();
     } else {
       navigate("/permission/add");
     }
@@ -331,10 +340,21 @@ export default function PermissionManagement() {
           isOpen={isPendingOpen}
           onOpenChange={onPendingOpenChange}
           title="ບໍ່ສາມາດເພີ່ມໄດ້"
-          message="ທ່ານຍັງບໍ່ໄດ້ຍ້ອມຮັບຈາກເຈົ້າຂອງກະລູນາຕິດຕໍ່ຫາເບີ 2099999999"
+          message="ທ່ານຍັງບໍ່ໄດ້ຍ້ອມຮັບຈາກເຈົ້າຂອງກະລູນาຕິດຕໍ່ຫາເບີ 2099999999"
           confirmText="ຕົກລົງ"
           onConfirm={onPendingClose}
           color="warning"
+        />
+
+        {/* Rejected Status Modal */}
+        <ConfirmModal
+          isOpen={isRejectedOpen}
+          onOpenChange={onRejectedOpenChange}
+          title="ບໍ່ສາມາດສ້າງໄດ້"
+          message="ການສະໝັກຂອງທ່ານຖືກປະຕิເສດ"
+          confirmText="ຕົກລົງ"
+          onConfirm={onRejectedClose}
+          color="danger"
         />
 
         <CardFooter className="flex items-center justify-between px-6 py-4 border-t border-gray-200">

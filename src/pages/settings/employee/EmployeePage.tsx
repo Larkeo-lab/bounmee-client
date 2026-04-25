@@ -53,6 +53,12 @@ export default function EmployeePage() {
     onClose: onPendingClose,
     onOpenChange: onPendingOpenChange,
   } = useDisclosure();
+  const {
+    isOpen: isRejectedOpen,
+    onOpen: onRejectedOpen,
+    onClose: onRejectedClose,
+    onOpenChange: onRejectedOpenChange,
+  } = useDisclosure();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
@@ -145,8 +151,11 @@ export default function EmployeePage() {
 
   const handleCreateOpen = () => {
     // @ts-ignore
-    if (user?.user?.store?.status === "PENDING") {
+    const storeStatus = user?.user?.store?.status;
+    if (storeStatus === "PENDING") {
       onPendingOpen();
+    } else if (storeStatus === "REJECTED") {
+      onRejectedOpen();
     } else {
       setSelectedEmployee(null);
       onFormOpen();
@@ -321,6 +330,17 @@ export default function EmployeePage() {
         confirmText="ຕົກລົງ"
         onConfirm={onPendingClose}
         color="warning"
+      />
+
+      {/* Rejected Status Modal */}
+      <ConfirmModal
+        isOpen={isRejectedOpen}
+        onOpenChange={onRejectedOpenChange}
+        title="ບໍ່ສາມາດສ້າງໄດ້"
+        message="ການສະໝັກຂອງທ່ານຖືກປະຕິເສດ"
+        confirmText="ຕົກລົງ"
+        onConfirm={onRejectedClose}
+        color="danger"
       />
     </div>
   );
