@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 
 import { useGetContacts } from "@/services/contact/useContact";
+import { getDisplayImageUrl } from "@/lib/utils";
+
 
 interface PendingModalProps {
   isOpen: boolean;
@@ -79,7 +81,8 @@ export default function PendingModal({
                       showFallback
                       className="w-14 h-14 border-2 border-white shadow-md bg-warning-50"
                       name={adminContact.name}
-                      src={adminContact.profileImage}
+                      src={getDisplayImageUrl(adminContact.profileImage)}
+
                     />
                     <div className="flex-1 min-w-0">
                       <h4 className="text-base font-bold text-default-800 truncate">
