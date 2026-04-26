@@ -42,6 +42,7 @@ import { useGetCategories, Category } from "@/services/category/useCategory";
 import { formatNumber } from "@/utils/numberFormat";
 import EmptyState from "@/components/common/empty-state";
 import ConfirmModal from "@/components/common/popup-confirm";
+import PendingModal from "@/components/common/pending-modal";
 import CreateProduct from "./CreateProduct";
 import EditProduct from "./EditProduct";
 
@@ -69,7 +70,6 @@ export default function ProductPage() {
   const {
     isOpen: isPendingOpen,
     onOpen: onPendingOpen,
-    onClose: onPendingClose,
     onOpenChange: onPendingOpenChange,
   } = useDisclosure();
   const {
@@ -391,14 +391,9 @@ export default function ProductPage() {
       />
 
       {/* Pending Status Modal */}
-      <ConfirmModal
+      <PendingModal
         isOpen={isPendingOpen}
         onOpenChange={onPendingOpenChange}
-        title={t("settings.common.pendingTitle")}
-        message={t("settings.common.pendingMsg")}
-        confirmText={t("settings.common.ok")}
-        onConfirm={onPendingClose}
-        color="warning"
       />
 
       {/* Rejected Status Modal */}

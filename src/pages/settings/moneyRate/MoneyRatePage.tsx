@@ -37,6 +37,7 @@ import {
 import { formatNumber, parseNumber } from "@/utils/numberFormat";
 import EmptyState from "@/components/common/empty-state";
 import ConfirmModal from "@/components/common/popup-confirm";
+import PendingModal from "@/components/common/pending-modal";
 
 export default function MoneyRatePage() {
   const { t, i18n } = useTranslation();
@@ -61,7 +62,6 @@ export default function MoneyRatePage() {
   const {
     isOpen: isPendingOpen,
     onOpen: onPendingOpen,
-    onClose: onPendingClose,
     onOpenChange: onPendingOpenChange,
   } = useDisclosure();
   const {
@@ -429,14 +429,9 @@ export default function MoneyRatePage() {
       />
 
       {/* Pending Status Modal */}
-      <ConfirmModal
+      <PendingModal
         isOpen={isPendingOpen}
         onOpenChange={onPendingOpenChange}
-        title={t("settings.common.pendingTitle")}
-        message={t("settings.common.pendingMsg")}
-        confirmText={t("settings.common.ok")}
-        onConfirm={onPendingClose}
-        color="warning"
       />
 
       {/* Rejected Status Modal */}

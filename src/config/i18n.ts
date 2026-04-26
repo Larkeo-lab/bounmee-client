@@ -6,6 +6,7 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 import enTranslations from './messages/en.json';
 import loTranslations from './messages/lo.json';
 import thTranslations from './messages/th.json';
+import chTranslations from './messages/ch.json';
 
 const resources = {
   en: {
@@ -16,6 +17,9 @@ const resources = {
   },
   th: {
     translation: thTranslations,
+  },
+  ch: {
+    translation: chTranslations,
   }
 };
 

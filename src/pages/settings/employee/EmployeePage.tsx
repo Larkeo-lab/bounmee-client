@@ -32,6 +32,7 @@ import { getDisplayImageUrl } from "@/lib/utils";
 import { useGetStoreDetail } from "@/services/store/useStore";
 import EmptyState from "@/components/common/empty-state";
 import ConfirmModal from "@/components/common/popup-confirm";
+import PendingModal from "@/components/common/pending-modal";
 import AddAndEdit from "./AddAndEdit";
 
 export default function EmployeePage() {
@@ -52,7 +53,6 @@ export default function EmployeePage() {
   const {
     isOpen: isPendingOpen,
     onOpen: onPendingOpen,
-    onClose: onPendingClose,
     onOpenChange: onPendingOpenChange,
   } = useDisclosure();
   const {
@@ -324,14 +324,9 @@ export default function EmployeePage() {
       />
 
       {/* Pending Status Modal */}
-      <ConfirmModal
+      <PendingModal
         isOpen={isPendingOpen}
         onOpenChange={onPendingOpenChange}
-        title={t("settings.common.pendingTitle")}
-        message={t("settings.common.pendingMsg")}
-        confirmText={t("settings.common.ok")}
-        onConfirm={onPendingClose}
-        color="warning"
       />
 
       {/* Rejected Status Modal */}

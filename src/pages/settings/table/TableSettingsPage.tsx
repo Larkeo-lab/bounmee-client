@@ -29,6 +29,7 @@ import { v4 as uuidv4 } from "uuid";
 import { useGetTables } from "@/services/table/useTable";
 import { useGetZones } from "@/services/table/useZone";
 import ConfirmModal from "@/components/common/popup-confirm";
+import PendingModal from "@/components/common/pending-modal";
 import CreateAndEdit from "./CreateAndEdit";
 
 const columns = (t: any) => [
@@ -75,7 +76,6 @@ export default function TableSettingsPage() {
   const {
     isOpen: isPendingOpen,
     onOpen: onPendingOpen,
-    onClose: onPendingClose,
     onOpenChange: onPendingOpenChange,
   } = useDisclosure();
   const {
@@ -396,14 +396,9 @@ export default function TableSettingsPage() {
       />
 
       {/* Pending Status Modal */}
-      <ConfirmModal
+      <PendingModal
         isOpen={isPendingOpen}
         onOpenChange={onPendingOpenChange}
-        title={t("settings.common.pendingTitle")}
-        message={t("settings.common.pendingMsg")}
-        confirmText={t("settings.common.ok")}
-        onConfirm={onPendingClose}
-        color="warning"
       />
 
       {/* Rejected Status Modal */}

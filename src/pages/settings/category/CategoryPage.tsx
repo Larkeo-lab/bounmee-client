@@ -28,6 +28,7 @@ import {
 } from "@/services/category/useCategory";
 import EmptyState from "@/components/common/empty-state";
 import ConfirmModal from "@/components/common/popup-confirm";
+import PendingModal from "@/components/common/pending-modal";
 
 export default function CategoryPage() {
   const { t } = useTranslation();
@@ -51,7 +52,6 @@ export default function CategoryPage() {
   const {
     isOpen: isPendingOpen,
     onOpen: onPendingOpen,
-    onClose: onPendingClose,
     onOpenChange: onPendingOpenChange,
   } = useDisclosure();
   const {
@@ -387,14 +387,9 @@ export default function CategoryPage() {
       />
 
       {/* Pending Status Modal */}
-      <ConfirmModal
+      <PendingModal
         isOpen={isPendingOpen}
         onOpenChange={onPendingOpenChange}
-        title={t("settings.common.pendingTitle")}
-        message={t("settings.common.pendingMsg")}
-        confirmText={t("settings.common.ok")}
-        onConfirm={onPendingClose}
-        color="warning"
       />
 
       {/* Rejected Status Modal */}

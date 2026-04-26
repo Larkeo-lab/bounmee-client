@@ -32,6 +32,7 @@ import { PermissionData } from "@/types";
 import { Input } from "@heroui/input";
 import EmptyState from "@/components/common/empty-state";
 import ConfirmModal from "@/components/common/popup-confirm";
+import PendingModal from "@/components/common/pending-modal";
 import {
   useGetPermissions,
   useDeletePermission,
@@ -56,7 +57,6 @@ export default function PermissionManagement() {
   const {
     isOpen: isPendingOpen,
     onOpen: onPendingOpen,
-    onClose: onPendingClose,
     onOpenChange: onPendingOpenChange,
   } = useDisclosure();
   const {
@@ -86,8 +86,6 @@ export default function PermissionManagement() {
   const updateMutation = useUpdatePermission();
 
   const permissions = permissionsData?.data || [];
-
-  console.log("permissions", permissions);
 
   const toggleActive = (permission: PermissionData) => {
     updateMutation.mutate({
@@ -338,14 +336,9 @@ export default function PermissionManagement() {
         </CardBody>
 
         {/* Pending Status Modal */}
-        <ConfirmModal
+        <PendingModal
           isOpen={isPendingOpen}
           onOpenChange={onPendingOpenChange}
-          title="ບໍ່ສາມາດເພີ່ມໄດ້"
-          message="ທ່ານຍັງບໍ່ໄດ້ຍ້ອມຮັບຈາກເຈົ້າຂອງກະລູນาຕິດຕໍ່ຫາເບີ 2099999999"
-          confirmText="ຕົກລົງ"
-          onConfirm={onPendingClose}
-          color="warning"
         />
 
         {/* Rejected Status Modal */}
@@ -353,7 +346,7 @@ export default function PermissionManagement() {
           isOpen={isRejectedOpen}
           onOpenChange={onRejectedOpenChange}
           title="ບໍ່ສາມາດສ້າງໄດ້"
-          message="ການສະໝັກຂອງທ່ານຖືກປະຕิເສດ"
+          message="ການສະໝັກຂອງທ່ານຖືກປະຕິເສດ"
           confirmText="ຕົກລົງ"
           onConfirm={onRejectedClose}
           color="danger"
