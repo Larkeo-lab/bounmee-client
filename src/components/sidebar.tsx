@@ -161,8 +161,6 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
     0,
   );
 
-  console.log("user", user);
-
   // Permission Logic
   const userRole = user?.user?.role;
   const userPermissions = user?.user?.employee?.permission?.permissions || {};

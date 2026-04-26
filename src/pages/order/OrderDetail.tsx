@@ -75,8 +75,6 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({
     }
   };
 
-  console.log("user", user);
-
   return (
     <>
       <Modal

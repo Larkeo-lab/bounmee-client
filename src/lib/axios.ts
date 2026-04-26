@@ -15,10 +15,7 @@ export const API_BASE_URL = getBaseUrl(
   import.meta.env.VITE_API_BASE_URL,
   "8080",
 );
-export const WORKFLOW_API_BASE_URL = getBaseUrl(
-  import.meta.env.VITE_WORKFLOW_API_BASE_URL,
-  "8080",
-);
+
 
 // Shared interceptors
 const addAuthToken = (config: any) => {
@@ -76,19 +73,4 @@ axiosInstance.interceptors.response.use(
   handleResponseError,
 );
 
-// Workflow & Service axios instance (localhost)
-export const workflowAxiosInstance = axios.create({
-  baseURL: WORKFLOW_API_BASE_URL,
-  timeout: 30000,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
 
-workflowAxiosInstance.interceptors.request.use(addAuthToken, (error) =>
-  Promise.reject(error),
-);
-workflowAxiosInstance.interceptors.response.use(
-  (response) => response,
-  handleResponseError,
-);
