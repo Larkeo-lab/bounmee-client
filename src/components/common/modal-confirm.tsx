@@ -47,7 +47,10 @@ export default function ModalConfirm({
   closeOnConfirm = true,
 }: ModalConfirmProps) {
   const targetRef = React.useRef(null);
-  const { moveProps } = useDraggable({ targetRef, isDisabled: !isOpen || !isDraggable });
+  const { moveProps } = useDraggable({
+    targetRef,
+    isDisabled: !isOpen || !isDraggable,
+  });
 
   const handleConfirm = () => {
     onConfirm?.();
@@ -66,20 +69,40 @@ export default function ModalConfirm({
       {showTriggerButton && onOpen && (
         <Button onPress={onOpen}>{triggerButtonText}</Button>
       )}
-      <Modal ref={targetRef} isOpen={isOpen} onOpenChange={onOpenChange} backdrop="blur">
+      <Modal
+        ref={targetRef}
+        backdrop="blur"
+        isOpen={isOpen}
+        onOpenChange={onOpenChange}
+      >
         <ModalContent>
-          <ModalHeader {...(isDraggable ? moveProps : {})} className="flex justify-start items-center gap-1">
-            <div className="w-10 h-10 rounded-full flex justify-center items-center">{icon}</div>  ແຈ້ງເຕືອນ
+          <ModalHeader
+            {...(isDraggable ? moveProps : {})}
+            className="flex justify-start items-center gap-1"
+          >
+            <div className="w-10 h-10 rounded-full flex justify-center items-center">
+              {icon}
+            </div>{" "}
+            ແຈ້ງເຕືອນ
           </ModalHeader>
           <ModalBody className="min-h-20">
             <h5 className="font-semibold ">{title}</h5>
             <p className="text-sm text-gray-500 -mt-2">{content}</p>
           </ModalBody>
           <ModalFooter>
-            <Button color="default" variant="light" onPress={handleCancel} isDisabled={isLoading}>
+            <Button
+              color="default"
+              isDisabled={isLoading}
+              variant="light"
+              onPress={handleCancel}
+            >
               {cancelText}
             </Button>
-            <Button color={confirmColor} onPress={handleConfirm} isLoading={isLoading}>
+            <Button
+              color={confirmColor}
+              isLoading={isLoading}
+              onPress={handleConfirm}
+            >
               {confirmText}
             </Button>
           </ModalFooter>
@@ -88,4 +111,3 @@ export default function ModalConfirm({
     </>
   );
 }
-

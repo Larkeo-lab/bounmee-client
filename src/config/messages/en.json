@@ -214,6 +214,8 @@
       "confirmDeleteMsg": "Are you sure you want to delete this item? This action cannot be undone.",
       "pendingTitle": "Cannot Add",
       "pendingMsg": "Store is pending approval. Please contact support.",
+      "administrator": "Administrator",
+      "contactWhatsApp": "Contact via WhatsApp",
       "rejectedTitle": "Cannot Create",
       "rejectedMsg": "Your registration has been rejected.",
       "ok": "OK",

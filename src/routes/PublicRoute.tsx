@@ -1,24 +1,24 @@
-import React from 'react'
-import { Navigate } from 'react-router-dom'
+import React from "react";
+import { Navigate } from "react-router-dom";
 
 interface PublicRouteProps {
-  children: React.ReactNode
-  isAuthenticated?: boolean
-  redirectTo?: string
+  children: React.ReactNode;
+  isAuthenticated?: boolean;
+  redirectTo?: string;
 }
 
-const PublicRoute: React.FC<PublicRouteProps> = ({ 
-  children, 
-  isAuthenticated = false, 
-  redirectTo = '/dashboard' 
+const PublicRoute: React.FC<PublicRouteProps> = ({
+  children,
+  isAuthenticated = false,
+  redirectTo = "/dashboard",
 }) => {
   // If user is authenticated, redirect to the specified route (usually dashboard)
   if (isAuthenticated) {
-    return <Navigate to={redirectTo} replace />
+    return <Navigate replace to={redirectTo} />;
   }
 
   // If user is not authenticated, render the public route (login, register, etc.)
-  return <>{children}</>
-}
+  return <>{children}</>;
+};
 
-export default PublicRoute
+export default PublicRoute;

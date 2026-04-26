@@ -13,11 +13,12 @@ import {
   Banknote,
   ChevronDown,
 } from "lucide-react";
+import clsx from "clsx";
+import { toast } from "react-hot-toast";
+
 import { useCart } from "@/provider";
 import { getDisplayImageUrl } from "@/lib/utils";
 import { formatNumber } from "@/utils/numberFormat";
-import clsx from "clsx";
-import { toast } from "react-hot-toast";
 
 interface OrderRightProps {
   selectedTable: any;
@@ -53,7 +54,10 @@ const getStatusDisplay = (status: string, t: any) => {
     case "CANCEL":
       return { label: t("table.cart.cancel"), color: "danger" as const };
     default:
-      return { label: status || t("table.cart.pending"), color: "default" as const };
+      return {
+        label: status || t("table.cart.pending"),
+        color: "default" as const,
+      };
   }
 };
 
@@ -102,7 +106,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
       <div className="p-2 md:p-3 border-b border-divider flex items-center justify-between bg-primary/5 flex-shrink-0">
         <div className="flex flex-col flex-grow">
           <div className="flex items-center gap-2 font-bold text-base md:text-lg">
-            <ShoppingCart size={18} className="text-primary" />
+            <ShoppingCart className="text-primary" size={18} />
             <span>{t("table.cart.title", { name: selectedTable?.name })}</span>
           </div>
           <div className="flex items-center gap-4 ml-8 mt-1">
@@ -115,19 +119,19 @@ export const OrderRight: React.FC<OrderRightProps> = ({
           {/* Mobile Minimize instead of Close Table when Menu is open */}
           <Button
             isIconOnly
+            className="sm:hidden"
+            color="default"
             size="sm"
             variant="light"
-            color="default"
-            className="sm:hidden"
             onClick={() => setIsSelectingMenu(false)}
           >
             <ChevronDown size={20} />
           </Button>
           <Button
             isIconOnly
+            color="danger"
             size="sm"
             variant="light"
-            color="danger"
             onClick={() => setSelectedTable(null)}
           >
             ✕
@@ -138,6 +142,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
       <div className="flex items-center justify-between px-2 md:px-3 py-1.5 bg-default-100/50 border-b border-divider flex-shrink-0">
         <div className="flex items-center gap-2">
           <Checkbox
+            isDisabled={filteredCart.length === 0}
             isSelected={
               filteredCart.length > 0 &&
               filteredCart.every((item) =>
@@ -146,11 +151,13 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                 ),
               )
             }
+            size="sm"
             onValueChange={(isSelected) => {
               if (isSelected) {
                 const newIds = filteredCart.map(
                   (item) => `${item.id}-${item.status}-${item.note || ""}`,
                 );
+
                 setSelectedCartItems(
                   Array.from(new Set([...selectedCartItems, ...newIds])),
                 );
@@ -160,13 +167,12 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                     (item) => `${item.id}-${item.status}-${item.note || ""}`,
                   ),
                 );
+
                 setSelectedCartItems(
                   selectedCartItems.filter((id) => !filteredIds.has(id)),
                 );
               }
             }}
-            size="sm"
-            isDisabled={filteredCart.length === 0}
           >
             <span className="text-xs font-bold text-default-700">
               {t("table.cart.selectAll")}
@@ -181,15 +187,15 @@ export const OrderRight: React.FC<OrderRightProps> = ({
             ].map((status) => (
               <button
                 key={status.value}
-                onClick={() => {
-                  setStatusFilter(status.value);
-                  setSelectedCartItems([]);
-                }}
                 className={`px-2 py-1 text-[9px] lg:text-[10px] font-bold rounded-lg transition-all whitespace-nowrap outline-none border-[0.5px] ${
                   statusFilter === status.value
                     ? "bg-primary text-white border-primary shadow-md shadow-primary/30 scale-[1.02]"
                     : "bg-default-100 text-default-500 border-default-200 hover:bg-default-200 hover:text-default-700"
                 }`}
+                onClick={() => {
+                  setStatusFilter(status.value);
+                  setSelectedCartItems([]);
+                }}
               >
                 {status.label}
               </button>
@@ -210,6 +216,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
         {filteredCart.length > 0 ? (
           filteredCart.map((item) => {
             const uniqueId = `${item.id}-${item.status}-${item.note || ""}`;
+
             return (
               <div
                 key={uniqueId}
@@ -217,6 +224,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
               >
                 <Checkbox
                   isSelected={selectedCartItems.includes(uniqueId)}
+                  size="sm"
                   onValueChange={(isSelected) => {
                     if (isSelected) {
                       setSelectedCartItems((prev) => [...prev, uniqueId]);
@@ -226,12 +234,11 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                       );
                     }
                   }}
-                  size="sm"
                 />
                 <Image
-                  src={getDisplayImageUrl(item.image)}
                   className="w-10 h-10 lg:w-12 lg:h-12 object-cover min-w-[40px] lg:min-w-[48px]"
                   radius="md"
+                  src={getDisplayImageUrl(item.image)}
                 />
                 <div className="flex-grow flex flex-col justify-between py-0.5 min-w-0">
                   <div className="flex flex-col">
@@ -240,7 +247,8 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                     </span>
                     <div className="flex justify-between items-center mt-1">
                       <span className="text-primary font-black text-xs lg:text-sm">
-                        {formatNumber(item.price * item.quantity)} {t("table.cart.kip")}
+                        {formatNumber(item.price * item.quantity)}{" "}
+                        {t("table.cart.kip")}
                       </span>
 
                       <div className="flex items-center gap-2">
@@ -260,13 +268,17 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                           )}
 
                           {(() => {
-                            const statusConfig = getStatusDisplay(item.status, t);
+                            const statusConfig = getStatusDisplay(
+                              item.status,
+                              t,
+                            );
+
                             return (
                               <Chip
-                                size="sm"
-                                color={statusConfig.color}
-                                variant="flat"
                                 className="font-bold text-[9px] h-5"
+                                color={statusConfig.color}
+                                size="sm"
+                                variant="flat"
                               >
                                 {statusConfig.label}
                               </Chip>
@@ -277,9 +289,9 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                         <div className="flex items-center gap-1 bg-default-100 rounded-lg p-0.5 border border-default-200">
                           <Button
                             isIconOnly
+                            className="min-w-6 h-6 w-6"
                             size="sm"
                             variant="light"
-                            className="min-w-6 h-6 w-6"
                             onClick={() =>
                               updateQuantity(
                                 item.id,
@@ -292,6 +304,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                             <Minus size={10} />
                           </Button>
                           <input
+                            className="w-8 text-center font-bold text-xs bg-transparent outline-none border-none focus:ring-0"
                             type="text"
                             value={item.quantity}
                             onChange={(e) =>
@@ -302,15 +315,14 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                                 item.note,
                               )
                             }
-                            className="w-8 text-center font-bold text-xs bg-transparent outline-none border-none focus:ring-0"
                             onFocus={(e) => e.target.select()}
                           />
                           <Button
                             isIconOnly
-                            size="sm"
-                            variant="light"
                             className="min-w-6 h-6 w-6"
                             isDisabled={item.quantity >= item.stockQty}
+                            size="sm"
+                            variant="light"
                             onClick={() =>
                               updateQuantity(item.id, item.status, 1, item.note)
                             }
@@ -337,9 +349,10 @@ export const OrderRight: React.FC<OrderRightProps> = ({
 
                 <Button
                   isIconOnly
+                  className="min-w-8 h-8 w-8 sm:min-w-7 sm:h-7 sm:w-7 transition-all -mr-1"
+                  color="danger"
                   size="sm"
                   variant="flat"
-                  color="danger"
                   onClick={() => {
                     setItemToRemove({
                       id: item.id,
@@ -348,9 +361,8 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                     });
                     onRemoveItemOpen();
                   }}
-                  className="min-w-8 h-8 w-8 sm:min-w-7 sm:h-7 sm:w-7 transition-all -mr-1"
                 >
-                  <Trash2 size={16} className="sm:size-[14px]" />
+                  <Trash2 className="sm:size-[14px]" size={16} />
                 </Button>
               </div>
             );
@@ -366,26 +378,36 @@ export const OrderRight: React.FC<OrderRightProps> = ({
       <div className="px-2 py-1.5 sm:px-3 sm:py-2 border-t border-divider bg-default-50/50 flex-shrink-0 z-40">
         <div className="grid grid-cols-4 xl:grid-cols-4 gap-1 md:gap-2 items-stretch">
           <Button
-            variant="flat"
-            color={isSelectingMenu ? "danger" : "primary"}
             className={`h-8 md:h-9 font-bold text-[9px] md:text-[11px] px-1 ${isSelectingMenu ? "bg-danger/10 text-danger" : "bg-primary/10"}`}
-            onClick={() => setIsSelectingMenu(!isSelectingMenu)}
+            color={isSelectingMenu ? "danger" : "primary"}
             startContent={<Utensils size={12} />}
+            variant="flat"
+            onClick={() => setIsSelectingMenu(!isSelectingMenu)}
           >
-            {isSelectingMenu ? t("table.cart.closeMenu") : t("table.cart.openMenu")}
+            {isSelectingMenu
+              ? t("table.cart.closeMenu")
+              : t("table.cart.openMenu")}
           </Button>
           <Button
-            color="warning"
             className="h-8 md:h-9 font-bold text-[9px] md:text-[11px] text-white shadow-sm px-1"
+            color="warning"
+            isDisabled={
+              selectedCartItems.length === 0 ||
+              selectedCartItems.some((uId) => {
+                const item = cart.find(
+                  (i) => `${i.id}-${i.status}-${i.note || ""}` === uId,
+                );
+
+                return item?.status === "COOKING" || item?.status === "SERVED";
+              })
+            }
+            startContent={<ChefHat size={12} />}
             onClick={() => {
               if (!isConnected) {
-                toast.error(
-                  t("table.cart.offlineOrderWarning"),
-                  {
-                    duration: 4000,
-                    style: { fontWeight: "bold" },
-                  },
-                );
+                toast.error(t("table.cart.offlineOrderWarning"), {
+                  duration: 4000,
+                  style: { fontWeight: "bold" },
+                });
               }
               try {
                 updateStatus(selectedCartItems, "COOKING");
@@ -395,6 +417,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                 // Play notification sound
                 try {
                   const audio = new Audio("/assets/void/notification.mp3");
+
                   audio
                     .play()
                     .catch((e) => console.log("Audio play blocked:", e));
@@ -403,31 +426,29 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                 toast.error(t("table.cart.updateError"));
               }
             }}
-            startContent={<ChefHat size={12} />}
+          >
+            {t("table.cart.sendToKitchen")}
+          </Button>
+          <Button
+            className="h-8 md:h-9 font-bold text-[9px] md:text-[11px] text-white shadow-sm px-1"
+            color="primary"
             isDisabled={
               selectedCartItems.length === 0 ||
               selectedCartItems.some((uId) => {
                 const item = cart.find(
                   (i) => `${i.id}-${i.status}-${i.note || ""}` === uId,
                 );
-                return item?.status === "COOKING" || item?.status === "SERVED";
+
+                return item?.status === "SERVED";
               })
             }
-          >
-            {t("table.cart.sendToKitchen")}
-          </Button>
-          <Button
-            color="primary"
-            className="h-8 md:h-9 font-bold text-[9px] md:text-[11px] text-white shadow-sm px-1"
+            startContent={<ChefHat size={12} />}
             onClick={() => {
               if (!isConnected) {
-                toast.error(
-                  t("table.cart.offlineSyncWarning"),
-                  {
-                    duration: 4000,
-                    style: { fontWeight: "bold" },
-                  },
-                );
+                toast.error(t("table.cart.offlineSyncWarning"), {
+                  duration: 4000,
+                  style: { fontWeight: "bold" },
+                });
               }
               try {
                 updateStatus(selectedCartItems, "SERVED");
@@ -437,25 +458,15 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                 toast.error(t("table.cart.updateError"));
               }
             }}
-            startContent={<ChefHat size={12} />}
-            isDisabled={
-              selectedCartItems.length === 0 ||
-              selectedCartItems.some((uId) => {
-                const item = cart.find(
-                  (i) => `${i.id}-${i.status}-${i.note || ""}` === uId,
-                );
-                return item?.status === "SERVED";
-              })
-            }
           >
             {t("table.cart.serveFood")}
           </Button>
           <Button
-            color="secondary"
-            variant="solid"
             className="h-8 md:h-9 font-bold text-[9px] md:text-[11px] text-white shadow-sm px-1"
-            onClick={onQrOpen}
+            color="secondary"
             startContent={<QrCode size={12} />}
+            variant="solid"
+            onClick={onQrOpen}
           >
             QR
           </Button>
@@ -466,18 +477,26 @@ export const OrderRight: React.FC<OrderRightProps> = ({
         <div className="flex flex-col gap-1 mb-2">
           <div className="flex justify-between items-center text-[10px] lg:text-xs text-warning-600 font-bold">
             <span>{t("table.cart.pending")}:</span>
-            <span>{formatNumber(statusTotals.PENDING)} {t("table.cart.kip")}</span>
+            <span>
+              {formatNumber(statusTotals.PENDING)} {t("table.cart.kip")}
+            </span>
           </div>
           <div className="flex justify-between items-center text-[10px] lg:text-xs text-primary-600 font-bold">
             <span>{t("table.cart.cooking")}:</span>
-            <span>{formatNumber(statusTotals.COOKING)} {t("table.cart.kip")}</span>
+            <span>
+              {formatNumber(statusTotals.COOKING)} {t("table.cart.kip")}
+            </span>
           </div>
           <div className="flex justify-between items-center text-[10px] md:text-xs text-success-600 font-bold">
             <span>{t("table.cart.served")}:</span>
-            <span>{formatNumber(statusTotals.SERVED)} {t("table.cart.kip")}</span>
+            <span>
+              {formatNumber(statusTotals.SERVED)} {t("table.cart.kip")}
+            </span>
           </div>
           <div className="flex justify-between items-center font-black pt-1 border-t border-divider mt-1">
-            <span className="text-xs md:text-sm text-default-700">{t("table.cart.total")}:</span>
+            <span className="text-xs md:text-sm text-default-700">
+              {t("table.cart.total")}:
+            </span>
             <div className="text-right">
               <span className="text-primary text-base md:text-lg">
                 {formatNumber(subtotal)} {t("table.cart.kip")}
@@ -488,34 +507,30 @@ export const OrderRight: React.FC<OrderRightProps> = ({
 
         <div className="grid grid-cols-2 gap-2 md:gap-3">
           <Button
-            variant="flat"
-            color="danger"
             className="h-9 md:h-11 font-bold text-xs md:text-sm"
+            color="danger"
             isLoading={updateTablePending}
+            startContent={<Trash2 size={14} />}
+            variant="flat"
             onClick={() => {
               if (cart.length > 0) {
-                toast.error(
-                  t("table.cart.closeTableError"),
-                  {
-                    style: {
-                      fontWeight: "bold",
-                      borderRadius: "12px",
-                    },
+                toast.error(t("table.cart.closeTableError"), {
+                  style: {
+                    fontWeight: "bold",
+                    borderRadius: "12px",
                   },
-                );
+                });
+
                 return;
               }
               onCloseTableOpen();
             }}
-            startContent={<Trash2 size={14} />}
           >
             {t("table.cart.closeTable")}
           </Button>
           <Button
-            color="primary"
             className="h-9 md:h-11 font-bold text-xs md:text-sm shadow-md shadow-primary/20"
-            startContent={<Banknote size={14} />}
-            onPress={onPaymentOpen}
+            color="primary"
             isDisabled={
               cart.length === 0 ||
               !cart.every(
@@ -524,6 +539,8 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                   item.status?.toUpperCase() === "CANCEL",
               )
             }
+            startContent={<Banknote size={14} />}
+            onPress={onPaymentOpen}
           >
             {t("table.cart.next")}
           </Button>

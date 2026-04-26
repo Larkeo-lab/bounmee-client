@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { axiosInstance } from "@/lib/axios";
 import {
   Modal,
   ModalContent,
@@ -13,6 +12,8 @@ import {
 } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { Send, MessageCircle, Clock, Check, CheckCheck } from "lucide-react";
+
+import { axiosInstance } from "@/lib/axios";
 import { socket } from "@/config/socket";
 import { API_ENDPOINTS } from "@/config/api";
 import { getDisplayImageUrl } from "@/lib/utils";
@@ -51,6 +52,7 @@ export default function ChatPage({
     const handleResize = () => {
       if (window.visualViewport) {
         const offset = window.innerHeight - window.visualViewport.height;
+
         setKeyboardHeight(offset > 0 ? offset : 0);
       }
     };
@@ -58,6 +60,7 @@ export default function ChatPage({
     if (window.visualViewport) {
       window.visualViewport.addEventListener("resize", handleResize);
       window.visualViewport.addEventListener("scroll", handleResize);
+
       return () => {
         window.visualViewport?.removeEventListener("resize", handleResize);
         window.visualViewport?.removeEventListener("scroll", handleResize);
@@ -76,7 +79,8 @@ export default function ChatPage({
       }) => {
         if (data.tableId === tableId && data.sender !== "customer") {
           setMessages((prev) => {
-            if (prev.some(m => m.id === data.id)) return prev;
+            if (prev.some((m) => m.id === data.id)) return prev;
+
             return [
               ...prev,
               {
@@ -92,33 +96,62 @@ export default function ChatPage({
 
           if (data.id) {
             if (isOpenRef.current) {
-              socket.emit("MESSAGE_READ", { storeId, tableId, messageId: data.id, senderToMarkAsRead: "staff" });
+              socket.emit("MESSAGE_READ", {
+                storeId,
+                tableId,
+                messageId: data.id,
+                senderToMarkAsRead: "staff",
+              });
             } else {
-              socket.emit("MESSAGE_DELIVERED", { storeId, tableId, messageId: data.id });
+              socket.emit("MESSAGE_DELIVERED", {
+                storeId,
+                tableId,
+                messageId: data.id,
+              });
             }
           }
         }
       };
 
-      const handleTyping = (data: { tableId: string, sender: string, isTyping: boolean }) => {
+      const handleTyping = (data: {
+        tableId: string;
+        sender: string;
+        isTyping: boolean;
+      }) => {
         if (data.tableId === tableId && data.sender === "staff") {
           setIsStaffTyping(data.isTyping);
         }
       };
 
-      const handleDelivered = (data: { messageId?: string, tableId: string }) => {
+      const handleDelivered = (data: {
+        messageId?: string;
+        tableId: string;
+      }) => {
         if (data.tableId === tableId) {
-          setMessages((prev) => prev.map(m => 
-            (m.sender === "customer" && (m.status === "sending" || m.status === "sent")) ? { ...m, status: "delivered" } : m
-          ));
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.sender === "customer" &&
+              (m.status === "sending" || m.status === "sent")
+                ? { ...m, status: "delivered" }
+                : m,
+            ),
+          );
         }
       };
 
-      const handleRead = (data: { messageId?: string, tableId: string, senderToMarkAsRead?: string }) => {
+      const handleRead = (data: {
+        messageId?: string;
+        tableId: string;
+        senderToMarkAsRead?: string;
+      }) => {
         if (data.tableId === tableId) {
-          setMessages((prev) => prev.map(m => 
-            (m.sender === "customer" && m.status !== "read") ? { ...m, status: "read" } : m
-          ));
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.sender === "customer" && m.status !== "read"
+                ? { ...m, status: "read" }
+                : m,
+            ),
+          );
         }
       };
 
@@ -145,8 +178,9 @@ export default function ChatPage({
         );
         const mappedHistory = (res.data?.data || []).map((m: any) => ({
           ...m,
-          status: m.isRead ? "read" : "sent"
+          status: m.isRead ? "read" : "sent",
         }));
+
         setMessages(mappedHistory);
       } catch (err) {
         console.error("Failed to fetch chat history:", err);
@@ -167,22 +201,21 @@ export default function ChatPage({
       text: message,
       sender: "customer" as const,
       timestamp: new Date().toISOString(),
-      status: "sending"
+      status: "sending",
     };
 
     // Optimistically add to local messages
-    setMessages((prev) => [
-      ...prev,
-      msgData,
-    ]);
+    setMessages((prev) => [...prev, msgData]);
     setMessage("");
 
     // Emit via socket
     socket.emit("SEND_CHAT_MESSAGE", msgData, (res: any) => {
       if (res.success) {
-        setMessages((prev) => prev.map(m => 
-          m.id === tempId ? { ...m, id: res.message.id, status: "sent" } : m
-        ));
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === tempId ? { ...m, id: res.message.id, status: "sent" } : m,
+          ),
+        );
       }
     });
 
@@ -232,21 +265,22 @@ export default function ChatPage({
   // Mark messages as read when modal opens
   useEffect(() => {
     if (isOpen && storeId && tableId) {
-      socket.emit("MESSAGE_READ", { storeId, tableId, senderToMarkAsRead: "staff" });
-      setMessages(prev => prev.map(m => m.sender === "staff" ? { ...m, isRead: true } : m));
+      socket.emit("MESSAGE_READ", {
+        storeId,
+        tableId,
+        senderToMarkAsRead: "staff",
+      });
+      setMessages((prev) =>
+        prev.map((m) => (m.sender === "staff" ? { ...m, isRead: true } : m)),
+      );
     }
   }, [isOpen, storeId, tableId]);
 
   return (
     <Modal
-      isOpen={isOpen}
-      onOpenChange={onOpenChange}
-      size="md"
-      placement="bottom-center"
-      className="m-0 sm:m-4 max-h-[90vh] fixed bottom-0 left-0 right-0 mx-auto z-[100] transition-[bottom] duration-200"
-      style={{ bottom: keyboardHeight }}
-      scrollBehavior="inside"
       backdrop="blur"
+      className="m-0 sm:m-4 max-h-[90vh] fixed bottom-0 left-0 right-0 mx-auto z-[100] transition-[bottom] duration-200"
+      isOpen={isOpen}
       motionProps={{
         variants: {
           enter: {
@@ -267,6 +301,11 @@ export default function ChatPage({
           },
         },
       }}
+      placement="bottom-center"
+      scrollBehavior="inside"
+      size="md"
+      style={{ bottom: keyboardHeight }}
+      onOpenChange={onOpenChange}
     >
       <ModalContent className="bg-white/95 backdrop-blur-md rounded-t-3xl sm:rounded-3xl border-t sm:border border-white/20 shadow-2xl overflow-hidden">
         {() => (
@@ -275,8 +314,8 @@ export default function ChatPage({
               <div className="flex items-center gap-3">
                 {logoUrl ? (
                   <Image
-                    src={getDisplayImageUrl(logoUrl)}
                     className="w-10 h-10 rounded-full object-cover shadow-sm border border-default-200"
+                    src={getDisplayImageUrl(logoUrl)}
                   />
                 ) : (
                   <div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center text-success animate-pulse">
@@ -295,13 +334,13 @@ export default function ChatPage({
             </ModalHeader>
             <ModalBody className="p-0 bg-transparent">
               <ScrollShadow
-                className="h-[400px] p-4 flex flex-col gap-4 no-scrollbar"
                 ref={scrollRef}
+                className="h-[400px] p-4 flex flex-col gap-4 no-scrollbar"
               >
                 {messages.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-full text-center opacity-40 py-10 scale-90">
                     <div className="w-24 h-24 rounded-full bg-default-100 flex items-center justify-center mb-6 shadow-inner">
-                      <MessageCircle size={48} className="text-default-400" />
+                      <MessageCircle className="text-default-400" size={48} />
                     </div>
                     <p className="text-base font-black text-default-600 mb-1 line-clamp-1">
                       {t("customer.startChat")}
@@ -329,9 +368,13 @@ export default function ChatPage({
                           {msg.text}
                         </span>
                       </div>
-                      
+
                       <div className="flex items-center gap-1 mt-1.5 px-1 py-0.5">
-                        {(!msg.sender || (msg.sender === "customer" && msg.status !== "sending")) && <Clock size={9} className="text-default-400" />}
+                        {(!msg.sender ||
+                          (msg.sender === "customer" &&
+                            msg.status !== "sending")) && (
+                          <Clock className="text-default-400" size={9} />
+                        )}
                         <span className="text-[9px] text-default-400 font-bold uppercase tracking-wider">
                           {new Date(msg.timestamp).toLocaleTimeString([], {
                             hour: "2-digit",
@@ -340,10 +383,24 @@ export default function ChatPage({
                         </span>
                         {msg.sender === "customer" && (
                           <span className="ml-1 flex items-center pr-1">
-                            {msg.status === "sending" && <Clock size={10} className="text-default-400 opacity-60" />}
-                            {msg.status === "sent" && <Check size={12} className="text-default-500" />}
-                            {msg.status === "delivered" && <CheckCheck size={12} className="text-default-500" />}
-                            {msg.status === "read" && <CheckCheck size={12} className="text-blue-500" />}
+                            {msg.status === "sending" && (
+                              <Clock
+                                className="text-default-400 opacity-60"
+                                size={10}
+                              />
+                            )}
+                            {msg.status === "sent" && (
+                              <Check className="text-default-500" size={12} />
+                            )}
+                            {msg.status === "delivered" && (
+                              <CheckCheck
+                                className="text-default-500"
+                                size={12}
+                              />
+                            )}
+                            {msg.status === "read" && (
+                              <CheckCheck className="text-blue-500" size={12} />
+                            )}
                           </span>
                         )}
                       </div>
@@ -354,9 +411,9 @@ export default function ChatPage({
                 {isStaffTyping && (
                   <div className="flex flex-col items-start mb-2 mt-1 animate-appearance-in">
                     <div className="p-3.5 text-[15px] shadow-sm relative bg-white text-default-800 rounded-2xl rounded-bl-none border border-default-100 flex items-center justify-center gap-1.5 h-[46px] ml-1">
-                      <span className="w-1.5 h-1.5 bg-default-400 rounded-full animate-bounce"></span>
-                      <span className="w-1.5 h-1.5 bg-default-400 rounded-full animate-bounce delay-75"></span>
-                      <span className="w-1.5 h-1.5 bg-default-400 rounded-full animate-bounce delay-150"></span>
+                      <span className="w-1.5 h-1.5 bg-default-400 rounded-full animate-bounce" />
+                      <span className="w-1.5 h-1.5 bg-default-400 rounded-full animate-bounce delay-75" />
+                      <span className="w-1.5 h-1.5 bg-default-400 rounded-full animate-bounce delay-150" />
                     </div>
                     <span className="text-[10px] text-default-400 mt-1 font-medium ml-1">
                       {t("customer.staffTyping")}
@@ -369,26 +426,26 @@ export default function ChatPage({
               <div className="w-full flex gap-3 items-center">
                 <Input
                   fullWidth
-                  placeholder={t("customer.inputPlaceholder")}
-                  value={message}
-                  onChange={(e) => handleInputChange(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && sendMessage()}
                   className="bg-white/80"
-                  size="lg"
-                  radius="full"
                   classNames={{
                     input: "text-sm font-semibold",
                     innerWrapper: "pb-0.5",
                   }}
+                  placeholder={t("customer.inputPlaceholder")}
+                  radius="full"
+                  size="lg"
+                  value={message}
+                  onChange={(e) => handleInputChange(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && sendMessage()}
                 />
                 <Button
                   isIconOnly
+                  className="min-w-[50px] w-[50px] h-[50px] shadow-lg shadow-primary/30"
                   color="primary"
                   radius="full"
                   onPress={sendMessage}
-                  className="min-w-[50px] w-[50px] h-[50px] shadow-lg shadow-primary/30"
                 >
-                  <Send size={22} className="ml-1" />
+                  <Send className="ml-1" size={22} />
                 </Button>
               </div>
             </ModalFooter>

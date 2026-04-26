@@ -1,7 +1,6 @@
 import { Card, CardBody } from "@heroui/react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "@/routes/AuthContext";
 import {
   Package,
   Layers,
@@ -13,6 +12,8 @@ import {
   ChevronRight,
   Armchair,
 } from "lucide-react";
+
+import { useAuth } from "@/routes/AuthContext";
 
 interface SettingItem {
   titleKey: string;
@@ -118,7 +119,9 @@ const SettingsPage = () => {
     if (!key) return true;
     if (userRole === "SUPER_ADMIN" || userRole === "STORE_ADMIN") return true;
     const modulePerms = userPermissions[key] as string[] | undefined;
+
     if (modulePerms && modulePerms.includes("read")) return true;
+
     return false;
   };
 
@@ -132,9 +135,7 @@ const SettingsPage = () => {
         <h1 className="text-3xl font-black text-primary mb-2">
           {t("sidebar.menu.setting")}
         </h1>
-        <p className="text-default-500">
-          {t("settings.description.main")}
-        </p>
+        <p className="text-default-500">{t("settings.description.main")}</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -142,8 +143,8 @@ const SettingsPage = () => {
           <Card
             key={item.href}
             isPressable
-            onPress={() => navigate(item.href)}
             className="group border-none bg-white/70 dark:bg-gray-800/70 backdrop-blur-md hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
+            onPress={() => navigate(item.href)}
           >
             <CardBody className="p-6 flex flex-row items-center gap-6">
               <div

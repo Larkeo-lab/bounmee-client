@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+
 import { socket } from "@/config/socket";
 
 export const useWifiConnect = () => {
@@ -18,7 +19,7 @@ export const useWifiConnect = () => {
     const checkLatency = () => {
       if (!socket.connected) return;
       const start = performance.now();
-      
+
       // Use navigator.connection if available as a hint, or ping the server
       if ((navigator as any).connection?.rtt !== undefined) {
         setRtt((navigator as any).connection.rtt);

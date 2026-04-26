@@ -9,20 +9,23 @@ import {
   NavbarMenu,
   NavbarMenuItem,
 } from "@heroui/navbar";
-import { siteConfig } from "@/config/site";
-import ProfileDropdown from "./profile-dropdown";
-import LanguageSwitch from "./common/language-switch";
-import { SearchIcon } from "@/components/icons";
-import { useCart } from "@/provider";
 import { Wifi, WifiHigh, WifiLow, WifiOff } from "lucide-react";
 import clsx from "clsx";
+
+import ProfileDropdown from "./profile-dropdown";
+import LanguageSwitch from "./common/language-switch";
+
+import { siteConfig } from "@/config/site";
+import { SearchIcon } from "@/components/icons";
+import { useCart } from "@/provider";
 
 export const Navbar = () => {
   const { isConnected, rtt } = useCart();
 
   const WifiSignal = () => {
-    if (!isConnected) return <WifiOff size={16} className="text-danger animate-pulse" />;
-    
+    if (!isConnected)
+      return <WifiOff className="text-danger animate-pulse" size={16} />;
+
     // Determine icon based on strength
     let Icon = Wifi;
     let textColor = "text-success";
@@ -36,17 +39,17 @@ export const Navbar = () => {
       } else if (rtt >= 150) {
         Icon = WifiHigh;
         textColor = "text-success";
-        shadowColor = "rgba(23,201,100,0.6)"; 
+        shadowColor = "rgba(23,201,100,0.6)";
       }
     }
 
     return (
-      <Icon 
-        size={16} 
+      <Icon
         className={clsx(
-          textColor, 
-          `drop-shadow-[0_0_3px_${shadowColor}] transition-all duration-500`
-        )} 
+          textColor,
+          `drop-shadow-[0_0_3px_${shadowColor}] transition-all duration-500`,
+        )}
+        size={16}
       />
     );
   };
@@ -74,17 +77,21 @@ export const Navbar = () => {
 
   return (
     <HeroUINavbar
+      className="py-0 border-b border-b-default-200"
       maxWidth="full"
       position="sticky"
-      className="py-0 border-b border-b-default-200"
     >
       <NavbarContent className="flex basis-1/5 sm:basis-full" justify="end">
         <NavbarItem className="flex items-center gap-4">
           {/* status online and offline */}
-          <div className={clsx(
-            "flex items-center justify-center px-2.5 py-1.5 rounded-full border shadow-sm transition-all duration-300",
-            isConnected ? "bg-success/5 border-success/10" : "bg-danger/5 border-danger/10"
-          )}>
+          <div
+            className={clsx(
+              "flex items-center justify-center px-2.5 py-1.5 rounded-full border shadow-sm transition-all duration-300",
+              isConnected
+                ? "bg-success/5 border-success/10"
+                : "bg-danger/5 border-danger/10",
+            )}
+          >
             <WifiSignal />
           </div>
           <LanguageSwitch />

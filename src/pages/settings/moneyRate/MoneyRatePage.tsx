@@ -26,6 +26,7 @@ import {
   TrendingUp,
   TrendingDown,
 } from "lucide-react";
+
 import { useAuth } from "@/routes/AuthContext";
 import {
   useGetMoneyRates,
@@ -97,17 +98,20 @@ export default function MoneyRatePage() {
 
   const filteredItems = useMemo(() => {
     let filtered = [...moneyRates];
+
     if (searchQuery) {
       filtered = filtered.filter((item) =>
         item.name?.toLowerCase().includes(searchQuery.toLowerCase()),
       );
     }
+
     return filtered;
   }, [moneyRates, searchQuery]);
 
   const items = useMemo(() => {
     const start = (page - 1) * rowsPerPage;
     const end = start + rowsPerPage;
+
     return filteredItems.slice(start, end);
   }, [page, filteredItems]);
 
@@ -184,6 +188,7 @@ export default function MoneyRatePage() {
   const handleCreateOpen = () => {
     // @ts-ignore
     const storeStatus = user?.user?.store?.status;
+
     if (storeStatus === "PENDING") {
       onPendingOpen();
     } else if (storeStatus === "REJECTED") {
@@ -196,36 +201,36 @@ export default function MoneyRatePage() {
   const rateForm = (
     <div className="space-y-4 py-2">
       <Input
+        isRequired
         label={`${t("settings.common.nameLabel")} (Name)`}
         placeholder={t("settings.moneyRate.title")}
-        variant="bordered"
         value={formData.name}
+        variant="bordered"
         onValueChange={(val) => setFormData({ ...formData, name: val })}
-        isRequired
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Input
+          isRequired
           label={t("settings.moneyRate.sellRate")}
           placeholder="0.00"
-          variant="bordered"
+          startContent={<TrendingUp className="text-success" size={18} />}
           value={formData.rateSell}
+          variant="bordered"
           onValueChange={(val) =>
             setFormData({ ...formData, rateSell: formatNumber(val) })
           }
-          isRequired
-          startContent={<TrendingUp size={18} className="text-success" />}
         />
         <Input
+          isRequired
           label="ອັດຕາຊື้ (Buy Rate)"
           placeholder="0.00"
-          variant="bordered"
+          startContent={<TrendingDown className="text-danger" size={18} />}
           value={formData.rateBuy}
+          variant="bordered"
           onValueChange={(val) =>
             setFormData({ ...formData, rateBuy: formatNumber(val) })
           }
-          isRequired
-          startContent={<TrendingDown size={18} className="text-danger" />}
         />
       </div>
     </div>
@@ -242,10 +247,10 @@ export default function MoneyRatePage() {
           <p className="text-default-500">{t("settings.moneyRate.subtitle")}</p>
         </div>
         <Button
+          className="font-bold h-12 px-6 shadow-lg shadow-primary/30"
           color="primary"
           startContent={<Plus size={20} />}
           onPress={handleCreateOpen}
-          className="font-bold h-12 px-6 shadow-lg shadow-primary/30"
         >
           {t("settings.moneyRate.addTitle")}
         </Button>
@@ -258,8 +263,8 @@ export default function MoneyRatePage() {
           placeholder={t("settings.common.search")}
           startContent={<Search className="text-default-400" size={18} />}
           value={searchQuery}
-          onValueChange={setSearchQuery}
           variant="bordered"
+          onValueChange={setSearchQuery}
         />
         <div className="text-default-400 text-sm">
           {t("settings.common.total", { count: filteredItems.length })}
@@ -268,11 +273,6 @@ export default function MoneyRatePage() {
 
       <Table
         aria-label="Money Rate table"
-        className="mt-4"
-        classNames={{
-          wrapper: "shadow-sm border border-divider rounded-xl overflow-hidden",
-          th: "bg-default-50 text-default-600 font-bold h-12",
-        }}
         bottomContent={
           filteredItems.length > rowsPerPage && (
             <div className="flex w-full justify-center p-4">
@@ -287,21 +287,28 @@ export default function MoneyRatePage() {
             </div>
           )
         }
+        className="mt-4"
+        classNames={{
+          wrapper: "shadow-sm border border-divider rounded-xl overflow-hidden",
+          th: "bg-default-50 text-default-600 font-bold h-12",
+        }}
       >
         <TableHeader>
           <TableColumn>{t("settings.common.nameLabel")}</TableColumn>
           <TableColumn>{t("settings.moneyRate.sellRate")} (Sell)</TableColumn>
           <TableColumn>{t("settings.moneyRate.buyRate")} (Buy)</TableColumn>
           <TableColumn>{t("settings.moneyRate.lastUpdated")}</TableColumn>
-          <TableColumn className="text-center">{t("settings.common.actions")}</TableColumn>
+          <TableColumn className="text-center">
+            {t("settings.common.actions")}
+          </TableColumn>
         </TableHeader>
-        <TableBody isLoading={isLoading} emptyContent={<EmptyState />}>
+        <TableBody emptyContent={<EmptyState />} isLoading={isLoading}>
           {items.map((item) => (
             <TableRow key={item.id}>
               <TableCell>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full flex items-center justify-center border border-divider bg-default-50">
-                    <JapaneseYen size={20} className="text-default-400" />
+                    <JapaneseYen className="text-default-400" size={20} />
                   </div>
                   <span className="font-semibold">{item.name}</span>
                 </div>
@@ -317,24 +324,30 @@ export default function MoneyRatePage() {
                 </span>
               </TableCell>
               <TableCell>
-                {new Date(item.updatedAt).toLocaleString(i18n.language === "en" ? "en-US" : i18n.language === "lo" ? "lo-LA" : "th-TH")}
+                {new Date(item.updatedAt).toLocaleString(
+                  i18n.language === "en"
+                    ? "en-US"
+                    : i18n.language === "lo"
+                      ? "lo-LA"
+                      : "th-TH",
+                )}
               </TableCell>
               <TableCell>
                 <div className="flex items-center justify-center gap-2">
                   <Button
                     isIconOnly
+                    color="primary"
                     size="sm"
                     variant="light"
-                    color="primary"
                     onPress={() => handleEditOpen(item)}
                   >
                     <Edit2 size={18} />
                   </Button>
                   <Button
                     isIconOnly
+                    color="danger"
                     size="sm"
                     variant="light"
-                    color="danger"
                     onPress={() => handleDeleteOpen(item)}
                   >
                     <Trash2 size={18} />
@@ -349,10 +362,10 @@ export default function MoneyRatePage() {
       {/* Create Modal */}
       <Modal
         isOpen={isCreateOpen}
-        onOpenChange={onCreateOpenChange}
         placement="center"
-        onClose={resetForm}
         size="xl"
+        onClose={resetForm}
+        onOpenChange={onCreateOpenChange}
       >
         <ModalContent>
           {(onClose) => (
@@ -367,11 +380,11 @@ export default function MoneyRatePage() {
                 </Button>
                 <Button
                   color="primary"
-                  onPress={() => handleCreateSubmit(onClose)}
-                  isLoading={createRateMutation.isPending}
                   isDisabled={
                     !formData.name || !formData.rateSell || !formData.rateBuy
                   }
+                  isLoading={createRateMutation.isPending}
+                  onPress={() => handleCreateSubmit(onClose)}
                 >
                   {t("settings.common.save")}
                 </Button>
@@ -384,10 +397,10 @@ export default function MoneyRatePage() {
       {/* Update Modal */}
       <Modal
         isOpen={isUpdateOpen}
-        onOpenChange={onUpdateOpenChange}
         placement="center"
-        onClose={resetForm}
         size="xl"
+        onClose={resetForm}
+        onOpenChange={onUpdateOpenChange}
       >
         <ModalContent>
           {(onClose) => (
@@ -402,11 +415,11 @@ export default function MoneyRatePage() {
                 </Button>
                 <Button
                   color="primary"
-                  onPress={() => handleUpdateSubmit(onClose)}
-                  isLoading={updateRateMutation.isPending}
                   isDisabled={
                     !formData.name || !formData.rateSell || !formData.rateBuy
                   }
+                  isLoading={updateRateMutation.isPending}
+                  onPress={() => handleUpdateSubmit(onClose)}
                 >
                   {t("settings.common.update")}
                 </Button>
@@ -418,31 +431,28 @@ export default function MoneyRatePage() {
 
       {/* Delete Modal */}
       <ConfirmModal
-        isOpen={isDeleteOpen}
-        onOpenChange={onDeleteOpenChange}
-        title={t("settings.common.confirmDelete")}
-        message={t("settings.common.confirmDeleteMsg")}
-        confirmText={t("settings.common.delete")}
-        onConfirm={() => handleDeleteSubmit(onDeleteClose)}
-        icon={<Trash2 size={24} />}
         color="danger"
+        confirmText={t("settings.common.delete")}
+        icon={<Trash2 size={24} />}
+        isOpen={isDeleteOpen}
+        message={t("settings.common.confirmDeleteMsg")}
+        title={t("settings.common.confirmDelete")}
+        onConfirm={() => handleDeleteSubmit(onDeleteClose)}
+        onOpenChange={onDeleteOpenChange}
       />
 
       {/* Pending Status Modal */}
-      <PendingModal
-        isOpen={isPendingOpen}
-        onOpenChange={onPendingOpenChange}
-      />
+      <PendingModal isOpen={isPendingOpen} onOpenChange={onPendingOpenChange} />
 
       {/* Rejected Status Modal */}
       <ConfirmModal
-        isOpen={isRejectedOpen}
-        onOpenChange={onRejectedOpenChange}
-        title={t("settings.common.rejectedTitle")}
-        message={t("settings.common.rejectedMsg")}
-        confirmText={t("settings.common.ok")}
-        onConfirm={onRejectedClose}
         color="danger"
+        confirmText={t("settings.common.ok")}
+        isOpen={isRejectedOpen}
+        message={t("settings.common.rejectedMsg")}
+        title={t("settings.common.rejectedTitle")}
+        onConfirm={onRejectedClose}
+        onOpenChange={onRejectedOpenChange}
       />
     </div>
   );

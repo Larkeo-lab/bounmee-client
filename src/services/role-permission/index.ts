@@ -1,7 +1,8 @@
-import { axiosInstance } from "@/lib/axios";
-import { API_ENDPOINTS } from "@/config/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
+
+import { axiosInstance } from "@/lib/axios";
+import { API_ENDPOINTS } from "@/config/api";
 import { useAuth } from "@/routes/AuthContext";
 
 // ============ Permission Management ============
@@ -15,11 +16,13 @@ export const getPermissions = async (params?: GetPermissionsParams) => {
   const response = await axiosInstance.get(API_ENDPOINTS.PERMISSION.LIST, {
     params,
   });
+
   return response.data;
 };
 
 export const getPermissionById = async (id: string) => {
   const response = await axiosInstance.get(API_ENDPOINTS.PERMISSION.DETAIL(id));
+
   return response.data;
 };
 
@@ -28,6 +31,7 @@ export const createPermission = async (data: any) => {
     API_ENDPOINTS.PERMISSION.LIST,
     data,
   );
+
   return response.data;
 };
 
@@ -36,6 +40,7 @@ export const updatePermission = async (id: string, data: any) => {
     API_ENDPOINTS.PERMISSION.DETAIL(id),
     data,
   );
+
   return response.data;
 };
 
@@ -43,6 +48,7 @@ export const deletePermission = async (id: string) => {
   const response = await axiosInstance.delete(
     API_ENDPOINTS.PERMISSION.DETAIL(id),
   );
+
   return response.data;
 };
 
@@ -80,7 +86,9 @@ export const useCreatePermission = () => {
       toast.success("Permission created successfully");
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Failed to create permission");
+      toast.error(
+        error?.response?.data?.message || "Failed to create permission",
+      );
     },
   });
 };
@@ -96,7 +104,9 @@ export const useUpdatePermission = () => {
       toast.success("Permission updated successfully");
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Failed to update permission");
+      toast.error(
+        error?.response?.data?.message || "Failed to update permission",
+      );
     },
   });
 };
@@ -111,7 +121,9 @@ export const useDeletePermission = () => {
       toast.success("Permission deleted successfully");
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Failed to delete permission");
+      toast.error(
+        error?.response?.data?.message || "Failed to delete permission",
+      );
     },
   });
 };

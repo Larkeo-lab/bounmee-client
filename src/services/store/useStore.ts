@@ -1,7 +1,8 @@
-import { axiosInstance } from "@/lib/axios";
-import { API_ENDPOINTS } from "@/config/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
+
+import { axiosInstance } from "@/lib/axios";
+import { API_ENDPOINTS } from "@/config/api";
 
 export interface Store {
   id: string;
@@ -17,6 +18,7 @@ export interface Store {
 
 export const getStoreDetail = async (id: string) => {
   const response = await axiosInstance.get(API_ENDPOINTS.STORE.DETAIL(id));
+
   return response.data;
 };
 
@@ -26,6 +28,7 @@ export const updateStore = async (data: Partial<Store> & { id: string }) => {
     API_ENDPOINTS.STORE.DETAIL(id),
     payload,
   );
+
   return response.data;
 };
 
@@ -39,6 +42,7 @@ export const useGetStoreDetail = (id?: string) => {
 
 export const useUpdateStore = () => {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (data: Partial<Store> & { id: string }) => updateStore(data),
     onSuccess: () => {
@@ -48,6 +52,7 @@ export const useUpdateStore = () => {
     onError: (error: any) => {
       const message =
         error.response?.data?.message || "ເກີດຂໍ້ຜິດພາດໃນການອັບເດດຮ້ານ";
+
       toast.error(message);
     },
   });

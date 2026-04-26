@@ -13,6 +13,7 @@ import {
 import { Barcode, Tag, DollarSign, Package, Upload, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useState, useRef } from "react";
+
 import { useCreateProduct } from "@/services/product/useProduct";
 import { useUploadImage } from "@/services/storage";
 import { Category } from "@/services/category/useCategory";
@@ -76,8 +77,10 @@ export default function CreateProduct({
   const handleUploadImage = async (file: File) => {
     try {
       const previewUrl = URL.createObjectURL(file);
+
       setPreviewImage(previewUrl);
       const imageName = await uploadImageMutation.mutateAsync(file);
+
       setFormData((prev) => ({ ...prev, image: imageName }));
     } catch (error) {
       console.error("Failed to upload image:", error);
@@ -86,6 +89,7 @@ export default function CreateProduct({
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+
     if (file) {
       handleUploadImage(file);
     }
@@ -115,9 +119,9 @@ export default function CreateProduct({
   return (
     <Modal
       isOpen={isOpen}
-      onOpenChange={handleOpenChange}
-      size="2xl"
       scrollBehavior="inside"
+      size="2xl"
+      onOpenChange={handleOpenChange}
     >
       <ModalContent>
         {(onModalClose) => (
@@ -132,15 +136,6 @@ export default function CreateProduct({
                     {t("product.image")}
                   </label>
                   <div
-                    onClick={() => fileInputRef.current?.click()}
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={(e) => {
-                      e.preventDefault();
-                      const file = e.dataTransfer.files?.[0];
-                      if (file) {
-                        handleUploadImage(file);
-                      }
-                    }}
                     className={`
                       relative group cursor-pointer
                       w-full h-48 rounded-xl border-2 border-dashed 
@@ -148,25 +143,39 @@ export default function CreateProduct({
                       flex flex-col items-center justify-center gap-3
                       ${previewImage || formData.image ? "border-primary bg-primary/5" : "border-default-200 hover:border-primary hover:bg-default-50"}
                     `}
+                    onClick={() => fileInputRef.current?.click()}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      const file = e.dataTransfer.files?.[0];
+
+                      if (file) {
+                        handleUploadImage(file);
+                      }
+                    }}
                   >
                     {uploadImageMutation.isPending ? (
                       <div className="flex flex-col items-center gap-2">
-                        <Spinner size="lg" color="primary" />
-                        <p className="text-small text-default-500">{t("settings.common.uploading")}</p>
+                        <Spinner color="primary" size="lg" />
+                        <p className="text-small text-default-500">
+                          {t("settings.common.uploading")}
+                        </p>
                       </div>
                     ) : previewImage || formData.image ? (
                       <>
                         <img
-                          src={getDisplayImageUrl(previewImage || formData.image)}
                           alt="Preview"
                           className="w-full h-full object-contain rounded-lg p-2"
+                          src={getDisplayImageUrl(
+                            previewImage || formData.image,
+                          )}
                         />
                         <Button
                           isIconOnly
-                          size="sm"
-                          color="danger"
-                          variant="flat"
                           className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                          color="danger"
+                          size="sm"
+                          variant="flat"
                           onClick={(e) => {
                             e.stopPropagation();
                             removeImage();
@@ -191,10 +200,10 @@ export default function CreateProduct({
                       </>
                     )}
                     <input
-                      type="file"
                       ref={fileInputRef}
-                      className="hidden"
                       accept="image/*"
+                      className="hidden"
+                      type="file"
                       onChange={handleImageChange}
                     />
                   </div>
@@ -202,25 +211,26 @@ export default function CreateProduct({
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Input
-                    label={t("settings.common.nameLabel")}
-                    placeholder={t("settings.common.nameLabel")}
-                    variant="bordered"
-                    labelPlacement="outside"
+                    isRequired
                     className="col-span-1 md:col-span-2"
+                    label={t("settings.common.nameLabel")}
+                    labelPlacement="outside"
+                    placeholder={t("settings.common.nameLabel")}
                     value={formData.name}
+                    variant="bordered"
                     onValueChange={(val) =>
                       setFormData((prev) => ({ ...prev, name: val }))
                     }
-                    isRequired
                   />
                   <Select
                     label={t("product.barcodeType")}
-                    placeholder={t("product.barcodeType")}
-                    variant="bordered"
                     labelPlacement="outside"
+                    placeholder={t("product.barcodeType")}
                     selectedKeys={formData.isBarcode ? ["yes"] : ["no"]}
+                    variant="bordered"
                     onSelectionChange={(keys) => {
                       const val = Array.from(keys)[0] === "yes";
+
                       setFormData((prev) => ({
                         ...prev,
                         isBarcode: val,
@@ -228,35 +238,43 @@ export default function CreateProduct({
                       }));
                     }}
                   >
-                    <SelectItem key={"yes"}>{t("product.hasBarcode")}</SelectItem>
+                    <SelectItem key={"yes"}>
+                      {t("product.hasBarcode")}
+                    </SelectItem>
                     <SelectItem key={"no"}>{t("product.noBarcode")}</SelectItem>
                   </Select>
                   <Input
+                    isDisabled={!formData.isBarcode}
                     label={t("product.barcode")}
-                    placeholder={t("product.barcode")}
-                    variant="bordered"
                     labelPlacement="outside"
-                    startContent={<Barcode size={18} className="text-default-400" />}
+                    placeholder={t("product.barcode")}
+                    startContent={
+                      <Barcode className="text-default-400" size={18} />
+                    }
                     value={formData.barcode}
+                    variant="bordered"
                     onValueChange={(val) =>
                       setFormData((prev) => ({ ...prev, barcode: val }))
                     }
-                    isDisabled={!formData.isBarcode}
                   />
                   <Select
+                    isRequired
                     label={t("product.category")}
-                    placeholder={t("product.category")}
-                    variant="bordered"
                     labelPlacement="outside"
-                    startContent={<Tag size={18} className="text-default-400" />}
-                    selectedKeys={formData.categoryId ? [formData.categoryId] : []}
+                    placeholder={t("product.category")}
+                    selectedKeys={
+                      formData.categoryId ? [formData.categoryId] : []
+                    }
+                    startContent={
+                      <Tag className="text-default-400" size={18} />
+                    }
+                    variant="bordered"
                     onSelectionChange={(keys) =>
                       setFormData((prev) => ({
                         ...prev,
                         categoryId: Array.from(keys)[0] as string,
                       }))
                     }
-                    isRequired
                   >
                     {categories.map((cat: Category) => (
                       <SelectItem key={cat.id}>{cat.name}</SelectItem>
@@ -264,57 +282,73 @@ export default function CreateProduct({
                   </Select>
                   <Input
                     label={t("product.cost")}
-                    placeholder="0"
-                    type="text"
-                    variant="bordered"
                     labelPlacement="outside"
-                    startContent={<DollarSign size={18} className="text-default-400" />}
+                    placeholder="0"
+                    startContent={
+                      <DollarSign className="text-default-400" size={18} />
+                    }
+                    type="text"
                     value={formatNumber(formData.cost)}
+                    variant="bordered"
                     onValueChange={(val) =>
-                      setFormData((prev) => ({ ...prev, cost: parseNumber(val) }))
+                      setFormData((prev) => ({
+                        ...prev,
+                        cost: parseNumber(val),
+                      }))
                     }
                   />
                   <Input
-                    label={t("product.price")}
-                    placeholder="0"
-                    type="text"
-                    variant="bordered"
-                    labelPlacement="outside"
-                    startContent={<DollarSign size={18} className="text-default-400" />}
-                    value={formatNumber(formData.price)}
-                    onValueChange={(val) =>
-                      setFormData((prev) => ({ ...prev, price: parseNumber(val) }))
-                    }
                     isRequired
+                    label={t("product.price")}
+                    labelPlacement="outside"
+                    placeholder="0"
+                    startContent={
+                      <DollarSign className="text-default-400" size={18} />
+                    }
+                    type="text"
+                    value={formatNumber(formData.price)}
+                    variant="bordered"
+                    onValueChange={(val) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        price: parseNumber(val),
+                      }))
+                    }
                   />
                   <Input
                     label={t("product.stockQty")}
-                    placeholder="0"
-                    type="text"
-                    variant="bordered"
                     labelPlacement="outside"
-                    startContent={<Package size={18} className="text-default-400" />}
+                    placeholder="0"
+                    startContent={
+                      <Package className="text-default-400" size={18} />
+                    }
+                    type="text"
                     value={formatNumber(formData.stockQty)}
+                    variant="bordered"
                     onValueChange={(val) =>
-                      setFormData((prev) => ({ ...prev, stockQty: parseNumber(val) }))
+                      setFormData((prev) => ({
+                        ...prev,
+                        stockQty: parseNumber(val),
+                      }))
                     }
                   />
                 </div>
               </div>
             </ModalBody>
             <ModalFooter>
-              <Button variant="flat" color="danger" onPress={onModalClose}>
+              <Button color="danger" variant="flat" onPress={onModalClose}>
                 {t("settings.common.cancel")}
               </Button>
               <Button
                 color="primary"
-                onPress={() => handleSubmit(onModalClose)}
-                isLoading={
-                  createProductMutation.isPending || uploadImageMutation.isPending
-                }
                 isDisabled={
                   !formData.name || !formData.categoryId || formData.price <= 0
                 }
+                isLoading={
+                  createProductMutation.isPending ||
+                  uploadImageMutation.isPending
+                }
+                onPress={() => handleSubmit(onModalClose)}
               >
                 {t("settings.common.save")}
               </Button>

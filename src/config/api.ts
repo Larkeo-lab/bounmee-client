@@ -1,7 +1,4 @@
-
-
 const API_VERSION = "/api/v1";
-
 
 export const API_ENDPOINTS = {
   AUTH: {
@@ -84,5 +81,8 @@ export const API_ENDPOINTS = {
     HISTORY: (tableId: string) => `${API_VERSION}/chat/history/${tableId}`,
     UNREAD: (storeId: string) => `${API_VERSION}/chat/unread/${storeId}`,
     READ: (tableId: string) => `${API_VERSION}/chat/read/${tableId}`,
+  },
+  CONTACT: {
+    LIST: `${API_VERSION}/contact`,
   },
 };

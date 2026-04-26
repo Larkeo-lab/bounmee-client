@@ -18,6 +18,7 @@ import {
   useDisclosure,
 } from "@heroui/react";
 import { Plus, Search, Edit2, Trash2, LayoutGrid } from "lucide-react";
+
 import { useAuth } from "@/routes/AuthContext";
 import {
   useGetCategories,
@@ -84,17 +85,20 @@ export default function CategoryPage() {
 
   const filteredItems = useMemo(() => {
     let filtered = [...categories];
+
     if (searchQuery) {
       filtered = filtered.filter((item) =>
         item.name.toLowerCase().includes(searchQuery.toLowerCase()),
       );
     }
+
     return filtered;
   }, [categories, searchQuery]);
 
   const items = useMemo(() => {
     const start = (page - 1) * rowsPerPage;
     const end = start + rowsPerPage;
+
     return filteredItems.slice(start, end);
   }, [page, filteredItems]);
 
@@ -161,6 +165,7 @@ export default function CategoryPage() {
   const handleCreateOpen = () => {
     // @ts-ignore
     const storeStatus = user?.user?.store?.status;
+
     if (storeStatus === "PENDING") {
       onPendingOpen();
     } else if (storeStatus === "REJECTED") {
@@ -178,15 +183,13 @@ export default function CategoryPage() {
             <LayoutGrid size={28} />
             {t("settings.category.title")}
           </h1>
-          <p className="text-default-500">
-            {t("settings.category.subtitle")}
-          </p>
+          <p className="text-default-500">{t("settings.category.subtitle")}</p>
         </div>
         <Button
+          className="font-bold h-12 px-6 shadow-lg shadow-primary/30"
           color="primary"
           startContent={<Plus size={20} />}
           onPress={handleCreateOpen}
-          className="font-bold h-12 px-6 shadow-lg shadow-primary/30"
         >
           {t("settings.category.addTitle")}
         </Button>
@@ -199,8 +202,8 @@ export default function CategoryPage() {
           placeholder={t("settings.common.search")}
           startContent={<Search className="text-default-400" size={18} />}
           value={searchQuery}
-          onValueChange={setSearchQuery}
           variant="bordered"
+          onValueChange={setSearchQuery}
         />
         <div className="text-default-400 text-sm">
           {t("settings.common.total", { count: filteredItems.length })}
@@ -209,11 +212,6 @@ export default function CategoryPage() {
 
       <Table
         aria-label="Category table"
-        className="mt-4"
-        classNames={{
-          wrapper: "shadow-sm border border-divider rounded-xl overflow-hidden",
-          th: "bg-default-50 text-default-600 font-bold h-12",
-        }}
         bottomContent={
           filteredItems.length > rowsPerPage && (
             <div className="flex w-full justify-center p-4">
@@ -228,14 +226,21 @@ export default function CategoryPage() {
             </div>
           )
         }
+        className="mt-4"
+        classNames={{
+          wrapper: "shadow-sm border border-divider rounded-xl overflow-hidden",
+          th: "bg-default-50 text-default-600 font-bold h-12",
+        }}
       >
         <TableHeader>
           <TableColumn>{t("settings.common.no")}</TableColumn>
           <TableColumn>{t("settings.common.nameLabel")}</TableColumn>
-          <TableColumn className="text-center">{t("settings.common.actions")}</TableColumn>
+          <TableColumn className="text-center">
+            {t("settings.common.actions")}
+          </TableColumn>
         </TableHeader>
-        <TableBody isLoading={isLoading} emptyContent={<EmptyState />}>
-          {items.map((category,index) => (
+        <TableBody emptyContent={<EmptyState />} isLoading={isLoading}>
+          {items.map((category, index) => (
             <TableRow key={category.id}>
               <TableCell className="font-semibold">{index + 1}</TableCell>
               <TableCell className="font-semibold">{category.name}</TableCell>
@@ -246,18 +251,18 @@ export default function CategoryPage() {
                 <div className="flex items-center justify-center gap-2">
                   <Button
                     isIconOnly
+                    color="primary"
                     size="sm"
                     variant="light"
-                    color="primary"
                     onPress={() => handleEditOpen(category)}
                   >
                     <Edit2 size={18} />
                   </Button>
                   <Button
                     isIconOnly
+                    color="danger"
                     size="sm"
                     variant="light"
-                    color="danger"
                     onPress={() => handleDeleteOpen(category)}
                   >
                     <Trash2 size={18} />
@@ -271,9 +276,9 @@ export default function CategoryPage() {
       {/* Create Modal */}
       <Modal
         isOpen={isCreateOpen}
-        onOpenChange={onCreateOpenChange}
         placement="center"
         onClose={resetForm}
+        onOpenChange={onCreateOpenChange}
       >
         <ModalContent>
           {(onClose) => (
@@ -286,8 +291,8 @@ export default function CategoryPage() {
                   <Input
                     label={t("settings.category.nameLabel")}
                     placeholder={t("settings.category.namePlaceholder")}
-                    variant="bordered"
                     value={formData.name}
+                    variant="bordered"
                     onValueChange={(val) =>
                       setFormData({ ...formData, name: val })
                     }
@@ -309,9 +314,9 @@ export default function CategoryPage() {
                 </Button>
                 <Button
                   color="primary"
-                  onPress={() => handleCreateSubmit(onClose)}
-                  isLoading={createCategoryMutation.isPending}
                   isDisabled={!formData.name}
+                  isLoading={createCategoryMutation.isPending}
+                  onPress={() => handleCreateSubmit(onClose)}
                 >
                   {t("settings.common.save")}
                 </Button>
@@ -324,9 +329,9 @@ export default function CategoryPage() {
       {/* Update Modal */}
       <Modal
         isOpen={isUpdateOpen}
-        onOpenChange={onUpdateOpenChange}
         placement="center"
         onClose={resetForm}
+        onOpenChange={onUpdateOpenChange}
       >
         <ModalContent>
           {(onClose) => (
@@ -339,8 +344,8 @@ export default function CategoryPage() {
                   <Input
                     label={t("settings.common.nameLabel")}
                     placeholder={t("settings.common.namePlaceholder")}
-                    variant="bordered"
                     value={formData.name}
+                    variant="bordered"
                     onValueChange={(val) =>
                       setFormData({ ...formData, name: val })
                     }
@@ -362,9 +367,9 @@ export default function CategoryPage() {
                 </Button>
                 <Button
                   color="primary"
-                  onPress={() => handleUpdateSubmit(onClose)}
-                  isLoading={updateCategoryMutation.isPending}
                   isDisabled={!formData.name}
+                  isLoading={updateCategoryMutation.isPending}
+                  onPress={() => handleUpdateSubmit(onClose)}
                 >
                   {t("settings.common.update")}
                 </Button>
@@ -376,31 +381,28 @@ export default function CategoryPage() {
 
       {/* Delete Modal */}
       <ConfirmModal
-        isOpen={isDeleteOpen}
-        onOpenChange={onDeleteOpenChange}
-        title={t("settings.common.confirmDelete")}
-        message={t("settings.common.confirmDeleteMsg")}
-        confirmText={t("settings.common.delete")}
-        onConfirm={() => handleDeleteSubmit(onDeleteClose)}
-        icon={<Trash2 size={24} />}
         color="danger"
+        confirmText={t("settings.common.delete")}
+        icon={<Trash2 size={24} />}
+        isOpen={isDeleteOpen}
+        message={t("settings.common.confirmDeleteMsg")}
+        title={t("settings.common.confirmDelete")}
+        onConfirm={() => handleDeleteSubmit(onDeleteClose)}
+        onOpenChange={onDeleteOpenChange}
       />
 
       {/* Pending Status Modal */}
-      <PendingModal
-        isOpen={isPendingOpen}
-        onOpenChange={onPendingOpenChange}
-      />
+      <PendingModal isOpen={isPendingOpen} onOpenChange={onPendingOpenChange} />
 
       {/* Rejected Status Modal */}
       <ConfirmModal
-        isOpen={isRejectedOpen}
-        onOpenChange={onRejectedOpenChange}
-        title="ບໍ່ສາມາດສ້າງໄດ້"
-        message="ການສະໝັກຂອງທ່ານຖືກປະຕิເສດ"
-        confirmText="ຕົກລົງ"
-        onConfirm={onRejectedClose}
         color="danger"
+        confirmText="ຕົກລົງ"
+        isOpen={isRejectedOpen}
+        message="ການສະໝັກຂອງທ່ານຖືກປະຕิເສດ"
+        title="ບໍ່ສາມາດສ້າງໄດ້"
+        onConfirm={onRejectedClose}
+        onOpenChange={onRejectedOpenChange}
       />
     </div>
   );

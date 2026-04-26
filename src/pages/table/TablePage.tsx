@@ -1,14 +1,8 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "@/routes/AuthContext";
-import { useGetTables, useUpdateTable } from "@/services/table/useTable";
-import { useGetZones } from "@/services/table/useZone";
-import { useGetProducts } from "@/services/product/useProduct";
-import { useGetCategories, Category } from "@/services/category/useCategory";
 import clsx from "clsx";
 import { QRCodeSVG } from "qrcode.react";
-import { socket } from "@/config/socket";
 import {
   Card,
   CardBody,
@@ -23,11 +17,6 @@ import {
   ModalBody,
   ScrollShadow,
 } from "@heroui/react";
-import EmptyState from "@/components/common/empty-state";
-import { TableCart } from "./components/TableCart";
-import { OrderRight } from "./components/OrderRight";
-import { MenuList } from "./components/MenuList";
-import ConfirmModal from "@/components/common/popup-confirm";
 import {
   Search,
   Armchair,
@@ -41,9 +30,22 @@ import {
   Utensils,
   Trash2, // Added Trash2
 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+
+import { TableCart } from "./components/TableCart";
+import { OrderRight } from "./components/OrderRight";
+import { MenuList } from "./components/MenuList";
+
+import { useAuth } from "@/routes/AuthContext";
+import { useGetTables, useUpdateTable } from "@/services/table/useTable";
+import { useGetZones } from "@/services/table/useZone";
+import { useGetProducts } from "@/services/product/useProduct";
+import { useGetCategories, Category } from "@/services/category/useCategory";
+import { socket } from "@/config/socket";
+import EmptyState from "@/components/common/empty-state";
+import ConfirmModal from "@/components/common/popup-confirm";
 import { useCart } from "@/provider";
 import PaymentModal from "@/components/common/payment-modal";
-import { useQueryClient } from "@tanstack/react-query";
 
 export default function TablePage() {
   const queryClient = useQueryClient();
@@ -121,8 +123,10 @@ export default function TablePage() {
   const toggleNote = (uId: string) => {
     setExpandedNotes((prev) => {
       const next = new Set(prev);
+
       if (next.has(uId)) next.delete(uId);
       else next.add(uId);
+
       return next;
     });
   };
@@ -149,10 +153,7 @@ export default function TablePage() {
 
   // useEffect: ซิงค์ข้อมูลตะกร้าสินค้าของโต๊ะที่เลือกมาไว้ใน Provider ส่วนกลาง
   useEffect(() => {
-    if (
-      selectedTable?.id &&
-      Array.isArray(selectedTable.activeCart)
-    ) {
+    if (selectedTable?.id && Array.isArray(selectedTable.activeCart)) {
       // ถ้าเปลี่ยนโต๊ะ หรือ โต๊ะเดิมแต่สถานะเป็น AVAILABLE (เพิ่งเปิดใหม่)
       // ให้ซิงค์ข้อมูลจากเซิร์ฟเวอร์ทุกครั้ง
       const isNewSelection = syncedTableRef.current !== selectedTable.id;
@@ -160,21 +161,31 @@ export default function TablePage() {
 
       if (isNewSelection || isAvailable) {
         syncedTableRef.current = selectedTable.id;
-        
+
         // บังคับล้างข้อมูลถ้าสถานะเป็น AVAILABLE เพื่อป้องกันออเดอร์เก่าค้าง
         if (isAvailable) {
           clearTableCart(selectedTable.id);
           // ถ้าเป็น AVAILABLE ออเดอร์ในเครื่องควรเป็นว่างเสมอ
           setTableCart(selectedTable.id, [], selectedTable.status);
         } else {
-          setTableCart(selectedTable.id, selectedTable.activeCart, selectedTable.status);
+          setTableCart(
+            selectedTable.id,
+            selectedTable.activeCart,
+            selectedTable.status,
+          );
         }
       }
     }
     if (!selectedTable) {
       syncedTableRef.current = null;
     }
-  }, [selectedTable?.id, setTableCart, clearTableCart, selectedTable?.status, selectedTable?.activeCart]);
+  }, [
+    selectedTable?.id,
+    setTableCart,
+    clearTableCart,
+    selectedTable?.status,
+    selectedTable?.activeCart,
+  ]);
 
   // useEffect: อัปเดต ID โต๊ะที่กำลังใช้งานใน Cart context เพื่อให้จัดการตะกร้าได้ถูกโต๊ะ
   useEffect(() => {
@@ -191,6 +202,7 @@ export default function TablePage() {
   useEffect(() => {
     if (targetTableId && tables.length > 0 && !selectedTable) {
       const found = tables.find((t: any) => t.id === targetTableId);
+
       if (found) {
         setSelectedTable(found);
       }
@@ -201,12 +213,14 @@ export default function TablePage() {
   useEffect(() => {
     const handleNewOrder = (data: { tableId: string }) => {
       const found = tables.find((t: any) => t.id === data.tableId);
+
       if (found) {
         setSelectedTable(found);
       }
     };
 
     socket.on("CUSTOMER_ORDER", handleNewOrder);
+
     return () => {
       socket.off("CUSTOMER_ORDER", handleNewOrder);
     };
@@ -227,6 +241,7 @@ export default function TablePage() {
   const filteredCart = cart.filter((item) => {
     if (statusFilter === "ALL") return true;
     const itemStatus = item.status?.toUpperCase() || "PENDING";
+
     return itemStatus === statusFilter;
   });
 
@@ -235,9 +250,11 @@ export default function TablePage() {
     return cart.reduce(
       (acc, item) => {
         const s = item.status?.toUpperCase() || "PENDING";
+
         if (s !== "CANCEL") {
           acc[s] = (acc[s] || 0) + item.price * item.quantity;
         }
+
         return acc;
       },
       { PENDING: 0, COOKING: 0, SERVED: 0 } as Record<string, number>,
@@ -405,11 +422,11 @@ export default function TablePage() {
                     <Utensils size={24} /> {t("table.selectMenu")}
                   </h2>
                   <Button
-                    variant="flat"
+                    className="font-bold"
                     color="danger"
                     size="sm"
+                    variant="flat"
                     onPress={() => setIsSelectingMenu(false)}
-                    className="font-bold"
                   >
                     {t("table.back")}
                   </Button>
@@ -418,16 +435,16 @@ export default function TablePage() {
                 <>
                   <div className="flex-1 overflow-x-auto scrollbar-hide">
                     <Tabs
-                      variant="solid"
-                      color="primary"
-                      size="sm"
-                      selectedKey={selectedZone}
-                      onSelectionChange={(key) =>
-                        setSelectedZone(key as string)
-                      }
                       classNames={{
                         tabList: "flex-nowrap",
                       }}
+                      color="primary"
+                      selectedKey={selectedZone}
+                      size="sm"
+                      variant="solid"
+                      onSelectionChange={(key) =>
+                        setSelectedZone(key as string)
+                      }
                     >
                       <Tab
                         key="all"
@@ -455,14 +472,14 @@ export default function TablePage() {
 
                   <div className="flex items-center gap-2 w-full md:w-auto">
                     <Input
+                      className="w-full md:w-56"
                       placeholder={t("table.searchPlaceholder")}
                       size="sm"
                       startContent={
-                        <Search size={16} className="text-default-400" />
+                        <Search className="text-default-400" size={16} />
                       }
-                      variant="bordered"
-                      className="w-full md:w-56"
                       value={searchQuery}
+                      variant="bordered"
                       onValueChange={setSearchQuery}
                     />
                     <Button
@@ -478,27 +495,23 @@ export default function TablePage() {
               )}
             </div>
 
-            <div className={clsx(
-              "p-4 sm:p-6 flex-grow overflow-y-auto scrollbar-hide transition-all duration-300",
-              selectedTable && !isSelectingMenu && "pb-[70vh] sm:pb-6",
-              selectedTable && isSelectingMenu && "pb-[45vh] sm:pb-6"
-            )}>
+            <div
+              className={clsx(
+                "p-4 sm:p-6 flex-grow overflow-y-auto scrollbar-hide transition-all duration-300",
+                selectedTable && !isSelectingMenu && "pb-[70vh] sm:pb-6",
+                selectedTable && isSelectingMenu && "pb-[45vh] sm:pb-6",
+              )}
+            >
               {isSelectingMenu ? (
                 <div className="space-y-4 pb-10">
                   <ScrollShadow
-                    size={40}
-                    orientation="horizontal"
-                    className="max-w-full w-0 min-w-full overflow-x-auto scrollbar-hide"
                     hideScrollBar
+                    className="max-w-full w-0 min-w-full overflow-x-auto scrollbar-hide"
+                    orientation="horizontal"
+                    size={40}
                   >
                     <Tabs
                       aria-label="Product Categories"
-                      color="primary"
-                      variant="underlined"
-                      selectedKey={selectedCategory}
-                      onSelectionChange={(key) =>
-                        setSelectedCategory(key as string)
-                      }
                       classNames={{
                         tabList:
                           "gap-4 lg:gap-6 flex-nowrap p-0 min-w-max border-b-2 border-divider",
@@ -507,6 +520,12 @@ export default function TablePage() {
                         tabContent:
                           "group-data-[selected=true]:text-primary font-medium text-xs lg:text-sm whitespace-nowrap",
                       }}
+                      color="primary"
+                      selectedKey={selectedCategory}
+                      variant="underlined"
+                      onSelectionChange={(key) =>
+                        setSelectedCategory(key as string)
+                      }
                     >
                       {categories.map((cat) => (
                         <Tab key={cat.id} title={cat.label} />
@@ -515,11 +534,11 @@ export default function TablePage() {
                   </ScrollShadow>
 
                   <MenuList
+                    addToCart={addToCart}
+                    cart={cart}
                     isLoadingProducts={isLoadingProducts}
                     products={products}
                     selectedTable={selectedTable}
-                    addToCart={addToCart}
-                    cart={cart}
                   />
                 </div>
               ) : (
@@ -555,7 +574,9 @@ export default function TablePage() {
       <div
         className={clsx(
           "fixed inset-0 z-50 transition-opacity duration-300 sm:hidden",
-          (selectedTable && !isSelectingMenu) ? "bg-black/40 opacity-100" : "opacity-0 pointer-events-none"
+          selectedTable && !isSelectingMenu
+            ? "bg-black/40 opacity-100"
+            : "opacity-0 pointer-events-none",
         )}
         onClick={() => {
           if (!isSelectingMenu) {
@@ -572,46 +593,55 @@ export default function TablePage() {
             : "translate-y-full opacity-0 pointer-events-none sm:opacity-100 sm:pointer-events-auto",
         )}
       >
-        {(selectedTable || lastSelectedTable) ? (
+        {selectedTable || lastSelectedTable ? (
           <OrderRight
-            selectedTable={selectedTable || lastSelectedTable}
-            setSelectedTable={setSelectedTable}
+            expandedNotes={expandedNotes}
             filteredCart={filteredCart}
-            selectedCartItems={selectedCartItems}
-            setSelectedCartItems={setSelectedCartItems}
             isSelectingMenu={isSelectingMenu}
+            selectedCartItems={selectedCartItems}
+            selectedTable={selectedTable || lastSelectedTable}
             setIsSelectingMenu={setIsSelectingMenu}
             setItemToRemove={setItemToRemove}
-            onRemoveItemOpen={onRemoveItemOpen}
-            expandedNotes={expandedNotes}
-            toggleNote={toggleNote}
-            statusFilter={statusFilter}
+            setSelectedCartItems={setSelectedCartItems}
+            setSelectedTable={setSelectedTable}
             setStatusFilter={setStatusFilter}
+            statusFilter={statusFilter}
             statusTotals={statusTotals}
-            onQrOpen={onQrOpen}
-            onPaymentOpen={onOpen}
-            onCloseTableOpen={onCloseTableOpen}
+            toggleNote={toggleNote}
             updateTablePending={updateTable.isPending}
+            onCloseTableOpen={onCloseTableOpen}
+            onPaymentOpen={onOpen}
+            onQrOpen={onQrOpen}
+            onRemoveItemOpen={onRemoveItemOpen}
           />
         ) : (
           <div className="hidden sm:flex w-full sm:w-[320px] md:w-[350px] lg:w-[400px] h-full flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 border-l border-divider">
             <div className="flex flex-col items-center gap-4 opacity-40">
               <ShoppingCart size={80} strokeWidth={1} />
-              <p className="font-bold text-lg">{t("table.cart.selectPrompt")}</p>
+              <p className="font-bold text-lg">
+                {t("table.cart.selectPrompt")}
+              </p>
             </div>
           </div>
         )}
       </div>
 
       {/* Modals */}
-      <Modal isOpen={isQrOpen} onOpenChange={onQrOpenChange} placement="center" size="md">
+      <Modal
+        isOpen={isQrOpen}
+        placement="center"
+        size="md"
+        onOpenChange={onQrOpenChange}
+      >
         <ModalContent>
-          <ModalHeader>{t("table.modal.qrTitle", { name: selectedTable?.name })}</ModalHeader>
+          <ModalHeader>
+            {t("table.modal.qrTitle", { name: selectedTable?.name })}
+          </ModalHeader>
           <ModalBody className="flex flex-col items-center pb-8 pt-4">
             {selectedTable?.qrCode && (
               <QRCodeSVG
-                value={`${window.location.origin}/menu/${selectedTable.qrCode}`}
                 size={180}
+                value={`${window.location.origin}/menu/${selectedTable.qrCode}`}
               />
             )}
             <p className="mt-4 font-black text-2xl text-primary">
@@ -623,30 +653,29 @@ export default function TablePage() {
 
       <PaymentModal
         isOpen={isOpen}
-        onOpenChange={onOpenChange}
-        total={subtotal}
         items={cart}
         tableId={selectedTable?.id}
+        total={subtotal}
+        onOpenChange={onOpenChange}
         onPaymentSuccess={handleCloseTable}
       />
 
       <ConfirmModal
-        isOpen={isCloseTableOpen}
-        onOpenChange={onCloseTableOpenChange}
-        title={t("table.modal.closeTableTitle")}
-        message={t("table.modal.closeTableMsg", { name: selectedTable?.name })}
-        confirmText={t("table.cart.closeTable")}
         cancelText={t("common.cancel")}
-        onConfirm={handleCloseTable}
         color="danger"
+        confirmText={t("table.cart.closeTable")}
         icon={<Trash2 size={24} />}
+        isOpen={isCloseTableOpen}
+        message={t("table.modal.closeTableMsg", { name: selectedTable?.name })}
+        title={t("table.modal.closeTableTitle")}
+        onConfirm={handleCloseTable}
+        onOpenChange={onCloseTableOpenChange}
       />
 
       <ConfirmModal
         isOpen={isRemoveItemOpen}
-        onOpenChange={onRemoveItemOpenChange}
-        title={t("table.modal.confirmRemove")}
         message={t("table.modal.confirmRemoveMsg")}
+        title={t("table.modal.confirmRemove")}
         onConfirm={() => {
           if (itemToRemove) {
             removeFromCart(
@@ -657,6 +686,7 @@ export default function TablePage() {
             setItemToRemove(null);
           }
         }}
+        onOpenChange={onRemoveItemOpenChange}
       />
     </div>
   );

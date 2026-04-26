@@ -12,13 +12,7 @@ import {
   Divider,
   Chip,
 } from "@heroui/react";
-import { EyeFilledIcon, EyeSlashFilledIcon } from "@/components/icons";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/routes";
-import { useGetAllProvinces } from "@/services/province/useProvince";
-import { useGetDistrictsByProvince } from "@/services/district/useDistrict";
-import LanguageSwitch from "@/components/common/language-switch";
-import { showErrorToast } from "@/config/error-messages";
 import toast from "react-hot-toast";
 import {
   Store,
@@ -32,8 +26,18 @@ import {
   ArrowRight,
   CheckCircle2,
 } from "lucide-react";
-import oneDoorLogo from "/assets/logo.png";
+
 import version from "../../../package.json";
+
+import { EyeFilledIcon, EyeSlashFilledIcon } from "@/components/icons";
+import { useAuth } from "@/routes";
+import { useGetAllProvinces } from "@/services/province/useProvince";
+import { useGetDistrictsByProvince } from "@/services/district/useDistrict";
+import LanguageSwitch from "@/components/common/language-switch";
+import { showErrorToast } from "@/config/error-messages";
+
+import oneDoorLogo from "/assets/logo.png";
+
 import {
   trackButtonClick,
   trackFormSubmit,
@@ -95,7 +99,9 @@ export default function Register() {
 
   // Step state: 1 = pick store type, 2 = fill form
   const [step, setStep] = React.useState<1 | 2>(1);
-  const [selectedType, setSelectedType] = React.useState<StoreType | null>(null);
+  const [selectedType, setSelectedType] = React.useState<StoreType | null>(
+    null,
+  );
 
   const [isVisible, setIsVisible] = React.useState(false);
   const [isConfirmVisible, setIsConfirmVisible] = React.useState(false);
@@ -120,7 +126,10 @@ export default function Register() {
 
   const handleNextStep = () => {
     if (!selectedType) return;
-    trackButtonClick("register-select-type", `Selected store type: ${selectedType}`);
+    trackButtonClick(
+      "register-select-type",
+      `Selected store type: ${selectedType}`,
+    );
     setStep(2);
   };
 
@@ -173,7 +182,7 @@ export default function Register() {
   };
 
   const selectedTypeOption = STORE_TYPE_OPTIONS.find(
-    (o) => o.value === selectedType
+    (o) => o.value === selectedType,
   );
 
   return (
@@ -192,7 +201,11 @@ export default function Register() {
 
         <div className="relative z-10 flex flex-col items-center text-center text-white space-y-6">
           <div className="p-4 bg-white rounded-[2.5rem] shadow-2xl animate-float">
-            <Image src={oneDoorLogo} alt="Dee POS Logo" className="w-32 lg:w-48" />
+            <Image
+              alt="Dee POS Logo"
+              className="w-32 lg:w-48"
+              src={oneDoorLogo}
+            />
           </div>
           <div className="space-y-4">
             <h1 className="text-4xl lg:text-7xl font-black tracking-tight drop-shadow-lg uppercase italic">
@@ -243,7 +256,9 @@ export default function Register() {
           <div className="pt-4 grid grid-cols-2 gap-4 w-full max-w-md">
             <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20">
               <p className="text-2xl font-bold italic">PRO</p>
-              <p className="text-xs opacity-70">{t("auth.enterpriseEdition")}</p>
+              <p className="text-xs opacity-70">
+                {t("auth.enterpriseEdition")}
+              </p>
             </div>
             <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20">
               <p className="text-2xl font-bold italic">FAST</p>
@@ -261,10 +276,10 @@ export default function Register() {
         {/* Top Header Bar */}
         <div className="sticky top-0 w-full z-30 flex items-center justify-between p-4 bg-gray-50/80 dark:bg-gray-950/80 backdrop-blur-xl">
           <Button
-            variant="light"
-            startContent={<ArrowLeft size={18} />}
-            onPress={handleBack}
             className="font-semibold text-primary hover:bg-primary/5 p-0 h-auto"
+            startContent={<ArrowLeft size={18} />}
+            variant="light"
+            onPress={handleBack}
           >
             {step === 2 ? t("common.back") : t("auth.backToLogin")}
           </Button>
@@ -287,11 +302,10 @@ export default function Register() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {STORE_TYPE_OPTIONS.map((option) => {
                   const isSelected = selectedType === option.value;
+
                   return (
                     <button
                       key={option.value}
-                      type="button"
-                      onClick={() => handleSelectType(option.value)}
                       className={`relative w-full text-left rounded-2xl border-2 p-5 transition-all duration-200 cursor-pointer group
                         ${
                           isSelected
@@ -299,6 +313,8 @@ export default function Register() {
                             : "border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-700 hover:shadow-md hover:scale-[1.01]"
                         }
                       `}
+                      type="button"
+                      onClick={() => handleSelectType(option.value)}
                     >
                       {/* Icon circle */}
                       <div
@@ -319,8 +335,8 @@ export default function Register() {
                       {isSelected && (
                         <div className="absolute top-3 right-3">
                           <CheckCircle2
-                            size={22}
                             className="text-primary fill-primary/10"
+                            size={22}
                           />
                         </div>
                       )}
@@ -330,18 +346,18 @@ export default function Register() {
               </div>
 
               <Button
-                color="primary"
-                size="lg"
                 className="w-full h-14 font-bold text-lg shadow-lg shadow-primary/30"
-                isDisabled={!selectedType}
+                color="primary"
                 endContent={<ArrowRight size={20} />}
+                isDisabled={!selectedType}
+                size="lg"
                 onPress={handleNextStep}
               >
                 {t("common.next")}
                 {selectedTypeOption && (
                   <Chip
-                    size="sm"
                     className="ml-2 bg-white/20 text-white text-xs font-semibold"
+                    size="sm"
                   >
                     {t(selectedTypeOption.labelKey)}
                   </Chip>
@@ -362,10 +378,14 @@ export default function Register() {
                     <div
                       className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-white text-xs font-bold bg-gradient-to-r ${selectedTypeOption.gradient}`}
                     >
-                      {React.cloneElement(selectedTypeOption.icon as React.ReactElement, {
-                        size: 14,
-                      })}
-                      {t(selectedTypeOption.labelKey) || selectedTypeOption.defaultLabel}
+                      {React.cloneElement(
+                        selectedTypeOption.icon as React.ReactElement,
+                        {
+                          size: 14,
+                        },
+                      )}
+                      {t(selectedTypeOption.labelKey) ||
+                        selectedTypeOption.defaultLabel}
                     </div>
                   )}
                 </div>
@@ -376,7 +396,10 @@ export default function Register() {
 
               <Card className="w-full border-none bg-white/70 dark:bg-white/5 backdrop-blur-xl shadow-2xl">
                 <CardBody className="p-6 md:p-8">
-                  <Form onSubmit={onSubmit} className="w-full flex flex-col gap-6">
+                  <Form
+                    className="w-full flex flex-col gap-6"
+                    onSubmit={onSubmit}
+                  >
                     {/* Store Info */}
                     <div className="w-full space-y-4">
                       <div className="flex items-center gap-2 text-primary font-bold border-b border-divider pb-1">
@@ -387,41 +410,44 @@ export default function Register() {
                       </div>
 
                       <Input
-                        name="storeName"
-                        label={t("auth.storeName")}
-                        labelPlacement="outside"
-                        placeholder={t("auth.storeNamePlaceholder")}
-                        variant="bordered"
-                        size="lg"
                         isRequired
                         className="w-full"
                         classNames={{
-                          label: "font-semibold text-gray-700 dark:text-gray-300",
+                          label:
+                            "font-semibold text-gray-700 dark:text-gray-300",
                           inputWrapper:
                             "w-full h-14 border-2 border-default-200 hover:border-primary transition-colors",
                         }}
+                        label={t("auth.storeName")}
+                        labelPlacement="outside"
+                        name="storeName"
+                        placeholder={t("auth.storeNamePlaceholder")}
+                        size="lg"
+                        variant="bordered"
                       />
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <Select
-                          name="provinceId"
-                          label={t("auth.province")}
-                          labelPlacement="outside"
-                          placeholder={t("auth.province")}
-                          variant="bordered"
-                          size="lg"
-                          isLoading={isLoadingProvinces}
                           isRequired
                           classNames={{
-                            label: "font-semibold text-gray-700 dark:text-gray-300",
+                            label:
+                              "font-semibold text-gray-700 dark:text-gray-300",
                             trigger:
                               "h-14 border-2 border-default-200 hover:border-primary transition-colors",
                           }}
+                          isLoading={isLoadingProvinces}
+                          label={t("auth.province")}
+                          labelPlacement="outside"
+                          name="provinceId"
+                          placeholder={t("auth.province")}
+                          size="lg"
+                          variant="bordered"
                           onSelectionChange={(keys) => {
                             const provinceId = Array.from(keys)[0] as string;
                             const province = provinces.find(
-                              (p: any) => p.id === provinceId
+                              (p: any) => p.id === provinceId,
                             );
+
                             if (province) setSelectedProvince(province.code);
                           }}
                         >
@@ -433,20 +459,21 @@ export default function Register() {
                         </Select>
 
                         <Select
-                          name="districtId"
-                          label={t("auth.district")}
-                          labelPlacement="outside"
-                          placeholder={t("auth.district")}
-                          variant="bordered"
-                          size="lg"
-                          isLoading={isLoadingDistricts}
                           isRequired
-                          isDisabled={!selectedProvince}
                           classNames={{
-                            label: "font-semibold text-gray-700 dark:text-gray-300",
+                            label:
+                              "font-semibold text-gray-700 dark:text-gray-300",
                             trigger:
                               "h-14 border-2 border-default-200 hover:border-primary transition-colors",
                           }}
+                          isDisabled={!selectedProvince}
+                          isLoading={isLoadingDistricts}
+                          label={t("auth.district")}
+                          labelPlacement="outside"
+                          name="districtId"
+                          placeholder={t("auth.district")}
+                          size="lg"
+                          variant="bordered"
                         >
                           {districts.map((dist: any) => (
                             <SelectItem key={dist.id} textValue={dist.nameLo}>
@@ -457,19 +484,22 @@ export default function Register() {
                       </div>
 
                       <Input
-                        name="address"
-                        label={t("auth.address")}
-                        labelPlacement="outside"
-                        placeholder={t("auth.addressPlaceholder")}
-                        variant="bordered"
-                        size="lg"
                         className="w-full"
-                        startContent={<MapPin className="text-default-400" size={20} />}
                         classNames={{
-                          label: "font-semibold text-gray-700 dark:text-gray-300",
+                          label:
+                            "font-semibold text-gray-700 dark:text-gray-300",
                           inputWrapper:
                             "w-full h-14 border-2 border-default-200 hover:border-primary transition-colors",
                         }}
+                        label={t("auth.address")}
+                        labelPlacement="outside"
+                        name="address"
+                        placeholder={t("auth.addressPlaceholder")}
+                        size="lg"
+                        startContent={
+                          <MapPin className="text-default-400" size={20} />
+                        }
+                        variant="bordered"
                       />
                     </div>
 
@@ -516,33 +546,35 @@ export default function Register() {
                       </div> */}
 
                       <Input
-                        name="email"
-                        type="email"
-                        label={t("auth.email")}
-                        labelPlacement="outside"
-                        placeholder="example@gmail.com"
-                        variant="bordered"
-                        size="lg"
                         isRequired
                         className="w-full"
-                        startContent={<Mail className="text-default-400" size={20} />}
                         classNames={{
-                          label: "font-semibold text-gray-700 dark:text-gray-300",
+                          label:
+                            "font-semibold text-gray-700 dark:text-gray-300",
                           inputWrapper:
                             "w-full h-14 border-2 border-default-200 hover:border-primary transition-colors",
                         }}
+                        label={t("auth.email")}
+                        labelPlacement="outside"
+                        name="email"
+                        placeholder="example@gmail.com"
+                        size="lg"
+                        startContent={
+                          <Mail className="text-default-400" size={20} />
+                        }
+                        type="email"
+                        variant="bordered"
                       />
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <Input
-                          name="password"
-                          label={t("auth.password")}
-                          labelPlacement="outside"
-                          placeholder={t("auth.passwordPlaceholder")}
-                          variant="bordered"
-                          size="lg"
                           isRequired
-                          startContent={<Lock className="text-default-400" size={20} />}
+                          classNames={{
+                            label:
+                              "font-semibold text-gray-700 dark:text-gray-300",
+                            inputWrapper:
+                              "h-14 border-2 border-default-200 hover:border-primary transition-colors",
+                          }}
                           endContent={
                             <button type="button" onClick={toggleVisibility}>
                               {isVisible ? (
@@ -552,24 +584,30 @@ export default function Register() {
                               )}
                             </button>
                           }
+                          label={t("auth.password")}
+                          labelPlacement="outside"
+                          name="password"
+                          placeholder={t("auth.passwordPlaceholder")}
+                          size="lg"
+                          startContent={
+                            <Lock className="text-default-400" size={20} />
+                          }
                           type={isVisible ? "text" : "password"}
+                          variant="bordered"
+                        />
+                        <Input
+                          isRequired
                           classNames={{
-                            label: "font-semibold text-gray-700 dark:text-gray-300",
+                            label:
+                              "font-semibold text-gray-700 dark:text-gray-300",
                             inputWrapper:
                               "h-14 border-2 border-default-200 hover:border-primary transition-colors",
                           }}
-                        />
-                        <Input
-                          name="confirmPassword"
-                          label={t("auth.confirmPassword")}
-                          labelPlacement="outside"
-                          placeholder={t("auth.passwordPlaceholder")}
-                          variant="bordered"
-                          size="lg"
-                          isRequired
-                          startContent={<Lock className="text-default-400" size={20} />}
                           endContent={
-                            <button type="button" onClick={toggleConfirmVisibility}>
+                            <button
+                              type="button"
+                              onClick={toggleConfirmVisibility}
+                            >
                               {isConfirmVisible ? (
                                 <EyeSlashFilledIcon className="text-2xl text-default-400" />
                               ) : (
@@ -577,24 +615,30 @@ export default function Register() {
                               )}
                             </button>
                           }
+                          label={t("auth.confirmPassword")}
+                          labelPlacement="outside"
+                          name="confirmPassword"
+                          placeholder={t("auth.passwordPlaceholder")}
+                          size="lg"
+                          startContent={
+                            <Lock className="text-default-400" size={20} />
+                          }
                           type={isConfirmVisible ? "text" : "password"}
-                          classNames={{
-                            label: "font-semibold text-gray-700 dark:text-gray-300",
-                            inputWrapper:
-                              "h-14 border-2 border-default-200 hover:border-primary transition-colors",
-                          }}
+                          variant="bordered"
                         />
                       </div>
                     </div>
 
                     <Button
-                      type="submit"
-                      color="primary"
-                      size="lg"
                       className="w-full h-14 font-bold text-lg shadow-lg shadow-primary/30 mt-2"
+                      color="primary"
                       isLoading={isLoading}
+                      size="lg"
+                      type="submit"
                     >
-                      {isLoading ? t("auth.registering") : t("auth.registerButton")}
+                      {isLoading
+                        ? t("auth.registering")
+                        : t("auth.registerButton")}
                     </Button>
                   </Form>
                 </CardBody>

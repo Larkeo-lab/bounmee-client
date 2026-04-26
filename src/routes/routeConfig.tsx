@@ -1,5 +1,9 @@
 import React from "react";
 import { RouteObject } from "react-router-dom";
+
+import PublicRoute from "./PublicRoute";
+import PrivateRoute from "./PrivateRoute";
+
 import { Role } from "@/types";
 
 // Import page components
@@ -19,8 +23,7 @@ import PermissionSetting from "@/pages/settings/permission-management/Permission
 import AddRoleUser from "@/pages/settings/permission-management/AddRoleUser";
 
 // Import route components
-import PublicRoute from "./PublicRoute";
-import PrivateRoute from "./PrivateRoute";
+
 import Dashboard from "@/pages/dashboard/Dashboard";
 import TablePage from "@/pages/table/TablePage";
 import TableSettingsPage from "@/pages/settings/table/TableSettingsPage";
@@ -206,9 +209,9 @@ export const generateRoutes = (
     path: route.path,
     element: route.isPrivate ? (
       <PrivateRoute
-        requiresLayout={route.requiresLayout}
         allowedRoles={route.allowedRoles}
         permissionKey={route.permissionKey}
+        requiresLayout={route.requiresLayout}
       >
         {route.element}
       </PrivateRoute>

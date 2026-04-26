@@ -9,6 +9,7 @@ import {
 } from "@heroui/react";
 import { CheckCircle2, Download, X } from "lucide-react";
 import { toast } from "react-hot-toast";
+
 import { formatNumber } from "@/utils/numberFormat";
 import { getDisplayImageUrl } from "@/lib/utils";
 
@@ -59,6 +60,7 @@ export default function BillModal({
   const handleDownloadBill = async () => {
     if (!billRef.current) {
       toast.error("ບິນບໍ່ພົບໃນໜ້າຈໍ");
+
       return;
     }
 
@@ -81,11 +83,14 @@ export default function BillModal({
         onclone: (clonedDoc: Document) => {
           // 1. Remove ALL existing style and link tags to prevent html2canvas parsing errors
           const heads = clonedDoc.getElementsByTagName("head");
+
           if (heads.length > 0) {
             const head = heads[0];
             const links = Array.from(head.getElementsByTagName("link"));
+
             links.forEach((l) => head.removeChild(l));
             const styles = Array.from(head.getElementsByTagName("style"));
+
             styles.forEach((s) => head.removeChild(s));
           }
 
@@ -93,10 +98,13 @@ export default function BillModal({
           const allElements = clonedDoc.getElementsByTagName("*");
           const colorRegex =
             /(oklch|oklab)\((?:[^()]+|\((?:[^()]+|\([^()]*\))*\))*\)/g;
+
           for (let i = 0; i < allElements.length; i++) {
             const el = allElements[i] as HTMLElement;
+
             if (el.getAttribute && el.getAttribute("style")) {
               const style = el.getAttribute("style") || "";
+
               if (style.includes("oklch") || style.includes("oklab")) {
                 el.setAttribute("style", style.replace(colorRegex, "#000000"));
               }
@@ -105,6 +113,7 @@ export default function BillModal({
 
           // 3. Inject a comprehensive, self-contained CSS for the bill
           const styleOverride = clonedDoc.createElement("style");
+
           styleOverride.id = "capture-override";
           styleOverride.innerHTML = `
             * {
@@ -207,6 +216,7 @@ export default function BillModal({
           const elementsToHide = clonedDoc.querySelectorAll(
             ".animate-pulse, .animate-bounce, button",
           );
+
           elementsToHide.forEach((el: any) => (el.style.display = "none"));
         },
       });
@@ -231,6 +241,7 @@ export default function BillModal({
               title: "Bill Receipt",
             });
             toast.success("ກຳລັງເປີດການແຊຣ໌ບິນ...");
+
             return;
           }
         } catch (shareError) {
@@ -240,6 +251,7 @@ export default function BillModal({
 
       // Fallback: Standard browser download
       const link = document.createElement("a");
+
       link.href = dataUrl;
       link.download = `Bill-${Date.now()}.png`;
       document.body.appendChild(link);
@@ -251,6 +263,7 @@ export default function BillModal({
       console.error("Critical download failure:", error);
       const errorMessage =
         error instanceof Error ? error.message : String(error);
+
       toast.error(`ຂໍ້ຜິດພາດ: ${errorMessage}`);
     } finally {
       setIsDownloading(false);
@@ -272,15 +285,15 @@ export default function BillModal({
 
   return (
     <Modal
-      isOpen={isOpen}
-      onOpenChange={onOpenChange}
       isDismissable
-      hideCloseButton={false}
       backdrop="blur"
-      size="md"
-      placement="top"
       className="mx-4 rounded-3xl"
+      hideCloseButton={false}
+      isOpen={isOpen}
+      placement="top"
       scrollBehavior="outside"
+      size="md"
+      onOpenChange={onOpenChange}
     >
       <ModalContent className="bg-transparent shadow-none border-none">
         <div className="py-10 flex flex-col items-center text-center">
@@ -302,8 +315,8 @@ export default function BillModal({
                 <div className="p-6 border-b border-divider flex flex-col items-center gap-1 bg-gray-50/80">
                   {tableData?.store?.logoUrl ? (
                     <img
-                      src={getDisplayImageUrl(tableData.store.logoUrl)}
                       className="w-16 h-16 rounded-2xl object-cover shadow-sm mb-2"
+                      src={getDisplayImageUrl(tableData.store.logoUrl)}
                       style={{ width: "64px", height: "64px" }}
                     />
                   ) : (
@@ -352,12 +365,12 @@ export default function BillModal({
                       ຮູບແບບการชຳລະ:
                     </span>
                     <Chip
-                      size="sm"
+                      className="font-black text-[10px] uppercase"
                       color={getPaymentMethodColor(
                         finalOrder?.paymentMethod || paymentMethod || "",
                       )}
+                      size="sm"
                       variant="flat"
-                      className="font-black text-[10px] uppercase"
                     >
                       {getPaymentMethodLabel(
                         finalOrder?.paymentMethod || paymentMethod || "",
@@ -388,6 +401,7 @@ export default function BillModal({
                           const productName = item.product?.name || item.name;
                           const qty = item.qty || item.quantity;
                           const price = item.unitPrice || item.price;
+
                           return (
                             <div
                               key={idx}
@@ -459,21 +473,21 @@ export default function BillModal({
 
           <div className="mt-8 w-full max-w-sm flex flex-col gap-3">
             <Button
-              color="primary"
-              variant="shadow"
-              size="lg"
               className="w-full rounded-2xl font-black h-14 text-lg animate-pulse"
-              startContent={!isDownloading && <Download size={24} />}
-              onClick={handleDownloadBill}
+              color="primary"
               isLoading={isDownloading}
+              size="lg"
+              startContent={!isDownloading && <Download size={24} />}
+              variant="shadow"
+              onClick={handleDownloadBill}
             >
               ດາວໂຫຼດບິນ (DOWNLOAD BILL)
             </Button>
             <Button
-              variant="flat"
-              size="lg"
               className="w-full rounded-2xl font-bold h-12 text-white bg-white/20 backdrop-blur-md hover:bg-white/30"
+              size="lg"
               startContent={<X size={20} />}
+              variant="flat"
               onPress={() => onOpenChange(false)}
             >
               ປິດ

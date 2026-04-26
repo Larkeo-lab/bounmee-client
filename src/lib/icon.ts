@@ -1,4 +1,4 @@
-import * as LucideIcons from 'lucide-react';
+import * as LucideIcons from "lucide-react";
 
 // Export all Lucide icons (500+ icons)
 export const iconMap = { ...LucideIcons };
@@ -10,7 +10,7 @@ export type IconName = keyof typeof iconMap;
  * Get icon component by name from props
  * @param iconName - Name of the icon from Lucide
  * @returns Icon component or null if not found
- * 
+ *
  * @example
  * const Icon = getIcon('Home');
  * if (Icon) {
@@ -42,13 +42,14 @@ export const getAllIconNames = (): string[] => {
  * Search icons by name pattern
  * @param pattern - Search pattern (case insensitive)
  * @returns Array of matching icon names
- * 
+ *
  * @example
  * searchIcons('arrow'); // Returns ['ArrowUp', 'ArrowDown', 'ArrowLeft', ...]
  */
 export const searchIcons = (pattern: string): string[] => {
-  const regex = new RegExp(pattern, 'i');
-  return getAllIconNames().filter(name => regex.test(name));
+  const regex = new RegExp(pattern, "i");
+
+  return getAllIconNames().filter((name) => regex.test(name));
 };
 
 // Re-export commonly used icons for direct access
@@ -330,4 +331,4 @@ export {
   ZapOff,
   ZoomIn,
   ZoomOut,
-} from 'lucide-react';
+} from "lucide-react";

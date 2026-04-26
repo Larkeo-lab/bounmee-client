@@ -1,7 +1,8 @@
-import { axiosInstance } from "@/lib/axios";
-import { API_ENDPOINTS } from "@/config/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
+
+import { axiosInstance } from "@/lib/axios";
+import { API_ENDPOINTS } from "@/config/api";
 
 export interface Bank {
   id: string;
@@ -33,6 +34,7 @@ export const getBanks = async (storeId?: string) => {
   const response = await axiosInstance.get(API_ENDPOINTS.BANK.LIST, {
     params: { storeId },
   });
+
   return response.data;
 };
 
@@ -46,6 +48,7 @@ export const useGetBanks = (storeId?: string) => {
 
 export const useCreateBank = () => {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (data: CreateBankInput) =>
       axiosInstance.post(API_ENDPOINTS.BANK.LIST, data),
@@ -63,6 +66,7 @@ export const useCreateBank = () => {
 
 export const useUpdateBank = () => {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({ id, ...data }: UpdateBankInput) =>
       axiosInstance.put(API_ENDPOINTS.BANK.DETAIL(id), data),
@@ -80,6 +84,7 @@ export const useUpdateBank = () => {
 
 export const useDeleteBank = (storeId?: string) => {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (id: string) =>
       axiosInstance.delete(API_ENDPOINTS.BANK.DETAIL(id)),

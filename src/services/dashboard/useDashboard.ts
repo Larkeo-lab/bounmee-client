@@ -1,6 +1,7 @@
+import { useQuery } from "@tanstack/react-query";
+
 import { axiosInstance } from "@/lib/axios";
 import { API_ENDPOINTS } from "@/config/api";
-import { useQuery } from "@tanstack/react-query";
 
 export interface DashboardSummary {
   totalSales: number;
@@ -49,6 +50,7 @@ export const getDashboardData = async (filters: DashboardFilters) => {
   const response = await axiosInstance.get(API_ENDPOINTS.DASHBOARD.GET, {
     params: filters,
   });
+
   return response.data.data as DashboardData;
 };
 

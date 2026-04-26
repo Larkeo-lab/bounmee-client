@@ -19,6 +19,7 @@ import {
   Building,
   Mail,
 } from "lucide-react";
+
 import { useAuth } from "@/routes/AuthContext";
 import { useGetStoreDetail, useUpdateStore } from "@/services/store/useStore";
 import { useUploadImage } from "@/services/storage";
@@ -52,6 +53,7 @@ export default function ProfilePage() {
     if (store) {
       const adminUser = store.users?.find((u: any) => u.role === "STORE_ADMIN");
       const currentLang = i18n.language === "EN" ? "EN" : "LA";
+
       setFormData({
         name: store.name || "",
         address: store.address || "",
@@ -74,12 +76,15 @@ export default function ProfilePage() {
 
   const handleImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+
     if (file) {
       try {
         const previewUrl = URL.createObjectURL(file);
+
         setPreviewImage(previewUrl);
 
         const imageName = await uploadImageMutation.mutateAsync(file);
+
         setFormData((prev) => ({ ...prev, logoUrl: imageName }));
       } catch (error) {
         console.error("Failed to upload image:", error);
@@ -122,8 +127,12 @@ export default function ProfilePage() {
           <StoreIcon size={28} />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-primary">{t("settings.storeProfile.title")}</h1>
-          <p className="text-default-500">{t("settings.storeProfile.subtitle")}</p>
+          <h1 className="text-2xl font-bold text-primary">
+            {t("settings.storeProfile.title")}
+          </h1>
+          <p className="text-default-500">
+            {t("settings.storeProfile.subtitle")}
+          </p>
         </div>
       </div>
 
@@ -136,7 +145,6 @@ export default function ProfilePage() {
                 {t("settings.bank.logo")}
               </label>
               <div
-                onClick={() => fileInputRef.current?.click()}
                 className={`
                   relative group cursor-pointer
                   w-48 h-48 rounded-2xl border-2 border-dashed 
@@ -144,15 +152,16 @@ export default function ProfilePage() {
                   flex items-center justify-center overflow-hidden
                   ${previewImage || formData.logoUrl ? "border-primary bg-primary/5" : "border-default-200 hover:border-primary hover:bg-default-50"}
                 `}
+                onClick={() => fileInputRef.current?.click()}
               >
                 {uploadImageMutation.isPending ? (
                   <Spinner color="primary" />
                 ) : previewImage || formData.logoUrl ? (
                   <>
                     <Image
-                      src={getDisplayImageUrl(previewImage || formData.logoUrl)}
                       alt="Store Logo"
                       className="w-full h-full object-cover"
+                      src={getDisplayImageUrl(previewImage || formData.logoUrl)}
                     />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white">
                       <Upload size={24} />
@@ -161,23 +170,25 @@ export default function ProfilePage() {
                 ) : (
                   <div className="flex flex-col items-center gap-2 text-default-400">
                     <Upload size={32} />
-                    <span className="text-sm">{t("settings.common.upload")} {t("settings.bank.logo")}</span>
+                    <span className="text-sm">
+                      {t("settings.common.upload")} {t("settings.bank.logo")}
+                    </span>
                   </div>
                 )}
                 <input
-                  type="file"
                   ref={fileInputRef}
-                  className="hidden"
                   accept="image/*"
+                  className="hidden"
+                  type="file"
                   onChange={handleImageChange}
                 />
               </div>
               {(previewImage || formData.logoUrl) && (
                 <Button
-                  size="sm"
                   color="danger"
-                  variant="light"
+                  size="sm"
                   startContent={<X size={16} />}
+                  variant="light"
                   onPress={removeImage}
                 >
                   {t("settings.common.remove")}
@@ -190,92 +201,92 @@ export default function ProfilePage() {
               <div className="grid grid-cols-1 gap-6">
                 <Input
                   label={t("auth.storeName")}
-                  placeholder={t("auth.storeNamePlaceholder")}
-                  variant="bordered"
                   labelPlacement="outside"
+                  placeholder={t("auth.storeNamePlaceholder")}
+                  startContent={
+                    <Building className="text-default-400" size={18} />
+                  }
                   value={formData.name}
+                  variant="bordered"
                   onValueChange={(val) =>
                     setFormData({ ...formData, name: val })
-                  }
-                  startContent={
-                    <Building size={18} className="text-default-400" />
                   }
                 />
 
                 <Input
                   label={t("auth.phone")}
-                  placeholder={t("auth.phonePlaceholder")}
-                  variant="bordered"
                   labelPlacement="outside"
+                  placeholder={t("auth.phonePlaceholder")}
+                  startContent={
+                    <Phone className="text-default-400" size={18} />
+                  }
                   value={formData.phone}
+                  variant="bordered"
                   onValueChange={(val) =>
                     setFormData({ ...formData, phone: val })
-                  }
-                  startContent={
-                    <Phone size={18} className="text-default-400" />
                   }
                 />
 
                 <Input
                   label={t("auth.email")}
-                  placeholder={t("auth.emailOrUsernamePlaceholder")}
-                  variant="bordered"
                   labelPlacement="outside"
+                  placeholder={t("auth.emailOrUsernamePlaceholder")}
+                  startContent={<Mail className="text-default-400" size={18} />}
                   value={formData.email}
+                  variant="bordered"
                   onValueChange={(val) =>
                     setFormData({ ...formData, email: val })
                   }
-                  startContent={<Mail size={18} className="text-default-400" />}
                 />
 
                 <Input
+                  isReadOnly
                   label={t("auth.province")}
-                  placeholder={t("auth.province")}
-                  variant="bordered"
                   labelPlacement="outside"
-                  value={formData.province}
-                  isReadOnly
+                  placeholder={t("auth.province")}
                   startContent={
-                    <MapPin size={18} className="text-default-400" />
+                    <MapPin className="text-default-400" size={18} />
                   }
+                  value={formData.province}
+                  variant="bordered"
                 />
 
                 <Input
-                  label={t("auth.district")}
-                  placeholder={t("auth.district")}
-                  variant="bordered"
-                  labelPlacement="outside"
-                  value={formData.district}
                   isReadOnly
+                  label={t("auth.district")}
+                  labelPlacement="outside"
+                  placeholder={t("auth.district")}
                   startContent={
-                    <MapPin size={18} className="text-default-400" />
+                    <MapPin className="text-default-400" size={18} />
                   }
+                  value={formData.district}
+                  variant="bordered"
                 />
 
                 <Textarea
                   label={t("auth.address")}
-                  placeholder={t("auth.addressPlaceholder")}
-                  variant="bordered"
                   labelPlacement="outside"
+                  minRows={3}
+                  placeholder={t("auth.addressPlaceholder")}
+                  startContent={
+                    <MapPin className="text-default-400 mt-2" size={18} />
+                  }
                   value={formData.address}
+                  variant="bordered"
                   onValueChange={(val) =>
                     setFormData({ ...formData, address: val })
                   }
-                  startContent={
-                    <MapPin size={18} className="text-default-400 mt-2" />
-                  }
-                  minRows={3}
                 />
               </div>
 
               <div className="flex justify-end pt-4">
                 <Button
-                  color="primary"
-                  size="lg"
                   className="font-bold px-8"
+                  color="primary"
+                  isLoading={updateStoreMutation.isPending}
+                  size="lg"
                   startContent={<Save size={20} />}
                   onPress={handleSubmit}
-                  isLoading={updateStoreMutation.isPending}
                 >
                   {t("settings.common.save")}
                 </Button>

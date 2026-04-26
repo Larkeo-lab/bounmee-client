@@ -26,8 +26,9 @@ import {
   Banknote,
   Landmark,
 } from "lucide-react";
-import { Order } from "@/services/order/useOrder";
 import dayjs from "dayjs";
+
+import { Order } from "@/services/order/useOrder";
 import { getDisplayImageUrl } from "@/lib/utils";
 import { formatNumber } from "@/utils/numberFormat";
 import { useAuth } from "@/routes/AuthContext";
@@ -79,13 +80,13 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({
   return (
     <>
       <Modal
-        isOpen={isOpen}
-        onOpenChange={onOpenChange}
-        size="2xl"
-        scrollBehavior="inside"
-        placement="center"
-        className="mx-0 sm:mx-2"
         backdrop="blur"
+        className="mx-0 sm:mx-2"
+        isOpen={isOpen}
+        placement="center"
+        scrollBehavior="inside"
+        size="2xl"
+        onOpenChange={onOpenChange}
       >
         <ModalContent>
           {(onClose) => (
@@ -105,7 +106,7 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({
                   {/* Summary Row */}
                   <div className="grid grid-cols-3 gap-2">
                     <div className="bg-default-100 p-2 rounded-xl flex flex-col items-center">
-                      <User size={14} className="text-default-400 mb-1" />
+                      <User className="text-default-400 mb-1" size={14} />
                       <span className="text-[9px] font-bold text-default-400 uppercase">
                         {t("order.tableEmployeeCol")}
                       </span>
@@ -115,8 +116,8 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({
                     </div>
                     <div className="bg-default-100 p-2 rounded-xl flex flex-col items-center">
                       <ShoppingBag
-                        size={14}
                         className="text-default-400 mb-1"
+                        size={14}
                       />
                       <span className="text-[9px] font-bold text-default-400 uppercase">
                         {t("order.tableTable")}
@@ -128,17 +129,17 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({
                       </span>
                     </div>
                     <div className="bg-default-100 p-2 rounded-xl flex flex-col items-center">
-                      <Banknote size={14} className="text-default-400 mb-1" />
+                      <Banknote className="text-default-400 mb-1" size={14} />
                       <span className="text-[9px] font-bold text-default-400 uppercase">
                         {t("order.tablePayment")}
                       </span>
                       <Chip
-                        size="sm"
+                        className="h-4 text-[8px] font-black"
                         color={getPaymentMethodColor(
                           selectedOrder?.paymentMethod || "",
                         )}
+                        size="sm"
                         variant="flat"
-                        className="h-4 text-[8px] font-black"
                       >
                         {getPaymentMethodLabel(
                           selectedOrder?.paymentMethod || "",
@@ -150,27 +151,33 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({
                   {/* Items List */}
                   <div className="space-y-3">
                     <p className="font-black text-sm flex items-center gap-2 text-default-700">
-                      <Receipt size={16} className="text-primary" />
+                      <Receipt className="text-primary" size={16} />
                       {t("order.tableItems")} ({selectedOrder?.items.length})
                     </p>
                     <Table
-                      aria-label="Order items table"
-                      shadow="none"
                       removeWrapper
+                      aria-label="Order items table"
                       className="border border-divider rounded-2xl overflow-hidden bg-default-50/30"
                       classNames={{
                         th: "bg-default-100 text-default-600 font-bold text-[10px] uppercase py-2 h-10",
                         td: "py-3 border-b border-divider/50 last:border-none bg-white/50",
                       }}
+                      shadow="none"
                     >
                       <TableHeader>
-                        <TableColumn width={40} align="center">
+                        <TableColumn align="center" width={40}>
                           {t("order.tableRank")}
                         </TableColumn>
                         <TableColumn>{t("order.imageName")}</TableColumn>
-                        <TableColumn align="end">{t("order.priceUnit")}</TableColumn>
-                        <TableColumn align="center">{t("order.qty")}</TableColumn>
-                        <TableColumn align="end">{t("order.subtotal")}</TableColumn>
+                        <TableColumn align="end">
+                          {t("order.priceUnit")}
+                        </TableColumn>
+                        <TableColumn align="center">
+                          {t("order.qty")}
+                        </TableColumn>
+                        <TableColumn align="end">
+                          {t("order.subtotal")}
+                        </TableColumn>
                       </TableHeader>
                       <TableBody>
                         {(selectedOrder?.items || []).map((item, idx) => (
@@ -183,11 +190,11 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({
                             <TableCell>
                               <div className="flex items-center gap-2.5 min-w-[120px]">
                                 <Image
+                                  className="w-10 h-10 min-w-[40px] object-cover"
+                                  radius="md"
                                   src={getDisplayImageUrl(
                                     (item as any).product.image,
                                   )}
-                                  className="w-10 h-10 min-w-[40px] object-cover"
-                                  radius="md"
                                 />
                                 <span className="text-[11px] font-bold text-default-800 leading-tight">
                                   {(item as any).product.name}
@@ -223,7 +230,8 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({
                     <div className="flex justify-between items-center text-xs text-white/70 font-bold uppercase tracking-widest">
                       <span>{t("order.subtotal")}:</span>
                       <span>
-                        {formatNumber(Number(selectedOrder?.totalAmount))} {t("order.kip") || "ກີບ"}
+                        {formatNumber(Number(selectedOrder?.totalAmount))}{" "}
+                        {t("order.kip") || "ກີບ"}
                       </span>
                     </div>
                     <div className="flex justify-between items-center text-xs text-white/70 font-bold uppercase tracking-widest">
@@ -239,7 +247,8 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({
                         {t("order.change")}
                       </span>
                       <span className="text-xl font-black">
-                        {formatNumber(Number(selectedOrder?.change))} {t("order.kip") || "ກີບ"}
+                        {formatNumber(Number(selectedOrder?.change))}{" "}
+                        {t("order.kip") || "ກີບ"}
                       </span>
                     </div>
                   </div>
@@ -247,15 +256,15 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({
               </ModalBody>
               <ModalFooter className="border-t bg-default-50 p-4">
                 <Button
+                  className="font-bold flex-grow sm:flex-grow-0"
                   variant="flat"
                   onPress={onClose}
-                  className="font-bold flex-grow sm:flex-grow-0"
                 >
                   {t("order.close")}
                 </Button>
                 <Button
-                  color="primary"
                   className="font-black flex-grow sm:flex-grow-0 shadow-md shadow-primary/20"
+                  color="primary"
                   startContent={<Download size={18} />}
                   onPress={onBillOpen}
                 >
@@ -269,20 +278,20 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({
 
       {selectedOrder && (
         <BillModal
-          isOpen={isBillOpen}
-          onOpenChange={onBillOpenChange}
-          tableData={{
-            store: user?.user?.store,
-            name: selectedOrder?.table?.name || t("order.shopFloor"),
-          }}
-          finalOrder={selectedOrder}
-          paymentMethod={selectedOrder.paymentMethod}
           bankName={selectedOrder.bank?.name || null}
+          finalOrder={selectedOrder}
+          isOpen={isBillOpen}
+          paymentMethod={selectedOrder.paymentMethod}
           placedOrders={selectedOrder.items.map((item) => ({
             ...item,
             price: item.unitPrice,
             quantity: item.qty,
           }))}
+          tableData={{
+            store: user?.user?.store,
+            name: selectedOrder?.table?.name || t("order.shopFloor"),
+          }}
+          onOpenChange={onBillOpenChange}
         />
       )}
     </>

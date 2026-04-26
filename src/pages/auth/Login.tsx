@@ -11,24 +11,29 @@ import {
   CardBody,
   Divider,
 } from "@heroui/react";
-import { EyeFilledIcon, EyeSlashFilledIcon } from "@/components/icons";
 import { useNavigate } from "react-router-dom";
+import { Lock, Mail } from "lucide-react";
+
+import version from "../../../package.json";
+
+import { EyeFilledIcon, EyeSlashFilledIcon } from "@/components/icons";
 import { useAuth } from "@/routes";
 
 // Version number
-import version from "../../../package.json";
+
 import oneDoorLogo from "/assets/logo.png";
+
 import LanguageSwitch from "@/components/common/language-switch";
 import { showErrorToast } from "@/config/error-messages";
 
 const bgLineName = "/line-nam-bg.png";
+
 import {
   trackButtonClick,
   trackFormSubmit,
   trackLogin,
   trackPageView,
 } from "@/lib/analytics";
-import { Lock, Mail } from "lucide-react";
 
 export default function Login() {
   const [isVisible, setIsVisible] = React.useState(false);
@@ -115,9 +120,9 @@ export default function Login() {
         <div className="relative z-10 flex flex-col items-center text-center text-white space-y-6">
           <div className="p-4 bg-white rounded-[2.5rem] shadow-2xl animate-float">
             <Image
-              src={oneDoorLogo}
               alt="Dee POS Logo"
               className="w-40 sm:w-56"
+              src={oneDoorLogo}
             />
           </div>
           <div className="space-y-4">
@@ -167,45 +172,35 @@ export default function Login() {
 
           <Card className="border-none bg-white/70 dark:bg-white/5 backdrop-blur-xl shadow-2xl">
             <CardBody className="p-8">
-              <Form onSubmit={onSubmit} className="flex flex-col gap-6">
+              <Form className="flex flex-col gap-6" onSubmit={onSubmit}>
                 <Input
-                  type="text"
+                  className="w-full"
+                  classNames={{
+                    label: "font-semibold text-gray-700 dark:text-gray-300",
+                    inputWrapper:
+                      "h-14 border-2 border-default-200 hover:border-primary transition-colors",
+                  }}
                   label={t("auth.emailOrUsername")}
                   labelPlacement="outside"
                   name="identifier"
                   placeholder={t("auth.emailOrUsernamePlaceholder")}
-                  variant="bordered"
-                  className="w-full"
                   size="lg"
                   startContent={<Mail className="text-default-400" size={20} />}
-                  classNames={{
-                    label: "font-semibold text-gray-700 dark:text-gray-300",
-                    inputWrapper:
-                      "h-14 border-2 border-default-200 hover:border-primary transition-colors",
-                  }}
+                  type="text"
                   validate={(value) => {
                     if (!value) return t("auth.missingCredentials");
+
                     return true;
                   }}
+                  variant="bordered"
                 />
 
                 <Input
-                  label={t("auth.password")}
-                  labelPlacement="outside"
-                  name="password"
-                  placeholder={t("auth.passwordPlaceholder")}
-                  variant="bordered"
                   className="w-full"
-                  size="lg"
-                  startContent={<Lock className="text-default-400" size={20} />}
                   classNames={{
                     label: "font-semibold text-gray-700 dark:text-gray-300",
                     inputWrapper:
                       "h-14 border-2 border-default-200 hover:border-primary transition-colors",
-                  }}
-                  validate={(value) => {
-                    if (!value) return t("auth.missingCredentials");
-                    return true;
                   }}
                   endContent={
                     <button
@@ -220,33 +215,45 @@ export default function Login() {
                       )}
                     </button>
                   }
+                  label={t("auth.password")}
+                  labelPlacement="outside"
+                  name="password"
+                  placeholder={t("auth.passwordPlaceholder")}
+                  size="lg"
+                  startContent={<Lock className="text-default-400" size={20} />}
                   type={isVisible ? "text" : "password"}
+                  validate={(value) => {
+                    if (!value) return t("auth.missingCredentials");
+
+                    return true;
+                  }}
+                  variant="bordered"
                 />
 
                 <div className="flex items-center justify-between px-1">
                   <label className="flex items-center gap-2 text-sm text-gray-500 cursor-pointer">
                     <input
-                      type="checkbox"
                       className="rounded border-gray-300 text-primary focus:ring-primary"
+                      type="checkbox"
                     />
                     <span>{t("auth.rememberMe")}</span>
                   </label>
                   <Button
-                    variant="light"
-                    size="sm"
-                    color="primary"
                     className="font-semibold p-0 h-auto"
+                    color="primary"
+                    size="sm"
+                    variant="light"
                   >
                     {t("auth.forgotPassword")}?
                   </Button>
                 </div>
 
                 <Button
-                  type="submit"
-                  color="primary"
-                  size="lg"
                   className="w-full h-14 font-bold text-lg shadow-lg shadow-primary/30"
+                  color="primary"
                   isLoading={isLoading}
+                  size="lg"
+                  type="submit"
                 >
                   {isLoading ? t("auth.loggingIn") : t("auth.loginButton")}
                 </Button>
@@ -258,9 +265,9 @@ export default function Login() {
             <p className="text-sm text-gray-500">
               {t("auth.noAccount")}{" "}
               <Button
-                variant="light"
-                color="primary"
                 className="p-0 h-auto font-bold"
+                color="primary"
+                variant="light"
                 onClick={() => navigate("/register")}
               >
                 {t("auth.register")}

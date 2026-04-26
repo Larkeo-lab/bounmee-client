@@ -1,8 +1,10 @@
-import { axiosInstance } from "@/lib/axios";
-import { API_ENDPOINTS } from "@/config/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
+
 import { Zone } from "./useZone";
+
+import { API_ENDPOINTS } from "@/config/api";
+import { axiosInstance } from "@/lib/axios";
 
 export interface TableItem {
   id: string;
@@ -40,6 +42,7 @@ export const getTables = async (storeId?: string, search?: string) => {
   const response = await axiosInstance.get(API_ENDPOINTS.TABLE.LIST, {
     params: { storeId, search },
   });
+
   return response.data;
 };
 
@@ -53,6 +56,7 @@ export const useGetTables = (storeId?: string, search?: string) => {
 
 export const useCreateTable = () => {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (data: CreateTableInput) =>
       axiosInstance.post(API_ENDPOINTS.TABLE.LIST, data),
@@ -70,6 +74,7 @@ export const useCreateTable = () => {
 
 export const useUpdateTable = () => {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({ id, ...data }: UpdateTableInput) =>
       axiosInstance.put(API_ENDPOINTS.TABLE.DETAIL(id), data),
@@ -87,6 +92,7 @@ export const useUpdateTable = () => {
 
 export const useDeleteTable = (storeId?: string) => {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (id: string) =>
       axiosInstance.delete(API_ENDPOINTS.TABLE.DETAIL(id)),
@@ -102,6 +108,7 @@ export const useDeleteTable = (storeId?: string) => {
 
 export const useGenerateQrCodes = () => {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (storeId: string) =>
       axiosInstance.post(API_ENDPOINTS.TABLE.LIST + "/generate-qrcodes", {

@@ -1,7 +1,8 @@
-import { axiosInstance } from "@/lib/axios";
-import { API_ENDPOINTS } from "@/config/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
+
+import { axiosInstance } from "@/lib/axios";
+import { API_ENDPOINTS } from "@/config/api";
 
 export interface MoneyRate {
   id: string;
@@ -32,6 +33,7 @@ export const getMoneyRates = async (storeId?: string) => {
   const response = await axiosInstance.get(API_ENDPOINTS.MONEY_RATE.LIST, {
     params: { storeId },
   });
+
   return response.data;
 };
 
@@ -45,6 +47,7 @@ export const useGetMoneyRates = (storeId?: string) => {
 
 export const useCreateMoneyRate = () => {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (data: CreateMoneyRateInput) =>
       axiosInstance.post(API_ENDPOINTS.MONEY_RATE.LIST, data),
@@ -58,6 +61,7 @@ export const useCreateMoneyRate = () => {
       const message =
         error.response?.data?.message ||
         "เกิดข้อผิดพลาดในการเพิ่มข้อมูลอัตราแลกเปลี่ยน";
+
       toast.error(message);
     },
   });
@@ -65,6 +69,7 @@ export const useCreateMoneyRate = () => {
 
 export const useUpdateMoneyRate = () => {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({ id, ...data }: UpdateMoneyRateInput) =>
       axiosInstance.put(API_ENDPOINTS.MONEY_RATE.DETAIL(id), data),
@@ -82,6 +87,7 @@ export const useUpdateMoneyRate = () => {
 
 export const useDeleteMoneyRate = (storeId?: string) => {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (id: string) =>
       axiosInstance.delete(API_ENDPOINTS.MONEY_RATE.DETAIL(id), {

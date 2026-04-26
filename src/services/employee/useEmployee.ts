@@ -1,7 +1,8 @@
-import { axiosInstance } from "@/lib/axios";
-import { API_ENDPOINTS } from "@/config/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
+
+import { axiosInstance } from "@/lib/axios";
+import { API_ENDPOINTS } from "@/config/api";
 
 export interface User {
   id: string;
@@ -54,6 +55,7 @@ export const getEmployees = async (storeId?: string) => {
   const response = await axiosInstance.get(API_ENDPOINTS.EMPLOYEE.LIST, {
     params: { storeId },
   });
+
   return response.data;
 };
 
@@ -67,6 +69,7 @@ export const useGetEmployees = (storeId?: string) => {
 
 export const useCreateEmployee = () => {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (data: CreateEmployeeInput) =>
       axiosInstance.post(API_ENDPOINTS.EMPLOYEE.LIST, data),
@@ -80,6 +83,7 @@ export const useCreateEmployee = () => {
       const message =
         error.response?.data?.message ||
         "ເກີດຂໍ້ຜິດພາດໃນການເພີ່ມຂໍ້ມູນພະນັກງານ";
+
       toast.error(message);
     },
   });
@@ -87,6 +91,7 @@ export const useCreateEmployee = () => {
 
 export const useUpdateEmployee = () => {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({ id, ...data }: UpdateEmployeeInput) =>
       axiosInstance.put(API_ENDPOINTS.EMPLOYEE.DETAIL(id), data),
@@ -104,6 +109,7 @@ export const useUpdateEmployee = () => {
 
 export const useDeleteEmployee = (storeId?: string) => {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (id: string) =>
       axiosInstance.delete(API_ENDPOINTS.EMPLOYEE.DETAIL(id)),

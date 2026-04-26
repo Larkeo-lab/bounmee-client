@@ -21,6 +21,7 @@ import {
   Image,
 } from "@heroui/react";
 import { Plus, Search, Edit2, Trash2, Landmark, Upload, X } from "lucide-react";
+
 import { useAuth } from "@/routes/AuthContext";
 import {
   useGetBanks,
@@ -92,17 +93,20 @@ export default function BankPage() {
 
   const filteredItems = useMemo(() => {
     let filtered = [...banks];
+
     if (searchQuery) {
       filtered = filtered.filter((item) =>
         item.name.toLowerCase().includes(searchQuery.toLowerCase()),
       );
     }
+
     return filtered;
   }, [banks, searchQuery]);
 
   const items = useMemo(() => {
     const start = (page - 1) * rowsPerPage;
     const end = start + rowsPerPage;
+
     return filteredItems.slice(start, end);
   }, [page, filteredItems]);
 
@@ -177,6 +181,7 @@ export default function BankPage() {
   const handleCreateOpen = () => {
     // @ts-ignore
     const storeStatus = user?.user?.store?.status;
+
     if (storeStatus === "PENDING") {
       onPendingOpen();
     } else if (storeStatus === "REJECTED") {
@@ -188,12 +193,15 @@ export default function BankPage() {
 
   const handleImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+
     if (file) {
       try {
         const previewUrl = URL.createObjectURL(file);
+
         setPreviewImage(previewUrl);
 
         const imageName = await uploadImageMutation.mutateAsync(file);
+
         setFormData((prev) => ({ ...prev, logoUrl: imageName }));
       } catch (error) {
         console.error("Failed to upload image:", error);
@@ -203,12 +211,15 @@ export default function BankPage() {
 
   const handleQrCodeChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+
     if (file) {
       try {
         const previewUrl = URL.createObjectURL(file);
+
         setQrCodePreview(previewUrl);
 
         const imageName = await uploadImageMutation.mutateAsync(file);
+
         setFormData((prev) => ({ ...prev, qrCodeImage: imageName }));
       } catch (error) {
         console.error("Failed to upload QR code:", error);
@@ -234,9 +245,10 @@ export default function BankPage() {
       <div className="flex justify-center gap-8 mb-4">
         {/* Logo Upload */}
         <div className="flex flex-col items-center gap-2">
-          <p className="text-tiny text-default-500 font-medium">{t("settings.bank.logo")}</p>
+          <p className="text-tiny text-default-500 font-medium">
+            {t("settings.bank.logo")}
+          </p>
           <div
-            onClick={() => fileInputRef.current?.click()}
             className={`
               relative group cursor-pointer
               w-24 h-24 rounded-full border-2 border-dashed 
@@ -244,18 +256,19 @@ export default function BankPage() {
               flex items-center justify-center overflow-hidden
               ${previewImage || formData.logoUrl ? "border-primary bg-primary/5" : "border-default-200 hover:border-primary hover:bg-default-50"}
             `}
+            onClick={() => fileInputRef.current?.click()}
           >
             {uploadImageMutation.isPending ? (
               <Spinner color="primary" />
             ) : previewImage || formData.logoUrl ? (
               <>
                 <Image
-                  src={getDisplayImageUrl(previewImage || formData.logoUrl)}
                   alt="Preview"
                   className="w-full h-full object-cover"
+                  src={getDisplayImageUrl(previewImage || formData.logoUrl)}
                 />
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                  <Edit2 size={20} className="text-white" />
+                  <Edit2 className="text-white" size={20} />
                 </div>
               </>
             ) : (
@@ -265,19 +278,19 @@ export default function BankPage() {
               </div>
             )}
             <input
-              type="file"
               ref={fileInputRef}
-              className="hidden"
               accept="image/*"
+              className="hidden"
+              type="file"
               onChange={handleImageChange}
             />
           </div>
           {(previewImage || formData.logoUrl) && (
             <Button
-              size="sm"
               color="danger"
-              variant="light"
+              size="sm"
               startContent={<X size={14} />}
+              variant="light"
               onPress={removeImage}
             >
               {t("settings.common.remove")}
@@ -287,7 +300,9 @@ export default function BankPage() {
 
         {/* QR Code Upload */}
         <div className="flex flex-col items-center gap-2">
-          <p className="text-tiny text-default-500 font-medium">{t("settings.bank.qr")}</p>
+          <p className="text-tiny text-default-500 font-medium">
+            {t("settings.bank.qr")}
+          </p>
           <label className="cursor-pointer">
             <div
               className={`
@@ -303,34 +318,38 @@ export default function BankPage() {
               ) : qrCodePreview || formData.qrCodeImage ? (
                 <>
                   <Image
-                    src={getDisplayImageUrl(qrCodePreview || formData.qrCodeImage)}
                     alt="QR Preview"
                     className="w-full h-full object-contain"
+                    src={getDisplayImageUrl(
+                      qrCodePreview || formData.qrCodeImage,
+                    )}
                   />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                    <Edit2 size={20} className="text-white" />
+                    <Edit2 className="text-white" size={20} />
                   </div>
                 </>
               ) : (
                 <div className="flex flex-col items-center gap-1 text-default-400">
                   <Upload size={20} />
-                  <span className="text-tiny">{t("settings.common.upload")} QR</span>
+                  <span className="text-tiny">
+                    {t("settings.common.upload")} QR
+                  </span>
                 </div>
               )}
               <input
-                type="file"
-                className="hidden"
                 accept="image/*"
+                className="hidden"
+                type="file"
                 onChange={handleQrCodeChange}
               />
             </div>
           </label>
           {(qrCodePreview || formData.qrCodeImage) && (
             <Button
-              size="sm"
               color="danger"
-              variant="light"
+              size="sm"
               startContent={<X size={14} />}
+              variant="light"
               onPress={removeQrCode}
             >
               {t("settings.common.remove")} QR
@@ -340,16 +359,18 @@ export default function BankPage() {
       </div>
 
       <Input
+        isRequired
         label={t("settings.bank.bankName")}
         placeholder={t("settings.bank.bankNamePlaceholder")}
-        variant="bordered"
         value={formData.name}
+        variant="bordered"
         onValueChange={(val) => setFormData({ ...formData, name: val })}
-        isRequired
       />
 
       <div className="flex items-center justify-between px-1">
-        <span className="text-small font-medium">{t("settings.common.active")}</span>
+        <span className="text-small font-medium">
+          {t("settings.common.active")}
+        </span>
         <Switch
           isSelected={formData.isActive}
           onValueChange={(val) => setFormData({ ...formData, isActive: val })}
@@ -366,15 +387,13 @@ export default function BankPage() {
             <Landmark size={28} />
             {t("settings.bank.title")}
           </h1>
-          <p className="text-default-500">
-            {t("settings.bank.subtitle")}
-          </p>
+          <p className="text-default-500">{t("settings.bank.subtitle")}</p>
         </div>
         <Button
+          className="font-bold h-12 px-6 shadow-lg shadow-primary/30"
           color="primary"
           startContent={<Plus size={20} />}
           onPress={handleCreateOpen}
-          className="font-bold h-12 px-6 shadow-lg shadow-primary/30"
         >
           {t("settings.bank.addTitle")}
         </Button>
@@ -387,8 +406,8 @@ export default function BankPage() {
           placeholder={t("settings.common.search")}
           startContent={<Search className="text-default-400" size={18} />}
           value={searchQuery}
-          onValueChange={setSearchQuery}
           variant="bordered"
+          onValueChange={setSearchQuery}
         />
         <div className="text-default-400 text-sm">
           {t("settings.common.total", { count: filteredItems.length })}
@@ -397,11 +416,6 @@ export default function BankPage() {
 
       <Table
         aria-label="Bank table"
-        className="mt-4"
-        classNames={{
-          wrapper: "shadow-sm border border-divider rounded-xl overflow-hidden",
-          th: "bg-default-50 text-default-600 font-bold h-12",
-        }}
         bottomContent={
           filteredItems.length > rowsPerPage && (
             <div className="flex w-full justify-center p-4">
@@ -416,23 +430,30 @@ export default function BankPage() {
             </div>
           )
         }
+        className="mt-4"
+        classNames={{
+          wrapper: "shadow-sm border border-divider rounded-xl overflow-hidden",
+          th: "bg-default-50 text-default-600 font-bold h-12",
+        }}
       >
         <TableHeader>
           <TableColumn>{t("settings.bank.logo")}</TableColumn>
           <TableColumn>{t("settings.bank.bankName")}</TableColumn>
           <TableColumn>{t("settings.common.status")}</TableColumn>
-          <TableColumn className="text-center">{t("settings.common.actions")}</TableColumn>
+          <TableColumn className="text-center">
+            {t("settings.common.actions")}
+          </TableColumn>
         </TableHeader>
-        <TableBody isLoading={isLoading} emptyContent={<EmptyState />}>
+        <TableBody emptyContent={<EmptyState />} isLoading={isLoading}>
           {items.map((bank) => (
             <TableRow key={bank.id}>
               <TableCell>
                 <div className="w-10 h-10 rounded-full overflow-hidden border border-divider bg-default-50">
                   {bank.logoUrl ? (
                     <Image
-                      src={getDisplayImageUrl(bank.logoUrl)}
                       alt={bank.name}
                       className="w-full h-full object-cover"
+                      src={getDisplayImageUrl(bank.logoUrl)}
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-default-400">
@@ -463,18 +484,18 @@ export default function BankPage() {
                 <div className="flex items-center justify-center gap-2">
                   <Button
                     isIconOnly
+                    color="primary"
                     size="sm"
                     variant="light"
-                    color="primary"
                     onPress={() => handleEditOpen(bank)}
                   >
                     <Edit2 size={18} />
                   </Button>
                   <Button
                     isIconOnly
+                    color="danger"
                     size="sm"
                     variant="light"
-                    color="danger"
                     onPress={() => handleDeleteOpen(bank)}
                   >
                     <Trash2 size={18} />
@@ -489,9 +510,9 @@ export default function BankPage() {
       {/* Create Modal */}
       <Modal
         isOpen={isCreateOpen}
-        onOpenChange={onCreateOpenChange}
         placement="center"
         onClose={resetForm}
+        onOpenChange={onCreateOpenChange}
       >
         <ModalContent>
           {(onClose) => (
@@ -506,12 +527,12 @@ export default function BankPage() {
                 </Button>
                 <Button
                   color="primary"
-                  onPress={() => handleCreateSubmit(onClose)}
+                  isDisabled={!formData.name}
                   isLoading={
                     createBankMutation.isPending ||
                     uploadImageMutation.isPending
                   }
-                  isDisabled={!formData.name}
+                  onPress={() => handleCreateSubmit(onClose)}
                 >
                   {t("settings.common.save")}
                 </Button>
@@ -524,9 +545,9 @@ export default function BankPage() {
       {/* Update Modal */}
       <Modal
         isOpen={isUpdateOpen}
-        onOpenChange={onUpdateOpenChange}
         placement="center"
         onClose={resetForm}
+        onOpenChange={onUpdateOpenChange}
       >
         <ModalContent>
           {(onClose) => (
@@ -541,12 +562,12 @@ export default function BankPage() {
                 </Button>
                 <Button
                   color="primary"
-                  onPress={() => handleUpdateSubmit(onClose)}
+                  isDisabled={!formData.name}
                   isLoading={
                     updateBankMutation.isPending ||
                     uploadImageMutation.isPending
                   }
-                  isDisabled={!formData.name}
+                  onPress={() => handleUpdateSubmit(onClose)}
                 >
                   {t("settings.common.update")}
                 </Button>
@@ -558,31 +579,28 @@ export default function BankPage() {
 
       {/* Delete Modal */}
       <ConfirmModal
-        isOpen={isDeleteOpen}
-        onOpenChange={onDeleteOpenChange}
-        title={t("settings.common.confirmDelete")}
-        message={t("settings.common.confirmDeleteMsg")}
-        confirmText={t("settings.common.delete")}
-        onConfirm={() => handleDeleteSubmit(onDeleteClose)}
-        icon={<Trash2 size={24} />}
         color="danger"
+        confirmText={t("settings.common.delete")}
+        icon={<Trash2 size={24} />}
+        isOpen={isDeleteOpen}
+        message={t("settings.common.confirmDeleteMsg")}
+        title={t("settings.common.confirmDelete")}
+        onConfirm={() => handleDeleteSubmit(onDeleteClose)}
+        onOpenChange={onDeleteOpenChange}
       />
 
       {/* Pending Status Modal */}
-      <PendingModal
-        isOpen={isPendingOpen}
-        onOpenChange={onPendingOpenChange}
-      />
+      <PendingModal isOpen={isPendingOpen} onOpenChange={onPendingOpenChange} />
 
       {/* Rejected Status Modal */}
       <ConfirmModal
-        isOpen={isRejectedOpen}
-        onOpenChange={onRejectedOpenChange}
-        title={t("settings.common.rejectedTitle")}
-        message={t("settings.common.rejectedMsg")}
-        confirmText={t("settings.common.ok")}
-        onConfirm={onRejectedClose}
         color="danger"
+        confirmText={t("settings.common.ok")}
+        isOpen={isRejectedOpen}
+        message={t("settings.common.rejectedMsg")}
+        title={t("settings.common.rejectedTitle")}
+        onConfirm={onRejectedClose}
+        onOpenChange={onRejectedOpenChange}
       />
     </div>
   );

@@ -1,12 +1,12 @@
-import i18n from 'i18next';
-import { initReactI18next } from 'react-i18next';
-import LanguageDetector from 'i18next-browser-languagedetector';
+import i18n from "i18next";
+import { initReactI18next } from "react-i18next";
+import LanguageDetector from "i18next-browser-languagedetector";
 
 // Import language files
-import enTranslations from './messages/en.json';
-import loTranslations from './messages/lo.json';
-import thTranslations from './messages/th.json';
-import chTranslations from './messages/ch.json';
+import enTranslations from "./messages/en.json";
+import loTranslations from "./messages/lo.json";
+import thTranslations from "./messages/th.json";
+import chTranslations from "./messages/ch.json";
 
 const resources = {
   en: {
@@ -20,7 +20,7 @@ const resources = {
   },
   ch: {
     translation: chTranslations,
-  }
+  },
 };
 
 i18n
@@ -28,7 +28,7 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    fallbackLng: 'en',
+    fallbackLng: "en",
     debug: false,
 
     interpolation: {
@@ -38,8 +38,8 @@ i18n
     detection: {
       // Prioritize localStorage, then fallback to navigator
       // URL-based detection will be handled by our routing system
-      order: ['localStorage', 'navigator'],
-      caches: ['localStorage'],
+      order: ["localStorage", "navigator"],
+      caches: ["localStorage"],
     },
   });
 

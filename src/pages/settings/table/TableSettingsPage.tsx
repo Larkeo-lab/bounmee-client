@@ -1,13 +1,6 @@
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  useUpdateTable,
-  useDeleteTable,
-} from "@/services/table/useTable";
-import {
-  useDeleteZone,
-} from "@/services/table/useZone";
-import {
   Table,
   TableHeader,
   TableColumn,
@@ -24,13 +17,17 @@ import {
   Tab,
 } from "@heroui/react";
 import { Plus, Edit, Trash2, Search, Users, QrCode } from "lucide-react";
-import { useAuth } from "@/routes/AuthContext";
 import { v4 as uuidv4 } from "uuid";
+
+import CreateAndEdit from "./CreateAndEdit";
+
+import { useUpdateTable, useDeleteTable } from "@/services/table/useTable";
+import { useDeleteZone } from "@/services/table/useZone";
+import { useAuth } from "@/routes/AuthContext";
 import { useGetTables } from "@/services/table/useTable";
 import { useGetZones } from "@/services/table/useZone";
 import ConfirmModal from "@/components/common/popup-confirm";
 import PendingModal from "@/components/common/pending-modal";
-import CreateAndEdit from "./CreateAndEdit";
 
 const columns = (t: any) => [
   { name: t("settings.common.no"), uid: "id", sortable: true },
@@ -139,12 +136,15 @@ export default function TableSettingsPage() {
   const handleOpenModal = (type: "table" | "zone", item: any = null) => {
     // @ts-ignore
     const storeStatus = user?.user?.store?.status;
+
     if (!item && storeStatus === "PENDING") {
       onPendingOpen();
+
       return;
     }
     if (!item && storeStatus === "REJECTED") {
       onRejectedOpen();
+
       return;
     }
     setModalType(type);
@@ -171,6 +171,7 @@ export default function TableSettingsPage() {
 
   const handleGenerateQrForTable = async (table: any) => {
     const uniqueId = uuidv4().substring(0, 8).toUpperCase();
+
     await updateTable({
       id: table.id,
       storeId: storeId!,
@@ -183,7 +184,10 @@ export default function TableSettingsPage() {
 
     switch (columnKey) {
       case "id":
-        const index = sortedItems.findIndex((item: any) => item.id === table.id);
+        const index = sortedItems.findIndex(
+          (item: any) => item.id === table.id,
+        );
+
         return (
           <span className="text-small font-medium">
             {(page - 1) * rowsPerPage + index + 1}
@@ -197,37 +201,40 @@ export default function TableSettingsPage() {
         );
       case "zoneId":
         const zone = zones.find((z: any) => z.id === cellValue);
+
         return (
-          <Chip color="primary" variant="flat" size="sm" className="font-bold">
+          <Chip className="font-bold" color="primary" size="sm" variant="flat">
             {zone?.name || "N/A"}
           </Chip>
         );
       case "capacity":
         return (
           <div className="flex items-center gap-2">
-            <Users size={16} className="text-default-400" />
-            <span className="text-small font-medium">{cellValue} {t("ordering.seats")}</span>
+            <Users className="text-default-400" size={16} />
+            <span className="text-small font-medium">
+              {cellValue} {t("ordering.seats")}
+            </span>
           </div>
         );
       case "qrCode":
         return cellValue ? (
           <Chip
-            color="success"
-            variant="dot"
-            size="sm"
             className="font-bold border-success/30"
+            color="success"
+            size="sm"
+            variant="dot"
           >
             {cellValue}
           </Chip>
         ) : (
           <Button
-            size="sm"
             color="warning"
+            isLoading={isUpdatingTable}
+            size="sm"
             variant="flat"
             onPress={() => handleGenerateQrForTable(table)}
-            isLoading={isUpdatingTable}
           >
-            <QrCode size={14} className="mr-1" /> {t("settings.common.upload")}
+            <QrCode className="mr-1" size={14} /> {t("settings.common.upload")}
           </Button>
         );
       case "actions":
@@ -235,9 +242,9 @@ export default function TableSettingsPage() {
           <div className="relative flex justify-end items-center gap-2">
             <Button
               isIconOnly
+              color="primary"
               size="sm"
               variant="light"
-              color="primary"
               onPress={() =>
                 handleOpenModal(selectedTab as "table" | "zone", table)
               }
@@ -246,9 +253,9 @@ export default function TableSettingsPage() {
             </Button>
             <Button
               isIconOnly
+              color="danger"
               size="sm"
               variant="light"
-              color="danger"
               onPress={() =>
                 handleDelete(selectedTab as "table" | "zone", table.id)
               }
@@ -264,13 +271,18 @@ export default function TableSettingsPage() {
 
   const topContent = useMemo(() => {
     const isTable = selectedTab === "table";
+
     return (
       <div className="flex flex-col gap-4">
         <div className="flex justify-between gap-3 items-end">
           <Input
             isClearable
             className="w-full sm:max-w-[44%]"
-            placeholder={isTable ? t("settings.common.search") : t("settings.common.search")}
+            placeholder={
+              isTable
+                ? t("settings.common.search")
+                : t("settings.common.search")
+            }
             startContent={<Search size={18} />}
             value={filterValue}
             onClear={() => setFilterValue("")}
@@ -278,9 +290,9 @@ export default function TableSettingsPage() {
           />
           <div className="flex gap-3">
             <Button
+              className="font-bold h-12"
               color="primary"
               endContent={<Plus size={20} />}
-              className="font-bold h-12"
               onPress={() => handleOpenModal(selectedTab as "table" | "zone")}
             >
               {t("settings.common.addNew")}
@@ -294,22 +306,14 @@ export default function TableSettingsPage() {
   return (
     <div className="space-y-6 m-4">
       <div className="flex flex-col gap-1">
-        <h1 className="text-3xl font-black text-primary">{t("settings.table.title")}</h1>
-        <p className="text-default-500">
-          {t("settings.table.subtitle")}
-        </p>
+        <h1 className="text-3xl font-black text-primary">
+          {t("settings.table.title")}
+        </h1>
+        <p className="text-default-500">{t("settings.table.subtitle")}</p>
       </div>
 
       <Tabs
         aria-label="Table and Zone Tabs"
-        selectedKey={selectedTab}
-        onSelectionChange={(key) => {
-          setSelectedTab(key as string);
-          setPage(1);
-        }}
-        color="primary"
-        variant="solid"
-        radius="full"
         classNames={{
           tabList: "bg-content1 shadow-md w-full sm:w-auto",
           cursor: "w-full bg-primary",
@@ -317,14 +321,22 @@ export default function TableSettingsPage() {
           tabContent:
             "font-bold text-default-500 group-data-[selected=true]:text-white",
         }}
+        color="primary"
+        radius="full"
+        selectedKey={selectedTab}
+        variant="solid"
+        onSelectionChange={(key) => {
+          setSelectedTab(key as string);
+          setPage(1);
+        }}
       >
         <Tab key="table" title={t("settings.table.title")} />
         <Tab key="zone" title={t("settings.table.zone")} />
       </Tabs>
 
       <Table
-        aria-label="Table management"
         isHeaderSticky
+        aria-label="Table management"
         bottomContent={
           <div className="flex w-full justify-center">
             <Pagination
@@ -361,8 +373,8 @@ export default function TableSettingsPage() {
         </TableHeader>
         <TableBody
           emptyContent={t("settings.common.noData")}
-          items={sortedItems}
           isLoading={isLoading}
+          items={sortedItems}
         >
           {(item) => (
             <TableRow key={item.id}>
@@ -375,41 +387,38 @@ export default function TableSettingsPage() {
       </Table>
 
       <CreateAndEdit
-        isOpen={isOpen}
-        onOpenChange={onOpenChange}
         isEditing={isEditing}
-        modalType={modalType}
+        isOpen={isOpen}
         item={selectedItem}
-        zones={zones}
+        modalType={modalType}
         storeId={storeId!}
+        zones={zones}
+        onOpenChange={onOpenChange}
       />
       <ConfirmModal
-        isOpen={isDeleteOpen}
-        onOpenChange={onDeleteOpenChange}
-        title={t("settings.common.confirmDelete")}
-        message={t("settings.common.confirmDeleteMsg")}
-        confirmText={t("settings.common.delete")}
         cancelText={t("settings.common.cancel")}
-        onConfirm={confirmDelete}
         color="danger"
+        confirmText={t("settings.common.delete")}
         icon={<Trash2 size={24} />}
+        isOpen={isDeleteOpen}
+        message={t("settings.common.confirmDeleteMsg")}
+        title={t("settings.common.confirmDelete")}
+        onConfirm={confirmDelete}
+        onOpenChange={onDeleteOpenChange}
       />
 
       {/* Pending Status Modal */}
-      <PendingModal
-        isOpen={isPendingOpen}
-        onOpenChange={onPendingOpenChange}
-      />
+      <PendingModal isOpen={isPendingOpen} onOpenChange={onPendingOpenChange} />
 
       {/* Rejected Status Modal */}
       <ConfirmModal
-        isOpen={isRejectedOpen}
-        onOpenChange={onRejectedOpenChange}
-        title={t("settings.common.rejectedTitle")}
-        message={t("settings.common.rejectedMsg")}
-        confirmText={t("settings.common.ok")}
-        onConfirm={onRejectedClose}
         color="danger"
+        confirmText={t("settings.common.ok")}
+        isOpen={isRejectedOpen}
+        message={t("settings.common.rejectedMsg")}
+        title={t("settings.common.rejectedTitle")}
+        onConfirm={onRejectedClose}
+        onOpenChange={onRejectedOpenChange}
       />
     </div>
   );

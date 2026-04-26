@@ -1,7 +1,8 @@
 import { useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+
 import { socket } from "@/config/socket";
 import { useAuth } from "@/routes/AuthContext";
-import { useQueryClient } from "@tanstack/react-query";
 
 export const useSocketNotification = () => {
   const { user } = useAuth();
@@ -11,6 +12,7 @@ export const useSocketNotification = () => {
 
   useEffect(() => {
     const serviceCenterId = authDataJson?.officerProfile?.serviceCenterId;
+
     if (!serviceCenterId) return;
 
     // Connect socket if not connected

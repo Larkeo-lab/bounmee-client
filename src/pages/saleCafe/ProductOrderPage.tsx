@@ -16,8 +16,11 @@ import {
 } from "@heroui/react";
 import { Search, Plus, ShoppingCart, Barcode, LayoutGrid } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import EmptyState from "@/components/common/empty-state";
+import { toast } from "react-hot-toast";
 
+import { OrderRight } from "./orderRight";
+
+import EmptyState from "@/components/common/empty-state";
 import { useCart } from "@/provider";
 import PaymentModal from "@/components/common/payment-modal";
 import ConfirmModal from "@/components/common/popup-confirm";
@@ -31,8 +34,6 @@ import {
 import { getDisplayImageUrl } from "@/lib/utils";
 import { socket } from "@/lib/socket";
 import { formatNumber } from "@/utils/numberFormat";
-import { toast } from "react-hot-toast";
-import { OrderRight } from "./orderRight";
 
 interface FlyingItem {
   id: string;
@@ -96,8 +97,10 @@ export default function ProductOrderPage() {
   const toggleNote = (uId: string) => {
     setExpandedNotes((prev) => {
       const next = new Set(prev);
+
       if (next.has(uId)) next.delete(uId);
       else next.add(uId);
+
       return next;
     });
   };
@@ -106,6 +109,7 @@ export default function ProductOrderPage() {
     return cart.filter((item) => {
       if (statusFilter === "ALL") return true;
       const itemStatus = item.status?.toUpperCase() || "PENDING";
+
       return itemStatus === statusFilter;
     });
   }, [cart, statusFilter]);
@@ -114,9 +118,11 @@ export default function ProductOrderPage() {
     return cart.reduce(
       (acc, item) => {
         const s = item.status?.toUpperCase() || "PENDING";
+
         if (s !== "CANCEL") {
           acc[s] = (acc[s] || 0) + item.price * item.quantity;
         }
+
         return acc;
       },
       { PENDING: 0, COOKING: 0, SERVED: 0 } as Record<string, number>,
@@ -129,6 +135,7 @@ export default function ProductOrderPage() {
 
   useEffect(() => {
     const handler = setTimeout(() => setSearchQuery(searchQuery), 500);
+
     return () => clearTimeout(handler);
   }, [searchQuery]);
 
@@ -142,9 +149,11 @@ export default function ProductOrderPage() {
         duration: 1000,
       });
     };
+
     socket.on("SETUP", onConnect);
     socket.on("PRODUCT:SCANNED", onScanned);
     if (socket.connected) onConnect();
+
     return () => {
       socket.off("SETUP", onConnect);
       socket.off("PRODUCT:SCANNED", onScanned);
@@ -171,6 +180,7 @@ export default function ProductOrderPage() {
     if (!barcode || !user?.user?.storeId) return;
     try {
       const product = await getProductByBarcode(barcode, user.user.storeId);
+
       if (product) {
         addToCart(product);
         setSearchQuery("");
@@ -187,11 +197,13 @@ export default function ProductOrderPage() {
 
     // Get position from event target (supporting HeroUI's PressEvent which doesn't have currentTarget)
     const target = event?.target as HTMLElement;
+
     if (!target) {
       toast.success(t("sale.itemAdded", { name: product.name }), {
         duration: 800,
         position: "top-center",
       });
+
       return;
     }
 
@@ -234,51 +246,47 @@ export default function ProductOrderPage() {
             <div className="flex-grow">
               <Input
                 isClearable
-                size="sm"
-                variant="bordered"
                 className="w-full lg:max-w-[400px]"
-                placeholder={t("sale.searchPlaceholder")}
-                startContent={<Search className="text-default-400" size={18} />}
                 endContent={<Barcode className="text-default-400" size={18} />}
+                placeholder={t("sale.searchPlaceholder")}
+                size="sm"
+                startContent={<Search className="text-default-400" size={18} />}
                 value={searchQuery}
-                onValueChange={setSearchQuery}
+                variant="bordered"
                 onKeyDown={(e) => {
                   if (e.key === "Enter") handleBarcodeSearch(searchQuery);
                 }}
+                onValueChange={setSearchQuery}
               />
             </div>
             <div className="font-black text-lg text-primary lg:block hidden">
               Dee POS
             </div>
             <Badge
+              className="lg:hidden"
               color="danger"
               content={cart.length}
               isInvisible={cart.length === 0}
               shape="circle"
               size="md"
-              className="lg:hidden"
             >
               <div
                 className="p-2 bg-primary/10 rounded-full cursor-pointer"
                 onClick={() => setIsMinimized(false)}
               >
-                <ShoppingCart size={22} className="text-primary" />
+                <ShoppingCart className="text-primary" size={22} />
               </div>
             </Badge>
           </div>
 
           <ScrollShadow
-            size={40}
-            orientation="horizontal"
-            className="max-w-full w-0 min-w-full overflow-x-auto scrollbar-hide"
             hideScrollBar
+            className="max-w-full w-0 min-w-full overflow-x-auto scrollbar-hide"
+            orientation="horizontal"
+            size={40}
           >
             <Tabs
               aria-label="Product Categories"
-              color="primary"
-              variant="underlined"
-              selectedKey={selectedCategory}
-              onSelectionChange={(key) => setSelectedCategory(key as string)}
               classNames={{
                 tabList:
                   "gap-4 lg:gap-6 flex-nowrap p-0 min-w-max border-b-2 border-divider",
@@ -287,6 +295,10 @@ export default function ProductOrderPage() {
                 tabContent:
                   "group-data-[selected=true]:text-primary font-medium text-xs lg:text-sm whitespace-nowrap",
               }}
+              color="primary"
+              selectedKey={selectedCategory}
+              variant="underlined"
+              onSelectionChange={(key) => setSelectedCategory(key as string)}
             >
               {categories.map((cat) => (
                 <Tab key={cat.id} title={cat.label} />
@@ -307,18 +319,18 @@ export default function ProductOrderPage() {
           {!isLoadingProducts && products.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full py-10">
               <EmptyState
-                message={t("sale.emptyProducts")}
                 description={t("sale.emptyProductsDesc")}
+                message={t("sale.emptyProducts")}
               />
             </div>
           ) : (
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2 lg:gap-4">
               {products.map((product) => (
                 <Card
-                  isPressable
                   key={product.id}
-                  onPress={(e) => handleAddToCart(product, e as any)}
+                  isPressable
                   className="group relative border-none bg-white/70 dark:bg-gray-800/70 backdrop-blur-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+                  onPress={(e) => handleAddToCart(product, e as any)}
                 >
                   <CardBody className="p-0 relative overflow-hidden h-[100px] sm:h-[120px] lg:h-[140px]">
                     <div className="absolute top-1.5 right-1.5 z-20">
@@ -332,7 +344,9 @@ export default function ProductOrderPage() {
                               : "bg-red-500/80",
                         )}
                       >
-                        {product.stockQty > 0 ? `${product.stockQty}` : t("sale.outOfStock")}
+                        {product.stockQty > 0
+                          ? `${product.stockQty}`
+                          : t("sale.outOfStock")}
                       </div>
                     </div>
                     <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 flex items-center justify-center">
@@ -341,12 +355,12 @@ export default function ProductOrderPage() {
                       </div>
                     </div>
                     <Image
-                      shadow="none"
-                      radius="none"
-                      width="100%"
                       alt={product.name}
                       className="w-full object-cover h-full group-hover:scale-110 transition-transform duration-500"
+                      radius="none"
+                      shadow="none"
                       src={getDisplayImageUrl(product.image)}
+                      width="100%"
                     />
                   </CardBody>
                   <CardFooter className="flex flex-col items-start gap-0.5 p-2 bg-white/40 dark:bg-gray-900/40 backdrop-blur-sm">
@@ -370,8 +384,8 @@ export default function ProductOrderPage() {
       {/* Floating Action Button for Mobile Cart (only shows when minimized and cart not empty) */}
       {cart.length > 0 && isMinimized && (
         <Button
-          color="primary"
           className="fixed bottom-6 right-6 lg:hidden z-50 rounded-full h-14 w-14 shadow-2xl animate-in zoom-in duration-300 min-w-0 p-0"
+          color="primary"
           onClick={() => setIsMinimized(false)}
         >
           <Badge color="danger" content={cart.length} shape="circle" size="md">
@@ -382,28 +396,28 @@ export default function ProductOrderPage() {
 
       {/* Cart Sidebar / Bottom Sheet */}
       <OrderRight
-        isMinimized={isMinimized}
-        setIsMinimized={setIsMinimized}
-        filteredCart={filteredCart}
-        selectedCartItems={selectedCartItems}
-        setSelectedCartItems={setSelectedCartItems}
-        setItemToRemove={setItemToRemove}
-        onRemoveItemOpen={onRemoveItemOpen}
         expandedNotes={expandedNotes}
-        toggleNote={toggleNote}
-        statusFilter={statusFilter}
+        filteredCart={filteredCart}
+        isMinimized={isMinimized}
+        selectedCartItems={selectedCartItems}
+        setIsMinimized={setIsMinimized}
+        setItemToRemove={setItemToRemove}
+        setSelectedCartItems={setSelectedCartItems}
         setStatusFilter={setStatusFilter}
+        statusFilter={statusFilter}
         statusTotals={statusTotals}
-        onPaymentOpen={onPaymentOpen}
+        toggleNote={toggleNote}
         onClearCartOpen={onClearCartOpen}
+        onPaymentOpen={onPaymentOpen}
+        onRemoveItemOpen={onRemoveItemOpen}
       />
 
       <PaymentModal
-        isOpen={isPaymentOpen}
-        onOpenChange={onPaymentOpenChange}
-        total={subtotal}
-        items={cart}
         businessType="CAFE"
+        isOpen={isPaymentOpen}
+        items={cart}
+        total={subtotal}
+        onOpenChange={onPaymentOpenChange}
         onPaymentSuccess={() => {
           clearCart();
           refetchProducts();
@@ -411,10 +425,10 @@ export default function ProductOrderPage() {
       />
 
       <ConfirmModal
+        color="danger"
         isOpen={isRemoveItemOpen}
-        onOpenChange={onRemoveItemOpenChange}
-        title="ຢືນຢັນການລົບ?"
         message="ທ່ານຕ້ອງການລົບລາຍການນີ້ອອກຈາກກະຕ່າແທ້ຫຼືບໍ່?"
+        title="ຢືນຢັນການລົບ?"
         onConfirm={() => {
           if (itemToRemove) {
             removeFromCart(
@@ -425,18 +439,18 @@ export default function ProductOrderPage() {
             setItemToRemove(null);
           }
         }}
-        color="danger"
+        onOpenChange={onRemoveItemOpenChange}
       />
 
       <ConfirmModal
+        color="danger"
         isOpen={isClearCartOpen}
-        onOpenChange={onClearCartOpenChange}
-        title={t("sale.confirmClear")}
         message={t("sale.confirmClearMsg")}
+        title={t("sale.confirmClear")}
         onConfirm={() => {
           clearCart();
         }}
-        color="danger"
+        onOpenChange={onClearCartOpenChange}
       />
 
       {/* Flying Animation Layer */}
@@ -445,12 +459,6 @@ export default function ProductOrderPage() {
           {flyingItems.map((item) => (
             <motion.div
               key={item.id}
-              initial={{
-                x: item.startX,
-                y: item.startY,
-                scale: 0.8,
-                opacity: 1,
-              }}
               animate={{
                 x:
                   window.innerWidth > 1024
@@ -464,14 +472,20 @@ export default function ProductOrderPage() {
                 opacity: 0,
                 rotate: 720,
               }}
-              transition={{ duration: 0.8, ease: "anticipate" }}
+              initial={{
+                x: item.startX,
+                y: item.startY,
+                scale: 0.8,
+                opacity: 1,
+              }}
               style={{ position: "fixed", left: 0, top: 0 }}
+              transition={{ duration: 0.8, ease: "anticipate" }}
             >
               <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-primary shadow-2xl bg-white p-1">
                 <img
-                  src={item.src}
-                  className="w-full h-full object-cover rounded-xl"
                   alt="flying"
+                  className="w-full h-full object-cover rounded-xl"
+                  src={item.src}
                 />
               </div>
             </motion.div>

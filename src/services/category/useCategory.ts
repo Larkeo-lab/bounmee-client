@@ -1,7 +1,8 @@
-import { axiosInstance } from "@/lib/axios";
-import { API_ENDPOINTS } from "@/config/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
+
+import { axiosInstance } from "@/lib/axios";
+import { API_ENDPOINTS } from "@/config/api";
 
 export interface Category {
   id: string;
@@ -27,6 +28,7 @@ export const getCategories = async (storeId?: string) => {
   const response = await axiosInstance.get(API_ENDPOINTS.CATEGORY.LIST, {
     params: { storeId },
   });
+
   return response.data;
 };
 
@@ -40,6 +42,7 @@ export const useGetCategories = (storeId?: string) => {
 
 export const useCreateCategory = () => {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (data: CreateCategoryInput) =>
       axiosInstance.post(API_ENDPOINTS.CATEGORY.LIST, data),
@@ -57,6 +60,7 @@ export const useCreateCategory = () => {
 
 export const useUpdateCategory = () => {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({ id, ...data }: UpdateCategoryInput) =>
       axiosInstance.put(API_ENDPOINTS.CATEGORY.DETAIL(id), data),
@@ -74,6 +78,7 @@ export const useUpdateCategory = () => {
 
 export const useDeleteCategory = (storeId?: string) => {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (id: string) =>
       axiosInstance.delete(API_ENDPOINTS.CATEGORY.DETAIL(id)),

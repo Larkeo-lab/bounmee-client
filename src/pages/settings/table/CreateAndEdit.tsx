@@ -11,9 +11,10 @@ import {
 } from "@heroui/react";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "react-hot-toast";
+
 import { useCreateTable, useUpdateTable } from "@/services/table/useTable";
 import { useCreateZone, useUpdateZone } from "@/services/table/useZone";
-import { toast } from "react-hot-toast";
 
 interface CreateAndEditProps {
   isOpen: boolean;
@@ -41,8 +42,10 @@ export default function CreateAndEdit({
     useCreateTable();
   const { mutateAsync: updateTable, isPending: isUpdatingTable } =
     useUpdateTable();
-  const { mutateAsync: createZone, isPending: isCreatingZone } = useCreateZone();
-  const { mutateAsync: updateZone, isPending: isUpdatingZone } = useUpdateZone();
+  const { mutateAsync: createZone, isPending: isCreatingZone } =
+    useCreateZone();
+  const { mutateAsync: updateZone, isPending: isUpdatingZone } =
+    useUpdateZone();
 
   const isPending =
     isCreatingTable || isUpdatingTable || isCreatingZone || isUpdatingZone;
@@ -66,6 +69,7 @@ export default function CreateAndEdit({
       if (modalType === "table") {
         if (!formData.zoneId) {
           toast.error(t("settings.table.selectZoneError"));
+
           return;
         }
         const payload = {
@@ -74,6 +78,7 @@ export default function CreateAndEdit({
           capacity: Number(formData.capacity) || 0,
           zoneId: formData.zoneId,
         };
+
         if (isEditing) {
           await updateTable({ id: formData.id, ...payload });
         } else {
@@ -85,6 +90,7 @@ export default function CreateAndEdit({
           name: formData.name,
           description: formData.description,
         };
+
         if (isEditing) {
           await updateZone({ id: formData.id, ...payload });
         } else {
@@ -98,14 +104,18 @@ export default function CreateAndEdit({
   };
 
   return (
-    <Modal isOpen={isOpen} onOpenChange={onOpenChange} size="lg">
+    <Modal isOpen={isOpen} size="lg" onOpenChange={onOpenChange}>
       <ModalContent>
         {(onClose) => (
           <>
             <ModalHeader className="flex flex-col gap-1">
               <h2 className="text-2xl font-black text-primary">
-                {isEditing ? t("settings.common.edit") : t("settings.common.addNew")}{" "}
-                {modalType === "table" ? t("settings.table.title") : t("settings.table.zone")}
+                {isEditing
+                  ? t("settings.common.edit")
+                  : t("settings.common.addNew")}{" "}
+                {modalType === "table"
+                  ? t("settings.table.title")
+                  : t("settings.table.zone")}
               </h2>
             </ModalHeader>
             <ModalBody className="gap-4 pb-8">
@@ -113,31 +123,31 @@ export default function CreateAndEdit({
                 <>
                   <Input
                     label={t("settings.table.tableName")}
-                    placeholder={t("settings.table.tableName")}
-                    variant="bordered"
                     labelPlacement="outside"
+                    placeholder={t("settings.table.tableName")}
                     value={formData.name || ""}
+                    variant="bordered"
                     onValueChange={(val) =>
                       setFormData({ ...formData, name: val })
                     }
                   />
                   <Input
                     label={t("settings.table.seats")}
-                    placeholder="4"
-                    variant="bordered"
-                    type="number"
                     labelPlacement="outside"
+                    placeholder="4"
+                    type="number"
                     value={formData.capacity?.toString() || ""}
+                    variant="bordered"
                     onValueChange={(val) =>
                       setFormData({ ...formData, capacity: val })
                     }
                   />
                   <Select
                     label={t("settings.table.zone")}
-                    placeholder={t("settings.table.zone")}
-                    variant="bordered"
                     labelPlacement="outside"
+                    placeholder={t("settings.table.zone")}
                     selectedKeys={formData.zoneId ? [formData.zoneId] : []}
+                    variant="bordered"
                     onSelectionChange={(keys) =>
                       setFormData({
                         ...formData,
@@ -154,10 +164,10 @@ export default function CreateAndEdit({
                 <>
                   <Input
                     label={t("settings.table.zoneName")}
-                    placeholder={t("settings.table.zoneName")}
-                    variant="bordered"
                     labelPlacement="outside"
+                    placeholder={t("settings.table.zoneName")}
                     value={formData.name || ""}
+                    variant="bordered"
                     onValueChange={(val) =>
                       setFormData({ ...formData, name: val })
                     }
@@ -169,7 +179,11 @@ export default function CreateAndEdit({
               <Button color="danger" variant="light" onPress={onClose}>
                 {t("settings.common.cancel")}
               </Button>
-              <Button color="primary" isLoading={isPending} onPress={() => handleSave(onClose)}>
+              <Button
+                color="primary"
+                isLoading={isPending}
+                onPress={() => handleSave(onClose)}
+              >
                 {t("settings.common.save")}
               </Button>
             </ModalFooter>

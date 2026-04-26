@@ -11,6 +11,7 @@ import {
   AvatarGroup,
 } from "@heroui/react";
 import { Receipt, User, ShoppingCart, ChevronRight } from "lucide-react";
+
 import { useCart } from "@/provider";
 import { useGetTables } from "@/services/table/useTable";
 import { useAuth } from "@/routes/AuthContext";
@@ -42,7 +43,6 @@ export default function OrderingPage() {
   const { data: tablesResponse } = useGetTables(storeId);
   const tables = tablesResponse?.data || [];
 
-
   const activeOrders = useMemo(() => {
     return Object.entries(carts)
       .map(([tableId, items]) => {
@@ -63,7 +63,9 @@ export default function OrderingPage() {
             .map((item) => {
               const seenQty = snapshot[item.id] || 0;
               const newQty = item.quantity - seenQty;
+
               if (newQty <= 0) return null;
+
               return { ...item, quantity: newQty };
             })
             .filter(Boolean) as typeof pendingItems;
@@ -115,9 +117,7 @@ export default function OrderingPage() {
             <Receipt size={28} />
             {t("ordering.title")}
           </h1>
-          <p className="text-default-500">
-            {t("ordering.desc")}
-          </p>
+          <p className="text-default-500">{t("ordering.desc")}</p>
         </div>
 
         <div className="flex items-center gap-4 bg-white dark:bg-gray-800 p-2 pl-5 rounded-2xl border border-divider shadow-sm">
@@ -140,8 +140,8 @@ export default function OrderingPage() {
         {activeOrders.length === 0 ? (
           <div className="mt-20">
             <EmptyState
-              message={t("ordering.noOrders")}
               description={t("ordering.noOrdersDesc")}
+              message={t("ordering.noOrders")}
             />
           </div>
         ) : (
@@ -150,8 +150,8 @@ export default function OrderingPage() {
               <Card
                 key={order.tableId}
                 isPressable
-                onPress={() => handleGoToTable(order.tableId)}
                 className="border border-divider shadow-sm hover:shadow-md hover:border-primary/50 transition-all duration-200 group"
+                onPress={() => handleGoToTable(order.tableId)}
               >
                 <CardBody className="p-4 md:p-5">
                   <div className="flex flex-col md:flex-row md:items-center gap-6">
@@ -174,7 +174,8 @@ export default function OrderingPage() {
                           {t("ordering.table")} {order.tableName}
                         </h3>
                         <div className="flex items-center gap-1 text-default-400 text-xs font-bold uppercase tracking-wider">
-                          <User size={12} /> {order.capacity} {t("ordering.seats")}
+                          <User size={12} /> {order.capacity}{" "}
+                          {t("ordering.seats")}
                         </div>
                       </div>
                     </div>
@@ -186,13 +187,15 @@ export default function OrderingPage() {
                       </h3>
                       <div className="flex items-center gap-1.5 text-default-400 text-[11px] font-bold uppercase tracking-widest mt-0.5">
                         <User size={12} />{" "}
-                        <span>{order.capacity} {t("ordering.seats")}</span>
+                        <span>
+                          {order.capacity} {t("ordering.seats")}
+                        </span>
                       </div>
                     </div>
 
                     <Divider
-                      orientation="vertical"
                       className="hidden md:block h-10 mx-2 opacity-50"
+                      orientation="vertical"
                     />
 
                     {/* Order Details - Items Summary */}
@@ -202,20 +205,20 @@ export default function OrderingPage() {
                           {order.items.slice(0, 5).map((item, idx) => (
                             <Chip
                               key={`${item.id}-${idx}`}
-                              variant="flat"
+                              className="font-bold text-[10px] h-6"
                               color={getStatusColor(item.status)}
                               size="sm"
-                              className="font-bold text-[10px] h-6"
+                              variant="flat"
                             >
                               {item.name} x{item.quantity}
                             </Chip>
                           ))}
                           {order.items.length > 5 && (
                             <Chip
-                              variant="dot"
-                              size="sm"
-                              color="default"
                               className="font-bold text-[10px] h-6"
+                              color="default"
+                              size="sm"
+                              variant="dot"
                             >
                               +{order.items.length - 5} {t("ordering.items")}
                             </Chip>
@@ -228,8 +231,8 @@ export default function OrderingPage() {
                           {(order.items as any[]).map((item, idx) => (
                             <Avatar
                               key={idx}
-                              src={getDisplayImageUrl(item.image)}
                               className="w-8 h-8"
+                              src={getDisplayImageUrl(item.image)}
                             />
                           ))}
                         </AvatarGroup>
@@ -251,16 +254,16 @@ export default function OrderingPage() {
                       </div>
 
                       <Divider
-                        orientation="vertical"
                         className="h-8 mx-1 hidden sm:block opacity-30"
+                        orientation="vertical"
                       />
 
                       <div className="flex items-center gap-2">
                         <Button
+                          className="font-bold text-xs px-4"
+                          color="danger"
                           size="sm"
                           variant="flat"
-                          color="danger"
-                          className="font-bold text-xs px-4"
                           onClick={(e) => {
                             e.stopPropagation();
                             dismissTable(order.tableId);
@@ -271,8 +274,8 @@ export default function OrderingPage() {
 
                         <div className="w-10 h-10 bg-default-50 rounded-full flex items-center justify-center text-default-300 group-hover:bg-primary group-hover:text-white transition-all duration-300">
                           <ChevronRight
-                            size={20}
                             className="group-hover:translate-x-0.5 transition-transform"
+                            size={20}
                           />
                         </div>
                       </div>

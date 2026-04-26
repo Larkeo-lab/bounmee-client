@@ -1,6 +1,7 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
 import { axiosInstance } from "@/lib/axios";
 import { API_ENDPOINTS } from "@/config/api";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export interface OrderItemInput {
   productId: string;
@@ -95,6 +96,7 @@ export interface OrderFilters {
 
 export const createOrder = async (data: CreateOrderInput) => {
   const response = await axiosInstance.post(API_ENDPOINTS.ORDER.CREATE, data);
+
   return response.data;
 };
 
@@ -102,11 +104,13 @@ export const getOrders = async (filters: OrderFilters) => {
   const response = await axiosInstance.get(API_ENDPOINTS.ORDER.LIST, {
     params: filters,
   });
+
   return response.data;
 };
 
 export const useCreateOrder = () => {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (data: CreateOrderInput) => createOrder(data),
     onSuccess: () => {

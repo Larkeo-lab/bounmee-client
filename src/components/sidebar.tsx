@@ -6,13 +6,8 @@ import { Button, Image, Tooltip } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate, Link as RouterLink } from "react-router-dom";
 import clsx from "clsx";
-import { useAuth } from "@/routes/AuthContext";
 import { Modal, ModalContent, ModalBody, ModalFooter } from "@heroui/react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useChat } from "@/contexts/ChatContext";
-import { useCart } from "@/provider";
-
-// Icons import
 import {
   ShoppingCart,
   BarChart3,
@@ -32,10 +27,17 @@ import {
   MessageCircle,
 } from "lucide-react";
 
+import versionApp from "../../package.json";
+
+import { useChat } from "@/contexts/ChatContext";
+import { useCart } from "@/provider";
+
+// Icons import
+
 import deePosLogo from "/assets/logo.png";
 const bgLineName = "/line-nam-bg.png";
 
-import versionApp from "../../package.json";
+import { useAuth } from "@/routes/AuthContext";
 import { getDisplayImageUrl } from "@/lib/utils";
 
 interface SidebarProps {
@@ -149,6 +151,7 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
     handleResize();
 
     window.addEventListener("resize", handleResize);
+
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
@@ -181,14 +184,17 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
       // Restaurant can see both tables and cafe
       if (href === "/product-order") return false;
     } else if (storeType === "CAFE") {
-      if (href === "/tables" || href === "/product-order" || href === "/chat") return false;
+      if (href === "/tables" || href === "/product-order" || href === "/chat")
+        return false;
     }
 
     // Permission logic
     if (!key) return true;
     if (userRole === "SUPER_ADMIN" || userRole === "STORE_ADMIN") return true;
     const modulePerms = userPermissions[key] as string[] | undefined;
+
     if (modulePerms && modulePerms.includes("read")) return true;
+
     return false;
   };
 
@@ -206,6 +212,7 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
           if (item.href === "/kitchen") {
             return { ...item, badge: kitchenCount };
           }
+
           return item;
         })
         .filter((item) => canAccess(item.permissionKey, item.href)),
@@ -219,6 +226,7 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
   // Countdown logic for expiration modal
   useEffect(() => {
     let timer: any;
+
     if (isExpModalOpen && countdown > 0) {
       timer = setInterval(() => {
         setCountdown((prev) => prev - 1);
@@ -226,6 +234,7 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
     } else if (countdown === 0) {
       handleLogout();
     }
+
     return () => clearInterval(timer);
   }, [isExpModalOpen, countdown]);
 
@@ -239,10 +248,12 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
   const handleMenuClick = (e: React.MouseEvent | React.KeyboardEvent) => {
     // 1. Check if auth data exists in localStorage
     const authData = localStorage.getItem("authPOS");
+
     if (!authData) {
       e.preventDefault();
       logout();
       navigate("/");
+
       return;
     }
 
@@ -251,6 +262,7 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
       e.preventDefault();
       setCountdown(20);
       setIsExpModalOpen(true);
+
       return;
     }
 
@@ -263,6 +275,7 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
   // Function to check if a menu item is active
   const isActiveRoute = (href: string) => {
     const currentPath = location.pathname;
+
     if (href === "/" && currentPath === "/") {
       return true;
     }
@@ -272,12 +285,14 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
     ) {
       return true;
     }
+
     return false;
   };
 
   // Function to toggle submenu expansion
   const toggleSubmenu = (href: string) => {
     const newExpandedMenus = new Set(expandedMenus);
+
     if (newExpandedMenus.has(href)) {
       newExpandedMenus.delete(href);
     } else {
@@ -289,6 +304,7 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
   // Function to check if any child is active
   const hasActiveChild = (children: MenuItem[] | undefined) => {
     if (!children) return false;
+
     return children.some((child) => isActiveRoute(child.href));
   };
 
@@ -305,13 +321,11 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
         <div key={item.href}>
           {/* Parent menu item with children */}
           <Tooltip
+            className={isDesktopExpanded ? "hidden" : "hidden md:block"}
             content={t(item.labelKey)}
             placement="right"
-            className={isDesktopExpanded ? "hidden" : "hidden md:block"}
           >
             <motion.button
-              whileHover={{ x: 3 }}
-              transition={{ type: "spring", stiffness: 400, damping: 10 }}
               className={clsx(
                 "flex cursor-pointer items-center justify-between gap-3 px-3 py-2 rounded-lg w-full text-left",
                 !isDesktopExpanded ? "md:justify-center md:px-0" : "",
@@ -320,16 +334,21 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
                   : "text-white hover:bg-white/10",
                 isChild && "ml-1 md:ml-0",
               )}
+              transition={{ type: "spring", stiffness: 400, damping: 10 }}
+              whileHover={{ x: 3 }}
               onClick={() => {
                 const authData = localStorage.getItem("authPOS");
+
                 if (!authData) {
                   logout();
                   navigate("/");
+
                   return;
                 }
                 if (isTokenExpired()) {
                   setCountdown(20);
                   setIsExpModalOpen(true);
+
                   return;
                 }
                 if (!isDesktopExpanded && window.innerWidth >= 768) {
@@ -377,14 +396,14 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
           <AnimatePresence>
             {isExpanded && item.children && (
               <motion.div
-                initial={{ height: 0, opacity: 0 }}
                 animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
                 className={clsx(
                   "overflow-hidden",
                   !isDesktopExpanded && "md:hidden",
                 )}
+                exit={{ height: 0, opacity: 0 }}
+                initial={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
               >
                 <div className="ml-1 mt-1 space-y-1">
                   {item.children.map((child) => renderMenuItem(child, true))}
@@ -399,16 +418,17 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
       return (
         <motion.div
           key={item.href}
-          whileHover={{ x: 5 }}
-          transition={{ type: "spring", stiffness: 400, damping: 10 }}
           className="w-full"
+          transition={{ type: "spring", stiffness: 400, damping: 10 }}
+          whileHover={{ x: 5 }}
         >
           <Tooltip
+            className={isDesktopExpanded ? "hidden" : "hidden md:block"}
             content={t(item.labelKey)}
             placement="right"
-            className={isDesktopExpanded ? "hidden" : "hidden md:block"}
           >
             <Link
+              as={RouterLink}
               className={clsx(
                 "flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg transition-colors w-full text-left",
                 !isDesktopExpanded ? "md:justify-center md:px-0" : "",
@@ -417,7 +437,6 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
                   : "text-white hover:bg-white/10",
                 isChild && "ml-4 w-auto md:ml-0",
               )}
-              as={RouterLink}
               to={item.href}
               onClick={(e) => handleMenuClick(e)}
             >
@@ -429,11 +448,11 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
               >
                 {isChild ? (
                   <CornerDownRight
-                    size={15}
                     className={clsx(
                       "flex-shrink-0 -mr-1",
                       !isDesktopExpanded && "md:hidden",
                     )}
+                    size={15}
                   />
                 ) : (
                   <div className="relative flex-shrink-0">
@@ -480,14 +499,14 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
       {isOpen && (
         <div
           className="fixed inset-0 bg-opacity-50 backdrop-blur-xs z-40 md:hidden"
+          role="button"
+          tabIndex={0}
           onClick={onToggle}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
               onToggle();
             }
           }}
-          role="button"
-          tabIndex={0}
         />
       )}
 
@@ -525,11 +544,11 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
           >
             {/* Store Logo */}
             <Image
-              src={getDisplayImageUrl(user?.user?.store?.logoUrl) || deePosLogo}
-              fallbackSrc={deePosLogo}
               alt={user?.user?.store?.name || "Store Logo"}
-              radius="full"
               className="w-10 h-10 md:w-11 md:h-11 aspect-square object-cover border-2 border-white/20 flex-shrink-0"
+              fallbackSrc={deePosLogo}
+              radius="full"
+              src={getDisplayImageUrl(user?.user?.store?.logoUrl) || deePosLogo}
             />
 
             {/* Store Name (Status Text Removed) */}
@@ -543,6 +562,7 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
                 <span className="font-bold text-base whitespace-nowrap leading-none">
                   {(() => {
                     const name = user?.user?.store?.name || t("sidebar.title");
+
                     return name.length >= 14
                       ? `${name.substring(0, 14)}...`
                       : name;
@@ -554,12 +574,12 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
             {/* Desktop Toggle Button */}
             <Button
               isIconOnly
-              size="sm"
-              variant="light"
               className={clsx(
                 "hidden md:flex text-white min-w-8 h-8 rounded-lg hover:bg-white/20",
                 !isDesktopExpanded && "w-10 h-10 bg-white/20 flex-shrink-0",
               )}
+              size="sm"
+              variant="light"
               onPress={() => setIsDesktopExpanded(!isDesktopExpanded)}
             >
               {isDesktopExpanded ? (
@@ -627,16 +647,16 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
 
       {/* Session Expired Modal */}
       <Modal
+        hideCloseButton
+        className="max-w-md"
+        isDismissable={false}
         isOpen={isExpModalOpen}
         onClose={handleLogout}
-        hideCloseButton
-        isDismissable={false}
-        className="max-w-md"
       >
         <ModalContent>
           <ModalBody className="p-12 min-h-64">
             <div className="flex flex-col items-center justify-center">
-              <TriangleAlert size={53} className="text-danger" />
+              <TriangleAlert className="text-danger" size={53} />
               <h2 className="text-center font-bold text-xl text-primary pt-6">
                 ເຊດຊັນໝົດອາຍຸ (Session Expired)
               </h2>
@@ -654,7 +674,7 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
             </div>
           </ModalBody>
           <ModalFooter>
-            <Button color="primary" onPress={handleLogout} className="w-full">
+            <Button className="w-full" color="primary" onPress={handleLogout}>
               ໄປໜ້າລ໋ອກອິນ (Login)
             </Button>
           </ModalFooter>

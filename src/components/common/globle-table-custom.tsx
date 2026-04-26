@@ -5,6 +5,7 @@ import {
   TableColumn,
   Spinner,
 } from "@heroui/react";
+
 import { CustomTableProps } from "@/types";
 
 const GlobalTableCustom: React.FC<
@@ -20,7 +21,7 @@ const GlobalTableCustom: React.FC<
   isHoverable,
 }) => {
   return (
-    <Table shadow="none" className="w-full" {...({ isHoverable } as any)}>
+    <Table className="w-full" shadow="none" {...({ isHoverable } as any)}>
       <TableHeader
         className={
           headerClassName || "bg-[#d8e2ff] hover:bg-[#D8E2FF] whitespace-nowrap"
@@ -30,6 +31,7 @@ const GlobalTableCustom: React.FC<
           const headerText = typeof item === "string" ? item : "";
           const isClickable =
             onHeaderClick && headerText !== "จัดการ" && index !== 0;
+
           return (
             <TableColumn
               key={item as string}
@@ -55,9 +57,9 @@ const GlobalTableCustom: React.FC<
         })}
       </TableHeader>
       <TableBody
+        emptyContent={emptyContent || "ບໍ່ພົບຂໍ້ມູນ"}
         isLoading={isLoading}
         loadingContent={<Spinner label="ກຳລັງໂຫລດ..." />}
-        emptyContent={emptyContent || "ບໍ່ພົບຂໍ້ມູນ"}
       >
         {isLoading
           ? []

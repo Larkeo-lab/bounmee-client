@@ -1,6 +1,7 @@
+import { useQuery } from "@tanstack/react-query";
+
 import { axiosInstance } from "@/lib/axios";
 import { API_ENDPOINTS } from "@/config/api";
-import { useQuery } from "@tanstack/react-query";
 
 export interface Province {
   id: string;
@@ -17,6 +18,7 @@ export const getAllProvinces = async (
   const response = await axiosInstance.get(API_ENDPOINTS.PROVINCE.LIST, {
     params: { limit: filter.limit || 100 },
   });
+
   return response.data?.data || [];
 };
 

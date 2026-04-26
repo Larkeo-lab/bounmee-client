@@ -17,10 +17,11 @@ import {
   Banknote,
   Landmark,
 } from "lucide-react";
+import toast from "react-hot-toast";
+
 import { useAuth } from "@/routes/AuthContext";
 import { useGetBanks, Bank } from "@/services/bank/useBank";
 import { useCreateOrder } from "@/services/order/useOrder";
-import toast from "react-hot-toast";
 import { useGetMoneyRates } from "@/services/moneyRate/useMoneyRate";
 import { getDisplayImageUrl } from "@/lib/utils";
 
@@ -76,6 +77,7 @@ export default function PaymentModal({
   const handleKeypadPress = (val: string) => {
     setReceivedAmount((prev) => {
       if (prev === "0") return val;
+
       return prev + val;
     });
   };
@@ -94,6 +96,7 @@ export default function PaymentModal({
   const handleConfirm = async (onClose: () => void) => {
     if (!user?.user?.storeId || !user?.user?.id) {
       toast.error("Auth session invalid");
+
       return;
     }
 
@@ -128,6 +131,7 @@ export default function PaymentModal({
 
       if (errorData?.errorCode === "POS-9004") {
         const stockInfo = errorData.errors;
+
         toast.error(
           `ສິນຄ້າ "${stockInfo.productName}" ບໍ່ພໍ! (ມີ: ${stockInfo.availableStock}, ຕ້ອງການ: ${stockInfo.requested})`,
           {
@@ -143,17 +147,17 @@ export default function PaymentModal({
 
   return (
     <Modal
-      isOpen={isOpen}
-      onOpenChange={onOpenChange}
-      placement="center"
-      size="2xl"
       backdrop="blur"
-      scrollBehavior="inside"
       className="dark:bg-gray-900 mx-0 sm:mx-2"
       classNames={{
         wrapper: "z-[60]",
         backdrop: "z-[60]",
       }}
+      isOpen={isOpen}
+      placement="center"
+      scrollBehavior="inside"
+      size="2xl"
+      onOpenChange={onOpenChange}
     >
       <ModalContent>
         {(onClose) => (
@@ -169,8 +173,8 @@ export default function PaymentModal({
                     <Button
                       className="flex-grow h-10 sm:h-11 font-bold text-sm sm:text-base"
                       color={paymentMethod === "CASH" ? "primary" : "default"}
-                      variant={paymentMethod === "CASH" ? "solid" : "flat"}
                       startContent={<Banknote size={20} />}
+                      variant={paymentMethod === "CASH" ? "solid" : "flat"}
                       onClick={() => {
                         setPaymentMethod("CASH");
                         setSelectedBank(null);
@@ -183,8 +187,8 @@ export default function PaymentModal({
                       color={
                         paymentMethod === "TRANSFER" ? "primary" : "default"
                       }
-                      variant={paymentMethod === "TRANSFER" ? "solid" : "flat"}
                       startContent={<CreditCard size={20} />}
+                      variant={paymentMethod === "TRANSFER" ? "solid" : "flat"}
                       onClick={() => {
                         setPaymentMethod("TRANSFER");
                         setReceivedAmount(total.toString());
@@ -222,11 +226,11 @@ export default function PaymentModal({
                               ].map((curr) => (
                                 <Button
                                   key={curr}
-                                  variant={currency === curr ? "solid" : "flat"}
+                                  className="font-bold h-10"
                                   color={
                                     currency === curr ? "primary" : "default"
                                   }
-                                  className="font-bold h-10"
+                                  variant={currency === curr ? "solid" : "flat"}
                                   onClick={() => setCurrency(curr)}
                                 >
                                   {curr}
@@ -288,9 +292,9 @@ export default function PaymentModal({
                                   {bank.logoUrl ? (
                                     <div className="w-10 h-10 rounded-full overflow-hidden bg-white border border-divider">
                                       <img
-                                        src={getDisplayImageUrl(bank.logoUrl)}
                                         alt={bank.name}
                                         className="w-full h-full object-contain"
+                                        src={getDisplayImageUrl(bank.logoUrl)}
                                         onError={(e) => {
                                           (e.target as HTMLImageElement).src =
                                             "/assets/logo.png";
@@ -300,8 +304,8 @@ export default function PaymentModal({
                                   ) : (
                                     <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                                       <Landmark
-                                        size={20}
                                         className="text-primary"
+                                        size={20}
                                       />
                                     </div>
                                   )}
@@ -327,9 +331,9 @@ export default function PaymentModal({
                     {paymentMethod === "CASH" ? (
                       <>
                         <Button
+                          className="h-12 text-xl font-black rounded-xl mb-1 shadow-md shadow-primary/20"
                           color="primary"
                           variant="solid"
-                          className="h-12 text-xl font-black rounded-xl mb-1 shadow-md shadow-primary/20"
                           onPress={() => {
                             setCurrency("LAK");
                             setReceivedAmount(total.toString());
@@ -342,8 +346,8 @@ export default function PaymentModal({
                             (num) => (
                               <Button
                                 key={num}
-                                variant="flat"
                                 className="h-14 text-xl font-bold bg-default-100/50 hover:bg-primary hover:text-white transition-all rounded-xl shadow-sm"
+                                variant="flat"
                                 onPress={() =>
                                   handleKeypadPress(num.toString())
                                 }
@@ -355,19 +359,19 @@ export default function PaymentModal({
                         </div>
                         <div className="grid grid-cols-2 gap-3 mt-3">
                           <Button
-                            color="warning"
-                            variant="flat"
                             className="h-12 text-lg font-bold rounded-xl"
+                            color="warning"
                             startContent={<Delete size={20} />}
+                            variant="flat"
                             onPress={deleteLastDigit}
                           >
                             ລຶບ
                           </Button>
                           <Button
-                            color="danger"
-                            variant="flat"
                             className="h-12 text-lg font-bold rounded-xl"
+                            color="danger"
                             startContent={<XCircle size={20} />}
+                            variant="flat"
                             onPress={clearReceived}
                           >
                             ລຶບທັງໝົດ
@@ -380,11 +384,11 @@ export default function PaymentModal({
                           <>
                             <div className="bg-white p-3 rounded-2xl shadow-sm mb-4 border border-divider">
                               <img
+                                alt="QR Code"
+                                className="w-48 h-48 sm:w-64 sm:h-64 object-contain"
                                 src={getDisplayImageUrl(
                                   selectedBankData.qrCodeImage,
                                 )}
-                                alt="QR Code"
-                                className="w-48 h-48 sm:w-64 sm:h-64 object-contain"
                               />
                             </div>
                             <p className="text-lg font-black text-primary text-center">
@@ -397,7 +401,7 @@ export default function PaymentModal({
                         ) : (
                           <>
                             <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                              <CreditCard size={48} className="text-primary" />
+                              <CreditCard className="text-primary" size={48} />
                             </div>
                             <p className="text-lg font-bold text-primary">
                               ກະລຸນາໂອນເງິນ
@@ -417,24 +421,24 @@ export default function PaymentModal({
             </ModalBody>
             <ModalFooter className="border-t border-divider p-6">
               <Button
+                className="h-12 px-6 font-bold text-base"
                 color="default"
                 variant="flat"
                 onPress={onClose}
-                className="h-12 px-6 font-bold text-base"
               >
                 ຍົກເລີກ
               </Button>
               <Button
-                color="primary"
                 className="flex-grow h-12 font-black text-lg shadow-md shadow-primary/30"
-                startContent={<CheckCircle2 size={22} />}
-                onPress={() => handleConfirm(onClose)}
-                isLoading={createOrderMutation.isPending}
+                color="primary"
                 isDisabled={
                   paymentMethod === "CASH"
                     ? receivedAmountInLAK < total
                     : !selectedBank
                 }
+                isLoading={createOrderMutation.isPending}
+                startContent={<CheckCircle2 size={22} />}
+                onPress={() => handleConfirm(onClose)}
               >
                 ຢືນຢັນການຊຳລະເງິນ
               </Button>

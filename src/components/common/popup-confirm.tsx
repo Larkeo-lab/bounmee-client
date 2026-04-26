@@ -1,9 +1,9 @@
-import { 
-  Modal, 
-  ModalContent, 
-  ModalBody, 
-  ModalFooter, 
-  Button 
+import {
+  Modal,
+  ModalContent,
+  ModalBody,
+  ModalFooter,
+  Button,
 } from "@heroui/react";
 import { ReactNode } from "react";
 
@@ -28,14 +28,10 @@ export default function ConfirmModal({
   cancelText = "ຍົກເລີກ",
   onConfirm,
   icon,
-  color = "primary"
+  color = "primary",
 }: ConfirmModalProps) {
   return (
     <Modal
-      isOpen={isOpen}
-      onOpenChange={onOpenChange}
-      size="xs"
-      placement="center"
       hideCloseButton
       backdrop="blur"
       classNames={{
@@ -43,11 +39,17 @@ export default function ConfirmModal({
         backdrop: "z-[9998] bg-black/30",
         base: "border-none shadow-2xl",
       }}
+      isOpen={isOpen}
+      placement="center"
+      size="xs"
+      onOpenChange={onOpenChange}
     >
       <ModalContent>
         <ModalBody className="py-6 flex flex-col items-center">
           {icon && (
-            <div className={`w-14 h-14 rounded-full bg-${color}/10 flex items-center justify-center text-${color} mb-4 scale-110`}>
+            <div
+              className={`w-14 h-14 rounded-full bg-${color}/10 flex items-center justify-center text-${color} mb-4 scale-110`}
+            >
               {icon}
             </div>
           )}
@@ -59,20 +61,20 @@ export default function ConfirmModal({
         <ModalFooter className="flex gap-2 p-4 border-t border-divider/50 bg-default-50/50">
           <Button
             fullWidth
+            className="font-bold h-11"
             variant="flat"
             onPress={() => onOpenChange(false)}
-            className="font-bold h-11"
           >
             {cancelText}
           </Button>
           <Button
             fullWidth
+            className={`font-bold h-11 shadow-lg shadow-${color}/20`}
             color={color}
             onPress={() => {
               onConfirm();
               onOpenChange(false);
             }}
-            className={`font-bold h-11 shadow-lg shadow-${color}/20`}
           >
             {confirmText}
           </Button>

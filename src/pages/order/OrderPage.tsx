@@ -35,10 +35,12 @@ import {
   Coffee,
   Armchair,
 } from "lucide-react";
+import dayjs from "dayjs";
+
 import { OrderDetail } from "./OrderDetail";
+
 import { useAuth } from "@/routes/AuthContext";
 import { useGetOrders, Order } from "@/services/order/useOrder";
-import dayjs from "dayjs";
 import { getDisplayImageUrl } from "@/lib/utils";
 import { formatNumber } from "@/utils/numberFormat";
 import GlobalPagination from "@/components/common/globle-pagination";
@@ -65,6 +67,7 @@ export default function OrderPage() {
     const handler = setTimeout(() => {
       setDebouncedSearch(search);
     }, 500);
+
     return () => clearTimeout(handler);
   }, [search]);
 
@@ -105,6 +108,7 @@ export default function OrderPage() {
         if (o.businessType === "CAFE") acc.CAFE++;
         else if (o.tableId || o.table) acc.TABLE++;
         else acc.DIRECT++;
+
         return acc;
       },
       { TABLE: 0, DIRECT: 0, CAFE: 0 },
@@ -113,13 +117,19 @@ export default function OrderPage() {
 
   const filteredOrders = useMemo(() => {
     let result = ordersWithIndex;
+
     if (selectedSource === "TABLE") {
-      result = result.filter((o: any) => (o.tableId || o.table) && o.businessType !== "CAFE");
+      result = result.filter(
+        (o: any) => (o.tableId || o.table) && o.businessType !== "CAFE",
+      );
     } else if (selectedSource === "DIRECT") {
-      result = result.filter((o: any) => !o.tableId && !o.table && o.businessType !== "CAFE");
+      result = result.filter(
+        (o: any) => !o.tableId && !o.table && o.businessType !== "CAFE",
+      );
     } else if (selectedSource === "CAFE") {
       result = result.filter((o: any) => o.businessType === "CAFE");
     }
+
     return result;
   }, [ordersWithIndex, selectedSource]);
 
@@ -162,7 +172,7 @@ export default function OrderPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 border-b border-divider pb-3 bg-white/50 backdrop-blur-md sticky top-0 z-20 -mx-2 px-4 py-2 sm:mx-0 sm:px-0 sm:pt-0 sm:static sm:bg-transparent">
         <div>
           <h1 className="text-lg sm:text-2xl font-black text-primary flex items-center gap-2">
-            <Receipt size={22} className="sm:size-7" />
+            <Receipt className="sm:size-7" size={22} />
             {t("order.title")}
           </h1>
           <p className="text-[10px] sm:text-xs text-default-500 font-medium">
@@ -170,11 +180,11 @@ export default function OrderPage() {
           </p>
         </div>
         <Button
+          className="font-bold hidden sm:flex"
           color="primary"
-          variant="flat"
           size="sm"
           startContent={<Download size={16} />}
-          className="font-bold hidden sm:flex"
+          variant="flat"
           onPress={() => exportOrdersToExcel(orders)}
         >
           {t("order.exportExcel")}
@@ -195,8 +205,8 @@ export default function OrderPage() {
                 </h2>
               </div>
               <Receipt
-                size={60}
                 className="absolute -right-2 -bottom-2 text-white/10 rotate-12 pointer-events-none"
+                size={60}
               />
             </CardBody>
           </Card>
@@ -213,8 +223,8 @@ export default function OrderPage() {
                 </h2>
               </div>
               <Landmark
-                size={60}
                 className="absolute -right-2 -bottom-2 text-white/10 rotate-12 pointer-events-none"
+                size={60}
               />
             </CardBody>
           </Card>
@@ -228,20 +238,20 @@ export default function OrderPage() {
                 </p>
                 <div className="flex gap-2">
                   <div className="flex items-center gap-1">
-                    <div className="w-1.5 h-1.5 rounded-full bg-success"></div>
+                    <div className="w-1.5 h-1.5 rounded-full bg-success" />
                     <span className="text-[10px] font-bold">
                       {formatNumber(totalCash)}
                     </span>
                   </div>
                   <div className="flex items-center gap-1 text-primary">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary"></div>
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                     <span className="text-[10px] font-bold">
                       {formatNumber(totalTransfer)}
                     </span>
                   </div>
                 </div>
               </div>
-              <ScrollShadow size={20} className="max-h-[34px] overflow-y-auto">
+              <ScrollShadow className="max-h-[34px] overflow-y-auto" size={20}>
                 <div className="flex flex-wrap gap-x-3 gap-y-1">
                   {transfersByBank.map((bank: any) => (
                     <div
@@ -250,8 +260,8 @@ export default function OrderPage() {
                     >
                       {bank.logoUrl && (
                         <Image
-                          src={getDisplayImageUrl(bank.logoUrl)}
                           className="w-3 h-3 rounded-full object-cover"
+                          src={getDisplayImageUrl(bank.logoUrl)}
                         />
                       )}
                       <span className="font-semibold">{bank.name}:</span>
@@ -272,17 +282,17 @@ export default function OrderPage() {
         <div className="flex gap-2">
           <Input
             isClearable
-            placeholder={t("order.searchPlaceholder")}
-            value={search}
-            onValueChange={setSearch}
-            startContent={<Search size={16} className="text-primary/60" />}
-            variant="flat"
-            size="sm"
             className="flex-grow"
+            placeholder={t("order.searchPlaceholder")}
+            size="sm"
+            startContent={<Search className="text-primary/60" size={16} />}
+            value={search}
+            variant="flat"
+            onValueChange={setSearch}
           />
           <Dropdown placement="bottom-end">
             <DropdownTrigger>
-              <Button isIconOnly variant="flat" color="primary" size="sm">
+              <Button isIconOnly color="primary" size="sm" variant="flat">
                 <Filter size={18} />
               </Button>
             </DropdownTrigger>
@@ -293,6 +303,7 @@ export default function OrderPage() {
                 const today = dayjs().format("YYYY-MM-DD");
                 let start = today;
                 let end = today;
+
                 switch (key) {
                   case "today":
                     start = today;
@@ -317,11 +328,13 @@ export default function OrderPage() {
             >
               <DropdownItem
                 key="today"
-                startContent={<Calendar size={14} className="text-success" />}
+                startContent={<Calendar className="text-success" size={14} />}
               >
                 {t("order.today")}
               </DropdownItem>
-              <DropdownItem key="yesterday">{t("order.yesterday")}</DropdownItem>
+              <DropdownItem key="yesterday">
+                {t("order.yesterday")}
+              </DropdownItem>
               <DropdownItem key="3days">{t("order.last3Days")}</DropdownItem>
               <DropdownItem key="7days">{t("order.last7Days")}</DropdownItem>
               <DropdownItem key="1month">{t("order.lastMonth")}</DropdownItem>
@@ -335,10 +348,10 @@ export default function OrderPage() {
               {t("order.start")}
             </span>
             <input
+              className="bg-transparent border-none text-[10px] font-bold outline-none"
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="bg-transparent border-none text-[10px] font-bold outline-none"
             />
           </div>
           <div className="flex-shrink-0 flex items-center gap-1.5 bg-default-100 p-1 rounded-lg border border-divider">
@@ -346,10 +359,10 @@ export default function OrderPage() {
               {t("order.end")}
             </span>
             <input
+              className="bg-transparent border-none text-[10px] font-bold outline-none"
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="bg-transparent border-none text-[10px] font-bold outline-none"
             />
           </div>
         </div>
@@ -358,11 +371,6 @@ export default function OrderPage() {
       <div className="flex-shrink-0 -mb-1">
         <Tabs
           aria-label="Order Source"
-          color="primary"
-          variant="underlined"
-          selectedKey={selectedSource}
-          onSelectionChange={(key) => setSelectedSource(key as string)}
-          size="md"
           classNames={{
             base: "w-full",
             tabList: "gap-6 sm:gap-8 px-2 border-b-2 border-divider/40 w-full",
@@ -371,17 +379,29 @@ export default function OrderPage() {
             tabContent:
               "group-data-[selected=true]:text-primary text-default-450 font-bold transition-all duration-300",
           }}
+          color="primary"
+          selectedKey={selectedSource}
+          size="md"
+          variant="underlined"
+          onSelectionChange={(key) => setSelectedSource(key as string)}
         >
           <Tab
             key="ALL"
             title={
               <div className="flex items-center gap-2">
-                <LayoutGrid size={18} className={selectedSource === "ALL" ? "text-primary" : "text-default-400"} />
+                <LayoutGrid
+                  className={
+                    selectedSource === "ALL"
+                      ? "text-primary"
+                      : "text-default-400"
+                  }
+                  size={18}
+                />
                 <span className="text-sm">{t("order.all")}</span>
                 <Chip
+                  className="h-5 text-[10px] font-black bg-primary/10 text-primary border-none"
                   size="sm"
                   variant="flat"
-                  className="h-5 text-[10px] font-black bg-primary/10 text-primary border-none"
                 >
                   {totalOrders}
                 </Chip>
@@ -389,15 +409,26 @@ export default function OrderPage() {
             }
           />
           {/* Only show Table tab for Restaurants */}
-          {(user?.user?.store?.type === "RESTAURANT") && (
+          {user?.user?.store?.type === "RESTAURANT" && (
             <Tab
               key="TABLE"
               title={
                 <div className="flex items-center gap-2">
-                  <Armchair size={18} className={selectedSource === "TABLE" ? "text-primary" : "text-default-400"} />
+                  <Armchair
+                    className={
+                      selectedSource === "TABLE"
+                        ? "text-primary"
+                        : "text-default-400"
+                    }
+                    size={18}
+                  />
                   <span className="text-sm">{t("order.fromTable")}</span>
                   {sourceCounts.TABLE > 0 && (
-                    <Chip size="sm" variant="flat" className="h-4 text-[9px] font-bold">
+                    <Chip
+                      className="h-4 text-[9px] font-bold"
+                      size="sm"
+                      variant="flat"
+                    >
                       {sourceCounts.TABLE}
                     </Chip>
                   )}
@@ -407,15 +438,26 @@ export default function OrderPage() {
           )}
 
           {/* Only show Direct tab for General stores and Restaurants */}
-          {(user?.user?.store?.type === "GENERAL_STORE") && (
+          {user?.user?.store?.type === "GENERAL_STORE" && (
             <Tab
               key="DIRECT"
               title={
                 <div className="flex items-center gap-2">
-                  <ShoppingBag size={18} className={selectedSource === "DIRECT" ? "text-primary" : "text-default-400"} />
+                  <ShoppingBag
+                    className={
+                      selectedSource === "DIRECT"
+                        ? "text-primary"
+                        : "text-default-400"
+                    }
+                    size={18}
+                  />
                   <span className="text-sm">{t("order.fromShop")}</span>
                   {sourceCounts.DIRECT > 0 && (
-                    <Chip size="sm" variant="flat" className="h-4 text-[9px] font-bold">
+                    <Chip
+                      className="h-4 text-[9px] font-bold"
+                      size="sm"
+                      variant="flat"
+                    >
                       {sourceCounts.DIRECT}
                     </Chip>
                   )}
@@ -425,15 +467,27 @@ export default function OrderPage() {
           )}
 
           {/* Only show Cafe tab for Cafes and Restaurants */}
-          {(user?.user?.store?.type === "CAFE" || user?.user?.store?.type === "RESTAURANT") && (
+          {(user?.user?.store?.type === "CAFE" ||
+            user?.user?.store?.type === "RESTAURANT") && (
             <Tab
               key="CAFE"
               title={
                 <div className="flex items-center gap-2">
-                  <Coffee size={18} className={selectedSource === "CAFE" ? "text-primary" : "text-default-400"} />
+                  <Coffee
+                    className={
+                      selectedSource === "CAFE"
+                        ? "text-primary"
+                        : "text-default-400"
+                    }
+                    size={18}
+                  />
                   <span className="text-sm">{t("order.fromCafe")}</span>
                   {sourceCounts.CAFE > 0 && (
-                    <Chip size="sm" variant="flat" className="h-4 text-[9px] font-bold">
+                    <Chip
+                      className="h-4 text-[9px] font-bold"
+                      size="sm"
+                      variant="flat"
+                    >
                       {sourceCounts.CAFE}
                     </Chip>
                   )}
@@ -457,8 +511,8 @@ export default function OrderPage() {
               <Card
                 key={item.id}
                 isPressable
-                onPress={() => handleViewDetail(item)}
                 className="border-none bg-white rounded-none shadow-none border-b border-divider/60 hover:bg-default-50 transition-all active:scale-[0.99] w-full"
+                onPress={() => handleViewDetail(item)}
               >
                 <CardBody className="p-4">
                   <div className="flex justify-between items-start mb-3">
@@ -471,10 +525,10 @@ export default function OrderPage() {
                       </span>
                     </div>
                     <Chip
-                      size="sm"
-                      color={getPaymentMethodColor(item.paymentMethod)}
-                      variant="flat"
                       className="font-black h-5 text-[9px]"
+                      color={getPaymentMethodColor(item.paymentMethod)}
+                      size="sm"
+                      variant="flat"
                     >
                       {getPaymentMethodLabel(item.paymentMethod)}
                     </Chip>
@@ -485,7 +539,8 @@ export default function OrderPage() {
                         {t("order.grandTotal")}
                       </span>
                       <span className="text-base font-black text-primary">
-                        {formatNumber(item.totalAmount)} {t("order.kip") || "ກີບ"}
+                        {formatNumber(item.totalAmount)}{" "}
+                        {t("order.kip") || "ກີບ"}
                       </span>
                     </div>
                     <div className="text-right flex flex-col items-end">
@@ -524,11 +579,11 @@ export default function OrderPage() {
 
           <div className="pt-4 flex justify-center">
             <GlobalPagination
-              page={page}
-              totalPages={totalPages}
-              totalItems={totalOrders}
-              onChange={setPage}
               compact
+              page={page}
+              totalItems={totalOrders}
+              totalPages={totalPages}
+              onChange={setPage}
             />
           </div>
         </div>
@@ -537,37 +592,43 @@ export default function OrderPage() {
         <div className="hidden sm:block">
           <Table
             aria-label="Order history table"
-            shadow="none"
+            bottomContent={
+              <GlobalPagination
+                page={page}
+                results={Math.min(page * limit, totalOrders)}
+                showing={(page - 1) * limit + 1}
+                totalItems={totalOrders}
+                totalPages={totalPages}
+                onChange={setPage}
+              />
+            }
             classNames={{
               wrapper: "border border-divider rounded-2xl overflow-hidden p-0",
               th: "bg-default-50 text-default-600 font-bold h-12 text-center",
               td: "text-center py-3",
             }}
-            bottomContent={
-              <GlobalPagination
-                page={page}
-                totalPages={totalPages}
-                totalItems={totalOrders}
-                showing={(page - 1) * limit + 1}
-                results={Math.min(page * limit, totalOrders)}
-                onChange={setPage}
-              />
-            }
+            shadow="none"
           >
             <TableHeader>
               <TableColumn key="no">{t("order.tableRank")}</TableColumn>
-              <TableColumn key="orderNumber">{t("order.tableOrder")}</TableColumn>
-              <TableColumn key="itemsCount">{t("order.tableItems")}</TableColumn>
+              <TableColumn key="orderNumber">
+                {t("order.tableOrder")}
+              </TableColumn>
+              <TableColumn key="itemsCount">
+                {t("order.tableItems")}
+              </TableColumn>
               <TableColumn key="table">{t("order.tableTable")}</TableColumn>
               <TableColumn key="date">{t("order.tableDateTime")}</TableColumn>
-              <TableColumn key="employee">{t("order.tableEmployeeCol")}</TableColumn>
+              <TableColumn key="employee">
+                {t("order.tableEmployeeCol")}
+              </TableColumn>
               <TableColumn key="payment">{t("order.tablePayment")}</TableColumn>
               <TableColumn key="total">{t("order.tableTotal")}</TableColumn>
               <TableColumn key="actions">{t("order.tableAction")}</TableColumn>
             </TableHeader>
             <TableBody
-              isLoading={isLoading}
               emptyContent={<EmptyState />}
+              isLoading={isLoading}
               items={filteredOrders}
             >
               {(item: any) => (
@@ -586,7 +647,9 @@ export default function OrderPage() {
                     {item.items.length} {t("order.tableItems")}
                   </TableCell>
                   <TableCell className="font-bold text-primary text-xs">
-                    {item.businessType === "CAFE" ? "Cafe" : (item.table?.name || "-")}
+                    {item.businessType === "CAFE"
+                      ? "Cafe"
+                      : item.table?.name || "-"}
                   </TableCell>
                   <TableCell className="text-[10px] font-medium text-default-500">
                     {dayjs(item.createdAt).format("DD/MM/YYYY HH:mm")}
@@ -596,10 +659,10 @@ export default function OrderPage() {
                   </TableCell>
                   <TableCell>
                     <Chip
-                      size="sm"
-                      color={getPaymentMethodColor(item.paymentMethod)}
-                      variant="flat"
                       className="font-bold h-5 text-[10px]"
+                      color={getPaymentMethodColor(item.paymentMethod)}
+                      size="sm"
+                      variant="flat"
                     >
                       {getPaymentMethodLabel(item.paymentMethod)}
                     </Chip>
@@ -610,9 +673,9 @@ export default function OrderPage() {
                   <TableCell>
                     <Button
                       isIconOnly
+                      color="primary"
                       size="sm"
                       variant="light"
-                      color="primary"
                       onPress={() => handleViewDetail(item)}
                     >
                       <Eye size={18} />
@@ -627,8 +690,8 @@ export default function OrderPage() {
 
       <OrderDetail
         isOpen={isOpen}
-        onOpenChange={onOpenChange}
         selectedOrder={selectedOrder}
+        onOpenChange={onOpenChange}
       />
     </div>
   );

@@ -14,14 +14,10 @@ import {
   Image,
   Chip,
 } from "@heroui/react";
-import {
-  Plus,
-  Search,
-  Edit2,
-  Trash2,
-  Users,
-  User,
-} from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Users, User } from "lucide-react";
+
+import AddAndEdit from "./AddAndEdit";
+
 import { useAuth } from "@/routes/AuthContext";
 import {
   useGetEmployees,
@@ -33,7 +29,6 @@ import { useGetStoreDetail } from "@/services/store/useStore";
 import EmptyState from "@/components/common/empty-state";
 import ConfirmModal from "@/components/common/popup-confirm";
 import PendingModal from "@/components/common/pending-modal";
-import AddAndEdit from "./AddAndEdit";
 
 export default function EmployeePage() {
   const { t } = useTranslation();
@@ -90,6 +85,7 @@ export default function EmployeePage() {
       .map((u: any) => {
         // Find matching employee record if exists
         const emp = employees.find((e) => e.id === u.employeeId);
+
         return {
           id: u.id,
           employeeId: u.employeeId,
@@ -107,6 +103,7 @@ export default function EmployeePage() {
       .sort((a: any, b: any) => {
         if (a.role === "STORE_ADMIN" && b.role !== "STORE_ADMIN") return -1;
         if (a.role !== "STORE_ADMIN" && b.role === "STORE_ADMIN") return 1;
+
         return 0;
       });
   }, [store?.users, employees]);
@@ -115,6 +112,7 @@ export default function EmployeePage() {
 
   const filteredItems = useMemo(() => {
     let filtered = [...combinedEmployees];
+
     if (searchQuery) {
       filtered = filtered.filter(
         (item) =>
@@ -123,15 +121,16 @@ export default function EmployeePage() {
           item.phone?.includes(searchQuery),
       );
     }
+
     return filtered;
   }, [combinedEmployees, searchQuery]);
 
   const items = useMemo(() => {
     const start = (page - 1) * rowsPerPage;
     const end = start + rowsPerPage;
+
     return filteredItems.slice(start, end);
   }, [page, filteredItems]);
-
 
   const handleDeleteSubmit = async (onClose: () => void) => {
     if (!selectedEmployee) return;
@@ -145,7 +144,6 @@ export default function EmployeePage() {
     }
   };
 
-
   const handleEditOpen = (item: any) => {
     setSelectedEmployee(item.originalEmployee || item);
     onFormOpen();
@@ -154,6 +152,7 @@ export default function EmployeePage() {
   const handleCreateOpen = () => {
     // @ts-ignore
     const storeStatus = user?.user?.store?.status;
+
     if (storeStatus === "PENDING") {
       onPendingOpen();
     } else if (storeStatus === "REJECTED") {
@@ -171,8 +170,6 @@ export default function EmployeePage() {
     }
   };
 
-
-
   return (
     <div className="space-y-6 m-4">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -181,15 +178,13 @@ export default function EmployeePage() {
             <Users size={28} />
             {t("employee.title")} {store ? `(${store.name})` : ""}
           </h1>
-          <p className="text-default-500">
-            {t("employee.subtitle")}
-          </p>
+          <p className="text-default-500">{t("employee.subtitle")}</p>
         </div>
         <Button
+          className="font-bold h-12 px-6 shadow-lg shadow-primary/30"
           color="primary"
           startContent={<Plus size={20} />}
           onPress={handleCreateOpen}
-          className="font-bold h-12 px-6 shadow-lg shadow-primary/30"
         >
           {t("employee.addTitle")}
         </Button>
@@ -202,8 +197,8 @@ export default function EmployeePage() {
           placeholder={t("employee.searchPlaceholder")}
           startContent={<Search className="text-default-400" size={18} />}
           value={searchQuery}
-          onValueChange={setSearchQuery}
           variant="bordered"
+          onValueChange={setSearchQuery}
         />
         <div className="text-default-400 text-sm">
           {t("settings.common.total", { count: filteredItems.length })}
@@ -212,11 +207,6 @@ export default function EmployeePage() {
 
       <Table
         aria-label="Employee table"
-        className="mt-4"
-        classNames={{
-          wrapper: "shadow-sm border border-divider rounded-xl overflow-hidden",
-          th: "bg-default-50 text-default-600 font-bold h-12",
-        }}
         bottomContent={
           filteredItems.length > rowsPerPage && (
             <div className="flex w-full justify-center p-4">
@@ -231,15 +221,22 @@ export default function EmployeePage() {
             </div>
           )
         }
+        className="mt-4"
+        classNames={{
+          wrapper: "shadow-sm border border-divider rounded-xl overflow-hidden",
+          th: "bg-default-50 text-default-600 font-bold h-12",
+        }}
       >
         <TableHeader>
           <TableColumn>{t("employee.name")}</TableColumn>
           <TableColumn>{t("employee.phone")}</TableColumn>
           <TableColumn>{t("employee.username")}</TableColumn>
           <TableColumn>{t("employee.role")}</TableColumn>
-          <TableColumn className="text-center">{t("settings.common.actions")}</TableColumn>
+          <TableColumn className="text-center">
+            {t("settings.common.actions")}
+          </TableColumn>
         </TableHeader>
-        <TableBody isLoading={isLoading} emptyContent={<EmptyState />}>
+        <TableBody emptyContent={<EmptyState />} isLoading={isLoading}>
           {items.map((item) => (
             <TableRow key={item.id}>
               <TableCell>
@@ -247,9 +244,9 @@ export default function EmployeePage() {
                   <div className="w-10 h-10 rounded-full overflow-hidden border border-divider bg-default-50">
                     {item.logoUrl ? (
                       <Image
-                        src={getDisplayImageUrl(item.logoUrl)}
                         alt={item.name}
                         className="w-full h-full object-cover"
+                        src={getDisplayImageUrl(item.logoUrl)}
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-default-400">
@@ -264,32 +261,34 @@ export default function EmployeePage() {
               <TableCell>{item.userName || "-"}</TableCell>
               <TableCell>
                 <Chip
-                  size="sm"
                   color={item.role === "STORE_ADMIN" ? "warning" : "primary"}
+                  size="sm"
                   variant="flat"
                 >
-                  {item.role === "STORE_ADMIN" ? t("employee.admin") : t("employee.staff")}
+                  {item.role === "STORE_ADMIN"
+                    ? t("employee.admin")
+                    : t("employee.staff")}
                 </Chip>
               </TableCell>
               <TableCell>
                 <div className="flex items-center justify-center gap-2">
                   <Button
                     isIconOnly
+                    color="primary"
+                    isDisabled={item.role === "STORE_ADMIN"}
                     size="sm"
                     variant="light"
-                    color="primary"
                     onPress={() => handleEditOpen(item)}
-                    isDisabled={item.role === "STORE_ADMIN"}
                   >
                     <Edit2 size={18} />
                   </Button>
                   <Button
                     isIconOnly
+                    color="danger"
+                    isDisabled={item.role === "STORE_ADMIN"}
                     size="sm"
                     variant="light"
-                    color="danger"
                     onPress={() => handleDeleteOpen(item)}
-                    isDisabled={item.role === "STORE_ADMIN"}
                   >
                     <Trash2 size={18} />
                   </Button>
@@ -302,9 +301,9 @@ export default function EmployeePage() {
 
       <AddAndEdit
         isOpen={isFormOpen}
-        onOpenChange={onFormOpenChange}
         selectedEmployee={selectedEmployee}
         storeId={user?.user?.storeId || ""}
+        onOpenChange={onFormOpenChange}
         onSuccess={() => {
           getEmployees();
           getStore();
@@ -313,31 +312,30 @@ export default function EmployeePage() {
 
       {/* Delete Modal */}
       <ConfirmModal
-        isOpen={isDeleteOpen}
-        onOpenChange={onDeleteOpenChange}
-        title={t("settings.common.confirmDelete")}
-        message={t("employee.deleteConfirmMsg", { name: selectedEmployee?.name })}
-        confirmText={t("settings.common.delete")}
-        onConfirm={() => handleDeleteSubmit(onDeleteClose)}
-        icon={<Trash2 size={24} />}
         color="danger"
+        confirmText={t("settings.common.delete")}
+        icon={<Trash2 size={24} />}
+        isOpen={isDeleteOpen}
+        message={t("employee.deleteConfirmMsg", {
+          name: selectedEmployee?.name,
+        })}
+        title={t("settings.common.confirmDelete")}
+        onConfirm={() => handleDeleteSubmit(onDeleteClose)}
+        onOpenChange={onDeleteOpenChange}
       />
 
       {/* Pending Status Modal */}
-      <PendingModal
-        isOpen={isPendingOpen}
-        onOpenChange={onPendingOpenChange}
-      />
+      <PendingModal isOpen={isPendingOpen} onOpenChange={onPendingOpenChange} />
 
       {/* Rejected Status Modal */}
       <ConfirmModal
-        isOpen={isRejectedOpen}
-        onOpenChange={onRejectedOpenChange}
-        title={t("settings.common.rejectedTitle")}
-        message={t("settings.common.rejectedMsg")}
-        confirmText={t("settings.common.ok")}
-        onConfirm={onRejectedClose}
         color="danger"
+        confirmText={t("settings.common.ok")}
+        isOpen={isRejectedOpen}
+        message={t("settings.common.rejectedMsg")}
+        title={t("settings.common.rejectedTitle")}
+        onConfirm={onRejectedClose}
+        onOpenChange={onRejectedOpenChange}
       />
     </div>
   );

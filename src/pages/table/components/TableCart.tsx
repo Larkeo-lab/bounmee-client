@@ -1,4 +1,3 @@
-import { useUpdateTable } from "@/services/table/useTable";
 import { useTranslation } from "react-i18next";
 import { QRCodeSVG } from "qrcode.react";
 import {
@@ -14,6 +13,8 @@ import {
   useDisclosure,
 } from "@heroui/react";
 import { Users, Table as TableIcon, CheckCircle2, Clock } from "lucide-react";
+
+import { useUpdateTable } from "@/services/table/useTable";
 import { useCart } from "@/provider";
 
 export type TableStatus = "AVAILABLE" | "OCCUPIED" | "RESERVED" | "DIRTY";
@@ -204,11 +205,11 @@ export const TableCart = ({
 
             <div className="mt-auto pt-2 md:pt-3 flex items-center justify-between border-t border-black/5 dark:border-white/5">
               <Chip
-                startContent={getStatusIcon(table.status)}
-                color={colors.chipColor}
-                variant="flat"
-                size="sm"
                 className="font-bold border-none text-[10px] md:text-xs h-5 md:h-6"
+                color={colors.chipColor}
+                size="sm"
+                startContent={getStatusIcon(table.status)}
+                variant="flat"
               >
                 {getStatusLabel(table.status)}
               </Chip>
@@ -233,12 +234,14 @@ export const TableCart = ({
       <Modal
         isOpen={isOpen}
         placement="center"
-        onOpenChange={onOpenChange}
         size="md"
+        onOpenChange={onOpenChange}
       >
         <ModalContent>
           <ModalHeader className="flex flex-col gap-1 text-center">
-            <span className="text-lg font-bold">{t("navigation.table")} {table.name}</span>
+            <span className="text-lg font-bold">
+              {t("navigation.table")} {table.name}
+            </span>
           </ModalHeader>
           <ModalBody className="flex flex-col items-center py-4 gap-4">
             <p className="text-center text-lg font-medium text-default-600">
@@ -248,9 +251,9 @@ export const TableCart = ({
               <div className="flex flex-col items-center gap-2 p-4 bg-default-50 rounded-xl border border-default-200 w-full">
                 <div className="p-3 bg-white rounded-lg shadow-sm border border-default-100">
                   <QRCodeSVG
-                    value={`${window.location.origin}/menu/${table.qrCode}`}
-                    size={140}
                     level="M"
+                    size={140}
+                    value={`${window.location.origin}/menu/${table.qrCode}`}
                   />
                 </div>
                 <div className="text-center">

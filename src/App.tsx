@@ -1,4 +1,5 @@
 import { Routes, Route } from "react-router-dom";
+
 import { generateRoutes, useAuth } from "@/routes";
 
 function App() {
@@ -18,11 +19,7 @@ function App() {
   return (
     <Routes>
       {routes.map((route, index) => (
-        <Route
-          key={index}
-          path={route.path}
-          element={route.element}
-        />
+        <Route key={index} element={route.element} path={route.path} />
       ))}
     </Routes>
   );

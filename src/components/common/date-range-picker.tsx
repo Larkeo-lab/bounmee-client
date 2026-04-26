@@ -36,13 +36,13 @@ export default function DateRangePickerComponent({
 
   return (
     <DateRangePicker
-      labelPlacement="outside"
       className={className}
-      label={label ? label : ""}
       color={color}
+      isDisabled={disabled}
+      label={label ? label : ""}
+      labelPlacement="outside"
       value={value}
       onChange={handleChange}
-      isDisabled={disabled}
     />
   );
 }

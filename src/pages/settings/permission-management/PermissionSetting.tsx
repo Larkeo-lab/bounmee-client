@@ -24,12 +24,13 @@ import {
   Switch,
   useDisclosure,
 } from "@heroui/react";
+import { Input } from "@heroui/input";
+
 import GlobalTableCustom from "@/components/common/globle-table-custom";
 import GlobalPagination from "@/components/common/globle-pagination";
 import ModalConfirm from "@/components/common/modal-confirm";
 import SuccessModal from "@/components/common/success-modal";
 import { PermissionData } from "@/types";
-import { Input } from "@heroui/input";
 import EmptyState from "@/components/common/empty-state";
 import ConfirmModal from "@/components/common/popup-confirm";
 import PendingModal from "@/components/common/pending-modal";
@@ -70,6 +71,7 @@ export default function PermissionManagement() {
     const handler = setTimeout(() => {
       setDebouncedSearch(searchQuery);
     }, 500);
+
     return () => clearTimeout(handler);
   }, [searchQuery]);
 
@@ -121,6 +123,7 @@ export default function PermissionManagement() {
   const handleAddUser = () => {
     // @ts-ignore
     const storeStatus = user?.user?.store?.status;
+
     if (storeStatus === "PENDING") {
       onPendingOpen();
     } else if (storeStatus === "REJECTED") {
@@ -170,13 +173,13 @@ export default function PermissionManagement() {
             {/* Left side - Search */}
             <div className="w-[500px]">
               <Input
-                type="text"
                 ref={searchInputRef}
+                aria-label="Search permissions"
+                placeholder={t("settings.common.search")}
+                startContent={<Search size={18} />}
+                type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={t("settings.common.search")}
-                aria-label="Search permissions"
-                startContent={<Search size={18} />}
               />
             </div>
 
@@ -186,9 +189,9 @@ export default function PermissionManagement() {
                 <Dropdown>
                   <DropdownTrigger>
                     <Button
-                      variant="bordered"
                       className="w-full justify-between text-sm"
                       endContent={<ChevronDown size={16} />}
+                      variant="bordered"
                     >
                       {selectedStatus || t("settings.common.status")}
                     </Button>
@@ -197,17 +200,23 @@ export default function PermissionManagement() {
                     aria-label="Status selection"
                     onAction={(key) => setSelectedStatus(key as string)}
                   >
-                    <DropdownItem key="all">{t("settings.common.all")}</DropdownItem>
-                    <DropdownItem key={t("settings.common.active")}>{t("settings.common.active")}</DropdownItem>
-                    <DropdownItem key={t("settings.common.inactive")}>{t("settings.common.inactive")}</DropdownItem>
+                    <DropdownItem key="all">
+                      {t("settings.common.all")}
+                    </DropdownItem>
+                    <DropdownItem key={t("settings.common.active")}>
+                      {t("settings.common.active")}
+                    </DropdownItem>
+                    <DropdownItem key={t("settings.common.inactive")}>
+                      {t("settings.common.inactive")}
+                    </DropdownItem>
                   </DropdownMenu>
                 </Dropdown>
               </div>
 
               <Button
-                variant="solid"
                 color="primary"
                 type="button"
+                variant="solid"
                 onPress={handleAddUser}
               >
                 <PlusCircle size={14} />
@@ -219,7 +228,6 @@ export default function PermissionManagement() {
           {/* Table */}
           <div className="overflow-x-auto -mt-4">
             <GlobalTableCustom
-              isLoading={isLoading}
               emptyContent={<EmptyState />}
               header={[
                 t("settings.common.no"),
@@ -232,10 +240,11 @@ export default function PermissionManagement() {
                   className="flex items-center justify-center gap-1"
                 >
                   {t("permission.createdDate")}{" "}
-                  <ChevronsUpDown size={14} className="text-gray-600" />
+                  <ChevronsUpDown className="text-gray-600" size={14} />
                 </div>,
                 t("settings.common.actions"),
               ]}
+              isLoading={isLoading}
             >
               {permissions.map((permission: PermissionData, index: number) => (
                 <TableRow
@@ -257,13 +266,13 @@ export default function PermissionManagement() {
                   <TableCell className="text-center">
                     <div className="flex justify-center">
                       <Switch
-                        size="sm"
+                        aria-label={`Toggle ${permission?.name}`}
                         isSelected={permission?.isActive}
+                        size="sm"
+                        onClick={(e) => e.stopPropagation()}
                         onValueChange={() => {
                           toggleActive(permission);
                         }}
-                        onClick={(e) => e.stopPropagation()}
-                        aria-label={`Toggle ${permission?.name}`}
                       />
                     </div>
                   </TableCell>
@@ -280,31 +289,31 @@ export default function PermissionManagement() {
                   >
                     <div className="flex items-center gap-2 justify-end">
                       <Button
+                        isIconOnly
+                        aria-label={`Edit ${permission?.name}`}
                         type="button"
+                        variant="flat"
                         onPress={() => {
                           navigate(`/permission/add/${permission?.id}`, {
                             state: permission,
                           });
                         }}
-                        isIconOnly
-                        variant="flat"
-                        aria-label={`Edit ${permission?.name}`}
                       >
                         <SquarePen size={16} />
                       </Button>
 
                       <Button
+                        isIconOnly
+                        aria-label={`Delete ${permission?.name}`}
+                        color="danger"
+                        disabled={deleteMutation.isPending}
                         type="button"
+                        variant="flat"
                         onPress={() => {
                           handleDeleteClick(permission);
                         }}
-                        isIconOnly
-                        color="danger"
-                        variant="flat"
-                        aria-label={`Delete ${permission?.name}`}
-                        disabled={deleteMutation.isPending}
                       >
-                        <Trash2 size={16} className="text-danger" />
+                        <Trash2 className="text-danger" size={16} />
                       </Button>
                     </div>
                   </TableCell>
@@ -315,23 +324,27 @@ export default function PermissionManagement() {
 
           {/* Delete / Success Modals (render once) */}
           <ModalConfirm
-            icon={<Trash2 size={32} color="red" />}
-            title={t("permission.deleteConfirmTitle")}
-            content={t("permission.deleteConfirmMsg", { name: selectedPermission?.name })}
+            cancelText={t("settings.common.cancel")}
             confirmColor="danger"
             confirmText={t("settings.common.delete")}
-            cancelText={t("settings.common.cancel")}
-            onConfirm={handleDeleteConfirm}
+            content={t("permission.deleteConfirmMsg", {
+              name: selectedPermission?.name,
+            })}
+            icon={<Trash2 color="red" size={32} />}
             isOpen={isDeleteModalOpen}
+            title={t("permission.deleteConfirmTitle")}
+            onConfirm={handleDeleteConfirm}
             onOpenChange={setIsDeleteModalOpen}
           />
 
           <SuccessModal
             isOpen={isSuccessModalOpen}
-            onOpenChange={setIsSuccessModalOpen}
+            message={t("permission.deleteSuccessMsg", {
+              name: selectedPermission?.name,
+            })}
             title={t("permission.deleteSuccessTitle")}
-            message={t("permission.deleteSuccessMsg", { name: selectedPermission?.name })}
             onClose={handleSuccessModalClose}
+            onOpenChange={setIsSuccessModalOpen}
           />
         </CardBody>
 
@@ -343,13 +356,13 @@ export default function PermissionManagement() {
 
         {/* Rejected Status Modal */}
         <ConfirmModal
-          isOpen={isRejectedOpen}
-          onOpenChange={onRejectedOpenChange}
-          title="ບໍ່ສາມາດສ້າງໄດ້"
-          message="ການສະໝັກຂອງທ່ານຖືກປະຕິເສດ"
-          confirmText="ຕົກລົງ"
-          onConfirm={onRejectedClose}
           color="danger"
+          confirmText="ຕົກລົງ"
+          isOpen={isRejectedOpen}
+          message="ການສະໝັກຂອງທ່ານຖືກປະຕິເສດ"
+          title="ບໍ່ສາມາດສ້າງໄດ້"
+          onConfirm={onRejectedClose}
+          onOpenChange={onRejectedOpenChange}
         />
 
         <CardFooter className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
@@ -358,9 +371,9 @@ export default function PermissionManagement() {
           </div>
           <div className="flex justify-center items-center">
             <GlobalPagination
-              totalPages={Math.ceil(permissions.length / 10)}
-              totalItems={permissions.length}
               page={1}
+              totalItems={permissions.length}
+              totalPages={Math.ceil(permissions.length / 10)}
               onChange={() => {}}
             />
           </div>

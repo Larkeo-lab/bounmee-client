@@ -25,11 +25,11 @@ import {
   Package,
   Image as ImageIcon,
 } from "lucide-react";
-import {
-  useState,
-  useMemo,
-  useEffect,
-} from "react";
+import { useState, useMemo, useEffect } from "react";
+
+import CreateProduct from "./CreateProduct";
+import EditProduct from "./EditProduct";
+
 import { useAuth } from "@/routes/AuthContext";
 import { getDisplayImageUrl } from "@/lib/utils";
 import {
@@ -43,8 +43,6 @@ import { formatNumber } from "@/utils/numberFormat";
 import EmptyState from "@/components/common/empty-state";
 import ConfirmModal from "@/components/common/popup-confirm";
 import PendingModal from "@/components/common/pending-modal";
-import CreateProduct from "./CreateProduct";
-import EditProduct from "./EditProduct";
 
 export default function ProductPage() {
   const { t } = useTranslation();
@@ -113,10 +111,9 @@ export default function ProductPage() {
   const items = useMemo(() => {
     const start = (page - 1) * rowsPerPage;
     const end = start + rowsPerPage;
+
     return products.slice(start, end);
   }, [page, products]);
-
-
 
   const handleDeleteSubmit = async (onClose: () => void) => {
     if (!selectedProduct) return;
@@ -138,14 +135,10 @@ export default function ProductPage() {
     onDeleteOpen();
   };
 
-
-
-
-
-
   const handleAddProductOpen = () => {
     // @ts-ignore
     const storeStatus = user?.user?.store?.status;
+
     if (storeStatus === "PENDING") {
       onPendingOpen();
     } else if (storeStatus === "REJECTED") {
@@ -163,15 +156,13 @@ export default function ProductPage() {
             <Package size={28} />
             {t("product.title")}
           </h1>
-          <p className="text-default-500">
-            {t("product.subtitle")}
-          </p>
+          <p className="text-default-500">{t("product.subtitle")}</p>
         </div>
         <Button
+          className="font-bold h-12 px-6 shadow-lg shadow-primary/30"
           color="primary"
           startContent={<Plus size={20} />}
           onPress={handleAddProductOpen}
-          className="font-bold h-12 px-6 shadow-lg shadow-primary/30"
         >
           {t("product.addTitle")}
         </Button>
@@ -185,19 +176,19 @@ export default function ProductPage() {
             placeholder={t("product.searchPlaceholder")}
             startContent={<Search className="text-default-400" size={18} />}
             value={filterValue}
-            onValueChange={setFilterValue}
             variant="bordered"
+            onValueChange={setFilterValue}
           />
           <Select
-            placeholder={t("product.category")}
             className="w-full md:w-[200px]"
+            placeholder={t("product.category")}
             selectedKeys={selectedCategory ? [selectedCategory] : ["all"]}
+            startContent={<Filter className="text-default-400" size={18} />}
+            variant="bordered"
             onSelectionChange={(keys) => {
               setSelectedCategory(Array.from(keys)[0] as string);
               setPage(1);
             }}
-            variant="bordered"
-            startContent={<Filter size={18} className="text-default-400" />}
           >
             <SelectItem key="all">{t("settings.common.all")}</SelectItem>
             {categories.map((cat: Category) => (
@@ -212,11 +203,6 @@ export default function ProductPage() {
 
       <Table
         aria-label="Products management table"
-        className="mt-4"
-        classNames={{
-          wrapper: "shadow-sm border border-divider rounded-xl overflow-hidden",
-          th: "bg-default-50 text-default-600 font-bold h-12",
-        }}
         bottomContent={
           products.length > rowsPerPage ? (
             <div className="flex w-full justify-center p-4">
@@ -231,6 +217,11 @@ export default function ProductPage() {
             </div>
           ) : null
         }
+        className="mt-4"
+        classNames={{
+          wrapper: "shadow-sm border border-divider rounded-xl overflow-hidden",
+          th: "bg-default-50 text-default-600 font-bold h-12",
+        }}
       >
         <TableHeader>
           <TableColumn key="no" className="h-12 text-small">
@@ -253,16 +244,16 @@ export default function ProductPage() {
           </TableColumn>
         </TableHeader>
         <TableBody
-          loadingContent={<Spinner label={t("settings.common.loading")} />}
-          isLoading={isLoading}
           emptyContent={
             !isLoading && (
               <EmptyState
-                message={t("product.emptyTitle")}
                 description={t("product.emptyDesc")}
+                message={t("product.emptyTitle")}
               />
             )
           }
+          isLoading={isLoading}
+          loadingContent={<Spinner label={t("settings.common.loading")} />}
         >
           {items.map((item, index) => (
             <TableRow
@@ -278,13 +269,13 @@ export default function ProductPage() {
                 <div className="flex items-center gap-3">
                   {item.image ? (
                     <img
-                      src={getDisplayImageUrl(item.image)}
                       alt={item.name}
                       className="w-10 h-10 rounded-lg object-cover border border-divider shadow-sm"
+                      src={getDisplayImageUrl(item.image)}
                     />
                   ) : (
                     <div className="w-10 h-10 rounded-lg bg-default-100 flex items-center justify-center border border-divider">
-                      <ImageIcon size={20} className="text-default-400" />
+                      <ImageIcon className="text-default-400" size={20} />
                     </div>
                   )}
                   <div className="flex flex-col">
@@ -342,13 +333,13 @@ export default function ProductPage() {
                     variant="light"
                     onPress={() => handleEditOpen(item)}
                   >
-                    <Edit2 size={18} className="text-default-400" />
+                    <Edit2 className="text-default-400" size={18} />
                   </Button>
                   <Button
                     isIconOnly
+                    color="danger"
                     size="sm"
                     variant="light"
-                    color="danger"
                     onPress={() => handleDeleteOpen(item)}
                   >
                     <Trash2 size={18} />
@@ -361,50 +352,47 @@ export default function ProductPage() {
       </Table>
       {/* Create Product Modal */}
       <CreateProduct
-        isOpen={isCreateOpen}
-        onOpenChange={onCreateOpenChange}
-        onClose={onCreateClose}
-        storeId={user?.user?.storeId || ""}
         categories={categories}
+        isOpen={isCreateOpen}
+        storeId={user?.user?.storeId || ""}
+        onClose={onCreateClose}
+        onOpenChange={onCreateOpenChange}
       />
 
       {/* Edit Product Modal */}
       <EditProduct
+        categories={categories}
         isOpen={isEditOpen}
-        onOpenChange={onEditOpenChange}
-        onClose={onEditClose}
         product={selectedProduct}
         storeId={user?.user?.storeId || ""}
-        categories={categories}
+        onClose={onEditClose}
+        onOpenChange={onEditOpenChange}
       />
 
       {/* Delete Confirmation Modal */}
       <ConfirmModal
-        isOpen={isDeleteOpen}
-        onOpenChange={onDeleteOpenChange}
-        title={t("settings.common.confirmDelete")}
-        message={t("product.deleteConfirmMsg", { name: selectedProduct?.name })}
-        confirmText={t("settings.common.delete")}
-        onConfirm={() => handleDeleteSubmit(onDeleteClose)}
-        icon={<Trash2 size={24} />}
         color="danger"
+        confirmText={t("settings.common.delete")}
+        icon={<Trash2 size={24} />}
+        isOpen={isDeleteOpen}
+        message={t("product.deleteConfirmMsg", { name: selectedProduct?.name })}
+        title={t("settings.common.confirmDelete")}
+        onConfirm={() => handleDeleteSubmit(onDeleteClose)}
+        onOpenChange={onDeleteOpenChange}
       />
 
       {/* Pending Status Modal */}
-      <PendingModal
-        isOpen={isPendingOpen}
-        onOpenChange={onPendingOpenChange}
-      />
+      <PendingModal isOpen={isPendingOpen} onOpenChange={onPendingOpenChange} />
 
       {/* Rejected Status Modal */}
       <ConfirmModal
-        isOpen={isRejectedOpen}
-        onOpenChange={onRejectedOpenChange}
-        title={t("settings.common.rejectedTitle")}
-        message={t("settings.common.rejectedMsg")}
-        confirmText={t("settings.common.ok")}
-        onConfirm={onRejectedClose}
         color="danger"
+        confirmText={t("settings.common.ok")}
+        isOpen={isRejectedOpen}
+        message={t("settings.common.rejectedMsg")}
+        title={t("settings.common.rejectedTitle")}
+        onConfirm={onRejectedClose}
+        onOpenChange={onRejectedOpenChange}
       />
     </div>
   );

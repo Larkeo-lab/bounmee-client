@@ -14,15 +14,22 @@ interface BreadcrumProps {
   onNavigate?: (href: string) => void;
 }
 
-export default function Breadcrum({ items, className, onNavigate }: BreadcrumProps) {
+export default function Breadcrum({
+  items,
+  className,
+  onNavigate,
+}: BreadcrumProps) {
   return (
     <Breadcrumbs className={clsx("mb-3", className)}>
       {items.map((item, index) => {
         const isLastItem = index === items.length - 1;
+
         return (
           <BreadcrumbItem
             key={index}
-            className={isLastItem ? "text-black dark:text-white font-medium" : ""}
+            className={
+              isLastItem ? "text-black dark:text-white font-medium" : ""
+            }
           >
             {item.href && onNavigate ? (
               <span

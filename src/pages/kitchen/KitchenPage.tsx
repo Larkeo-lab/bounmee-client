@@ -1,8 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "@/routes/AuthContext";
-import { useGetTables } from "@/services/table/useTable";
-import { useCart, CartItem } from "@/provider";
 import {
   Card,
   CardBody,
@@ -30,9 +27,13 @@ import {
   Loader2,
   MessageSquare,
 } from "lucide-react";
+import { toast } from "react-hot-toast";
+
+import { useAuth } from "@/routes/AuthContext";
+import { useGetTables } from "@/services/table/useTable";
+import { useCart, CartItem } from "@/provider";
 import EmptyState from "@/components/common/empty-state";
 import { getDisplayImageUrl } from "@/lib/utils";
-import { toast } from "react-hot-toast";
 
 export default function KitchenPage() {
   const { t } = useTranslation();
@@ -46,8 +47,10 @@ export default function KitchenPage() {
   const [selectedView, setSelectedView] = useState<"table" | "item">("item");
 
   const [now, setNow] = useState(Date.now());
+
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 60000);
+
     return () => clearInterval(timer);
   }, []);
 
@@ -56,7 +59,9 @@ export default function KitchenPage() {
   const getElapsedMinutes = (val?: string | number) => {
     if (!val) return 0;
     const past = new Date(val).getTime();
+
     if (isNaN(past)) return 0;
+
     return Math.floor(Math.max(0, now - past) / 60000);
   };
 
@@ -70,8 +75,10 @@ export default function KitchenPage() {
 
     Object.entries(carts).forEach(([tableId, items]) => {
       const cookingItems = items.filter((item) => item.status === "COOKING");
+
       if (cookingItems.length > 0) {
         const table = tables.find((t: any) => t.id === tableId);
+
         tableOrders.push({
           tableId,
           tableName: table?.name || t("kitchen.shopFloor"),
@@ -85,6 +92,7 @@ export default function KitchenPage() {
 
   const allCookingItems = useMemo(() => {
     const items: { tableId: string; tableName: string; item: CartItem }[] = [];
+
     cookingOrdersByTable.forEach((order) => {
       order.items.forEach((item) => {
         items.push({
@@ -94,6 +102,7 @@ export default function KitchenPage() {
         });
       });
     });
+
     return items;
   }, [cookingOrdersByTable]);
 
@@ -105,6 +114,7 @@ export default function KitchenPage() {
       });
     }
     const uId = `${item.id}-${item.status}-${item.note || ""}-${tableId}`;
+
     if (isServing === uId) return;
 
     setIsServing(uId);
@@ -142,6 +152,7 @@ export default function KitchenPage() {
       const ids = items.map(
         (item) => `${item.id}-${item.status}-${item.note || ""}`,
       );
+
       updateStatus(ids, "SERVED", tableId);
       toast.success(t("kitchen.serveAllSuccess"));
     } catch (error) {
@@ -173,11 +184,11 @@ export default function KitchenPage() {
         </div>
 
         <Tabs
-          selectedKey={selectedView}
-          onSelectionChange={(key) => setSelectedView(key as any)}
           color="primary"
-          variant="solid"
           radius="full"
+          selectedKey={selectedView}
+          variant="solid"
+          onSelectionChange={(key) => setSelectedView(key as any)}
         >
           <Tab
             key="table"
@@ -204,8 +215,8 @@ export default function KitchenPage() {
         {cookingOrdersByTable.length === 0 ? (
           <div className="h-full mt-20">
             <EmptyState
-              message={t("kitchen.emptyState")}
               description={t("kitchen.emptyDescription")}
+              message={t("kitchen.emptyState")}
             />
           </div>
         ) : selectedView === "table" ? (
@@ -225,10 +236,10 @@ export default function KitchenPage() {
                     </span>
                   </div>
                   <Chip
-                    size="sm"
-                    color="warning"
-                    variant="flat"
                     className="font-bold"
+                    color="warning"
+                    size="sm"
+                    variant="flat"
                   >
                     {order.items.length} {t("kitchen.itemsCount")}
                   </Chip>
@@ -242,9 +253,9 @@ export default function KitchenPage() {
                       >
                         <div className="flex gap-2.5 items-start">
                           <Image
-                            src={getDisplayImageUrl(item.image)}
                             className="w-12 h-12 object-cover min-w-[48px] shadow-sm rounded-lg"
                             radius="none"
+                            src={getDisplayImageUrl(item.image)}
                           />
                           <div className="flex-grow">
                             <div className="flex justify-between items-start mb-1">
@@ -258,8 +269,8 @@ export default function KitchenPage() {
                             {item.note && (
                               <div className="flex items-start gap-1.5 mb-1.5 px-2 py-1.5 bg-warning-50 border border-warning-100 rounded-lg">
                                 <MessageSquare
-                                  size={11}
                                   className="text-warning-600 shrink-0 mt-0.5"
+                                  size={11}
                                 />
                                 <p className="text-[11px] text-warning-700 font-semibold leading-snug">
                                   {item.note}
@@ -278,17 +289,17 @@ export default function KitchenPage() {
                             </div>
                             <Button
                               fullWidth
-                              size="sm"
-                              color="success"
-                              variant="flat"
                               className="font-bold text-success hover:bg-success hover:text-white transition-all"
-                              startContent={<CheckCircle2 size={14} />}
-                              onPress={() =>
-                                handleServeItem(order.tableId, item)
-                              }
+                              color="success"
                               isLoading={
                                 isServing ===
                                 `${item.id}-${item.status}-${item.note || ""}-${order.tableId}`
+                              }
+                              size="sm"
+                              startContent={<CheckCircle2 size={14} />}
+                              variant="flat"
+                              onPress={() =>
+                                handleServeItem(order.tableId, item)
                               }
                             >
                               {t("kitchen.serve")}
@@ -303,13 +314,13 @@ export default function KitchenPage() {
                 <div className="p-4 bg-default-50/50">
                   <Button
                     fullWidth
-                    color="primary"
                     className="font-bold shadow-lg"
+                    color="primary"
+                    isLoading={isServing === order.tableId}
                     startContent={<CheckCircle2 size={18} />}
                     onPress={() =>
                       handleServeAllInTable(order.tableId, order.items)
                     }
-                    isLoading={isServing === order.tableId}
                   >
                     {t("kitchen.serveAll")}
                   </Button>
@@ -319,10 +330,10 @@ export default function KitchenPage() {
           </div>
         ) : (
           <Table
-            aria-label={t("kitchen.cookingList")}
             removeWrapper
-            selectionMode="none"
+            aria-label={t("kitchen.cookingList")}
             className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-2xl shadow-xl border border-default-100"
+            selectionMode="none"
           >
             <TableHeader>
               <TableColumn className="bg-primary/5 text-primary font-black uppercase tracking-wider">
@@ -368,6 +379,7 @@ export default function KitchenPage() {
             <TableBody items={allCookingItems}>
               {(data) => {
                 const idx = allCookingItems.indexOf(data);
+
                 return (
                   <TableRow
                     key={`${data.tableId}-${data.item.id}-${idx}`}
@@ -378,9 +390,9 @@ export default function KitchenPage() {
                     </TableCell>
                     <TableCell>
                       <Image
-                        src={getDisplayImageUrl(data.item.image)}
                         className="w-12 h-12 object-cover shadow-sm rounded-lg"
                         radius="none"
+                        src={getDisplayImageUrl(data.item.image)}
                       />
                     </TableCell>
                     <TableCell className="font-bold text-default-800">
@@ -409,7 +421,7 @@ export default function KitchenPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center justify-center gap-1.5 text-sm text-warning font-black">
-                        <Timer size={14} className="shrink-0" />
+                        <Timer className="shrink-0" size={14} />
                         <span>
                           {getElapsedMinutes(
                             (data.item as any).createdAt || data.item.timestamp,
@@ -420,16 +432,16 @@ export default function KitchenPage() {
                     </TableCell>
                     <TableCell>
                       <Button
-                        size="sm"
-                        color="success"
-                        variant="flat"
                         className="font-bold text-success hover:bg-success hover:text-white transition-all w-full"
-                        startContent={<CheckCircle2 size={16} />}
-                        onPress={() => handleServeItem(data.tableId, data.item)}
+                        color="success"
                         isLoading={
                           isServing ===
                           `${data.item.id}-${data.item.status}-${data.item.note || ""}-${data.tableId}`
                         }
+                        size="sm"
+                        startContent={<CheckCircle2 size={16} />}
+                        variant="flat"
+                        onPress={() => handleServeItem(data.tableId, data.item)}
                       >
                         {t("kitchen.serve")}
                       </Button>

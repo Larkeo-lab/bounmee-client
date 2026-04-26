@@ -13,15 +13,8 @@ import {
   Spinner,
   Image,
 } from "@heroui/react";
-import {
-  User,
-  Phone,
-  Lock,
-  Shield,
-  Upload,
-  X,
-  Edit2,
-} from "lucide-react";
+import { User, Phone, Lock, Shield, Upload, X, Edit2 } from "lucide-react";
+
 import {
   useCreateEmployee,
   useUpdateEmployee,
@@ -100,12 +93,15 @@ export default function AddAndEdit({
 
   const handleImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+
     if (file) {
       try {
         const previewUrl = URL.createObjectURL(file);
+
         setPreviewImage(previewUrl);
 
         const imageName = await uploadImageMutation.mutateAsync(file);
+
         setFormData((prev) => ({ ...prev, logoUrl: imageName }));
       } catch (error) {
         console.error("Failed to upload image:", error);
@@ -160,6 +156,7 @@ export default function AddAndEdit({
 
     if (Object.keys(updateData).length <= 2) {
       onClose();
+
       return;
     }
 
@@ -176,7 +173,6 @@ export default function AddAndEdit({
     <div className="space-y-4 py-2">
       <div className="flex flex-col items-center gap-2 mb-2">
         <div
-          onClick={() => fileInputRef.current?.click()}
           className={`
             relative group cursor-pointer
             w-24 h-24 rounded-full border-2 border-dashed 
@@ -184,18 +180,19 @@ export default function AddAndEdit({
             flex items-center justify-center overflow-hidden
             ${previewImage || formData.logoUrl ? "border-primary bg-primary/5" : "border-default-200 hover:border-primary hover:bg-default-50"}
           `}
+          onClick={() => fileInputRef.current?.click()}
         >
           {uploadImageMutation.isPending ? (
             <Spinner color="primary" />
           ) : previewImage || formData.logoUrl ? (
             <>
               <Image
-                src={getDisplayImageUrl(previewImage || formData.logoUrl)}
                 alt="Preview"
                 className="w-full h-full object-cover"
+                src={getDisplayImageUrl(previewImage || formData.logoUrl)}
               />
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                <Edit2 size={20} className="text-white" />
+                <Edit2 className="text-white" size={20} />
               </div>
             </>
           ) : (
@@ -205,21 +202,21 @@ export default function AddAndEdit({
             </div>
           )}
           <input
-            type="file"
             ref={fileInputRef}
-            className="hidden"
             accept="image/*"
+            className="hidden"
+            type="file"
             onChange={handleImageChange}
           />
         </div>
         {(previewImage || formData.logoUrl) && (
           <Button
-            size="sm"
-            color="danger"
-            variant="light"
-            startContent={<X size={14} />}
-            onPress={removeImage}
             className="h-7 min-w-0"
+            color="danger"
+            size="sm"
+            startContent={<X size={14} />}
+            variant="light"
+            onPress={removeImage}
           >
             {t("settings.common.remove")}
           </Button>
@@ -228,55 +225,56 @@ export default function AddAndEdit({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Input
+          isRequired
           label={t("employee.name")}
           placeholder={t("employee.name")}
-          variant="bordered"
+          startContent={<User className="text-default-400" size={18} />}
           value={formData.name}
+          variant="bordered"
           onValueChange={(val) => setFormData({ ...formData, name: val })}
-          isRequired
-          startContent={<User size={18} className="text-default-400" />}
         />
         <Input
+          isRequired
           label={t("employee.phone")}
           placeholder="20XXXXXXXX"
-          variant="bordered"
+          startContent={<Phone className="text-default-400" size={18} />}
           value={formData.phone}
+          variant="bordered"
           onValueChange={(val) => setFormData({ ...formData, phone: val })}
-          isRequired
-          startContent={<Phone size={18} className="text-default-400" />}
         />
         <Input
+          isRequired
           label={t("employee.username")}
           placeholder={t("employee.username")}
-          variant="bordered"
+          startContent={<User className="text-default-400" size={18} />}
           value={formData.userName}
+          variant="bordered"
           onValueChange={(val) => setFormData({ ...formData, userName: val })}
-          isRequired
-          startContent={<User size={18} className="text-default-400" />}
         />
         {!selectedEmployee && (
           <Input
+            isRequired
             label={t("employee.password")}
             placeholder={t("employee.password")}
+            startContent={<Lock className="text-default-400" size={18} />}
             type="password"
-            variant="bordered"
             value={formData.password}
+            variant="bordered"
             onValueChange={(val) => setFormData({ ...formData, password: val })}
-            isRequired
-            startContent={<Lock size={18} className="text-default-400" />}
           />
         )}
         <Select
+          className="md:col-span-2"
           label={t("employee.permissions")}
           placeholder={t("employee.permissions")}
-          variant="bordered"
-          className="md:col-span-2"
           selectedKeys={formData.permissionId ? [formData.permissionId] : []}
+          startContent={<Shield className="text-default-400" size={18} />}
+          variant="bordered"
           onSelectionChange={(keys) => {
             const val = Array.from(keys)[0] as string;
+
             setFormData({ ...formData, permissionId: val });
           }}
-          startContent={<Shield size={18} className="text-default-400" />}
         >
           {permissionsData.map((perm: any) => (
             <SelectItem key={perm.id}>{perm.name}</SelectItem>
@@ -289,16 +287,18 @@ export default function AddAndEdit({
   return (
     <Modal
       isOpen={isOpen}
-      onOpenChange={onOpenChange}
       placement="center"
-      onClose={resetForm}
       size="2xl"
+      onClose={resetForm}
+      onOpenChange={onOpenChange}
     >
       <ModalContent>
         {(onClose) => (
           <>
             <ModalHeader className="flex flex-col gap-1">
-              {selectedEmployee ? t("employee.editTitle") : t("employee.addTitle")}
+              {selectedEmployee
+                ? t("employee.editTitle")
+                : t("employee.addTitle")}
             </ModalHeader>
             <ModalBody>{employeeForm}</ModalBody>
             <ModalFooter>
@@ -307,24 +307,26 @@ export default function AddAndEdit({
               </Button>
               <Button
                 color="primary"
-                onPress={() => 
-                  selectedEmployee 
-                    ? handleUpdateSubmit(onClose) 
-                    : handleCreateSubmit(onClose)
-                }
-                isLoading={
-                  (selectedEmployee 
-                    ? updateEmployeeMutation.isPending 
-                    : createEmployeeMutation.isPending) ||
-                  uploadImageMutation.isPending
-                }
                 isDisabled={
                   !formData.name ||
                   !formData.userName ||
                   (!selectedEmployee && !formData.password)
                 }
+                isLoading={
+                  (selectedEmployee
+                    ? updateEmployeeMutation.isPending
+                    : createEmployeeMutation.isPending) ||
+                  uploadImageMutation.isPending
+                }
+                onPress={() =>
+                  selectedEmployee
+                    ? handleUpdateSubmit(onClose)
+                    : handleCreateSubmit(onClose)
+                }
               >
-                {selectedEmployee ? t("settings.common.update") : t("settings.common.save")}
+                {selectedEmployee
+                  ? t("settings.common.update")
+                  : t("settings.common.save")}
               </Button>
             </ModalFooter>
           </>

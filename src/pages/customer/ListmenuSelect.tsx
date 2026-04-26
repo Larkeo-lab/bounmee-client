@@ -12,10 +12,18 @@ import {
   Input,
 } from "@heroui/react";
 import { useTranslation } from "react-i18next";
-import { Plus, Minus, CheckCircle, Clock, Utensils, MessageSquare } from "lucide-react";
+import {
+  Plus,
+  Minus,
+  CheckCircle,
+  Clock,
+  Utensils,
+  MessageSquare,
+} from "lucide-react";
+import { toast } from "react-hot-toast";
+
 import { formatNumber } from "@/utils/numberFormat";
 import { getDisplayImageUrl } from "@/lib/utils";
-import { toast } from "react-hot-toast";
 
 interface ListmenuSelectProps {
   isOpen: boolean;
@@ -41,7 +49,10 @@ const getStatusDisplay = (status: string, t: any) => {
     case "CANCEL":
       return { label: t("customer.status.cancel"), color: "danger" as const };
     default:
-      return { label: status || t("customer.status.pending"), color: "default" as const };
+      return {
+        label: status || t("customer.status.pending"),
+        color: "default" as const,
+      };
   }
 };
 
@@ -63,8 +74,10 @@ export default function ListmenuSelect({
   const toggleNote = (id: string) => {
     setActiveNoteIds((prev) => {
       const next = new Set(prev);
+
       if (next.has(id)) next.delete(id);
       else next.add(id);
+
       return next;
     });
   };
@@ -79,11 +92,11 @@ export default function ListmenuSelect({
 
   return (
     <Modal
+      className="rounded-t-3xl sm:rounded-3xl m-0 sm:m-4 max-h-[90vh]"
       isOpen={isOpen}
-      onOpenChange={onOpenChange}
       placement="bottom"
       scrollBehavior="inside"
-      className="rounded-t-3xl sm:rounded-3xl m-0 sm:m-4 max-h-[90vh]"
+      onOpenChange={onOpenChange}
     >
       <ModalContent>
         {() => (
@@ -112,27 +125,27 @@ export default function ListmenuSelect({
                           <div className="flex items-center gap-3">
                             <div className="w-16 h-16 shrink-0">
                               <Image
-                                src={getDisplayImageUrl(item.image)}
                                 alt={item.name}
                                 className="w-full h-full object-cover rounded-xl shadow-sm border border-default-100"
+                                src={getDisplayImageUrl(item.image)}
                               />
                             </div>
                             <div className="flex-1 flex flex-col justify-between min-w-0 py-0.5">
                               <span className="font-black line-clamp-1 leading-tight text-default-800 block text-sm mb-1">
                                 {item.name}
                               </span>
-                              
+
                               <div className="flex items-center justify-between gap-2">
                                 <span className="text-primary font-black text-sm">
                                   {formatNumber(item.price)} ₭
                                 </span>
-                                
+
                                 <div className="flex items-center gap-1.5 bg-default-100/80 rounded-xl p-1 shadow-inner border border-default-200">
                                   <Button
-                                    size="sm"
                                     isIconOnly
-                                    variant="light"
                                     className="h-7 w-7 min-w-7"
+                                    size="sm"
+                                    variant="light"
                                     onPress={() => updateQuantity(item.id, -1)}
                                   >
                                     <Minus size={12} />
@@ -141,20 +154,24 @@ export default function ListmenuSelect({
                                     {item.quantity}
                                   </span>
                                   <Button
-                                    size="sm"
                                     isIconOnly
-                                    variant="light"
                                     className="h-7 w-7 min-w-7 bg-white shadow-sm"
                                     isDisabled={
                                       item.quantity >= (item.stockQty || 999)
                                     }
+                                    size="sm"
+                                    variant="light"
                                     onPress={() => {
                                       if (
                                         item.quantity >= (item.stockQty || 999)
                                       ) {
                                         toast.error(
-                                          t("customer.stockWarning", { name: item.name, qty: item.stockQty }),
+                                          t("customer.stockWarning", {
+                                            name: item.name,
+                                            qty: item.stockQty,
+                                          }),
                                         );
+
                                         return;
                                       }
                                       updateQuantity(item.id, 1);
@@ -168,11 +185,11 @@ export default function ListmenuSelect({
                               {!item.note && !activeNoteIds.has(item.id) && (
                                 <div className="mt-1">
                                   <Button
-                                    size="sm"
-                                    variant="flat"
                                     className="h-6 min-w-0 px-2 bg-default-100/50 rounded-xl text-[10px] font-bold text-default-400"
-                                    onPress={() => toggleNote(item.id)}
+                                    size="sm"
                                     startContent={<MessageSquare size={12} />}
+                                    variant="flat"
+                                    onPress={() => toggleNote(item.id)}
                                   >
                                     {t("customer.addNote")}
                                   </Button>
@@ -183,34 +200,37 @@ export default function ListmenuSelect({
                           {(item.note || activeNoteIds.has(item.id)) && (
                             <div className="flex flex-col gap-1.5 mt-1">
                               <Input
-                                size="sm"
-                                placeholder={t("customer.notePlaceholder")}
-                                value={item.note || ""}
-                                onValueChange={(val) => updateNote(item.id, val)}
-                                variant="flat"
                                 autoFocus
-                                startContent={
-                                  <MessageSquare
-                                    size={14}
-                                    className="text-primary"
-                                  />
-                                }
                                 classNames={{
                                   input: "text-[11px] font-medium",
-                                  inputWrapper: "h-8 bg-default-100/50 rounded-xl px-2",
+                                  inputWrapper:
+                                    "h-8 bg-default-100/50 rounded-xl px-2",
                                 }}
                                 endContent={
                                   !item.note && (
                                     <Button
                                       isIconOnly
+                                      className="h-6 w-6 min-w-6"
                                       size="sm"
                                       variant="light"
-                                      className="h-6 w-6 min-w-6"
                                       onPress={() => toggleNote(item.id)}
                                     >
                                       <Minus size={12} />
                                     </Button>
                                   )
+                                }
+                                placeholder={t("customer.notePlaceholder")}
+                                size="sm"
+                                startContent={
+                                  <MessageSquare
+                                    className="text-primary"
+                                    size={14}
+                                  />
+                                }
+                                value={item.note || ""}
+                                variant="flat"
+                                onValueChange={(val) =>
+                                  updateNote(item.id, val)
                                 }
                               />
                             </div>
@@ -228,11 +248,15 @@ export default function ListmenuSelect({
                 {Array.isArray(placedOrders) && placedOrders.length > 0 && (
                   <div className="flex flex-col gap-3">
                     <h4 className="font-bold text-sm text-success uppercase tracking-widest flex items-center gap-2">
-                      <Clock size={16} /> {t("customer.alreadyOrdered", { count: placedOrders.length })}
+                      <Clock size={16} />{" "}
+                      {t("customer.alreadyOrdered", {
+                        count: placedOrders.length,
+                      })}
                     </h4>
                     <div className="flex flex-col gap-4">
                       {placedOrders.map((item, index) => {
                         const statusInfo = getStatusDisplay(item.status, t);
+
                         return (
                           <div
                             key={`ord-${item.id || index}-${index}`}
@@ -240,9 +264,9 @@ export default function ListmenuSelect({
                           >
                             <div className="w-20 h-20 shrink-0">
                               <Image
-                                src={getDisplayImageUrl(item.image)}
                                 alt={item.name}
                                 className="w-full h-full object-cover rounded-xl shadow-sm border border-default-100"
+                                src={getDisplayImageUrl(item.image)}
                               />
                             </div>
                             <div className="flex-1 flex flex-col justify-between h-full py-1 min-w-0">
@@ -255,10 +279,10 @@ export default function ListmenuSelect({
                                     x{item.quantity}
                                   </span>
                                   <Chip
-                                    size="sm"
-                                    color={statusInfo.color}
-                                    variant="flat"
                                     className="font-bold text-[10px]"
+                                    color={statusInfo.color}
+                                    size="sm"
+                                    variant="flat"
                                   >
                                     {statusInfo.label}
                                   </Chip>
@@ -306,10 +330,10 @@ export default function ListmenuSelect({
               </div>
               {cart.length > 0 && (
                 <Button
-                  color="primary"
-                  size="lg"
                   className="w-full font-black text-base shadow-lg shadow-primary/30 h-14 rounded-2xl"
+                  color="primary"
                   isLoading={isPending}
+                  size="lg"
                   onPress={submitOrder}
                 >
                   {t("customer.confirmOrder")}

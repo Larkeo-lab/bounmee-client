@@ -1,11 +1,13 @@
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import dayjs from "dayjs";
+
 import { Order } from "@/services/order/useOrder";
 
 export const exportOrdersToExcel = async (orders: Order[]) => {
   if (!orders || orders.length === 0) {
     alert("ບໍ່ມີຂໍ້ມູນໃຫ້ສົ່ງອອກ");
+
     return;
   }
 
@@ -28,6 +30,7 @@ export const exportOrdersToExcel = async (orders: Order[]) => {
 
   // 2. Style header row
   const headerRow = worksheet.getRow(1);
+
   headerRow.height = 32;
   headerRow.eachCell((cell) => {
     cell.fill = {
@@ -66,7 +69,7 @@ export const exportOrdersToExcel = async (orders: Order[]) => {
     });
 
     row.height = 25;
-    
+
     // Formatting numbers
     row.getCell("total").numFmt = '#,##0 "ກີບ"';
     row.getCell("received").numFmt = '#,##0 "ກີບ"';
@@ -85,13 +88,26 @@ export const exportOrdersToExcel = async (orders: Order[]) => {
     });
 
     // Center specific columns
-    row.getCell("index").alignment = { horizontal: "center", vertical: "middle" };
-    row.getCell("payment").alignment = { horizontal: "center", vertical: "middle" };
-    row.getCell("items").alignment = { horizontal: "center", vertical: "middle" };
+    row.getCell("index").alignment = {
+      horizontal: "center",
+      vertical: "middle",
+    };
+    row.getCell("payment").alignment = {
+      horizontal: "center",
+      vertical: "middle",
+    };
+    row.getCell("items").alignment = {
+      horizontal: "center",
+      vertical: "middle",
+    };
   });
 
   // 4. Summary Row (Footer)
-  const totalAmount = orders.reduce((sum, o) => sum + Number(o.totalAmount || 0), 0);
+  const totalAmount = orders.reduce(
+    (sum, o) => sum + Number(o.totalAmount || 0),
+    0,
+  );
+
   worksheet.addRow([]); // Blank row
   const summaryRow = worksheet.addRow({
     bank: "ລວມທັງໝົດ:",
@@ -99,16 +115,25 @@ export const exportOrdersToExcel = async (orders: Order[]) => {
   });
 
   summaryRow.height = 30;
-  summaryRow.getCell("bank").font = { bold: true, size: 12, name: "Phetsarath OT" };
-  summaryRow.getCell("total").font = { bold: true, size: 12, name: "Phetsarath OT", color: { argb: "FFB91C1C" } }; // Red for total
+  summaryRow.getCell("bank").font = {
+    bold: true,
+    size: 12,
+    name: "Phetsarath OT",
+  };
+  summaryRow.getCell("total").font = {
+    bold: true,
+    size: 12,
+    name: "Phetsarath OT",
+    color: { argb: "FFB91C1C" },
+  }; // Red for total
   summaryRow.getCell("total").numFmt = '#,##0 "ກີບ"';
   summaryRow.getCell("total").alignment = { vertical: "middle" };
 
   // 5. Generate and Download file
   const buffer = await workbook.xlsx.writeBuffer();
-  const blob = new Blob([buffer], { 
-    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" 
+  const blob = new Blob([buffer], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   });
-  
+
   saveAs(blob, `POS_Orders_${dayjs().format("YYYYMMDD_HHmm")}.xlsx`);
 };

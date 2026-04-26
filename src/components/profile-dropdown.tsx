@@ -1,4 +1,3 @@
-import { useAuth } from "@/routes";
 import {
   User,
   useDisclosure,
@@ -7,9 +6,12 @@ import {
   DropdownMenu,
   DropdownItem,
 } from "@heroui/react";
-import ModalConfirm from "./common/modal-confirm";
 import { useTranslation } from "react-i18next";
 import { Info, LogOut } from "lucide-react";
+
+import ModalConfirm from "./common/modal-confirm";
+
+import { useAuth } from "@/routes";
 import { getDisplayImageUrl } from "@/lib/utils";
 
 export default function ProfileDropdown() {
@@ -51,8 +53,8 @@ export default function ProfileDropdown() {
         </DropdownTrigger>
         <DropdownMenu
           aria-label="User Actions"
-          variant="flat"
           className="opacity-80 p-3"
+          variant="flat"
         >
           <DropdownItem
             key="profile"
@@ -67,8 +69,8 @@ export default function ProfileDropdown() {
           <DropdownItem
             key="logout"
             color="danger"
-            onPress={() => setTimeout(onOpen, 100)}
             startContent={<LogOut size={18} />}
+            onPress={() => setTimeout(onOpen, 100)}
           >
             {t("navigation.logout")}
           </DropdownItem>
@@ -77,14 +79,14 @@ export default function ProfileDropdown() {
 
       {/* Modal confirm logout */}
       <ModalConfirm
-        isOpen={isOpen}
-        onOpenChange={onOpenChange}
-        onConfirm={handleLogout}
-        confirmText={t("auth.logoutConfirm")}
         cancelText={t("auth.logoutCancel")}
+        confirmText={t("auth.logoutConfirm")}
         content={t("auth.logoutConfirmMsg")}
-        title={t("auth.logoutConfirmTitle")}
         icon={<Info size={28} />}
+        isOpen={isOpen}
+        title={t("auth.logoutConfirmTitle")}
+        onConfirm={handleLogout}
+        onOpenChange={onOpenChange}
       />
     </>
   );

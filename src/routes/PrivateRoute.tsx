@@ -1,7 +1,9 @@
 import React, { useEffect } from "react";
 import { Navigate } from "react-router-dom";
-import DefaultLayout from "@/layouts/DefaultLayout";
+
 import { useAuth, checkTokenExpired } from "./AuthContext";
+
+import DefaultLayout from "@/layouts/DefaultLayout";
 import { Role } from "@/types";
 
 interface PrivateRouteProps {
@@ -25,14 +27,17 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({
   const isExpired = React.useMemo(() => {
     try {
       const userDataStr = localStorage.getItem("authPOS");
+
       if (!userDataStr) return true;
 
       const userData = JSON.parse(userDataStr);
+
       if (!userData?.accessToken) return true;
 
       return checkTokenExpired(userData.accessToken);
     } catch (error) {
       console.error("Token check failed:", error);
+
       return true;
     }
   }, []);
@@ -48,14 +53,14 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
       </div>
     );
   }
 
   // If user is not authenticated or token is expired, redirect to login
   if (!isAuthenticated || isExpired) {
-    return <Navigate to={redirectTo} replace />;
+    return <Navigate replace to={redirectTo} />;
   }
 
   // Role-based access check (Temporarily disabled as requested)

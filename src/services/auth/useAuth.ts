@@ -11,6 +11,7 @@ export const useAuthService = async (data: {
       API_ENDPOINTS.AUTH.LOGIN,
       data,
     );
+
     return response?.data;
   } catch (error) {
     throw error;
@@ -23,6 +24,7 @@ export const useRegisterService = async (data: any) => {
       API_ENDPOINTS.AUTH.REGISTER,
       data,
     );
+
     return response?.data;
   } catch (error) {
     throw error;

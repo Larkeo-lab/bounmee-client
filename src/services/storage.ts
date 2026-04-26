@@ -1,7 +1,8 @@
-import { axiosInstance } from "@/lib/axios";
-import { API_ENDPOINTS } from "@/config/api";
 import { useMutation } from "@tanstack/react-query";
 import { v4 as uuidv4 } from "uuid";
+
+import { axiosInstance } from "@/lib/axios";
+import { API_ENDPOINTS } from "@/config/api";
 
 // Setting Content-Type to undefined lets axios detect FormData and auto-set
 // the correct multipart/form-data boundary. Never set it manually.
@@ -9,6 +10,7 @@ const multipartConfig = { headers: { "Content-Type": undefined as any } };
 
 export const uploadImage = async (file: File): Promise<string> => {
   const formData = new FormData();
+
   formData.append("image", file);
   formData.append("file_name", uuidv4());
 
@@ -30,6 +32,7 @@ export const uploadImageGetUrls = async (
   smallUrl: string;
 }> => {
   const formData = new FormData();
+
   formData.append("image", file);
   formData.append("file_name", uuidv4());
 

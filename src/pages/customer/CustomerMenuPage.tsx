@@ -2,7 +2,6 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useParams } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { axiosInstance } from "@/lib/axios";
 import {
   Card,
   CardBody,
@@ -16,12 +15,15 @@ import {
 import { useTranslation } from "react-i18next";
 import { Plus, ShoppingCart, MessageCircle } from "lucide-react";
 import { toast } from "react-hot-toast";
+
+import ListmenuSelect from "./ListmenuSelect";
+import ChatPage from "./chatPage";
+
 import { getDisplayImageUrl } from "@/lib/utils";
 import { formatNumber } from "@/utils/numberFormat";
-import ListmenuSelect from "./ListmenuSelect";
 import BillModal from "@/components/common/bill";
 import { socket } from "@/config/socket";
-import ChatPage from "./chatPage";
+import { axiosInstance } from "@/lib/axios";
 
 export default function CustomerMenuPage() {
   const { t } = useTranslation();
@@ -36,6 +38,7 @@ export default function CustomerMenuPage() {
   const [cart, setCart] = useState<any[]>(() => {
     try {
       const saved = localStorage.getItem(`cart_${qrCode}`);
+
       return saved ? JSON.parse(saved) : [];
     } catch (e) {
       return [];
@@ -45,6 +48,7 @@ export default function CustomerMenuPage() {
   const [placedOrders, setPlacedOrders] = useState<any[]>(() => {
     try {
       const saved = localStorage.getItem(`placedOrders_${qrCode}`);
+
       return saved ? JSON.parse(saved) : [];
     } catch (e) {
       return [];
@@ -58,6 +62,7 @@ export default function CustomerMenuPage() {
   const [bankName, setBankName] = useState<string | null>(null);
   const [finalOrder, setFinalOrder] = useState<any | null>(() => {
     const saved = sessionStorage.getItem(`finalOrder_${qrCode}`);
+
     return saved ? JSON.parse(saved) : null;
   });
   const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
@@ -99,6 +104,7 @@ export default function CustomerMenuPage() {
     queryKey: ["public-table", qrCode],
     queryFn: async () => {
       const res = await axiosInstance.get(`/api/v1/public/table/${qrCode}`);
+
       return res.data?.data;
     },
     enabled: !!qrCode,
@@ -166,6 +172,7 @@ export default function CustomerMenuPage() {
 
       const playNotificationSound = () => {
         const audio = new Audio("/assets/void/pop_ding.mp3");
+
         audio.play().catch((err) => console.log("Audio play error:", err));
       };
 
@@ -197,6 +204,7 @@ export default function CustomerMenuPage() {
     queryKey: ["public-products", storeId],
     queryFn: async () => {
       const res = await axiosInstance.get(`/api/v1/public/products/${storeId}`);
+
       return res.data?.data;
     },
     enabled: !!storeId,
@@ -205,22 +213,26 @@ export default function CustomerMenuPage() {
   const categories = useMemo(() => {
     if (!productsData) return [];
     const uniqueMap = new Map();
+
     productsData.forEach((product: any) => {
       if (product.category)
         uniqueMap.set(product.category.id, product.category);
     });
+
     return Array.from(uniqueMap.values());
   }, [productsData]);
 
   const filteredProducts = useMemo(() => {
     if (!productsData) return [];
     if (selectedCategory === "ALL") return productsData;
+
     return productsData.filter((p: any) => p.category?.id === selectedCategory);
   }, [productsData, selectedCategory]);
 
   const submitOrderMutation = useMutation({
     mutationFn: async (payload: any) => {
       const res = await axiosInstance.post(`/api/v1/public/order`, payload);
+
       return res.data;
     },
     onSuccess: () => {
@@ -237,6 +249,7 @@ export default function CustomerMenuPage() {
     console.log("addToCart triggered", { product, hasEvent: !!e });
     if (isTableClosed) {
       toast.error(t("customer.tableClosed"));
+
       return;
     }
     const existing = cart.find((item) => item.id === product.id);
@@ -244,13 +257,18 @@ export default function CustomerMenuPage() {
 
     if (existingQty >= (product.stockQty || 999)) {
       toast.error(
-        t("customer.stockWarning", { name: product.name, qty: product.stockQty }),
+        t("customer.stockWarning", {
+          name: product.name,
+          qty: product.stockQty,
+        }),
       );
+
       return;
     }
 
     setCart((prev) => {
       const isItemInCart = prev.find((item) => item.id === product.id);
+
       if (isItemInCart) {
         return prev.map((item) =>
           item.id === product.id
@@ -258,6 +276,7 @@ export default function CustomerMenuPage() {
             : item,
         );
       }
+
       return [...prev, { ...product, quantity: 1 }];
     });
 
@@ -287,12 +306,15 @@ export default function CustomerMenuPage() {
         endY: cartIconRect.top + cartIconRect.height / 2,
         image: product.image,
       };
+
       console.log("Creating flying item:", newItem);
       setFlyingItems((prev) => [...prev, newItem]);
       setTimeout(() => {
         setFlyingItems((prev) => {
           const filtered = prev.filter((item) => item.id !== id);
+
           console.log("Removing flying item, count left:", filtered.length);
+
           return filtered;
         });
       }, 1000);
@@ -311,12 +333,18 @@ export default function CustomerMenuPage() {
           if (item.id === id) {
             if (delta > 0 && item.quantity >= (item.stockQty || 999)) {
               toast.error(
-                t("customer.stockWarning", { name: item.name, qty: item.stockQty }),
+                t("customer.stockWarning", {
+                  name: item.name,
+                  qty: item.stockQty,
+                }),
               );
+
               return item;
             }
+
             return { ...item, quantity: Math.max(0, item.quantity + delta) };
           }
+
           return item;
         })
         .filter((item) => item.quantity > 0),
@@ -347,7 +375,7 @@ export default function CustomerMenuPage() {
   if (isLoadingTable)
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Spinner size="lg" color="primary" />
+        <Spinner color="primary" size="lg" />
       </div>
     );
 
@@ -355,7 +383,7 @@ export default function CustomerMenuPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-8 text-center">
         <div className="w-20 h-20 bg-danger/10 rounded-full flex items-center justify-center text-danger mb-6">
-          <Plus size={40} className="rotate-45" />
+          <Plus className="rotate-45" size={40} />
         </div>
         <h2 className="text-2xl font-black text-danger uppercase">
           {t("customer.tableNotFound")}
@@ -371,7 +399,7 @@ export default function CustomerMenuPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-8 text-center gap-8">
         <div className="w-24 h-24 bg-danger/10 rounded-full flex items-center justify-center text-danger shadow-inner animate-pulse">
-          <Plus size={48} className="rotate-45" />
+          <Plus className="rotate-45" size={48} />
         </div>
         <div className="space-y-3">
           <h2 className="text-3xl font-black text-danger uppercase tracking-tight">
@@ -385,8 +413,8 @@ export default function CustomerMenuPage() {
         <div className="flex flex-col items-center gap-2 opacity-30 mt-8">
           {tableData.store?.logoUrl ? (
             <Image
-              src={getDisplayImageUrl(tableData.store.logoUrl)}
               className="w-20 h-20 rounded-2xl object-cover grayscale"
+              src={getDisplayImageUrl(tableData.store.logoUrl)}
             />
           ) : (
             <div className="w-20 h-20 rounded-2xl bg-default-300" />
@@ -404,8 +432,8 @@ export default function CustomerMenuPage() {
         <div className="max-w-2xl mx-auto px-5 pt-8 pb-5 relative text-center flex flex-col items-center">
           {tableData.store?.logoUrl ? (
             <Image
-              src={getDisplayImageUrl(tableData.store.logoUrl)}
               className="w-20 h-20 rounded-2xl object-cover shadow-lg border-2 border-white mb-3"
+              src={getDisplayImageUrl(tableData.store.logoUrl)}
             />
           ) : (
             <div className="w-20 h-20 rounded-2xl bg-primary flex items-center justify-center shadow-lg border-2 border-white text-white font-black text-2xl mb-3">
@@ -424,29 +452,29 @@ export default function CustomerMenuPage() {
       <main className="flex-1 p-4 max-w-2xl mx-auto w-full">
         {!isLoadingProducts && categories.length > 0 && (
           <ScrollShadow
-            orientation="horizontal"
-            className="flex gap-2 w-full no-scrollbar pb-4"
             hideScrollBar
+            className="flex gap-2 w-full no-scrollbar pb-4"
+            orientation="horizontal"
           >
             <Button
-              size="sm"
-              radius="full"
-              variant={selectedCategory === "ALL" ? "solid" : "flat"}
-              color="primary"
-              onPress={() => setSelectedCategory("ALL")}
               className="font-bold"
+              color="primary"
+              radius="full"
+              size="sm"
+              variant={selectedCategory === "ALL" ? "solid" : "flat"}
+              onPress={() => setSelectedCategory("ALL")}
             >
               {t("customer.all")}
             </Button>
             {categories.map((cat: any) => (
               <Button
                 key={cat.id}
-                size="sm"
-                radius="full"
-                variant={selectedCategory === cat.id ? "solid" : "flat"}
-                color="primary"
-                onPress={() => setSelectedCategory(cat.id)}
                 className="font-bold"
+                color="primary"
+                radius="full"
+                size="sm"
+                variant={selectedCategory === cat.id ? "solid" : "flat"}
+                onPress={() => setSelectedCategory(cat.id)}
               >
                 {cat.name}
               </Button>
@@ -480,8 +508,8 @@ export default function CustomerMenuPage() {
                   <CardBody className="p-0 flex flex-col h-full">
                     <div className="relative aspect-[4/3]">
                       <img
-                        src={getDisplayImageUrl(product.image)}
                         className="w-full h-full object-cover"
+                        src={getDisplayImageUrl(product.image)}
                       />
                       {product.stockQty <= 0 && (
                         <div className="absolute inset-0 bg-black/40 z-10 flex items-center justify-center">
@@ -496,18 +524,20 @@ export default function CustomerMenuPage() {
                         {product.name}
                       </h3>
                       <p className="text-primary font-black text-xs sm:text-sm">
-                        {formatNumber(product.price)} <span className="text-[10px]">₭</span>
+                        {formatNumber(product.price)}{" "}
+                        <span className="text-[10px]">₭</span>
                       </p>
                       <Button
-                        color="primary"
-                        variant="solid"
                         className="w-full font-bold text-[10px] sm:text-xs h-8 sm:h-9 min-w-0"
-                        onClick={(e) => addToCart(product, e)}
+                        color="primary"
                         isDisabled={
                           totalUsed >= (product.stockQty || 0) || isTableClosed
                         }
+                        variant="solid"
+                        onClick={(e) => addToCart(product, e)}
                       >
-                        <Plus size={14} className="mr-0.5 sm:mr-1" /> {t("customer.add")}
+                        <Plus className="mr-0.5 sm:mr-1" size={14} />{" "}
+                        {t("customer.add")}
                       </Button>
                     </div>
                   </CardBody>
@@ -519,13 +549,13 @@ export default function CustomerMenuPage() {
       </main>
 
       <BillModal
-        isOpen={isTableClosed}
-        onOpenChange={(open) => !open && setIsTableClosed(true)}
-        tableData={tableData}
-        finalOrder={finalOrder}
-        paymentMethod={paymentMethod}
         bankName={bankName}
+        finalOrder={finalOrder}
+        isOpen={isTableClosed}
+        paymentMethod={paymentMethod}
         placedOrders={placedOrders}
+        tableData={tableData}
+        onOpenChange={(open) => !open && setIsTableClosed(true)}
       />
 
       {/* Floating Buttons Group */}
@@ -533,47 +563,47 @@ export default function CustomerMenuPage() {
         {/* Floating Cart Button */}
         <div ref={cartRef}>
           <Badge
-            content={cartTotalItems + (placedOrders?.length || 0)}
+            className="font-bold border-none"
             color="danger"
+            content={cartTotalItems + (placedOrders?.length || 0)}
+            isInvisible={cartTotalItems + (placedOrders?.length || 0) === 0}
             shape="circle"
             size="lg"
-            className="font-bold border-none"
-            isInvisible={cartTotalItems + (placedOrders?.length || 0) === 0}
           >
             <Button
               isIconOnly
-              color="primary"
-              variant="shadow"
-              size="lg"
               className="w-16 h-16 rounded-full shadow-2xl"
+              color="primary"
+              size="lg"
+              variant="shadow"
               onPress={onOpenCart}
             >
-              <ShoppingCart size={28} className="text-white" />
+              <ShoppingCart className="text-white" size={28} />
             </Button>
           </Badge>
         </div>
 
         {/* Floating Chat Button */}
         <Badge
-          content={unreadChatCount}
+          className="font-bold border-none"
           color="danger"
+          content={unreadChatCount}
+          isInvisible={unreadChatCount === 0}
           shape="circle"
           size="lg"
-          className="font-bold border-none"
-          isInvisible={unreadChatCount === 0}
         >
           <Button
             isIconOnly
-            color="success"
-            variant="shadow"
-            size="lg"
             className="w-16 h-16 rounded-full shadow-2xl transition-transform hover:scale-110 active:scale-95"
+            color="success"
+            size="lg"
+            variant="shadow"
             onPress={() => {
               setUnreadChatCount(0);
               onOpenChat();
             }}
           >
-            <MessageCircle size={28} className="text-white" />
+            <MessageCircle className="text-white" size={28} />
           </Button>
         </Badge>
       </div>
@@ -583,12 +613,6 @@ export default function CustomerMenuPage() {
         {flyingItems.map((item) => (
           <motion.div
             key={item.id}
-            initial={{
-              left: item.startX,
-              top: item.startY,
-              scale: 1,
-              opacity: 1,
-            }}
             animate={{
               left: item.endX,
               top: item.endY,
@@ -596,9 +620,11 @@ export default function CustomerMenuPage() {
               opacity: 0.2,
             }}
             exit={{ opacity: 0 }}
-            transition={{
-              duration: 0.8,
-              ease: [0.4, 0, 0.2, 1],
+            initial={{
+              left: item.startX,
+              top: item.startY,
+              scale: 1,
+              opacity: 1,
             }}
             style={{
               position: "fixed",
@@ -608,13 +634,17 @@ export default function CustomerMenuPage() {
               width: 60,
               height: 60,
             }}
+            transition={{
+              duration: 0.8,
+              ease: [0.4, 0, 0.2, 1],
+            }}
           >
             <div className="w-full h-full rounded-full border-2 border-white shadow-xl overflow-hidden bg-primary flex items-center justify-center">
               {item.image ? (
                 <img
-                  src={getDisplayImageUrl(item.image)}
-                  className="w-full h-full object-cover"
                   alt=""
+                  className="w-full h-full object-cover"
+                  src={getDisplayImageUrl(item.image)}
                 />
               ) : (
                 <ShoppingCart className="text-white" size={24} />
@@ -625,25 +655,25 @@ export default function CustomerMenuPage() {
       </AnimatePresence>
 
       <ListmenuSelect
-        isOpen={isCartOpen}
-        onOpenChange={onCartOpenChange}
         cart={cart}
-        placedOrders={placedOrders}
-        updateQuantity={updateQuantity}
-        subtotal={subtotal}
         cartTotalItems={cartTotalItems}
-        submitOrder={submitOrder}
+        isOpen={isCartOpen}
         isPending={submitOrderMutation.isPending}
+        placedOrders={placedOrders}
+        submitOrder={submitOrder}
+        subtotal={subtotal}
         updateNote={updateNote}
+        updateQuantity={updateQuantity}
+        onOpenChange={onCartOpenChange}
       />
 
       <ChatPage
         isOpen={isChatOpen}
-        onOpenChange={onChatOpenChange}
-        tableName={tableData?.name || ""}
+        logoUrl={tableData?.store?.logoUrl}
         storeId={storeId || ""}
         tableId={tableData?.id || ""}
-        logoUrl={tableData?.store?.logoUrl}
+        tableName={tableData?.name || ""}
+        onOpenChange={onChatOpenChange}
       />
     </div>
   );

@@ -1,3 +1,5 @@
+import type { Key } from "react";
+
 import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -15,17 +17,17 @@ import {
   Textarea,
   Input,
 } from "@heroui/react";
-import type { Key } from "react";
 import { Save, CornerDownRight } from "lucide-react";
-import Breadcrum, { BreadcrumbItemType } from "@/components/common/breadcrum";
 import { z } from "zod";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+
+import Breadcrum, { BreadcrumbItemType } from "@/components/common/breadcrum";
 import {
   useCreatePermission,
   useUpdatePermission,
 } from "@/services/role-permission";
-import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/routes/AuthContext";
-import { useQueryClient } from "@tanstack/react-query";
 
 type PermissionType = "read" | "create" | "update" | "delete" | "full_access";
 
@@ -62,9 +64,10 @@ type PermissionRow = {
 };
 
 // Zod validation schema
-const roleSchema = (t: any) => z.object({
-  roleName: z.string().min(1, t("permission.roleNameRequired")),
-});
+const roleSchema = (t: any) =>
+  z.object({
+    roleName: z.string().min(1, t("permission.roleNameRequired")),
+  });
 
 export default function AddRoleUser() {
   const { t } = useTranslation();
@@ -177,19 +180,35 @@ export default function AddRoleUser() {
     if (storeType === "GENERAL_STORE") {
       return allPermissions.filter(
         (p) =>
-          !["table", "cafe", "ordering", "kitchen", "chat", "table_settings"].includes(p.id)
+          ![
+            "table",
+            "cafe",
+            "ordering",
+            "kitchen",
+            "chat",
+            "table_settings",
+          ].includes(p.id),
       );
     }
     if (storeType === "CAFE") {
       return allPermissions.filter(
         (p) =>
-          !["table", "pos", "ordering", "kitchen", "chat", "table_settings"].includes(p.id)
+          ![
+            "table",
+            "pos",
+            "ordering",
+            "kitchen",
+            "chat",
+            "table_settings",
+          ].includes(p.id),
       );
     }
+
     return allPermissions;
   }, [storeType]);
 
-  const [permissions, setPermissions] = useState<PermissionRow[]>(filteredPermissions);
+  const [permissions, setPermissions] =
+    useState<PermissionRow[]>(filteredPermissions);
 
   // Sync state if filteredPermissions changes (e.g. after user loads)
   useEffect(() => {
@@ -247,6 +266,7 @@ export default function AddRoleUser() {
           // If toggling full_access, set all permissions to the same value
           if (key === "full_access") {
             const newValue = !r.permissions[key];
+
             return {
               ...r,
               permissions: {
@@ -269,16 +289,19 @@ export default function AddRoleUser() {
             newPermissions.create &&
             newPermissions.update &&
             newPermissions.delete;
+
           if (allOthersChecked) {
             newPermissions.full_access = true;
           } else {
             newPermissions.full_access = false;
           }
+
           return {
             ...r,
             permissions: newPermissions,
           };
         }
+
         return r;
       }),
     );
@@ -318,6 +341,7 @@ export default function AddRoleUser() {
 
     if (!validation.success) {
       const fieldErrors: { roleName?: string } = {};
+
       // Use issues instead of errors and add safety check
       validation.error?.issues?.forEach((err: any) => {
         if (err.path[0] === "roleName") {
@@ -325,15 +349,18 @@ export default function AddRoleUser() {
         }
       });
       setErrors(fieldErrors);
+
       return;
     }
 
     // Build permissions object
     const _permissions: Record<string, string[]> = {};
+
     if (permissions && Array.isArray(permissions)) {
       permissions.forEach((row: PermissionRow) => {
         if (!row || !row.permissions) return;
         const activePermissions: string[] = [];
+
         (Object.keys(row.permissions) as PermissionType[]).forEach((key) => {
           // Skip full_access as it's only a UI helper, not sent to API
           if (row.permissions[key] && key !== "full_access") {
@@ -399,40 +426,42 @@ export default function AddRoleUser() {
 
   const breadcrumbItems: BreadcrumbItemType[] = [
     { label: t("permission.title"), href: "/permission-manage" },
-    { label: isEditMode ? t("permission.editTitle") : t("permission.addTitle") },
+    {
+      label: isEditMode ? t("permission.editTitle") : t("permission.addTitle"),
+    },
   ];
 
   return (
     <>
       <Breadcrum items={breadcrumbItems} />
 
-      <Card shadow="sm" className="py-4">
+      <Card className="py-4" shadow="sm">
         <CardBody className="px-6 space-y-4">
           {/* Role Info */}
           <div className="w-1/3">
             <Input
-              placeholder={t("permission.enterRoleName")}
-              value={roleName}
-              onChange={(e) => setRoleName(e.target.value)}
+              isRequired
+              color={errors.roleName ? "danger" : "default"}
+              errorMessage={errors.roleName}
+              isInvalid={!!errors.roleName}
               label={t("permission.permissionName")}
               labelPlacement="outside"
-              variant="bordered"
-              isRequired
+              placeholder={t("permission.enterRoleName")}
               size="lg"
-              isInvalid={!!errors.roleName}
-              errorMessage={errors.roleName}
-              color={errors.roleName ? "danger" : "default"}
+              value={roleName}
+              variant="bordered"
+              onChange={(e) => setRoleName(e.target.value)}
             />
           </div>
           <div>
             <Textarea
+              label={t("permission.descriptionLabel")}
+              labelPlacement="outside"
+              minRows={3}
               placeholder={t("permission.enterDescription")}
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              minRows={3}
-              labelPlacement="outside"
               variant="bordered"
-              label={t("permission.descriptionLabel")}
+              onChange={(e) => setDescription(e.target.value)}
             />
           </div>
 
@@ -470,6 +499,7 @@ export default function AddRoleUser() {
                 <TableRow key={item.id}>
                   {(columnKey: Key) => {
                     const key = String(columnKey);
+
                     switch (key) {
                       case "name":
                         const isSubItem = [
@@ -483,13 +513,14 @@ export default function AddRoleUser() {
                           "profile",
                           "table_settings",
                         ].includes(item.id);
+
                         return (
                           <TableCell>
                             <div className="flex items-center gap-2">
                               {isSubItem && (
                                 <CornerDownRight
-                                  size={16}
                                   className="text-gray-400 ml-6"
+                                  size={16}
                                 />
                               )}
                               <span>
@@ -506,19 +537,21 @@ export default function AddRoleUser() {
                       case "delete":
                       case "full_access":
                         const isHeader = ["settings"].includes(item.id);
+
                         if (isHeader) return <TableCell>{null}</TableCell>;
                         if (key !== "read")
                           return <TableCell>{null}</TableCell>;
+
                         return (
                           <TableCell>
                             <Checkbox
                               isSelected={
                                 item.permissions[key as PermissionType]
                               }
+                              size="md"
                               onValueChange={() =>
                                 togglePermission(item.id, key as PermissionType)
                               }
-                              size="md"
                             />
                           </TableCell>
                         );
@@ -534,24 +567,24 @@ export default function AddRoleUser() {
 
         <CardFooter className="flex justify-end gap-4 px-6">
           <Button
-            variant="bordered"
             className="flex items-center gap-2"
-            onPress={handleClear}
             isDisabled={
               createPermissionMutation.isPending ||
               updatePermissionMutation.isPending
             }
+            variant="bordered"
+            onPress={handleClear}
           >
             <span>{t("settings.common.cancel")}</span>
           </Button>
           <Button
-            color="primary"
             className="flex items-center gap-2 px-6"
-            onPress={handleSave}
+            color="primary"
             isLoading={
               createPermissionMutation.isPending ||
               updatePermissionMutation.isPending
             }
+            onPress={handleSave}
           >
             <Save size={16} />
             <span>{t("settings.common.save")}</span>

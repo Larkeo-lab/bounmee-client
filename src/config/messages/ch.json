@@ -219,6 +219,8 @@
       "confirmDeleteMsg": "您确定要删除该项吗？此操作不可撤销。",
       "pendingTitle": "无法添加",
       "pendingMsg": "店铺正等待审核，请联系客服人员。",
+      "administrator": "系统管理员",
+      "contactWhatsApp": "通过 WhatsApp 联系",
       "rejectedTitle": "无法创建",
       "rejectedMsg": "您的申请已被拒绝。",
       "ok": "确定",

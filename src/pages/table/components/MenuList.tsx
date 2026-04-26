@@ -3,6 +3,7 @@ import { Card, CardBody, CardFooter, Image } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { Plus } from "lucide-react";
 import clsx from "clsx";
+
 import EmptyState from "@/components/common/empty-state";
 import { getDisplayImageUrl } from "@/lib/utils";
 import { formatNumber } from "@/utils/numberFormat";
@@ -28,8 +29,8 @@ export const MenuList: React.FC<MenuListProps> = ({
   if (!isLoadingProducts && products.length === 0) {
     return (
       <EmptyState
-        message={t("table.menu.emptyProducts")}
         description={t("table.menu.emptyProductsDesc")}
+        message={t("table.menu.emptyProducts")}
       />
     );
   }
@@ -52,14 +53,14 @@ export const MenuList: React.FC<MenuListProps> = ({
 
         return (
           <Card
-            isPressable
             key={product.id}
-            onPress={() => addToCart(product)}
-            isDisabled={isOutOfStock}
+            isPressable
             className={clsx(
               "group relative border-none bg-white/70 dark:bg-gray-800/70 backdrop-blur-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 min-h-[110px] md:min-h-[130px] lg:min-h-[150px] flex flex-col",
               isOutOfStock && "opacity-60 grayscale-[0.5]",
             )}
+            isDisabled={isOutOfStock}
+            onPress={() => addToCart(product)}
           >
             <CardBody className="p-0 relative overflow-hidden flex-grow shrink">
               <div className="absolute top-2 right-2 z-20">
@@ -84,12 +85,12 @@ export const MenuList: React.FC<MenuListProps> = ({
                 </div>
               </div>
               <Image
-                shadow="none"
-                radius="none"
-                width="100%"
                 alt={product.name}
                 className="w-full object-cover h-full group-hover:scale-110 transition-transform duration-500"
+                radius="none"
+                shadow="none"
                 src={getDisplayImageUrl(product.image)}
+                width="100%"
               />
             </CardBody>
             <CardFooter className="flex flex-col items-start gap-0 p-1.5 bg-white/40 dark:bg-gray-900/40 backdrop-blur-sm">
