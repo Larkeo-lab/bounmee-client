@@ -46,7 +46,7 @@ interface CartActions {
   ) => void;
   clearTableCart: (tableId: string) => void;
   setActiveTableId: (id: string | null) => void;
-  setTableCart: (tableId: string, cart: CartItem[]) => void;
+  setTableCart: (tableId: string, cart: CartItem[], isOverwrite?: boolean) => void;
   dismissTable: (tableId: string) => void;
   setConnectivity: (isConnected: boolean, rtt: number | null) => void;
   mergeCarts: (local: CartItem[], incoming: any[]) => CartItem[];
@@ -348,10 +348,12 @@ export const useCartStore = create<CartState & CartActions>()(
         set({ carts: nextCarts });
       },
 
-      setTableCart: (tableId, cartData) => {
+      setTableCart: (tableId, cartData, isOverwrite = false) => {
         const { carts, mergeCarts } = get();
         const localCart = carts[tableId] || [];
-        const mergedCart = mergeCarts(localCart, cartData);
+        const mergedCart = isOverwrite
+          ? cartData
+          : mergeCarts(localCart, cartData);
 
         if (JSON.stringify(localCart) === JSON.stringify(mergedCart)) return;
 

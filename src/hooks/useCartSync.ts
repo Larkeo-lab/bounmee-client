@@ -66,7 +66,12 @@ export const useCartSync = () => {
 
               const currentCarts = useCartStore.getState().carts;
               const localCart = currentCarts[data.tableId] || [];
-              const mergedCart = mergeCarts(localCart, data.cart);
+
+              // ✨ If table is AVAILABLE, force clear instead of merging
+              const isAvailable = data.tableStatus === "AVAILABLE";
+              const mergedCart = isAvailable
+                ? []
+                : mergeCarts(localCart, data.cart);
 
               const nextJson = JSON.stringify(mergedCart);
               if (JSON.stringify(localCart) === nextJson) return;

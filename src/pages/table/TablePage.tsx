@@ -165,8 +165,8 @@ export default function TablePage() {
         // บังคับล้างข้อมูลถ้าสถานะเป็น AVAILABLE เพื่อป้องกันออเดอร์เก่าค้าง
         if (isAvailable) {
           clearTableCart(selectedTable.id);
-          // ถ้าเป็น AVAILABLE ออเดอร์ในเครื่องควรเป็นว่างเสมอ
-          setTableCart(selectedTable.id, []);
+          // ถ้าเป็น AVAILABLE ออเดอร์ในเครื่องควรเป็นว่างเสมอ (ใช้ true เพื่อ Overwrite)
+          setTableCart(selectedTable.id, [], true);
         } else {
           setTableCart(selectedTable.id, selectedTable.activeCart);
         }
@@ -272,6 +272,7 @@ export default function TablePage() {
 
       // 1. ล้างข้อมูลในเครื่องทันทีเพื่อให้ UI ตอบสนองไว (Immediate Local Clear)
       clearTableCart(closingTableId);
+      setTableCart(closingTableId, [], true); // ✨ บังคับล้างแบบ Overwrite
       setSelectedTable(null);
       syncedTableRef.current = null;
 
