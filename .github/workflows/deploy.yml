@@ -1,8 +1,9 @@
-name: dee-pos-store ci/cd [development]
+name: dee-pos-frontend ci/cd [development]
 
 on:
   push:
-    branches: development
+    branches:
+      - development
 
 jobs:
   deploy:
@@ -11,15 +12,35 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Deploy to Server via SSH
-        uses: appleboy/ssh-action@master
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
         with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: 22023
-          script: |
-            set -e
-            cd dee-pos-store 
-            git pull origin development
-            /usr/libexec/docker/cli-plugins/docker-compose up -d --build
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build project
+        run: pnpm run build
+        env:
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+          VITE_SOCKET_URL: ${{ secrets.VITE_SOCKET_URL }}
+          VITE_S3_PUBLIC_URL: ${{ secrets.VITE_S3_PUBLIC_URL }}
+          VITE_STORAGE_TYPE: "S3"
+
+      - name: Deploy to S3
+        uses: jakejarvis/s3-sync-action@master
+        with:
+          args: --delete
+        env:
+          AWS_S3_BUCKET: dee-pos-dev
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: "ap-southeast-1"
+          SOURCE_DIR: "dist"
