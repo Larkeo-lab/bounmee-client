@@ -1,8 +1,11 @@
+packages:
+  - "."
+
 ignoredBuiltDependencies:
-  - '@tailwindcss/oxide'
+  - "@tailwindcss/oxide"
   - core-js
   - esbuild
   - protobufjs
 
 onlyBuiltDependencies:
-  - '@heroui/shared-utils'
+  - "@heroui/shared-utils"
