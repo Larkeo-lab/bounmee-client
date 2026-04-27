@@ -277,7 +277,7 @@ export default function CustomerMenuPage() {
         );
       }
 
-      return [...prev, { ...product, quantity: 1 }];
+      return [...prev, { ...product, quantity: 1, timestamp: Date.now() }];
     });
 
     // Animation logic

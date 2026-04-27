@@ -166,13 +166,9 @@ export default function TablePage() {
         if (isAvailable) {
           clearTableCart(selectedTable.id);
           // ถ้าเป็น AVAILABLE ออเดอร์ในเครื่องควรเป็นว่างเสมอ
-          setTableCart(selectedTable.id, [], selectedTable.status);
+          setTableCart(selectedTable.id, []);
         } else {
-          setTableCart(
-            selectedTable.id,
-            selectedTable.activeCart,
-            selectedTable.status,
-          );
+          setTableCart(selectedTable.id, selectedTable.activeCart);
         }
       }
     }

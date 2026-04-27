@@ -78,7 +78,14 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     if (storeId) {
       if (!socket.connected) socket.connect();
-      socket.emit("JOIN:STORE", storeId);
+      socket.on("connect", () => {
+        socket.emit("JOIN:STORE", storeId);
+        refreshChatData();
+      });
+      socket.on("reconnect", () => {
+        socket.emit("JOIN:STORE", storeId);
+        refreshChatData();
+      });
 
       const handleReceiveMessage = (data: Message) => {
         if (data.sender === "staff") return;

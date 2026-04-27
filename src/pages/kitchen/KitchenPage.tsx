@@ -58,10 +58,13 @@ export default function KitchenPage() {
 
   const getElapsedMinutes = (val?: string | number) => {
     if (!val) return 0;
+    // In Thailand, server ISO strings might be interpreted correctly as UTC,
+    // but we need to ensure we compare apples to apples (ms to ms).
     const past = new Date(val).getTime();
 
     if (isNaN(past)) return 0;
 
+    // Use the state 'now' which is updated every minute
     return Math.floor(Math.max(0, now - past) / 60000);
   };
 
@@ -282,7 +285,7 @@ export default function KitchenPage() {
                               <span>
                                 {t("kitchen.cookingWait")} (
                                 {getElapsedMinutes(
-                                  (item as any).createdAt || item.timestamp,
+                                  item.timestamp || (item as any).createdAt,
                                 )}{" "}
                                 {t("kitchen.minutes")})
                               </span>
