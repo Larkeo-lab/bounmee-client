@@ -35,8 +35,6 @@ import { useAuth } from "@/routes";
 import { auth, googleProvider /*, facebookProvider */ } from "@/config/firebase";
 import { signInWithPopup } from "firebase/auth";
 import { FcGoogle } from "react-icons/fc";
-// import { FaFacebook } from "react-icons/fa";
-import { API_ENDPOINTS } from "@/config/api";
 import { useGetAllProvinces } from "@/services/province/useProvince";
 import { useGetDistrictsByProvince } from "@/services/district/useDistrict";
 import LanguageSwitch from "@/components/common/language-switch";

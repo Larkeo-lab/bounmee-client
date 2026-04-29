@@ -51,15 +51,6 @@ export default function Login() {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
-  const [firebaseEmail, setFirebaseEmail] = React.useState<string | null>(null);
-
-  // Sync identifier if it comes from firebase
-  React.useEffect(() => {
-    if (firebaseEmail) {
-      setIdentifier(firebaseEmail);
-    }
-  }, [firebaseEmail]);
-
   // Social Login Logic
   const handleSocialLogin = async (provider: any) => {
     setIsLoading(true);

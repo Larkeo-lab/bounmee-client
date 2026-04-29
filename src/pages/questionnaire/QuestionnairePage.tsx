@@ -3,7 +3,6 @@ import {
   Button,
   Card,
   CardBody,
-  Progress,
   RadioGroup,
   Radio,
   CheckboxGroup,
