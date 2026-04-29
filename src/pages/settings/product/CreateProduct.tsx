@@ -281,6 +281,23 @@ export default function CreateProduct({
                     ))}
                   </Select>
                   <Input
+                    label={t("product.stockQty")}
+                    labelPlacement="outside"
+                    placeholder="0"
+                    startContent={
+                      <Package className="text-default-400" size={18} />
+                    }
+                    type="text"
+                    value={formatNumber(formData.stockQty)}
+                    variant="bordered"
+                    onValueChange={(val) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        stockQty: parseNumber(val),
+                      }))
+                    }
+                  />
+                  <Input
                     label={t("product.cost")}
                     labelPlacement="outside"
                     placeholder="0"
@@ -315,23 +332,7 @@ export default function CreateProduct({
                       }))
                     }
                   />
-                  <Input
-                    label={t("product.stockQty")}
-                    labelPlacement="outside"
-                    placeholder="0"
-                    startContent={
-                      <Package className="text-default-400" size={18} />
-                    }
-                    type="text"
-                    value={formatNumber(formData.stockQty)}
-                    variant="bordered"
-                    onValueChange={(val) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        stockQty: parseNumber(val),
-                      }))
-                    }
-                  />
+                  
                 </div>
               </div>
             </ModalBody>

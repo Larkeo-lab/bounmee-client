@@ -28,9 +28,15 @@ import {
 } from "lucide-react";
 
 import version from "../../../package.json";
+import { checkQuestionnaireCompletion } from "@/services/questionnaire/useQuestionnaire";
 
 import { EyeFilledIcon, EyeSlashFilledIcon } from "@/components/icons";
 import { useAuth } from "@/routes";
+import { auth, googleProvider /*, facebookProvider */ } from "@/config/firebase";
+import { signInWithPopup } from "firebase/auth";
+import { FcGoogle } from "react-icons/fc";
+// import { FaFacebook } from "react-icons/fa";
+import { API_ENDPOINTS } from "@/config/api";
 import { useGetAllProvinces } from "@/services/province/useProvince";
 import { useGetDistrictsByProvince } from "@/services/district/useDistrict";
 import LanguageSwitch from "@/components/common/language-switch";
@@ -95,7 +101,7 @@ const STORE_TYPE_OPTIONS: StoreTypeOption[] = [
 export default function Register() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { register: registerStore } = useAuth();
+  const { register: registerStore, updateAuthState } = useAuth();
 
   // Step state: 1 = pick store type, 2 = fill form
   const [step, setStep] = React.useState<1 | 2>(1);
@@ -107,6 +113,12 @@ export default function Register() {
   const [isConfirmVisible, setIsConfirmVisible] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
   const [selectedProvince, setSelectedProvince] = React.useState<string>("");
+  const [email, setEmail] = React.useState<string>("");
+  const [firebaseData, setFirebaseData] = React.useState<{
+    uid: string;
+    email: string;
+    photoURL?: string;
+  } | null>(null);
 
   const { data: provinces = [], isLoading: isLoadingProvinces } =
     useGetAllProvinces();
@@ -116,6 +128,13 @@ export default function Register() {
   React.useEffect(() => {
     trackPageView("/register", "POS Register Page");
   }, []);
+
+  // Sync email from firebaseData to ensure it doesn't disappear
+  React.useEffect(() => {
+    if (firebaseData?.email) {
+      setEmail(firebaseData.email);
+    }
+  }, [firebaseData]);
 
   const toggleVisibility = () => setIsVisible(!isVisible);
   const toggleConfirmVisibility = () => setIsConfirmVisible(!isConfirmVisible);
@@ -138,6 +157,41 @@ export default function Register() {
       setStep(1);
     } else {
       navigate("/");
+    }
+  };
+
+
+  // Social Login Logic (Pre-fill version for Registration)
+  const handleSocialLogin = async (provider: any) => {
+    setIsLoading(true);
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      
+      // Pre-fill data from Firebase
+      // Try to get email from user object or providerData
+      const fbEmail = user.email || user.providerData?.[0]?.email || "";
+      
+      setFirebaseData({
+        uid: user.uid,
+        email: fbEmail,
+        photoURL: user.photoURL || undefined
+      });
+      setEmail(fbEmail);
+
+      toast.success(t("auth.socialLinkSuccess") || "Linked with social account");
+      
+      // If we are at step 1 and haven't selected a type, we stay at step 1 but email is ready
+      // Usually users pick type first, but if they click social first, we can jump to step 2 
+      // if they have selected a type.
+      if (selectedType) {
+        setStep(2);
+      }
+    } catch (error: any) {
+      console.error("Social Login Error:", error);
+      toast.error(error.message || "Social Login Failed");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -166,13 +220,40 @@ export default function Register() {
         password: data.password as string,
         role: "STORE_ADMIN",
         type: selectedType!,
+        // Include firebase details if available
+        firebaseUid: firebaseData?.uid,
+        photoURL: firebaseData?.photoURL,
       };
 
-      await registerStore(payload);
+      const authData = await registerStore(payload);
 
       trackFormSubmit("pos-register", true);
       toast.success(t("auth.registrationSuccess"));
-      navigate("/");
+      
+      // Auto Login
+      if (authData) {
+        updateAuthState(authData);
+        
+        // Check if questionnaire is completed
+        try {
+          if (authData?.user?.storeId) {
+            const completionStatus = await checkQuestionnaireCompletion({
+              storeId: authData.user.storeId
+            });
+
+            if (!completionStatus.isCompleted) {
+              navigate("/questionnaire");
+              return;
+            }
+          }
+        } catch (error) {
+          console.error("Error checking questionnaire status:", error);
+        }
+
+        navigate("/tables");
+      } else {
+        navigate("/");
+      }
     } catch (err: any) {
       trackFormSubmit("pos-register", false);
       showErrorToast(err, "", "danger");
@@ -564,6 +645,9 @@ export default function Register() {
                         }
                         type="email"
                         variant="bordered"
+                        value={email}
+                        onValueChange={setEmail}
+                        isReadOnly={!!firebaseData}
                       />
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -641,6 +725,32 @@ export default function Register() {
                         : t("auth.registerButton")}
                     </Button>
                   </Form>
+
+                  <div className="flex items-center gap-4 my-6">
+                    <Divider className="flex-1" />
+                    <span className="text-xs text-gray-400 uppercase tracking-widest">{t("auth.orContinueWith")}</span>
+                    <Divider className="flex-1" />
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4">
+                    <Button
+                      className="h-12 border-2 border-default-200 hover:border-primary transition-colors bg-white dark:bg-white/5"
+                      startContent={<FcGoogle size={20} />}
+                      variant="bordered"
+                      type="button"
+                      onPress={() => handleSocialLogin(googleProvider)}
+                    >
+                      Google
+                    </Button>
+                    {/* <Button
+                      className="h-12 border-2 border-default-200 hover:border-primary transition-colors bg-[#1877F2] text-white"
+                      startContent={<FaFacebook size={20} />}
+                      type="button"
+                      onPress={() => handleSocialLogin(facebookProvider)}
+                    >
+                      Facebook
+                    </Button> */}
+                  </div>
                 </CardBody>
               </Card>
 

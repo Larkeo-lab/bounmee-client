@@ -16,6 +16,7 @@ interface AuthContextType {
   user: any | null;
   login: (userData: any) => Promise<AuthData>;
   register: (userData: any) => Promise<any>;
+  updateAuthState: (data: AuthData) => void;
   logout: () => void;
   loading: boolean;
   isTokenExpired: () => boolean;
@@ -74,6 +75,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<AuthData | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const updateAuthState = useCallback((data: AuthData) => {
+    setUser(data);
+    setIsAuthenticated(true);
+    let lang = data.user?.language?.toLowerCase();
+    if (lang === "la") lang = "lo";
+    if (lang) {
+      i18n.changeLanguage(lang);
+    }
+    localStorage.setItem("authPOS", JSON.stringify(data));
+  }, []);
 
   const isTokenExpired = useCallback((): boolean => {
     try {
@@ -150,6 +162,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return response?.data;
   };
 
+
   const register = async (userData: any) => {
     const response: any = await useRegisterService(userData);
 
@@ -173,6 +186,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     user,
     login,
     register,
+    updateAuthState,
     logout,
     loading,
     isTokenExpired,

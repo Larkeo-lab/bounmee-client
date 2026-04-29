@@ -303,7 +303,7 @@ export default function AddAndEdit({
             <ModalBody>{employeeForm}</ModalBody>
             <ModalFooter>
               <Button variant="light" onPress={onClose}>
-                ຍົກເລີກ
+                {t("settings.common.cancel")}
               </Button>
               <Button
                 color="primary"

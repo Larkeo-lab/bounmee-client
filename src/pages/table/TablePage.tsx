@@ -276,7 +276,21 @@ export default function TablePage() {
       setSelectedTable(null);
       syncedTableRef.current = null;
 
-      // 2. อัปเดตสถานะบนเซิร์ฟเวอร์ในพื้นหลัง
+      // 2. อัปเดต Cache ของ Query ทันที (Optimistic Update) เพื่อป้องกันข้อมูลเก่าค้างตอนเปิดโต๊ะใหม่
+      queryClient.setQueryData(["tables", closingStoreId, undefined], (old: any) => {
+        if (!old || !old.data) return old;
+
+        return {
+          ...old,
+          data: old.data.map((t: any) =>
+            t.id === closingTableId
+              ? { ...t, status: "AVAILABLE", activeCart: [] }
+              : t,
+          ),
+        };
+      });
+
+      // 3. อัปเดตสถานะบนเซิร์ฟเวอร์ในพื้นหลัง
       updateTable.mutate(
         {
           id: closingTableId,

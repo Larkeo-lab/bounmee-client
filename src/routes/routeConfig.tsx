@@ -9,6 +9,7 @@ import { Role } from "@/types";
 // Import page components
 import LoginPage from "@/pages/auth/Login";
 import RegisterPage from "@/pages/auth/Register";
+import QuestionnairePage from "@/pages/questionnaire/QuestionnairePage";
 import PageNotFound from "@/pages/PageNotFound";
 import CustomerMenuPage from "@/pages/customer/CustomerMenuPage";
 import ProductPage from "@/pages/settings/product/ProductPage";
@@ -53,6 +54,12 @@ export const appRoutes: AppRoute[] = [
     path: "/register",
     element: <RegisterPage />,
     isPrivate: false,
+  },
+  {
+    path: "/questionnaire",
+    element: <QuestionnairePage />,
+    isPrivate: true,
+    requiresLayout: false,
   },
   {
     path: "/menu/:qrCode",

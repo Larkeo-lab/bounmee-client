@@ -13,11 +13,16 @@ import {
 } from "@heroui/react";
 import { useNavigate } from "react-router-dom";
 import { Lock, Mail } from "lucide-react";
+import { checkQuestionnaireCompletion } from "@/services/questionnaire/useQuestionnaire";
 
 import version from "../../../package.json";
 
 import { EyeFilledIcon, EyeSlashFilledIcon } from "@/components/icons";
-import { useAuth } from "@/routes";
+import { useAuth } from "@/routes/AuthContext";
+import { auth, googleProvider /*, facebookProvider */ } from "@/config/firebase";
+import { signInWithPopup } from "firebase/auth";
+import { FcGoogle } from "react-icons/fc";
+// import { FaFacebook } from "react-icons/fa";
 
 // Version number
 
@@ -25,6 +30,8 @@ import oneDoorLogo from "/assets/logo.png";
 
 import LanguageSwitch from "@/components/common/language-switch";
 import { showErrorToast } from "@/config/error-messages";
+import toast from "react-hot-toast";
+import { API_ENDPOINTS } from "@/config/api";
 
 const bgLineName = "/line-nam-bg.png";
 
@@ -38,10 +45,104 @@ import {
 export default function Login() {
   const [isVisible, setIsVisible] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
+  const [identifier, setIdentifier] = React.useState<string>("");
 
-  const { login } = useAuth();
+  const { login, updateAuthState } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
+
+  const [firebaseEmail, setFirebaseEmail] = React.useState<string | null>(null);
+
+  // Sync identifier if it comes from firebase
+  React.useEffect(() => {
+    if (firebaseEmail) {
+      setIdentifier(firebaseEmail);
+    }
+  }, [firebaseEmail]);
+
+  // Social Login Logic
+  const handleSocialLogin = async (provider: any) => {
+    setIsLoading(true);
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      const idToken = await user.getIdToken();
+      
+      // Update visual state (optional but nice)
+      setIdentifier(user.email || user.providerData?.[0]?.email || "");
+
+      // Call our Social Login API (the new path)
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}${API_ENDPOINTS.AUTH.FIREBASE_SYNC}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${idToken}`
+        },
+        body: JSON.stringify({
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName,
+          photoURL: user.photoURL,
+          provider: result.providerId
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to login with Social Account");
+      }
+
+      const authData = await response.json();
+      
+      // Successfully logged in! 
+      // Update global auth state
+      updateAuthState(authData.data);
+      
+      toast.success(t("common.success") || "Login Successful");
+      
+      const userRole = authData.data.user?.role;
+      const permissions = authData.data.user?.employee?.permission?.permissions;
+
+      // Handle conditional navigation (same as manual login)
+      if (userRole === "EMPLOYEE" && permissions) {
+        if (permissions["table"]?.includes("view")) {
+          navigate("/tables");
+        } else if (permissions["order"]?.includes("view")) {
+          navigate("/order");
+        } else if (permissions["product"]?.includes("view")) {
+          navigate("/product-order");
+        } else if (permissions["dashboard"]?.includes("view")) {
+          navigate("/dashboard");
+        } else {
+          navigate("/settings/profile");
+        }
+      } else {
+        // Check if questionnaire is completed
+        try {
+          if (authData.data.user?.storeId) {
+            const completionStatus = await checkQuestionnaireCompletion({
+              storeId: authData.data.user.storeId
+            });
+
+            if (!completionStatus.isCompleted) {
+              navigate("/questionnaire");
+              return;
+            }
+          }
+        } catch (error) {
+          console.error("Error checking questionnaire status:", error);
+        }
+
+        // Default navigation for STORE_ADMIN or others
+        navigate("/tables");
+      }
+    } catch (error: any) {
+      console.error("Social Login Error:", error);
+      toast.error(error.message || "Social Login Failed");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Track page view with Google Analytics
   React.useEffect(() => {
@@ -93,6 +194,23 @@ export default function Login() {
           navigate("/settings/profile"); // Fallback fallback if no module permissions match
         }
       } else {
+        // Check if questionnaire is completed
+        try {
+          if (authData?.user?.storeId) {
+            const completionStatus = await checkQuestionnaireCompletion({
+              storeId: authData.user.storeId
+            });
+
+            console.log('completionStatus', completionStatus)
+            if (!completionStatus.completed) {
+              navigate("/questionnaire");
+              return;
+            }
+          }
+        } catch (error) {
+          console.error("Failed to check questionnaire status:", error);
+        }
+        
         navigate("/tables"); // Default for Admin/Store Owner
       }
     } catch (err: any) {
@@ -187,6 +305,8 @@ export default function Login() {
                   size="lg"
                   startContent={<Mail className="text-default-400" size={20} />}
                   type="text"
+                  value={identifier}
+                  onValueChange={setIdentifier}
                   validate={(value) => {
                     if (!value) return t("auth.missingCredentials");
 
@@ -230,7 +350,7 @@ export default function Login() {
                   variant="bordered"
                 />
 
-                <div className="flex items-center justify-between px-1">
+                {/* <div className="flex items-center justify-between px-1">
                   <label className="flex items-center gap-2 text-sm text-gray-500 cursor-pointer">
                     <input
                       className="rounded border-gray-300 text-primary focus:ring-primary"
@@ -246,7 +366,7 @@ export default function Login() {
                   >
                     {t("auth.forgotPassword")}?
                   </Button>
-                </div>
+                </div> */}
 
                 <Button
                   className="w-full h-14 font-bold text-lg shadow-lg shadow-primary/30"
@@ -258,6 +378,32 @@ export default function Login() {
                   {isLoading ? t("auth.loggingIn") : t("auth.loginButton")}
                 </Button>
               </Form>
+
+              <div className="flex items-center gap-4 my-6">
+                <Divider className="flex-1" />
+                <span className="text-xs text-gray-400 uppercase tracking-widest">{t("auth.orContinueWith")}</span>
+                <Divider className="flex-1" />
+              </div>
+
+              <div className="grid grid-cols-1 gap-4">
+                <Button
+                  className="h-12 border-2 border-default-200 hover:border-primary transition-colors bg-white dark:bg-white/5"
+                  startContent={<FcGoogle size={20} />}
+                  variant="bordered"
+                  type="button"
+                  onPress={() => handleSocialLogin(googleProvider)}
+                >
+                  Google
+                </Button>
+                {/* <Button
+                  className="h-12 border-2 border-default-200 hover:border-primary transition-colors bg-[#1877F2] text-white"
+                  startContent={<FaFacebook size={20} />}
+                  type="button"
+                  onPress={() => handleSocialLogin(facebookProvider)}
+                >
+                  Facebook
+                </Button> */}
+              </div>
             </CardBody>
           </Card>
 

@@ -5,6 +5,7 @@ export const API_ENDPOINTS = {
     LOGIN: `${API_VERSION}/auth/login-store`,
     LOGIN_USER: `${API_VERSION}/auth/login`,
     REGISTER: `${API_VERSION}/auth/register-store`,
+    FIREBASE_SYNC: `${API_VERSION}/auth/firebase-sync`,
   },
   STORAGE: {
     IMAGE: `${API_VERSION}/storage/image/upload`,
@@ -84,5 +85,10 @@ export const API_ENDPOINTS = {
   },
   CONTACT: {
     LIST: `${API_VERSION}/contact`,
+  },
+  QUESTIONNAIRE: {
+    LIST: `${API_VERSION}/questionnaire`,
+    DETAIL: (id: string) => `${API_VERSION}/questionnaire/${id}`,
+    SUBMIT: `${API_VERSION}/questionnaire/submit`,
   },
 };
