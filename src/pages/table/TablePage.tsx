@@ -45,6 +45,7 @@ import { socket } from "@/config/socket";
 import EmptyState from "@/components/common/empty-state";
 import ConfirmModal from "@/components/common/popup-confirm";
 import { useCart } from "@/provider";
+import { useCartStore } from "@/store/useCartStore";
 import PaymentModal from "@/components/common/payment-modal";
 
 export default function TablePage() {
@@ -110,6 +111,23 @@ export default function TablePage() {
       "",
     );
   const products = productResponse?.data || [];
+
+  // ✨ Pre-fill Zustand store with activeCart from Prisma when tables load
+  useEffect(() => {
+    if (tables.length > 0) {
+      const newCarts: Record<string, any[]> = {};
+      tables.forEach((t: any) => {
+        if (t.activeCart && Array.isArray(t.activeCart)) {
+          newCarts[t.id] = t.activeCart;
+        }
+      });
+      
+      // Only update if there are actual changes to prevent infinite loops
+      useCartStore.setState((state) => ({
+        carts: { ...newCarts, ...state.carts } // Merge but prioritize query data on first load
+      }));
+    }
+  }, [tablesResponse]);
 
   const categories = [
     { id: "all", label: "ທັງໝົດ" },
@@ -216,9 +234,13 @@ export default function TablePage() {
     };
 
     socket.on("CUSTOMER_ORDER", handleNewOrder);
+    socket.on("TABLE_CART_UPDATED", () => {
+      queryClient.invalidateQueries({ queryKey: ["tables"] });
+    });
 
     return () => {
       socket.off("CUSTOMER_ORDER", handleNewOrder);
+      socket.off("TABLE_CART_UPDATED");
     };
   }, [tables]);
 
@@ -558,9 +580,7 @@ export default function TablePage() {
                     <div
                       className={clsx(
                         "grid gap-2 lg:gap-3",
-                        selectedTable
-                          ? "grid-cols-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
-                          : "grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6",
+                        "grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 3xl:grid-cols-8",
                       )}
                     >
                       {filteredTables.map((table: any) => (
@@ -598,10 +618,10 @@ export default function TablePage() {
 
       <div
         className={clsx(
-          "fixed inset-x-0 bottom-0 z-50 transition-all duration-500 ease-in-out transform sm:relative sm:inset-auto sm:translate-y-0 sm:opacity-100 sm:pointer-events-auto shrink-0",
+          "fixed inset-x-0 bottom-0 z-50 transition-all duration-500 ease-in-out transform sm:relative sm:inset-auto sm:translate-y-0 shrink-0",
           selectedTable
-            ? "translate-y-0 opacity-100 shadow-[0_-8px_30px_rgb(0,0,0,0.12)]"
-            : "translate-y-full opacity-0 pointer-events-none sm:opacity-100 sm:pointer-events-auto",
+            ? "translate-y-0 opacity-100 shadow-[0_-8px_30px_rgb(0,0,0,0.12)] sm:flex"
+            : "translate-y-full opacity-0 pointer-events-none sm:hidden",
         )}
       >
         {selectedTable || lastSelectedTable ? (

@@ -84,6 +84,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
   const {
     cart,
     updateQuantity,
+    setQuantity,
     updateStatus,
     updateItemNote,
     subtotal,
@@ -219,7 +220,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
           </div>
         )}
 
-        <ScrollShadow className="flex-grow overflow-y-auto p-4 space-y-4 scrollbar-hide">
+        <ScrollShadow className="flex-grow overflow-y-auto p-2 space-y-1.5 scrollbar-hide">
           {filteredCart.length > 0 ? (
             filteredCart.map((item) => {
               const uniqueId = `${item.id}-${item.status}-${item.note || ""}`;
@@ -227,7 +228,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
               return (
                 <div
                   key={uniqueId}
-                  className="flex gap-3 group items-center border-b border-divider border-dashed pb-3 last:border-b-0 last:pb-0"
+                  className="flex gap-2 group items-center border-b border-divider border-dashed pb-1.5 last:border-b-0 last:pb-0"
                 >
                   <Checkbox
                     isSelected={selectedCartItems.includes(uniqueId)}
@@ -243,24 +244,24 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                     }}
                   />
                   <Image
-                    className="w-14 h-14 object-cover rounded-xl shadow-sm"
+                    className="w-10 h-10 object-cover rounded-lg shadow-sm"
                     src={getDisplayImageUrl(item.image)}
                   />
                   <div className="flex-grow flex flex-col justify-between py-0.5">
-                    <div className="flex justify-between items-start gap-2">
-                      <span className="font-bold text-[13px] lg:text-sm line-clamp-1">
+                    <div className="flex justify-between items-start gap-1">
+                      <span className="font-bold text-[12px] lg:text-[13px] line-clamp-1">
                         {item.name}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center mt-1">
+                    <div className="flex justify-between items-center mt-0.5">
                       <div className="flex flex-col">
-                        <span className="text-primary font-black text-xs lg:text-sm">
+                        <span className="text-primary font-black text-[11px] lg:text-xs">
                           {formatNumber(item.price * item.quantity)}{" "}
-                          <span className="text-[10px] font-normal">
+                          <span className="text-[9px] font-normal">
                             {t("sale.kip")}
                           </span>
                         </span>
-                        <div className="flex items-center gap-2 mt-1">
+                        <div className="flex items-center gap-1 mt-0.5">
                           {(item.status !== "SERVED" || item.note) && (
                             <Tooltip
                               content={
@@ -294,7 +295,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
 
                             return (
                               <Chip
-                                className="font-bold text-[9px] h-5"
+                                className="font-bold text-[8px] h-4"
                                 color={statusConfig.color}
                                 size="sm"
                                 variant="flat"
@@ -305,31 +306,41 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                           })()}
                         </div>
                       </div>
-                      <div className="flex items-center gap-1 bg-default-100 rounded-lg p-0.5 border border-default-200">
+                      <div className="flex items-center gap-0 bg-default-100 rounded-md p-0.5 border border-default-200">
                         <Button
                           isIconOnly
-                          className="min-w-7 h-7 w-7"
+                          className="min-w-5 h-5 w-5"
+                          isDisabled={item.quantity <= 1}
                           size="sm"
                           variant="light"
                           onClick={() =>
                             updateQuantity(item.id, item.status, -1, item.note)
                           }
                         >
-                          <Minus size={12} />
+                          <Minus size={8} />
                         </Button>
-                        <span className="w-6 text-center font-bold text-xs">
-                          {item.quantity}
-                        </span>
+                        <input
+                          className="w-6 text-center font-bold text-[10px] bg-transparent outline-none border-none p-0 focus:ring-0"
+                          type="text"
+                          value={item.quantity === 0 ? "" : item.quantity}
+                          onChange={(e) => {
+                            const val = e.target.value;
+
+                            if (val === "" || /^\d+$/.test(val)) {
+                              setQuantity(item.id, item.status, val, item.note);
+                            }
+                          }}
+                        />
                         <Button
                           isIconOnly
-                          className="min-w-7 h-7 w-7"
+                          className="min-w-5 h-5 w-5"
                           size="sm"
                           variant="light"
                           onClick={() =>
                             updateQuantity(item.id, item.status, 1, item.note)
                           }
                         >
-                          <Plus size={12} />
+                          <Plus size={8} />
                         </Button>
                       </div>
                     </div>
@@ -396,7 +407,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                   </div>
                   <Button
                     isIconOnly
-                    className="min-w-8 h-8 w-8 ml-2"
+                    className="min-w-6 h-6 w-6 ml-1"
                     color="danger"
                     size="sm"
                     variant="flat"
@@ -409,7 +420,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                       onRemoveItemOpen();
                     }}
                   >
-                    <Trash2 size={16} />
+                    <Trash2 size={12} />
                   </Button>
                 </div>
               );

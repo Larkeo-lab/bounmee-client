@@ -67,6 +67,43 @@ export const useCartSync = () => {
               const currentCarts = useCartStore.getState().carts;
               const localCart = currentCarts[data.tableId] || [];
 
+              // 🔊 Sound Logic: Context-Aware Notifications
+              const isKitchenPage = window.location.pathname.includes("/kitchen");
+              const isTablePage = window.location.pathname.includes("/tables");
+
+              const hasNewCooking = data.cart?.some(
+                (newItem) =>
+                  newItem.status === "COOKING" &&
+                  !localCart.some(
+                    (old) =>
+                      old.id === newItem.id &&
+                      old.status === "COOKING" &&
+                      (old.note || "") === (newItem.note || ""),
+                  ),
+              );
+
+              const hasNewServed = data.cart?.some(
+                (newItem) =>
+                  newItem.status === "SERVED" &&
+                  !localCart.some(
+                    (old) =>
+                      old.id === newItem.id &&
+                      old.status === "SERVED" &&
+                      (old.note || "") === (newItem.note || ""),
+                  ),
+              );
+
+              // Play sound for Kitchen if new items to cook arrive
+              // Play sound for POS if items are served by kitchen
+              if ((isKitchenPage && hasNewCooking) || (isTablePage && hasNewServed)) {
+                try {
+                  const audio = new Audio("/assets/void/notification.mp3");
+                  audio
+                    .play()
+                    .catch((e) => console.log("Audio play blocked:", e));
+                } catch (e) {}
+              }
+
               // ✨ If table is AVAILABLE, force clear instead of merging
               const isAvailable = data.tableStatus === "AVAILABLE";
               const mergedCart = isAvailable

@@ -583,7 +583,8 @@
     "offlineKitchen": "⚠️ Currently Offline! Order will be sent to kitchen once back online.",
     "offlineSync": "⚠️ Currently Offline! Data will sync once back online.",
     "updateSuccess": "Update successful",
-    "updateError": "Update failed"
+    "updateError": "Update failed",
+    "kip": "Kip"
   },
   "table": {
     "title": "Shop Floor",

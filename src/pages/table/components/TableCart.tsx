@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { QRCodeSVG } from "qrcode.react";
+//import { QRCodeSVG } from "qrcode.react";
 import {
   Card,
   CardBody,
@@ -15,7 +15,8 @@ import {
 import { Users, Table as TableIcon, CheckCircle2, Clock } from "lucide-react";
 
 import { useUpdateTable } from "@/services/table/useTable";
-import { useCart } from "@/provider";
+import { useCartStore } from "@/store/useCartStore";
+import { socket } from "@/config/socket";
 
 export type TableStatus = "AVAILABLE" | "OCCUPIED" | "RESERVED" | "DIRTY";
 
@@ -39,10 +40,11 @@ export const TableCart = ({
 }) => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const updateTable = useUpdateTable();
-  const { carts } = useCart();
+  const carts = useCartStore((state) => state.carts);
 
   const { t } = useTranslation();
-  const tableCart = carts[table.id] || [];
+  // ✨ Use store data first, then fallback to prop data, then empty array
+  const tableCart = carts[table.id] || (table as any).activeCart || [];
 
   const pendingCount = (tableCart as any[])
     .filter((i) => i.status === "PENDING")
@@ -247,7 +249,7 @@ export const TableCart = ({
             <p className="text-center text-lg font-medium text-default-600">
               {t("table.modal.openTableConfirm")}
             </p>
-            {table.qrCode && (
+            {/* {table.qrCode && (
               <div className="flex flex-col items-center gap-2 p-4 bg-default-50 rounded-xl border border-default-200 w-full">
                 <div className="p-3 bg-white rounded-lg shadow-sm border border-default-100">
                   <QRCodeSVG
@@ -265,7 +267,7 @@ export const TableCart = ({
                   </span>
                 </div>
               </div>
-            )}
+            )} */}
           </ModalBody>
           <ModalFooter>
             <Button
@@ -283,6 +285,15 @@ export const TableCart = ({
                   { id: table.id, storeId: table.storeId, status: "OCCUPIED" },
                   {
                     onSuccess: () => {
+                      // 🌐 Broadcast to other devices
+                      if (socket.connected) {
+                        socket.emit("SYNC_TABLE_CART", {
+                          storeId: table.storeId,
+                          tableId: table.id,
+                          cart: [],
+                          tableStatus: "OCCUPIED",
+                        });
+                      }
                       onOpenChange();
                       onTableSelect?.({ ...table, status: "OCCUPIED" });
                     },

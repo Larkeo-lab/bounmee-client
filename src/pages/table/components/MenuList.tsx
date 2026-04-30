@@ -49,7 +49,8 @@ export const MenuList: React.FC<MenuListProps> = ({
           .filter((i) => i.id === product.id && i.status !== "CANCEL")
           .reduce((sum, i) => sum + i.quantity, 0);
 
-        const isOutOfStock = (product.stockQty || 0) <= cartQty;
+        const remainingStock = Math.max(0, (product.stockQty || 0) - cartQty);
+        const isOutOfStock = remainingStock <= 0;
 
         return (
           <Card
@@ -67,15 +68,15 @@ export const MenuList: React.FC<MenuListProps> = ({
                 <div
                   className={clsx(
                     "px-2 py-0.5 rounded-full text-[9px] font-bold text-white shadow-lg backdrop-blur-md",
-                    product.stockQty > 10
+                    remainingStock > 10
                       ? "bg-green-500/80"
-                      : product.stockQty > 0
+                      : remainingStock > 0
                         ? "bg-orange-500/80"
                         : "bg-red-500/80",
                   )}
                 >
-                  {product.stockQty > 0
-                    ? t("table.menu.remaining", { count: product.stockQty })
+                  {remainingStock > 0
+                    ? t("table.menu.remaining", { count: remainingStock })
                     : t("table.menu.outOfStock")}
                 </div>
               </div>

@@ -19,9 +19,9 @@ import version from "../../../package.json";
 
 import { EyeFilledIcon, EyeSlashFilledIcon } from "@/components/icons";
 import { useAuth } from "@/routes/AuthContext";
-import { auth, googleProvider /*, facebookProvider */ } from "@/config/firebase";
-import { signInWithPopup } from "firebase/auth";
-import { FcGoogle } from "react-icons/fc";
+//import { auth,/* googleProvider , facebookProvider */ } from "@/config/firebase";
+//import { signInWithPopup } from "firebase/auth";
+//import { FcGoogle } from "react-icons/fc";
 // import { FaFacebook } from "react-icons/fa";
 
 // Version number
@@ -30,8 +30,8 @@ import oneDoorLogo from "/assets/logo.png";
 
 import LanguageSwitch from "@/components/common/language-switch";
 import { showErrorToast } from "@/config/error-messages";
-import toast from "react-hot-toast";
-import { API_ENDPOINTS } from "@/config/api";
+// import { toast } from "react-hot-toast";
+// import { API_ENDPOINTS } from "@/config/api";
 
 const bgLineName = "/line-nam-bg.png";
 
@@ -47,93 +47,93 @@ export default function Login() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [identifier, setIdentifier] = React.useState<string>("");
 
-  const { login, updateAuthState } = useAuth();
+  const { login,/*  updateAuthState */ } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
 
   // Social Login Logic
-  const handleSocialLogin = async (provider: any) => {
-    setIsLoading(true);
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      const idToken = await user.getIdToken();
+  // const handleSocialLogin = async (provider: any) => {
+  //   setIsLoading(true);
+  //   try {
+  //     const result = await signInWithPopup(auth, provider);
+  //     const user = result.user;
+  //     const idToken = await user.getIdToken();
       
-      // Update visual state (optional but nice)
-      setIdentifier(user.email || user.providerData?.[0]?.email || "");
+  //     // Update visual state (optional but nice)
+  //     setIdentifier(user.email || user.providerData?.[0]?.email || "");
 
-      // Call our Social Login API (the new path)
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}${API_ENDPOINTS.AUTH.FIREBASE_SYNC}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${idToken}`
-        },
-        body: JSON.stringify({
-          uid: user.uid,
-          email: user.email,
-          displayName: user.displayName,
-          photoURL: user.photoURL,
-          provider: result.providerId
-        })
-      });
+  //     // Call our Social Login API (the new path)
+  //     const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}${API_ENDPOINTS.AUTH.FIREBASE_SYNC}`, {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         "Authorization": `Bearer ${idToken}`
+  //       },
+  //       body: JSON.stringify({
+  //         uid: user.uid,
+  //         email: user.email,
+  //         displayName: user.displayName,
+  //         photoURL: user.photoURL,
+  //         provider: result.providerId
+  //       })
+  //     });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to login with Social Account");
-      }
+  //     if (!response.ok) {
+  //       const errorData = await response.json();
+  //       throw new Error(errorData.message || "Failed to login with Social Account");
+  //     }
 
-      const authData = await response.json();
+  //     const authData = await response.json();
       
-      // Successfully logged in! 
-      // Update global auth state
-      updateAuthState(authData.data);
+  //     // Successfully logged in! 
+  //     // Update global auth state
+  //     updateAuthState(authData.data);
       
-      toast.success(t("common.success") || "Login Successful");
+  //     toast.success(t("common.success") || "Login Successful");
       
-      const userRole = authData.data.user?.role;
-      const permissions = authData.data.user?.employee?.permission?.permissions;
+  //     const userRole = authData.data.user?.role;
+  //     const permissions = authData.data.user?.employee?.permission?.permissions;
 
-      // Handle conditional navigation (same as manual login)
-      if (userRole === "EMPLOYEE" && permissions) {
-        if (permissions["table"]?.includes("view")) {
-          navigate("/tables");
-        } else if (permissions["order"]?.includes("view")) {
-          navigate("/order");
-        } else if (permissions["product"]?.includes("view")) {
-          navigate("/product-order");
-        } else if (permissions["dashboard"]?.includes("view")) {
-          navigate("/dashboard");
-        } else {
-          navigate("/settings/profile");
-        }
-      } else {
-        // Check if questionnaire is completed
-        try {
-          if (authData.data.user?.storeId) {
-            const completionStatus = await checkQuestionnaireCompletion({
-              storeId: authData.data.user.storeId
-            });
+  //     // Handle conditional navigation (same as manual login)
+  //     if (userRole === "EMPLOYEE" && permissions) {
+  //       if (permissions["table"]?.includes("view")) {
+  //         navigate("/tables");
+  //       } else if (permissions["order"]?.includes("view")) {
+  //         navigate("/order");
+  //       } else if (permissions["product"]?.includes("view")) {
+  //         navigate("/product-order");
+  //       } else if (permissions["dashboard"]?.includes("view")) {
+  //         navigate("/dashboard");
+  //       } else {
+  //         navigate("/settings/profile");
+  //       }
+  //     } else {
+  //       // Check if questionnaire is completed
+  //       try {
+  //         if (authData.data.user?.storeId) {
+  //           const completionStatus = await checkQuestionnaireCompletion({
+  //             storeId: authData.data.user.storeId
+  //           });
 
-            if (!completionStatus.isCompleted) {
-              navigate("/questionnaire");
-              return;
-            }
-          }
-        } catch (error) {
-          console.error("Error checking questionnaire status:", error);
-        }
+  //           if (!completionStatus.isCompleted) {
+  //             navigate("/questionnaire");
+  //             return;
+  //           }
+  //         }
+  //       } catch (error) {
+  //         console.error("Error checking questionnaire status:", error);
+  //       }
 
-        // Default navigation for STORE_ADMIN or others
-        navigate("/tables");
-      }
-    } catch (error: any) {
-      console.error("Social Login Error:", error);
-      toast.error(error.message || "Social Login Failed");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  //       // Default navigation for STORE_ADMIN or others
+  //       navigate("/tables");
+  //     }
+  //   } catch (error: any) {
+  //     console.error("Social Login Error:", error);
+  //     toast.error(error.message || "Social Login Failed");
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
   // Track page view with Google Analytics
   React.useEffect(() => {
@@ -376,7 +376,7 @@ export default function Login() {
                 <Divider className="flex-1" />
               </div>
 
-              <div className="grid grid-cols-1 gap-4">
+              {/* <div className="grid grid-cols-1 gap-4">
                 <Button
                   className="h-12 border-2 border-default-200 hover:border-primary transition-colors bg-white dark:bg-white/5"
                   startContent={<FcGoogle size={20} />}
@@ -386,15 +386,15 @@ export default function Login() {
                 >
                   Google
                 </Button>
-                {/* <Button
+                <Button
                   className="h-12 border-2 border-default-200 hover:border-primary transition-colors bg-[#1877F2] text-white"
                   startContent={<FaFacebook size={20} />}
                   type="button"
                   onPress={() => handleSocialLogin(facebookProvider)}
                 >
                   Facebook
-                </Button> */}
-              </div>
+                </Button>
+              </div> */}
             </CardBody>
           </Card>
 

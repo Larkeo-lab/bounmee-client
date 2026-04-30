@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { toast } from "react-hot-toast";
+import i18n from "@/config/i18n";
 
 export interface CartItem {
   id: string;
@@ -136,7 +137,10 @@ export const useCartStore = create<CartState & CartActions>()(
             totalInCart + 1 > product.stockQty
           ) {
             toast.error(
-              `ສິນຄ້າ "${product.name}" ມີໃນສາງພຽງ ${product.stockQty} ລາຍການ`,
+              i18n.t("customer.stockWarning", {
+                name: product.name,
+                qty: product.stockQty,
+              }),
             );
 
             return;
@@ -146,9 +150,18 @@ export const useCartStore = create<CartState & CartActions>()(
             ...nextCart[existingIndex],
             quantity: nextCart[existingIndex].quantity + 1,
           };
+
+          toast.success(i18n.t("sale.itemAdded", { name: product.name }), {
+            duration: 800,
+            position: "top-center",
+          });
         } else {
           if (product.stockQty <= 0) {
-            toast.error(`ສິນຄ້າ "${product.name}" ຫມົດแล้ว!`);
+            toast.error(
+              i18n.t("customer.soldOut", {
+                name: product.name,
+              }),
+            );
 
             return;
           }
@@ -163,6 +176,11 @@ export const useCartStore = create<CartState & CartActions>()(
             status,
             timestamp: Date.now(),
             note: note || undefined,
+          });
+
+          toast.success(i18n.t("sale.itemAdded", { name: product.name }), {
+            duration: 800,
+            position: "top-center",
           });
         }
 
@@ -205,7 +223,10 @@ export const useCartStore = create<CartState & CartActions>()(
               newQty > item.stockQty
             ) {
               toast.error(
-                `ສິນຄ້າ "${item.name}" ມີໃນສະຕັອກພຽງ ${item.stockQty} รายการ`,
+                i18n.t("customer.stockWarning", {
+                  name: item.name,
+                  qty: item.stockQty,
+                }),
               );
 
               return item;
@@ -237,13 +258,16 @@ export const useCartStore = create<CartState & CartActions>()(
           ) {
             if (item.stockQty !== undefined && newQty > item.stockQty) {
               toast.error(
-                `ສິນค้า "${item.name}" มีในสต็อกเพียง ${item.stockQty} รายการ`,
+                i18n.t("customer.stockWarning", {
+                  name: item.name,
+                  qty: item.stockQty,
+                }),
               );
 
               return { ...item, quantity: item.stockQty };
             }
 
-            return { ...item, quantity: Math.max(0, newQty) };
+            return { ...item, quantity: Math.max(1, newQty) };
           }
 
           return item;

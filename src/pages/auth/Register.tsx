@@ -32,9 +32,9 @@ import { checkQuestionnaireCompletion } from "@/services/questionnaire/useQuesti
 
 import { EyeFilledIcon, EyeSlashFilledIcon } from "@/components/icons";
 import { useAuth } from "@/routes";
-import { auth, googleProvider /*, facebookProvider */ } from "@/config/firebase";
-import { signInWithPopup } from "firebase/auth";
-import { FcGoogle } from "react-icons/fc";
+//import { auth, /*,googleProvider  facebookProvider */ } from "@/config/firebase";
+//import { signInWithPopup } from "firebase/auth";
+//import { FcGoogle } from "react-icons/fc";
 import { useGetAllProvinces } from "@/services/province/useProvince";
 import { useGetDistrictsByProvince } from "@/services/district/useDistrict";
 import LanguageSwitch from "@/components/common/language-switch";
@@ -112,7 +112,7 @@ export default function Register() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [selectedProvince, setSelectedProvince] = React.useState<string>("");
   const [email, setEmail] = React.useState<string>("");
-  const [firebaseData, setFirebaseData] = React.useState<{
+  const [firebaseData, /* setFirebaseData */] = React.useState<{
     uid: string;
     email: string;
     photoURL?: string;
@@ -160,38 +160,38 @@ export default function Register() {
 
 
   // Social Login Logic (Pre-fill version for Registration)
-  const handleSocialLogin = async (provider: any) => {
-    setIsLoading(true);
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
+  // const handleSocialLogin = async (provider: any) => {
+  //   setIsLoading(true);
+  //   try {
+  //     const result = await signInWithPopup(auth, provider);
+  //     const user = result.user;
       
-      // Pre-fill data from Firebase
-      // Try to get email from user object or providerData
-      const fbEmail = user.email || user.providerData?.[0]?.email || "";
+  //     // Pre-fill data from Firebase
+  //     // Try to get email from user object or providerData
+  //     const fbEmail = user.email || user.providerData?.[0]?.email || "";
       
-      setFirebaseData({
-        uid: user.uid,
-        email: fbEmail,
-        photoURL: user.photoURL || undefined
-      });
-      setEmail(fbEmail);
+  //     setFirebaseData({
+  //       uid: user.uid,
+  //       email: fbEmail,
+  //       photoURL: user.photoURL || undefined
+  //     });
+  //     setEmail(fbEmail);
 
-      toast.success(t("auth.socialLinkSuccess") || "Linked with social account");
+  //     toast.success(t("auth.socialLinkSuccess") || "Linked with social account");
       
-      // If we are at step 1 and haven't selected a type, we stay at step 1 but email is ready
-      // Usually users pick type first, but if they click social first, we can jump to step 2 
-      // if they have selected a type.
-      if (selectedType) {
-        setStep(2);
-      }
-    } catch (error: any) {
-      console.error("Social Login Error:", error);
-      toast.error(error.message || "Social Login Failed");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  //     // If we are at step 1 and haven't selected a type, we stay at step 1 but email is ready
+  //     // Usually users pick type first, but if they click social first, we can jump to step 2 
+  //     // if they have selected a type.
+  //     if (selectedType) {
+  //       setStep(2);
+  //     }
+  //   } catch (error: any) {
+  //     console.error("Social Login Error:", error);
+  //     toast.error(error.message || "Social Login Failed");
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -730,7 +730,7 @@ export default function Register() {
                     <Divider className="flex-1" />
                   </div>
 
-                  <div className="grid grid-cols-1 gap-4">
+                  {/* <div className="grid grid-cols-1 gap-4">
                     <Button
                       className="h-12 border-2 border-default-200 hover:border-primary transition-colors bg-white dark:bg-white/5"
                       startContent={<FcGoogle size={20} />}
@@ -740,15 +740,15 @@ export default function Register() {
                     >
                       Google
                     </Button>
-                    {/* <Button
+                    <Button
                       className="h-12 border-2 border-default-200 hover:border-primary transition-colors bg-[#1877F2] text-white"
                       startContent={<FaFacebook size={20} />}
                       type="button"
                       onPress={() => handleSocialLogin(facebookProvider)}
                     >
                       Facebook
-                    </Button> */}
-                  </div>
+                    </Button>
+                  </div> */}
                 </CardBody>
               </Card>
 

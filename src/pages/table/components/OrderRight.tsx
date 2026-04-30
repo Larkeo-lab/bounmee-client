@@ -90,6 +90,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
     subtotal,
     isConnected, // 🌐 Get connection status
   } = useCart();
+  const [isSending, setIsSending] = React.useState(false);
 
   return (
     <div
@@ -393,6 +394,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
             color="warning"
             isDisabled={
               selectedCartItems.length === 0 ||
+              isSending ||
               selectedCartItems.some((uId) => {
                 const item = cart.find(
                   (i) => `${i.id}-${i.status}-${i.note || ""}` === uId,
@@ -401,29 +403,36 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                 return item?.status === "COOKING" || item?.status === "SERVED";
               })
             }
-            startContent={<ChefHat size={12} />}
-            onClick={() => {
+            isLoading={isSending}
+            startContent={!isSending && <ChefHat size={12} />}
+            onClick={async () => {
               if (!isConnected) {
                 toast.error(t("table.cart.offlineOrderWarning"), {
                   duration: 4000,
                   style: { fontWeight: "bold" },
                 });
               }
+
+              setIsSending(true);
               try {
+                // Simulate a small delay for better UX and to allow socket to emit
+                await new Promise((resolve) => setTimeout(resolve, 800));
+
                 updateStatus(selectedCartItems, "COOKING");
                 setSelectedCartItems([]);
                 toast.success(t("table.cart.updateSuccess"));
 
-                // Play notification sound
+                // Play notification sound locally to confirm action
                 try {
                   const audio = new Audio("/assets/void/notification.mp3");
-
                   audio
                     .play()
                     .catch((e) => console.log("Audio play blocked:", e));
                 } catch (e) {}
               } catch (error) {
                 toast.error(t("table.cart.updateError"));
+              } finally {
+                setIsSending(false);
               }
             }}
           >

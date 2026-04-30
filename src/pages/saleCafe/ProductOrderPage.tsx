@@ -134,7 +134,7 @@ export default function ProductOrderPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
 
   useEffect(() => {
-    const handler = setTimeout(() => setSearchQuery(searchQuery), 500);
+    const handler = setTimeout(() => setDebouncedSearch(searchQuery), 500);
 
     return () => clearTimeout(handler);
   }, [searchQuery]);
@@ -158,7 +158,7 @@ export default function ProductOrderPage() {
       socket.off("SETUP", onConnect);
       socket.off("PRODUCT:SCANNED", onScanned);
     };
-  }, [user?.user?.storeId, addToCart]);
+  }, [user?.user?.storeId, addToCart, t]);
 
   const { data: categoryResponse } = useGetCategories(
     user?.user?.storeId || "",
@@ -184,8 +184,6 @@ export default function ProductOrderPage() {
       if (product) {
         addToCart(product);
         setSearchQuery("");
-        // No animation for barcode scan as we don't have click coordinates usually,
-        // but it shows toast.
       }
     } catch (error) {
       setDebouncedSearch(barcode);
@@ -195,15 +193,10 @@ export default function ProductOrderPage() {
   const handleAddToCart = (product: Product, event: any) => {
     addToCart(product);
 
-    // Get position from event target (supporting HeroUI's PressEvent which doesn't have currentTarget)
+    // Get position from event target
     const target = event?.target as HTMLElement;
 
     if (!target) {
-      toast.success(t("sale.itemAdded", { name: product.name }), {
-        duration: 800,
-        position: "top-center",
-      });
-
       return;
     }
 
@@ -219,11 +212,6 @@ export default function ProductOrderPage() {
     setTimeout(() => {
       setFlyingItems((prev) => prev.filter((item) => item.id !== newItem.id));
     }, 1000);
-
-    toast.success(t("sale.itemAdded", { name: product.name }), {
-      duration: 800,
-      position: "top-center",
-    });
   };
 
   const categories = [
@@ -325,63 +313,76 @@ export default function ProductOrderPage() {
             </div>
           ) : (
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2 lg:gap-4">
-              {products.map((product) => (
-                <Card
-                  key={product.id}
-                  isPressable
-                  className="group relative border-none bg-white/70 dark:bg-gray-800/70 backdrop-blur-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
-                  onPress={(e) => handleAddToCart(product, e as any)}
-                >
-                  <CardBody className="p-0 relative overflow-hidden h-[100px] sm:h-[120px] lg:h-[140px]">
-                    <div className="absolute top-1.5 right-1.5 z-20">
-                      <div
-                        className={clsx(
-                          "px-2 py-0.5 rounded-full text-[9px] lg:text-[10px] font-bold text-white shadow-lg backdrop-blur-md",
-                          product.stockQty > 10
-                            ? "bg-green-500/80"
-                            : product.stockQty > 0
-                              ? "bg-orange-500/80"
-                              : "bg-red-500/80",
-                        )}
-                      >
-                        {product.stockQty > 0
-                          ? `${product.stockQty}`
-                          : t("sale.outOfStock")}
+              {products.map((product) => {
+                const cartQty = cart
+                  .filter((i) => i.id === product.id && i.status !== "CANCEL")
+                  .reduce((sum, i) => sum + i.quantity, 0);
+
+                const remainingStock = Math.max(0, (product.stockQty || 0) - cartQty);
+                const isOutOfStock = remainingStock <= 0;
+
+                return (
+                  <Card
+                    key={product.id}
+                    isPressable
+                    className={clsx(
+                      "group relative border-none bg-white/70 dark:bg-gray-800/70 backdrop-blur-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300",
+                      isOutOfStock && "opacity-60 grayscale-[0.5]",
+                    )}
+                    isDisabled={isOutOfStock}
+                    onPress={(e) => handleAddToCart(product, e as any)}
+                  >
+                    <CardBody className="p-0 relative overflow-hidden h-[100px] sm:h-[120px] lg:h-[140px]">
+                      <div className="absolute top-1.5 right-1.5 z-20">
+                        <div
+                          className={clsx(
+                            "px-2 py-0.5 rounded-full text-[9px] lg:text-[10px] font-bold text-white shadow-lg backdrop-blur-md",
+                            remainingStock > 10
+                              ? "bg-green-500/80"
+                              : remainingStock > 0
+                                ? "bg-orange-500/80"
+                                : "bg-red-500/80",
+                          )}
+                        >
+                          {remainingStock > 0
+                            ? `${remainingStock}`
+                            : t("sale.outOfStock")}
+                        </div>
                       </div>
-                    </div>
-                    <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 flex items-center justify-center">
-                      <div className="bg-white/90 text-primary rounded-full p-2 lg:p-3 shadow-xl transform scale-50 group-hover:scale-100 transition-transform duration-300">
-                        <Plus size={24} strokeWidth={3} />
+                      <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 flex items-center justify-center">
+                        <div className="bg-white/90 text-primary rounded-full p-2 lg:p-3 shadow-xl transform scale-50 group-hover:scale-100 transition-transform duration-300">
+                          <Plus size={24} strokeWidth={3} />
+                        </div>
                       </div>
-                    </div>
-                    <Image
-                      alt={product.name}
-                      className="w-full object-cover h-full group-hover:scale-110 transition-transform duration-500"
-                      radius="none"
-                      shadow="none"
-                      src={getDisplayImageUrl(product.image)}
-                      width="100%"
-                    />
-                  </CardBody>
-                  <CardFooter className="flex flex-col items-start gap-0.5 p-2 bg-white/40 dark:bg-gray-900/40 backdrop-blur-sm">
-                    <b className="text-[11px] lg:text-[12px] font-bold text-default-700 w-full truncate group-hover:text-primary transition-colors">
-                      {product.name}
-                    </b>
-                    <p className="text-primary font-black text-[12px] lg:text-[14px] whitespace-nowrap">
-                      {formatNumber(product.price)}{" "}
-                      <span className="text-[8px] lg:text-[9px] font-medium text-default-400">
-                        {t("sale.kip")}
-                      </span>
-                    </p>
-                  </CardFooter>
-                </Card>
-              ))}
+                      <Image
+                        alt={product.name}
+                        className="w-full object-cover h-full group-hover:scale-110 transition-transform duration-500"
+                        radius="none"
+                        shadow="none"
+                        src={getDisplayImageUrl(product.image)}
+                        width="100%"
+                      />
+                    </CardBody>
+                    <CardFooter className="flex flex-col items-start gap-0.5 p-2 bg-white/40 dark:bg-gray-900/40 backdrop-blur-sm">
+                      <b className="text-[11px] lg:text-[12px] font-bold text-default-700 w-full truncate group-hover:text-primary transition-colors">
+                        {product.name}
+                      </b>
+                      <p className="text-primary font-black text-[12px] lg:text-[14px] whitespace-nowrap">
+                        {formatNumber(product.price)}{" "}
+                        <span className="text-[8px] lg:text-[9px] font-medium text-default-400">
+                          {t("sale.kip")}
+                        </span>
+                      </p>
+                    </CardFooter>
+                  </Card>
+                );
+              })}
             </div>
           )}
         </div>
       </div>
 
-      {/* Floating Action Button for Mobile Cart (only shows when minimized and cart not empty) */}
+      {/* Floating Action Button for Mobile Cart */}
       {cart.length > 0 && isMinimized && (
         <Button
           className="fixed bottom-6 right-6 lg:hidden z-50 rounded-full h-14 w-14 shadow-2xl animate-in zoom-in duration-300 min-w-0 p-0"

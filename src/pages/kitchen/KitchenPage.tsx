@@ -109,7 +109,7 @@ export default function KitchenPage() {
     return items;
   }, [cookingOrdersByTable]);
 
-  const handleServeItem = (tableId: string, item: CartItem) => {
+  const handleServeItem = async (tableId: string, item: CartItem) => {
     if (!isConnected) {
       toast.error(t("kitchen.offlineWarning"), {
         duration: 4000,
@@ -123,6 +123,9 @@ export default function KitchenPage() {
     setIsServing(uId);
 
     try {
+      // Simulate a small delay for better UX and to prevent rapid clicks
+      await new Promise((resolve) => setTimeout(resolve, 600));
+
       updateStatus(
         [`${item.id}-${item.status}-${item.note || ""}`],
         "SERVED",
@@ -131,10 +134,9 @@ export default function KitchenPage() {
       toast.success(t("kitchen.serveSuccess", { name: item.name }));
     } catch (error) {
       console.error("Failed to serve item:", error);
+      toast.error(t("common.error"));
     } finally {
-      // In practice, the item will be removed from the list,
-      // but we reset state for safety if it fails.
-      setTimeout(() => setIsServing(null), 500);
+      setIsServing(null);
     }
   };
 
@@ -437,14 +439,21 @@ export default function KitchenPage() {
                       <Button
                         className="font-bold text-success hover:bg-success hover:text-white transition-all w-full"
                         color="success"
+                        isDisabled={isServing !== null}
                         isLoading={
                           isServing ===
                           `${data.item.id}-${data.item.status}-${data.item.note || ""}-${data.tableId}`
                         }
                         size="sm"
-                        startContent={<CheckCircle2 size={16} />}
+                        startContent={isServing === null && <CheckCircle2 size={16} />}
                         variant="flat"
-                        onPress={() => handleServeItem(data.tableId, data.item)}
+                        onPress={async () => {
+                          try {
+                            const audio = new Audio("/assets/void/notification.mp3");
+                            audio.play().catch(() => {});
+                          } catch (e) {}
+                          handleServeItem(data.tableId, data.item);
+                        }}
                       >
                         {t("kitchen.serve")}
                       </Button>

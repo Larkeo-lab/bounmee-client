@@ -588,7 +588,8 @@
     "offlineKitchen": "⚠️ 当前离线！网络连接后点单将发送至后厨。",
     "offlineSync": "⚠️ 当前离线！网络连接后数据将同步。",
     "updateSuccess": "更新成功",
-    "updateError": "更新失败"
+    "updateError": "更新失败",
+    "kip": "基普"
   },
   "table": {
     "title": "店面桌预览",
