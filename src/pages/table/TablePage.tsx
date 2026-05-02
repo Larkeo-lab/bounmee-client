@@ -26,7 +26,6 @@ import {
   Clock,
   Users,
   Settings,
-  ShoppingCart,
   Utensils,
   Trash2, // Added Trash2
 } from "lucide-react";
@@ -618,43 +617,32 @@ export default function TablePage() {
 
       <div
         className={clsx(
-          "fixed inset-x-0 bottom-0 z-50 transition-all duration-500 ease-in-out transform sm:relative sm:inset-auto sm:translate-y-0 shrink-0",
+          "fixed inset-x-0 bottom-0 z-50 transition-all duration-500 ease-in-out transform sm:relative sm:inset-auto sm:translate-y-0 shrink-0 sm:flex",
           selectedTable
-            ? "translate-y-0 opacity-100 shadow-[0_-8px_30px_rgb(0,0,0,0.12)] sm:flex"
-            : "translate-y-full opacity-0 pointer-events-none sm:hidden",
+            ? "translate-y-0 opacity-100 shadow-[0_-8px_30px_rgb(0,0,0,0.12)] pointer-events-auto"
+            : "translate-y-full opacity-0 pointer-events-none sm:translate-y-0 sm:opacity-100 sm:pointer-events-auto",
         )}
       >
-        {selectedTable || lastSelectedTable ? (
-          <OrderRight
-            expandedNotes={expandedNotes}
-            filteredCart={filteredCart}
-            isSelectingMenu={isSelectingMenu}
-            selectedCartItems={selectedCartItems}
-            selectedTable={selectedTable || lastSelectedTable}
-            setIsSelectingMenu={setIsSelectingMenu}
-            setItemToRemove={setItemToRemove}
-            setSelectedCartItems={setSelectedCartItems}
-            setSelectedTable={setSelectedTable}
-            setStatusFilter={setStatusFilter}
-            statusFilter={statusFilter}
-            statusTotals={statusTotals}
-            toggleNote={toggleNote}
-            updateTablePending={updateTable.isPending}
-            onCloseTableOpen={onCloseTableOpen}
-            onPaymentOpen={onOpen}
-            onQrOpen={onQrOpen}
-            onRemoveItemOpen={onRemoveItemOpen}
-          />
-        ) : (
-          <div className="hidden sm:flex w-full sm:w-[320px] md:w-[350px] lg:w-[400px] h-full flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 border-l border-divider">
-            <div className="flex flex-col items-center gap-4 opacity-40">
-              <ShoppingCart size={80} strokeWidth={1} />
-              <p className="font-bold text-lg">
-                {t("table.cart.selectPrompt")}
-              </p>
-            </div>
-          </div>
-        )}
+        <OrderRight
+          expandedNotes={expandedNotes}
+          filteredCart={filteredCart}
+          isSelectingMenu={isSelectingMenu}
+          selectedCartItems={selectedCartItems}
+          selectedTable={selectedTable || lastSelectedTable}
+          setIsSelectingMenu={setIsSelectingMenu}
+          setItemToRemove={setItemToRemove}
+          setSelectedCartItems={setSelectedCartItems}
+          setSelectedTable={setSelectedTable}
+          setStatusFilter={setStatusFilter}
+          statusFilter={statusFilter}
+          statusTotals={statusTotals}
+          toggleNote={toggleNote}
+          updateTablePending={updateTable.isPending}
+          onCloseTableOpen={onCloseTableOpen}
+          onPaymentOpen={onOpen}
+          onQrOpen={onQrOpen}
+          onRemoveItemOpen={onRemoveItemOpen}
+        />
       </div>
 
       {/* Modals */}

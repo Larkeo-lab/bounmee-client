@@ -238,7 +238,9 @@
       "title": "Category Management",
       "subtitle": "Manage all product categories in your store",
       "addTitle": "Add New Category",
-      "editTitle": "Edit Category"
+      "editTitle": "Edit Category",
+      "nameLabel": "Category Name",
+      "namePlaceholder": "Enter category name..."
     },
     "bank": {
       "title": "Bank Management",
@@ -584,7 +586,8 @@
     "offlineSync": "⚠️ Currently Offline! Data will sync once back online.",
     "updateSuccess": "Update successful",
     "updateError": "Update failed",
-    "kip": "Kip"
+    "kip": "Kip",
+    "barcodeNotFound": "Product not found for this barcode"
   },
   "table": {
     "title": "Shop Floor",

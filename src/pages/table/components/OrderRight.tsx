@@ -108,13 +108,17 @@ export const OrderRight: React.FC<OrderRightProps> = ({
         <div className="flex flex-col flex-grow">
           <div className="flex items-center gap-2 font-bold text-base md:text-lg">
             <ShoppingCart className="text-primary" size={18} />
-            <span>{t("table.cart.title", { name: selectedTable?.name })}</span>
+            <span>
+              {selectedTable
+                ? t("table.cart.title", { name: selectedTable.name })
+                : t("table.cart.selectPrompt")}
+            </span>
           </div>
-          <div className="flex items-center gap-4 ml-8 mt-1">
-            <p className="text-xs text-default-500">
-              {t("table.seats", { count: selectedTable?.capacity })}
-            </p>
-          </div>
+            {selectedTable && (
+              <p className="text-xs text-default-500">
+                {t("table.seats", { count: selectedTable.capacity })}
+              </p>
+            )}
         </div>
         <div className="flex items-center gap-1">
           {/* Mobile Minimize instead of Close Table when Menu is open */}
@@ -128,15 +132,17 @@ export const OrderRight: React.FC<OrderRightProps> = ({
           >
             <ChevronDown size={20} />
           </Button>
-          <Button
-            isIconOnly
-            color="danger"
-            size="sm"
-            variant="light"
-            onClick={() => setSelectedTable(null)}
-          >
-            ✕
-          </Button>
+          {selectedTable && (
+            <Button
+              isIconOnly
+              color="danger"
+              size="sm"
+              variant="light"
+              onClick={() => setSelectedTable(null)}
+            >
+              ✕
+            </Button>
+          )}
         </div>
       </div>
 
@@ -376,8 +382,8 @@ export const OrderRight: React.FC<OrderRightProps> = ({
         )}
       </ScrollShadow>
 
-      <div className="px-2 py-1.5 sm:px-3 sm:py-2 border-t border-divider bg-default-50/50 flex-shrink-0 z-40">
-        <div className="grid grid-cols-4 xl:grid-cols-4 gap-1 md:gap-2 items-stretch">
+      <div className="px-2 py-1 sm:px-3 sm:py-1.5 border-t border-divider bg-default-50/50 flex-shrink-0 z-40">
+        <div className="grid grid-cols-4 xl:grid-cols-4 gap-1 md:gap-1.5 items-stretch">
           <Button
             className={`h-8 md:h-9 font-bold text-[9px] md:text-[11px] px-1 ${isSelectingMenu ? "bg-danger/10 text-danger" : "bg-primary/10"}`}
             color={isSelectingMenu ? "danger" : "primary"}
@@ -393,6 +399,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
             className="h-8 md:h-9 font-bold text-[9px] md:text-[11px] text-white shadow-sm px-1"
             color="warning"
             isDisabled={
+              !selectedTable ||
               selectedCartItems.length === 0 ||
               isSending ||
               selectedCartItems.some((uId) => {
@@ -442,6 +449,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
             className="h-8 md:h-9 font-bold text-[9px] md:text-[11px] text-white shadow-sm px-1"
             color="primary"
             isDisabled={
+              !selectedTable ||
               selectedCartItems.length === 0 ||
               selectedCartItems.some((uId) => {
                 const item = cart.find(
@@ -475,6 +483,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
             color="secondary"
             startContent={<QrCode size={12} />}
             variant="solid"
+            isDisabled={!selectedTable}
             onClick={onQrOpen}
           >
             QR
@@ -482,46 +491,49 @@ export const OrderRight: React.FC<OrderRightProps> = ({
         </div>
       </div>
 
-      <div className="px-2 py-2 md:px-3 md:py-2.5 border-t border-divider bg-white mt-auto flex-shrink-0">
+      <div className="p-2 md:p-2.5 border-t border-divider bg-white mt-auto flex-shrink-0">
         <div className="flex flex-col gap-1 mb-2">
-          <div className="flex justify-between items-center text-[10px] lg:text-xs text-warning-600 font-bold">
-            <span>{t("table.cart.pending")}:</span>
-            <span>
-              {formatNumber(statusTotals.PENDING)} {t("table.cart.kip")}
-            </span>
+          <div className="grid grid-cols-3 gap-1 py-1 border-b border-divider/50 border-dashed">
+            <div className="flex flex-col items-center">
+              <span className="text-[9px] text-warning-600 font-bold leading-none mb-0.5">{t("table.cart.pending")}</span>
+              <span className="text-[10px] font-black text-warning-700">
+                {formatNumber(statusTotals.PENDING)} {t("table.cart.kip")}
+              </span>
+            </div>
+            <div className="flex flex-col items-center border-x border-divider/50">
+              <span className="text-[9px] text-primary-600 font-bold leading-none mb-0.5">{t("table.cart.cooking")}</span>
+              <span className="text-[10px] font-black text-primary-700">
+                {formatNumber(statusTotals.COOKING)} {t("table.cart.kip")}
+              </span>
+            </div>
+            <div className="flex flex-col items-center">
+              <span className="text-[9px] text-success-600 font-bold leading-none mb-0.5">{t("table.cart.served")}</span>
+              <span className="text-[10px] font-black text-success-700">
+                {formatNumber(statusTotals.SERVED)} {t("table.cart.kip")}
+              </span>
+            </div>
           </div>
-          <div className="flex justify-between items-center text-[10px] lg:text-xs text-primary-600 font-bold">
-            <span>{t("table.cart.cooking")}:</span>
-            <span>
-              {formatNumber(statusTotals.COOKING)} {t("table.cart.kip")}
-            </span>
-          </div>
-          <div className="flex justify-between items-center text-[10px] md:text-xs text-success-600 font-bold">
-            <span>{t("table.cart.served")}:</span>
-            <span>
-              {formatNumber(statusTotals.SERVED)} {t("table.cart.kip")}
-            </span>
-          </div>
-          <div className="flex justify-between items-center font-black pt-1 border-t border-divider mt-1">
-            <span className="text-xs md:text-sm text-default-700">
+          <div className="flex justify-between items-center font-black pt-1">
+            <span className="text-[10px] text-default-600">
               {t("table.cart.total")}:
             </span>
             <div className="text-right">
-              <span className="text-primary text-base md:text-lg">
+              <span className="text-primary text-base lg:text-lg">
                 {formatNumber(subtotal)} {t("table.cart.kip")}
               </span>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 md:gap-3">
+        <div className="grid grid-cols-2 gap-2">
           <Button
-            className="h-9 md:h-11 font-bold text-xs md:text-sm"
+            className="h-9 md:h-10 font-bold text-xs"
             color="danger"
             isLoading={updateTablePending}
             startContent={<Trash2 size={14} />}
             variant="flat"
             onClick={() => {
+              if (!selectedTable) return;
               if (cart.length > 0) {
                 toast.error(t("table.cart.closeTableError"), {
                   style: {
@@ -538,9 +550,10 @@ export const OrderRight: React.FC<OrderRightProps> = ({
             {t("table.cart.closeTable")}
           </Button>
           <Button
-            className="h-9 md:h-11 font-bold text-xs md:text-sm shadow-md shadow-primary/20"
+            className="h-9 md:h-10 font-black text-sm shadow-md shadow-primary/20"
             color="primary"
             isDisabled={
+              !selectedTable ||
               cart.length === 0 ||
               !cart.every(
                 (item) =>
@@ -548,7 +561,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                   item.status?.toUpperCase() === "CANCEL",
               )
             }
-            startContent={<Banknote size={14} />}
+            startContent={<Banknote size={16} />}
             onPress={onPaymentOpen}
           >
             {t("table.cart.next")}

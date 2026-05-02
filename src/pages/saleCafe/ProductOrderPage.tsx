@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import clsx from "clsx";
 import {
@@ -132,6 +132,7 @@ export default function ProductOrderPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(searchQuery), 500);
@@ -177,16 +178,30 @@ export default function ProductOrderPage() {
   const products = productResponse?.data || [];
 
   const handleBarcodeSearch = async (barcode: string) => {
-    if (!barcode || !user?.user?.storeId) return;
+    if (!barcode.trim() || !user?.user?.storeId) return;
     try {
-      const product = await getProductByBarcode(barcode, user.user.storeId);
+      const product = await getProductByBarcode(barcode.trim(), user.user.storeId);
 
       if (product) {
         addToCart(product);
         setSearchQuery("");
+        setIsMinimized(false); // เปิด order panel ให้เห็นรายการที่เพิ่ม
+        toast.success(t("sale.barcodeAdded", { name: product.name }), {
+          duration: 1200,
+          position: "top-center",
+          style: { fontWeight: "bold" },
+        });
+        // Auto focus กลับที่ input เพื่อยิง barcode ต่อได้เลย
+        setTimeout(() => searchInputRef.current?.focus(), 100);
+      } else {
+        toast.error(t("sale.barcodeNotFound") || "ไม่พົບສິນຄ້າ", {
+          duration: 2000,
+        });
+        setDebouncedSearch(barcode.trim());
       }
     } catch (error) {
-      setDebouncedSearch(barcode);
+      // ถ้า barcode ไม่เจอ → ใช้เป็นคำค้นหาแทน
+      setDebouncedSearch(barcode.trim());
     }
   };
 
@@ -233,6 +248,7 @@ export default function ProductOrderPage() {
             </div>
             <div className="flex-grow">
               <Input
+                ref={searchInputRef}
                 isClearable
                 className="w-full lg:max-w-[400px]"
                 endContent={<Barcode className="text-default-400" size={18} />}
@@ -242,7 +258,10 @@ export default function ProductOrderPage() {
                 value={searchQuery}
                 variant="bordered"
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") handleBarcodeSearch(searchQuery);
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleBarcodeSearch(searchQuery);
+                  }
                 }}
                 onValueChange={setSearchQuery}
               />

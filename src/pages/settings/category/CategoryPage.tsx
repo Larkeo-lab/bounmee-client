@@ -397,10 +397,10 @@ export default function CategoryPage() {
       {/* Rejected Status Modal */}
       <ConfirmModal
         color="danger"
-        confirmText="ຕົກລົງ"
+        confirmText={t("settings.common.ok")}
         isOpen={isRejectedOpen}
-        message="ການສະໝັກຂອງທ່ານຖືກປະຕิເສດ"
-        title="ບໍ່ສາມາດສ້າງໄດ້"
+        message={t("settings.common.rejectedMsg")}
+        title={t("settings.common.rejectedTitle")}
         onConfirm={onRejectedClose}
         onOpenChange={onRejectedOpenChange}
       />

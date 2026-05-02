@@ -112,6 +112,7 @@ export default function Register() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [selectedProvince, setSelectedProvince] = React.useState<string>("");
   const [email, setEmail] = React.useState<string>("");
+  const [fieldErrors, setFieldErrors] = React.useState<Record<string, string>>({});
   const [firebaseData, /* setFirebaseData */] = React.useState<{
     uid: string;
     email: string;
@@ -230,6 +231,11 @@ export default function Register() {
       
       // Auto Login
       if (authData) {
+        // เคลียร์ cart เก่าก่อน auto login (ป้องกัน order จากร้านเก่าค้าง)
+        try {
+          const { useCartStore } = await import("@/store/useCartStore");
+          useCartStore.getState().resetCart();
+        } catch (e) {}
         updateAuthState(authData);
         
         // Check if questionnaire is completed
@@ -248,12 +254,35 @@ export default function Register() {
           console.error("Error checking questionnaire status:", error);
         }
 
-        navigate("/tables");
+        // Navigate ตาม storeType
+        const storeType = authData?.user?.store?.type;
+        if (storeType === "CAFE") {
+          navigate("/cafe-order");
+        } else if (storeType === "GENERAL_STORE") {
+          navigate("/product-order");
+        } else {
+          navigate("/tables");
+        }
       } else {
         navigate("/");
       }
     } catch (err: any) {
       trackFormSubmit("pos-register", false);
+
+      // Handle field-specific duplicate errors
+      const apiMessage = err?.response?.data?.message;
+      const duplicatedField = err?.response?.data?.errors?.duplicatedField;
+
+      if (apiMessage === "USER_ALREADY_EXISTS" && duplicatedField) {
+        const fieldMap: Record<string, string> = {
+          Email: "email",
+          Username: "username",
+          Phone: "phone",
+        };
+        const fieldKey = fieldMap[duplicatedField] || duplicatedField.toLowerCase();
+        setFieldErrors({ [fieldKey]: t("auth.duplicateField", { field: duplicatedField }) || `${duplicatedField} ນີ້ຖືກລົງທະບຽນແລ້ວ` });
+      }
+
       showErrorToast(err, "", "danger");
     } finally {
       setIsLoading(false);
@@ -330,19 +359,6 @@ export default function Register() {
             <p className="text-white/70 text-xs">
               {step === 1 ? t("auth.step1") : t("auth.step2")}
             </p>
-          </div>
-
-          <div className="pt-4 grid grid-cols-2 gap-4 w-full max-w-md">
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20">
-              <p className="text-2xl font-bold italic">PRO</p>
-              <p className="text-xs opacity-70">
-                {t("auth.enterpriseEdition")}
-              </p>
-            </div>
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20">
-              <p className="text-2xl font-bold italic">FAST</p>
-              <p className="text-xs opacity-70">{t("auth.oneStepSetup")}</p>
-            </div>
           </div>
         </div>
 
@@ -644,8 +660,16 @@ export default function Register() {
                         type="email"
                         variant="bordered"
                         value={email}
-                        onValueChange={setEmail}
+                        onValueChange={(val) => {
+                          setEmail(val);
+                          // Clear field error when user starts typing
+                          if (fieldErrors.email) {
+                            setFieldErrors((prev) => ({ ...prev, email: "" }));
+                          }
+                        }}
                         isReadOnly={!!firebaseData}
+                        isInvalid={!!fieldErrors.email}
+                        errorMessage={fieldErrors.email}
                       />
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

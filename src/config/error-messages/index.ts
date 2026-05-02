@@ -70,6 +70,21 @@ export const DEFAULT_ERROR_MESSAGES = {
     message: "ຊື່ຜູ້ໃຊ້ ແລະ ລະຫັດຜ່ານບໍ່ຖືກຕ້ອງ",
     detail: "ກະລຸນາກວດສອບຊື່ຜູ້ໃຊ້ ແລະ ລະຫັດຜ່ານຂອງທ່ານແລ້ວລອງໃໝ່",
   },
+  USER_ALREADY_EXISTS: {
+    code: "USER_ALREADY_EXISTS",
+    message: "ຜູ້ໃຊ້ນີ້ມີຢູ່ໃນລະບົບແລ້ວ",
+    detail: "ອີເມວ ຫຼື ຊື່ຜູ້ໃຊ້ນີ້ຖືກລົງທະບຽນແລ້ວ ກະລຸນາໃຊ້ອີເມວອື່ນ",
+  },
+};
+
+// Map for duplicatedField values to Lao labels
+const FIELD_LABELS: Record<string, string> = {
+  Email: "ອີເມວ",
+  email: "ອີເມວ",
+  Username: "ຊື່ຜູ້ໃຊ້",
+  username: "ຊື່ຜູ້ໃຊ້",
+  Phone: "ເບີໂທ",
+  phone: "ເບີໂທ",
 };
 
 export function showErrorToast(
@@ -95,12 +110,22 @@ export function showErrorToast(
   const config =
     DEFAULT_ERROR_MESSAGES[errorCode as keyof typeof DEFAULT_ERROR_MESSAGES];
 
-  toastGlobal({
-    title: "ເກີດຂໍ້ຜິດພາດ!",
-    description:
+  // Handle USER_ALREADY_EXISTS with duplicatedField info
+  let description = "";
+  if (errorCode === "USER_ALREADY_EXISTS" && error?.response?.data?.errors?.duplicatedField) {
+    const field = error.response.data.errors.duplicatedField;
+    const fieldLabel = FIELD_LABELS[field] || field;
+    description = `${fieldLabel} ນີ້ຖືກລົງທະບຽນແລ້ວ ກະລຸນາໃຊ້${fieldLabel}ອື່ນ`;
+  } else {
+    description =
       config?.message ||
       fallbackMessage ||
-      (typeof error === "string" ? error : "ກະລຸນາລອງໃໝ່ພາຍຫຼັງ"),
+      (typeof error === "string" ? error : "ກະລຸນາລອງໃໝ່ພາຍຫຼັງ");
+  }
+
+  toastGlobal({
+    title: "ເກີດຂໍ້ຜິດພາດ!",
+    description,
     color: color || "danger",
   });
 }

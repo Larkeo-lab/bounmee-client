@@ -433,8 +433,8 @@ export const OrderRight: React.FC<OrderRightProps> = ({
           )}
         </ScrollShadow>
 
-        <div className="px-3 py-2 border-t border-divider bg-default-50/50 flex-shrink-0 z-40">
-          <div className="grid grid-cols-2 gap-2 mb-2">
+        <div className="px-3 py-1 border-t border-divider bg-default-50/50 flex-shrink-0 z-40">
+          <div className="grid grid-cols-2 gap-1.5 mb-1">
             <Button
               className="h-8 md:h-9 font-bold text-[9px] md:text-[11px] text-white shadow-sm px-1"
               color="warning"
@@ -517,48 +517,52 @@ export const OrderRight: React.FC<OrderRightProps> = ({
           </div>
         </div>
 
-        <div className="p-4 border-t border-divider bg-default-50/80 backdrop-blur-md">
-          <div className="flex flex-col gap-1 mb-3">
-            <div className="flex justify-between items-center text-xs text-warning-600 font-bold">
-              <span>{t("sale.totalPending")}</span>
-              <span>
-                {formatNumber(statusTotals.PENDING)} {t("sale.kip")}
-              </span>
+        <div className="p-2 md:p-2.5 border-t border-divider bg-default-50/80 backdrop-blur-md">
+          <div className="flex flex-col gap-1 mb-2">
+            <div className="grid grid-cols-3 gap-1 py-1 border-b border-divider/50 border-dashed">
+              <div className="flex flex-col items-center">
+                <span className="text-[9px] text-warning-600 font-bold leading-none mb-0.5">{t("sale.totalPending")}</span>
+                <span className="text-[10px] font-black text-warning-700">
+                  {formatNumber(statusTotals.PENDING)} {t("sale.kip")}
+                </span>
+              </div>
+              <div className="flex flex-col items-center border-x border-divider/50">
+                <span className="text-[9px] text-primary-600 font-bold leading-none mb-0.5">{t("sale.totalCooking")}</span>
+                <span className="text-[10px] font-black text-primary-700">
+                  {formatNumber(statusTotals.COOKING)} {t("sale.kip")}
+                </span>
+              </div>
+              <div className="flex flex-col items-center">
+                <span className="text-[9px] text-success-600 font-bold leading-none mb-0.5">{t("sale.totalServed")}</span>
+                <span className="text-[10px] font-black text-success-700">
+                  {formatNumber(statusTotals.SERVED)} {t("sale.kip")}
+                </span>
+              </div>
             </div>
-            <div className="flex justify-between items-center text-xs text-primary-600 font-bold">
-              <span>{t("sale.totalCooking")}</span>
-              <span>
-                {formatNumber(statusTotals.COOKING)} {t("sale.kip")}
-              </span>
-            </div>
-            <div className="flex justify-between items-center text-xs text-success-600 font-bold">
-              <span>{t("sale.totalServed")}</span>
-              <span>
-                {formatNumber(statusTotals.SERVED)} {t("sale.kip")}
-              </span>
-            </div>
-            <div className="flex justify-between items-center font-black pt-2 border-t border-divider mt-1">
-              <span className="text-default-700">{t("sale.totalSummary")}</span>
-              <span className="text-primary text-xl lg:text-2xl">
-                {formatNumber(subtotal)}{" "}
-                <span className="text-xs font-normal">{t("sale.kip")}</span>
-              </span>
+            <div className="flex justify-between items-center font-black pt-1">
+              <span className="text-[10px] text-default-600">{t("sale.totalSummary")}</span>
+              <div className="text-right">
+                <span className="text-primary text-base lg:text-lg">
+                  {formatNumber(subtotal)}{" "}
+                  <span className="text-[10px] font-normal">{t("sale.kip")}</span>
+                </span>
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2">
             <Button
-              className="h-12 font-bold text-base"
+              className="h-9 md:h-10 font-bold text-xs"
               color="danger"
               isDisabled={isEmpty}
-              startContent={<Trash2 size={18} />}
+              startContent={<Trash2 size={14} />}
               variant="flat"
               onClick={onClearCartOpen}
             >
               {t("sale.cancel")}
             </Button>
             <Button
-              className="h-12 font-black text-lg shadow-lg shadow-primary/20"
+              className="h-9 md:h-10 font-black text-sm shadow-md shadow-primary/20"
               color="primary"
               isDisabled={
                 isEmpty ||
@@ -566,7 +570,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                   (i) => i.status === "SERVED" || i.status === "CANCEL",
                 )
               }
-              startContent={<Banknote size={20} />}
+              startContent={<Banknote size={16} />}
               onPress={onPaymentOpen}
             >
               {t("sale.next")}

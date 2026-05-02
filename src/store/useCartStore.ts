@@ -51,6 +51,7 @@ interface CartActions {
   dismissTable: (tableId: string) => void;
   setConnectivity: (isConnected: boolean, rtt: number | null) => void;
   mergeCarts: (local: CartItem[], incoming: any[]) => CartItem[];
+  resetCart: () => void;
 }
 
 export const useCartStore = create<CartState & CartActions>()(
@@ -395,6 +396,14 @@ export const useCartStore = create<CartState & CartActions>()(
           });
 
         set({ dismissedCarts: { ...dismissedCarts, [tableId]: snapshot } });
+      },
+
+      resetCart: () => {
+        set({
+          carts: {},
+          activeTableId: null,
+          dismissedCarts: {},
+        });
       },
     }),
     {

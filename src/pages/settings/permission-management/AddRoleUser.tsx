@@ -203,6 +203,11 @@ export default function AddRoleUser() {
           ].includes(p.id),
       );
     }
+    if (storeType === "RESTAURANT") {
+      return allPermissions.filter(
+        (p) => !["pos"].includes(p.id),
+      );
+    }
 
     return allPermissions;
   }, [storeType]);
