@@ -112,8 +112,10 @@ export default function Register() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [selectedProvince, setSelectedProvince] = React.useState<string>("");
   const [email, setEmail] = React.useState<string>("");
-  const [fieldErrors, setFieldErrors] = React.useState<Record<string, string>>({});
-  const [firebaseData, /* setFirebaseData */] = React.useState<{
+  const [fieldErrors, setFieldErrors] = React.useState<Record<string, string>>(
+    {},
+  );
+  const [firebaseData /* setFirebaseData */] = React.useState<{
     uid: string;
     email: string;
     photoURL?: string;
@@ -159,18 +161,17 @@ export default function Register() {
     }
   };
 
-
   // Social Login Logic (Pre-fill version for Registration)
   // const handleSocialLogin = async (provider: any) => {
   //   setIsLoading(true);
   //   try {
   //     const result = await signInWithPopup(auth, provider);
   //     const user = result.user;
-      
+
   //     // Pre-fill data from Firebase
   //     // Try to get email from user object or providerData
   //     const fbEmail = user.email || user.providerData?.[0]?.email || "";
-      
+
   //     setFirebaseData({
   //       uid: user.uid,
   //       email: fbEmail,
@@ -179,9 +180,9 @@ export default function Register() {
   //     setEmail(fbEmail);
 
   //     toast.success(t("auth.socialLinkSuccess") || "Linked with social account");
-      
+
   //     // If we are at step 1 and haven't selected a type, we stay at step 1 but email is ready
-  //     // Usually users pick type first, but if they click social first, we can jump to step 2 
+  //     // Usually users pick type first, but if they click social first, we can jump to step 2
   //     // if they have selected a type.
   //     if (selectedType) {
   //       setStep(2);
@@ -228,7 +229,7 @@ export default function Register() {
 
       trackFormSubmit("pos-register", true);
       toast.success(t("auth.registrationSuccess"));
-      
+
       // Auto Login
       if (authData) {
         // เคลียร์ cart เก่าก่อน auto login (ป้องกัน order จากร้านเก่าค้าง)
@@ -237,12 +238,12 @@ export default function Register() {
           useCartStore.getState().resetCart();
         } catch (e) {}
         updateAuthState(authData);
-        
+
         // Check if questionnaire is completed
         try {
           if (authData?.user?.storeId) {
             const completionStatus = await checkQuestionnaireCompletion({
-              storeId: authData.user.storeId
+              storeId: authData.user.storeId,
             });
 
             if (!completionStatus.isCompleted) {
@@ -254,15 +255,57 @@ export default function Register() {
           console.error("Error checking questionnaire status:", error);
         }
 
-        // Navigate ตาม storeType
+        // Navigate ตาม storeType และ Permission
         const storeType = authData?.user?.store?.type;
-        if (storeType === "CAFE") {
-          navigate("/cafe-order");
-        } else if (storeType === "GENERAL_STORE") {
-          navigate("/product-order");
+        const userRole = authData?.user?.role;
+        const permissions = authData?.user?.employee?.permission?.permissions;
+        const isAdmin =
+          userRole === "SUPER_ADMIN" || userRole === "STORE_ADMIN";
+
+        const canAccess = (key: string) => {
+          if (permissions) {
+            return permissions[key]?.includes("read");
+          }
+          return isAdmin; // Fallback for admins
+        };
+
+        let targetPath = "/settings/profile";
+
+        if (storeType === "GENERAL_STORE") {
+          if (canAccess("pos")) targetPath = "/saleGeneral";
+          else if (canAccess("order")) targetPath = "/order";
+          else if (canAccess("dashboard")) targetPath = "/dashboard";
+        } else if (storeType === "CAFE") {
+          if (canAccess("cafe")) targetPath = "/saleCafe";
+          else if (canAccess("order")) targetPath = "/order";
+          else if (canAccess("dashboard")) targetPath = "/dashboard";
         } else {
-          navigate("/tables");
+          // RESTAURANT or others
+          if (canAccess("table")) targetPath = "/table";
+          else if (canAccess("cafe")) targetPath = "/saleCafe";
+          else if (canAccess("order")) targetPath = "/order";
+          else if (canAccess("dashboard")) targetPath = "/dashboard";
         }
+
+        // Check if questionnaire is completed (Only for Admins/Store Owners)
+        if (isAdmin) {
+          try {
+            if (authData?.user?.storeId) {
+              const completionStatus = await checkQuestionnaireCompletion({
+                storeId: authData.user.storeId,
+              });
+
+              if (!completionStatus.isCompleted) {
+                navigate("/questionnaire");
+                return;
+              }
+            }
+          } catch (error) {
+            console.error("Error checking questionnaire status:", error);
+          }
+        }
+
+        navigate(targetPath);
       } else {
         navigate("/");
       }
@@ -279,8 +322,13 @@ export default function Register() {
           Username: "username",
           Phone: "phone",
         };
-        const fieldKey = fieldMap[duplicatedField] || duplicatedField.toLowerCase();
-        setFieldErrors({ [fieldKey]: t("auth.duplicateField", { field: duplicatedField }) || `${duplicatedField} ນີ້ຖືກລົງທະບຽນແລ້ວ` });
+        const fieldKey =
+          fieldMap[duplicatedField] || duplicatedField.toLowerCase();
+        setFieldErrors({
+          [fieldKey]:
+            t("auth.duplicateField", { field: duplicatedField }) ||
+            `${duplicatedField} ນີ້ຖືກລົງທະບຽນແລ້ວ`,
+        });
       }
 
       showErrorToast(err, "", "danger");
@@ -310,14 +358,14 @@ export default function Register() {
         <div className="relative z-10 flex flex-col items-center text-center text-white space-y-6">
           <div className="p-4 bg-white rounded-[2.5rem] shadow-2xl animate-float">
             <Image
-              alt="Dee POS Logo"
+              alt="Eezy POS Logo"
               className="w-32 lg:w-48"
               src={oneDoorLogo}
             />
           </div>
           <div className="space-y-4">
             <h1 className="text-4xl lg:text-7xl font-black tracking-tight drop-shadow-lg uppercase italic">
-              Dee POS
+              Eezy POS
             </h1>
             <p className="text-xl lg:text-2xl font-light opacity-90 max-w-lg mx-auto">
               {t("auth.welcomeMessage")}
@@ -750,7 +798,9 @@ export default function Register() {
 
                   <div className="flex items-center gap-4 my-6">
                     <Divider className="flex-1" />
-                    <span className="text-xs text-gray-400 uppercase tracking-widest">{t("auth.orContinueWith")}</span>
+                    <span className="text-xs text-gray-400 uppercase tracking-widest">
+                      {t("auth.orContinueWith")}
+                    </span>
                     <Divider className="flex-1" />
                   </div>
 
@@ -779,7 +829,7 @@ export default function Register() {
               <footer className="text-center space-y-4 pt-2">
                 <Divider className="my-4" />
                 <p className="text-[10px] text-gray-400 font-mono uppercase tracking-[0.2em]">
-                  Dee POS System &bull; Version {version.version}
+                  Eezy POS System &bull; Version {version.version}
                 </p>
               </footer>
             </>

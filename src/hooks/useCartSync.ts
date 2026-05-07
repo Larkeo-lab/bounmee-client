@@ -69,7 +69,7 @@ export const useCartSync = () => {
 
               // 🔊 Sound Logic: Context-Aware Notifications
               const isKitchenPage = window.location.pathname.includes("/kitchen");
-              const isTablePage = window.location.pathname.includes("/tables");
+              const isTablePage = window.location.pathname.includes("/table");
 
               const hasNewCooking = data.cart?.some(
                 (newItem) =>

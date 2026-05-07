@@ -465,7 +465,7 @@ export default function BillModal({
                 </div>
 
                 <div className="p-6 bg-primary/5 text-primary font-black text-center text-sm border-t border-dashed border-divider italic">
-                  <p>Dee POS</p>⭐ ຂໍຂອບໃຈທີ່ໃຊ້ບໍລິການ! ກະລຸນາກັບມາໃໝ່ເດີ້ ⭐
+                  <p>Eezy POS</p>⭐ ຂໍຂອບໃຈທີ່ໃຊ້ບໍລິການ! ກະລຸນາກັບມາໃໝ່ເດີ້ ⭐
                 </div>
               </CardBody>
             </Card>

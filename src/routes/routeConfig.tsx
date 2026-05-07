@@ -67,13 +67,13 @@ export const appRoutes: AppRoute[] = [
     isPrivate: false,
   },
   {
-    path: "/product-order",
+    path: "/saleGeneral",
     element: <ProductOrderPage />,
     isPrivate: true,
     requiresLayout: true,
   },
   {
-    path: "/cafe-order",
+    path: "/saleCafe",
     element: <CafeOrderPage />,
     isPrivate: true,
     requiresLayout: true,
@@ -174,7 +174,7 @@ export const appRoutes: AppRoute[] = [
     requiresLayout: true,
   },
   {
-    path: "/tables",
+    path: "/table",
     element: <TablePage />,
     isPrivate: true,
     requiresLayout: true,

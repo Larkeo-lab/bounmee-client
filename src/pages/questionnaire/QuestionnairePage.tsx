@@ -95,7 +95,16 @@ const QuestionnairePage: React.FC = () => {
         {
           loading: t("questionnaire.submitting"),
           success: () => {
-            navigate("/tables");
+            const storeType = user?.user?.store?.type;
+
+            if (storeType === "GENERAL_STORE") {
+              navigate("/saleGeneral");
+            } else if (storeType === "CAFE") {
+              navigate("/saleCafe");
+            } else {
+              navigate("/table");
+            }
+
             return t("questionnaire.submitSuccess");
           },
           error: t("questionnaire.submitError"),

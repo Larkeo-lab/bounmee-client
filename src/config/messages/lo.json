@@ -96,11 +96,11 @@
   },
   "pageNotFound": {
     "error": "ຜິດພາດ",
-    "description": "Dee POS - ການບໍລິການຜ່ານປະຕູດຽວ",
+    "description": "Eezy POS - Page Not Found",
     "goBack": "ກັບຄືນ"
   },
   "sidebar": {
-    "title": "Dee POS",
+    "title": "Eezy POS",
     "groups": {
       "overview": "ພາບລວມ",
       "management": "ການຈັດການ",

@@ -97,11 +97,11 @@
   },
   "pageNotFound": {
     "error": "错误",
-    "description": "Dee POS - 页面未找到",
+    "description": "Eezy POS - 页面未找到",
     "goBack": "返回"
   },
   "sidebar": {
-    "title": "Dee POS",
+    "title": "Eezy POS",
     "groups": {
       "overview": "概览",
       "management": "管理",

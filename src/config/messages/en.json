@@ -96,11 +96,11 @@
   },
   "pageNotFound": {
     "error": "ERROR",
-    "description": "Dee POS - Dee POS ",
+    "description": "Eezy POS - Page Not Found",
     "goBack": "Go Back"
   },
   "sidebar": {
-    "title": "Dee POS",
+    "title": "Eezy POS",
     "groups": {
       "system": "System",
       "menu": "Menu",

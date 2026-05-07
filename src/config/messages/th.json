@@ -96,11 +96,11 @@
   },
   "pageNotFound": {
     "error": "ข้อผิดพลาด",
-    "description": "Dee POS - บริการผ่านประตูเดียว",
+    "description": "Eezy POS - Page Not Found",
     "goBack": "กลับเดี๋ยวนี้"
   },
   "sidebar": {
-    "title": "Dee POS",
+    "title": "Eezy POS",
     "groups": {
       "overview": "ภาพรวม",
       "management": "การจัดการ",

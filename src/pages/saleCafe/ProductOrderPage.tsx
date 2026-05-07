@@ -180,7 +180,10 @@ export default function ProductOrderPage() {
   const handleBarcodeSearch = async (barcode: string) => {
     if (!barcode.trim() || !user?.user?.storeId) return;
     try {
-      const product = await getProductByBarcode(barcode.trim(), user.user.storeId);
+      const product = await getProductByBarcode(
+        barcode.trim(),
+        user.user.storeId,
+      );
 
       if (product) {
         addToCart(product);
@@ -267,7 +270,7 @@ export default function ProductOrderPage() {
               />
             </div>
             <div className="font-black text-lg text-primary lg:block hidden">
-              Dee POS
+              Eezy POS
             </div>
             <Badge
               className="lg:hidden"
@@ -337,7 +340,10 @@ export default function ProductOrderPage() {
                   .filter((i) => i.id === product.id && i.status !== "CANCEL")
                   .reduce((sum, i) => sum + i.quantity, 0);
 
-                const remainingStock = Math.max(0, (product.stockQty || 0) - cartQty);
+                const remainingStock = Math.max(
+                  0,
+                  (product.stockQty || 0) - cartQty,
+                );
                 const isOutOfStock = remainingStock <= 0;
 
                 return (
