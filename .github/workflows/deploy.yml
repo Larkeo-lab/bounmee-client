@@ -1,12 +1,15 @@
-name: dee-pos-frontend ci/cd [development]
+name: eezy-pos-store ci/cd
 
 on:
   push:
     branches:
       - development
+      - production
 
 jobs:
-  deploy:
+  deploy-development:
+    name: Deploy to Dev (S3)
+    if: github.ref == 'refs/heads/development'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -29,17 +32,58 @@ jobs:
       - name: Build project
         run: pnpm run build
         env:
-          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
-          VITE_SOCKET_URL: ${{ secrets.VITE_SOCKET_URL }}
-          VITE_S3_PUBLIC_URL: ${{ secrets.VITE_S3_PUBLIC_URL }}
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL_DEV }}
+          VITE_SOCKET_URL: ${{ secrets.VITE_SOCKET_URL_DEV }}
+          VITE_S3_PUBLIC_URL: ${{ secrets.VITE_S3_PUBLIC_URL_DEV }}
           VITE_STORAGE_TYPE: "S3"
 
-      - name: Deploy to S3
+      - name: Deploy to S3 (Dev)
         uses: jakejarvis/s3-sync-action@master
         with:
           args: --delete
         env:
-          AWS_S3_BUCKET: dee-pos-dev
+          AWS_S3_BUCKET: "dee-pos-dev"
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: "ap-southeast-1"
+          SOURCE_DIR: "dist"
+
+  deploy-production:
+    name: Deploy to Prod (S3)
+    if: github.ref == 'refs/heads/production'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build project
+        run: pnpm run build
+        env:
+          VITE_API_BASE_URL: "https://api.eezypos.com"
+          VITE_SOCKET_URL: "https://api.eezypos.com"
+          VITE_S3_PUBLIC_URL: "https://dee-pos-storage.s3.ap-southeast-2.amazonaws.com"
+          VITE_STORAGE_TYPE: "S3"
+
+      - name: Deploy to S3 (Prod)
+        uses: jakejarvis/s3-sync-action@master
+        with:
+          args: --delete
+        env:
+          AWS_S3_BUCKET: "eezypos-prod"
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: "ap-southeast-1"
