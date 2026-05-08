@@ -31,9 +31,45 @@ export default function CameraModal({
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
+  const checkCameraPermission = async (): Promise<boolean> => {
+    // Check if mediaDevices API is available (requires HTTPS or localhost)
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setHasError(true);
+      setErrorMessage(
+        t("camera.unsupported") ||
+          "Camera is not supported in this browser or requires a secure connection (HTTPS)."
+      );
+      return false;
+    }
+
+    // Check permission status via Permissions API if available
+    if (navigator.permissions) {
+      try {
+        const result = await navigator.permissions.query({
+          name: "camera" as PermissionName,
+        });
+        if (result.state === "denied") {
+          setHasError(true);
+          setErrorMessage(
+            t("camera.permissionDenied") ||
+              "Camera permission has been denied. Please allow camera access in your browser settings."
+          );
+          return false;
+        }
+      } catch {
+        // Permissions API query not supported for camera in some browsers — continue
+      }
+    }
+
+    return true;
+  };
+
   const startCamera = async (facingMode: "user" | "environment") => {
     setHasError(false);
     setErrorMessage("");
+
+    const allowed = await checkCameraPermission();
+    if (!allowed) return;
 
     if (cameraType === "BARCODE") {
       // Small delay to ensure the modal is rendered and #reader is in the DOM
@@ -45,10 +81,10 @@ export default function CameraModal({
       if (stream) {
         stream.getTracks().forEach((track) => track.stop());
       }
-      
+
       // Standard constraints
       const constraints = {
-        video: { 
+        video: {
           facingMode: { ideal: facingMode },
           width: { ideal: 1280 },
           height: { ideal: 720 }
@@ -63,7 +99,19 @@ export default function CameraModal({
     } catch (error: any) {
       console.error("Error accessing camera:", error);
       setHasError(true);
-      setErrorMessage(error.message || "Could not access camera");
+      if (error.name === "NotAllowedError") {
+        setErrorMessage(
+          t("camera.permissionDenied") ||
+            "Camera permission has been denied. Please allow camera access in your browser settings."
+        );
+      } else if (error.name === "NotFoundError") {
+        setErrorMessage(
+          t("camera.notFound") ||
+            "No camera device found on this device."
+        );
+      } else {
+        setErrorMessage(error.message || "Could not access camera");
+      }
     }
   };
 
