@@ -297,7 +297,7 @@ export default function OrderPage() {
               </Button>
             </DropdownTrigger>
             <DropdownMenu
-              aria-label="ລະຍะເວລາ"
+              aria-label={t("order.filterTime")}
               className="font-bold"
               onAction={(key: any) => {
                 const today = dayjs().format("YYYY-MM-DD");

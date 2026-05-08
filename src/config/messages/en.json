@@ -16,7 +16,8 @@
     "retake": "Retake",
     "next": "Next",
     "back": "Back",
-    "skip": "Skip"
+    "skip": "Skip",
+    "currency": "₭"
   },
   "navigation": {
     "home": "Home",
@@ -231,6 +232,7 @@
       "active": "Active",
       "inactive": "Inactive",
       "upload": "Upload",
+      "uploading": "Uploading...",
       "remove": "Remove",
       "image": "Image",
       "nameLabel": "Name",
@@ -353,7 +355,11 @@
     "chooseGallery": "Choose from Gallery",
     "takePhoto": "Take Photo",
     "alignBarcode": "Align barcode within the frame",
-    "scanning": "Scanning..."
+    "scanning": "Scanning...",
+    "foundExisting": "Found existing product data",
+    "updateSuccess": "Product updated successfully",
+    "createSuccess": "Product created successfully",
+    "saveError": "Error saving product"
   },
   "queue": {
     "welcome": "Welcome to Saysettha ODSC",
@@ -541,7 +547,10 @@
     "received": "Received:",
     "change": "Change:",
     "close": "Close Window",
-    "reprint": "Reprint Bill"
+    "reprint": "Reprint Bill",
+    "paymentCash": "Cash",
+    "paymentTransfer": "Transfer",
+    "kip": "Kip"
   },
   "ordering": {
     "title": "Active Orders",

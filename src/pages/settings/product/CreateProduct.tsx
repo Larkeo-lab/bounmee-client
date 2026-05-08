@@ -14,13 +14,15 @@ import {
   DropdownMenu,
   DropdownItem,
 } from "@heroui/react";
-import { Barcode, Tag, DollarSign, Package, Upload, X, Camera, Image as ImageIcon } from "lucide-react";
+import { Barcode, Tag, Package, Upload, X, Camera, Image as ImageIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useState, useRef } from "react";
 
 import CameraModal from "@/components/camera";
 
-import { useCreateProduct } from "@/services/product/useProduct";
+import { toast } from "react-hot-toast";
+
+import { useCreateProduct, useUpdateProduct, getProductByBarcode } from "@/services/product/useProduct";
 import { useUploadImage } from "@/services/storage";
 import { Category } from "@/services/category/useCategory";
 import { getDisplayImageUrl } from "@/lib/utils";
@@ -42,6 +44,7 @@ export default function CreateProduct({
 }: CreateProductProps) {
   const { t } = useTranslation();
   const createProductMutation = useCreateProduct();
+  const updateProductMutation = useUpdateProduct();
   const uploadImageMutation = useUploadImage();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -61,6 +64,8 @@ export default function CreateProduct({
     isActive: true,
     isBarcode: false,
   });
+  const [isUpdateMode, setIsUpdateMode] = useState(false);
+  const [existingProductId, setExistingProductId] = useState<string | null>(null);
 
   const resetForm = () => {
     setFormData({
@@ -76,6 +81,8 @@ export default function CreateProduct({
       isBarcode: false,
     });
     setPreviewImage("");
+    setIsUpdateMode(false);
+    setExistingProductId(null);
   };
 
   const handleOpenChange = (open: boolean) => {
@@ -115,21 +122,68 @@ export default function CreateProduct({
 
   const handleBarcodeScan = (data: string) => {
     setFormData((prev) => ({ ...prev, barcode: data }));
+    handleBarcodeSearch(data);
+  };
+
+  const handleBarcodeSearch = async (barcode: string) => {
+    if (!barcode.trim() || !storeId) return;
+    try {
+      const product = await getProductByBarcode(barcode.trim(), storeId);
+
+      if (product) {
+        setFormData({
+          barcode: product.barcode,
+          name: product.name,
+          description: product.description || "",
+          cost: Number(product.cost),
+          price: Number(product.price),
+          stockQty: Number(product.stockQty),
+          categoryId: product.categoryId,
+          image: product.image || "",
+          isActive: product.isActive,
+          isBarcode: product.isBarcode || false,
+        });
+        setPreviewImage(product.image || "");
+        setIsUpdateMode(true);
+        setExistingProductId(product.id);
+        toast.success(t("product.foundExisting") || "พบข้อมูลสินค้าเดิม");
+      } else {
+        setIsUpdateMode(false);
+        setExistingProductId(null);
+      }
+    } catch (error) {
+      setIsUpdateMode(false);
+      setExistingProductId(null);
+    }
   };
 
   const handleSubmit = async (onModalClose: () => void) => {
     try {
-      await createProductMutation.mutateAsync({
-        ...formData,
-        cost: Number(formData.cost),
-        price: Number(formData.price),
-        stockQty: Number(formData.stockQty),
-        storeId: storeId,
-      });
+      if (isUpdateMode && existingProductId) {
+        await updateProductMutation.mutateAsync({
+          ...formData,
+          id: existingProductId,
+          cost: Number(formData.cost),
+          price: Number(formData.price),
+          stockQty: Number(formData.stockQty),
+          storeId: storeId,
+        });
+        toast.success(t("product.updateSuccess") || "อัปเดตสินค้าสำเร็จ");
+      } else {
+        await createProductMutation.mutateAsync({
+          ...formData,
+          cost: Number(formData.cost),
+          price: Number(formData.price),
+          stockQty: Number(formData.stockQty),
+          storeId: storeId,
+        });
+        toast.success(t("product.createSuccess") || "เพิ่มสินค้าสำเร็จ");
+      }
       resetForm();
       onModalClose();
     } catch (error) {
-      console.error("Failed to create product:", error);
+      console.error("Failed to save product:", error);
+      toast.error(t("product.saveError") || "เกิดข้อผิดพลาดในการบันทึก");
     }
   };
 
@@ -144,7 +198,7 @@ export default function CreateProduct({
         {(onModalClose) => (
           <>
             <ModalHeader className="flex flex-col gap-1 text-xl font-bold text-primary">
-              {t("product.addTitle")}
+              {isUpdateMode ? t("product.editTitle") : t("product.addTitle")}
             </ModalHeader>
             <ModalBody>
               <div className="flex flex-col gap-6 py-2">
@@ -315,6 +369,11 @@ export default function CreateProduct({
                     }
                     value={formData.barcode}
                     variant="bordered"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleBarcodeSearch(formData.barcode);
+                      }
+                    }}
                     onValueChange={(val) =>
                       setFormData((prev) => ({ ...prev, barcode: val }))
                     }
@@ -364,7 +423,7 @@ export default function CreateProduct({
                     labelPlacement="outside"
                     placeholder="0"
                     startContent={
-                      <DollarSign className="text-default-400" size={18} />
+                      <span className="text-default-400 font-bold text-small">{t("common.currency")}</span>
                     }
                     type="text"
                     value={formatNumber(formData.cost)}
@@ -382,7 +441,7 @@ export default function CreateProduct({
                     labelPlacement="outside"
                     placeholder="0"
                     startContent={
-                      <DollarSign className="text-default-400" size={18} />
+                      <span className="text-default-400 font-bold text-small">{t("common.currency")}</span>
                     }
                     type="text"
                     value={formatNumber(formData.price)}
@@ -409,11 +468,12 @@ export default function CreateProduct({
                 }
                 isLoading={
                   createProductMutation.isPending ||
+                  updateProductMutation.isPending ||
                   uploadImageMutation.isPending
                 }
                 onPress={() => handleSubmit(onModalClose)}
               >
-                {t("settings.common.save")}
+                {isUpdateMode ? t("settings.common.update") : t("settings.common.save")}
               </Button>
             </ModalFooter>
           </>

@@ -165,15 +165,44 @@ export default function CameraModal({
         stream.getTracks().forEach((track) => track.stop());
       }
 
-      const constraints = {
+      const constraints: MediaStreamConstraints = {
         video: {
           facingMode: { ideal: facingMode },
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
+          width: { ideal: 3840 },
+          height: { ideal: 2160 },
+          advanced: [
+            { focusMode: "continuous" } as any,
+            { exposureMode: "continuous" } as any,
+            { whiteBalanceMode: "continuous" } as any,
+          ],
         },
       };
 
       const newStream = await navigator.mediaDevices.getUserMedia(constraints);
+
+      // Apply real-time focus/exposure settings if supported
+      const videoTrack = newStream.getVideoTracks()[0];
+      if (videoTrack) {
+        try {
+          const capabilities = videoTrack.getCapabilities?.() as any;
+          const advancedSettings: any = {};
+          if (capabilities?.focusMode?.includes("continuous")) {
+            advancedSettings.focusMode = "continuous";
+          }
+          if (capabilities?.exposureMode?.includes("continuous")) {
+            advancedSettings.exposureMode = "continuous";
+          }
+          if (capabilities?.whiteBalanceMode?.includes("continuous")) {
+            advancedSettings.whiteBalanceMode = "continuous";
+          }
+          if (Object.keys(advancedSettings).length > 0) {
+            await (videoTrack as any).applyConstraints({ advanced: [advancedSettings] });
+          }
+        } catch {
+          // Device doesn't support advanced settings — ignore
+        }
+      }
+
       setStream(newStream);
       if (videoRef.current) {
         videoRef.current.srcObject = newStream;
@@ -248,6 +277,11 @@ export default function CameraModal({
             };
           },
           aspectRatio: 1.0,
+          videoConstraints: {
+            facingMode: facingMode,
+            width: { ideal: 1920 },
+            height: { ideal: 1080 },
+          },
         },
         (decodedText: string) => {
           if (onScan) {
@@ -295,8 +329,10 @@ export default function CameraModal({
       const canvas = canvasRef.current;
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
-      const ctx = canvas.getContext("2d");
+      const ctx = canvas.getContext("2d", { willReadFrequently: false });
       if (ctx) {
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
         // Handle mirrored front camera
         if (isFrontCamera) {
           ctx.translate(canvas.width, 0);
@@ -305,8 +341,8 @@ export default function CameraModal({
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         // Reset transform
         ctx.setTransform(1, 0, 0, 1, 0, 0);
-        
-        const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
+
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.95);
         setCapturedImage(dataUrl);
       }
     }
@@ -478,6 +514,8 @@ export default function CameraModal({
                     ref={videoRef}
                     autoPlay
                     playsInline
+                    muted
+                    style={{ imageRendering: "auto" }}
                     className={`w-full h-full object-cover ${isFrontCamera ? "scale-x-[-1]" : ""}`}
                   />
                 )
