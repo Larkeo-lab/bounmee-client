@@ -14,7 +14,7 @@ import {
   DropdownMenu,
   DropdownItem,
 } from "@heroui/react";
-import { Barcode, Tag, DollarSign, Package, Upload, X, Camera, Image as ImageIcon } from "lucide-react";
+import { Barcode, Tag, Package, Upload, X, Camera, Image as ImageIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useState, useRef, useEffect } from "react";
 
@@ -364,7 +364,7 @@ export default function EditProduct({
                     labelPlacement="outside"
                     placeholder="0"
                     startContent={
-                      <DollarSign className="text-default-400" size={18} />
+                      <span className="text-default-400 font-bold text-small">{t("common.currency")}</span>
                     }
                     type="text"
                     value={formatNumber(formData.cost)}
@@ -382,7 +382,7 @@ export default function EditProduct({
                     labelPlacement="outside"
                     placeholder="0"
                     startContent={
-                      <DollarSign className="text-default-400" size={18} />
+                      <span className="text-default-400 font-bold text-small">{t("common.currency")}</span>
                     }
                     type="text"
                     value={formatNumber(formData.price)}

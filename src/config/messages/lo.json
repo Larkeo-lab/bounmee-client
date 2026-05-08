@@ -17,7 +17,8 @@
     "retry": "ລອງໃໝ່",
     "next": "ຖັດໄປ",
     "back": "ກັບຄືນ",
-    "skip": "ຂ້າມ"
+    "skip": "ຂ້າມ",
+    "currency": "₭"
   },
   "navigation": {
     "home": "ໜ້າຫຼັກ",
@@ -236,6 +237,7 @@
       "active": "ເປີດນຳໃຊ້",
       "inactive": "ປິດນຳໃຊ້",
       "upload": "ອັບໂຫລດ",
+      "uploading": "ກຳລັງອັບໂຫຼດ...",
       "remove": "ລົບ",
       "image": "ຮູບພາບ",
       "nameLabel": "ຊື່",
@@ -358,7 +360,11 @@
     "chooseGallery": "ເລືອກຈາກຄັງຮູບພາບ",
     "takePhoto": "ຖ່າຍຮູບຈາກກ້ອງ",
     "alignBarcode": "ວາງບາໂຄດໃຫ້ຕົງກັບກອບ",
-    "scanning": "ກຳລັງແກນ..."
+    "scanning": "ກຳລັງແກນ...",
+    "foundExisting": "ພົບຂໍ້ມູນສິນຄ້າເດີມ",
+    "updateSuccess": "ອັບເດດສິນຄ້າສຳເລັດ",
+    "createSuccess": "ເພີ່ມສິນຄ້າສຳເລັດ",
+    "saveError": "ເກີດຂໍ້ຜິດພາດໃນການບັນທຶກ"
   },
   "queue": {
     "welcome": "ຍິນດີຕ້ອນຮັບສູ່ Saysettha ODSC",
@@ -546,7 +552,10 @@
     "received": "ຮັບເງິນມາ:",
     "change": "ເງິນທອນ:",
     "close": "ປິດໜ້າຕ່າງ",
-    "reprint": "ພິມບິນຄືນ"
+    "reprint": "ພິມບິນຄືນ",
+    "paymentCash": "ເງິນສົດ",
+    "paymentTransfer": "ເງິນໂອນ",
+    "kip": "ກີບ"
   },
   "ordering": {
     "title": "ລາຍການອໍເດີ",

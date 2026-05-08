@@ -19,6 +19,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
 
 import { OrderRight } from "./orderRight";
+import CameraModal from "@/components/camera";
 
 import EmptyState from "@/components/common/empty-state";
 import { useCart } from "@/provider";
@@ -78,6 +79,7 @@ export default function ProductOrderPage() {
     onOpen: onClearCartOpen,
     onOpenChange: onClearCartOpenChange,
   } = useDisclosure();
+  const [isBarcodeScannerOpen, setIsBarcodeScannerOpen] = useState(false);
 
   useEffect(() => {
     setActiveTableId(null);
@@ -289,32 +291,44 @@ export default function ProductOrderPage() {
             </Badge>
           </div>
 
-          <ScrollShadow
-            hideScrollBar
-            className="max-w-full w-0 min-w-full overflow-x-auto scrollbar-hide"
-            orientation="horizontal"
-            size={40}
-          >
-            <Tabs
-              aria-label="Product Categories"
-              classNames={{
-                tabList:
-                  "gap-4 lg:gap-6 flex-nowrap p-0 min-w-max border-b-2 border-divider",
-                cursor: "w-full bg-primary",
-                tab: "max-w-fit px-1 h-10 lg:h-12 flex-shrink-0",
-                tabContent:
-                  "group-data-[selected=true]:text-primary font-medium text-xs lg:text-sm whitespace-nowrap",
-              }}
-              color="primary"
-              selectedKey={selectedCategory}
-              variant="underlined"
-              onSelectionChange={(key) => setSelectedCategory(key as string)}
+          <div className="flex items-center gap-2">
+            <ScrollShadow
+              hideScrollBar
+              className="flex-1 max-w-full overflow-x-auto scrollbar-hide"
+              orientation="horizontal"
+              size={40}
             >
-              {categories.map((cat) => (
-                <Tab key={cat.id} title={cat.label} />
-              ))}
-            </Tabs>
-          </ScrollShadow>
+              <Tabs
+                aria-label="Product Categories"
+                classNames={{
+                  tabList:
+                    "gap-4 lg:gap-6 flex-nowrap p-0 min-w-max border-b-2 border-divider",
+                  cursor: "w-full bg-primary",
+                  tab: "max-w-fit px-1 h-10 lg:h-12 flex-shrink-0",
+                  tabContent:
+                    "group-data-[selected=true]:text-primary font-medium text-xs lg:text-sm whitespace-nowrap",
+                }}
+                color="primary"
+                selectedKey={selectedCategory}
+                variant="underlined"
+                onSelectionChange={(key) => setSelectedCategory(key as string)}
+              >
+                {categories.map((cat) => (
+                  <Tab key={cat.id} title={cat.label} />
+                ))}
+              </Tabs>
+            </ScrollShadow>
+
+            <Button
+              isIconOnly
+              className="bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+              onPress={() => setIsBarcodeScannerOpen(true)}
+              radius="full"
+              variant="flat"
+            >
+              <Barcode size={20} />
+            </Button>
+          </div>
         </div>
 
         {/* Product Grid Area */}
@@ -477,6 +491,13 @@ export default function ProductOrderPage() {
           clearCart();
         }}
         onOpenChange={onClearCartOpenChange}
+      />
+
+      <CameraModal
+        cameraType="BARCODE"
+        isOpen={isBarcodeScannerOpen}
+        onScan={handleBarcodeSearch}
+        onClose={() => setIsBarcodeScannerOpen(false)}
       />
 
       {/* Flying Animation Layer */}

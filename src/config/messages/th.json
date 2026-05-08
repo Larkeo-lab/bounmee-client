@@ -17,7 +17,8 @@
     "retry": "ลองใหม่",
     "next": "ถัดไป",
     "back": "กลับ",
-    "skip": "ข้าม"
+    "skip": "ข้าม",
+    "currency": "₭"
   },
   "navigation": {
     "home": "หน้าแรก",
@@ -235,6 +236,7 @@
       "active": "เปิดใช้งาน",
       "inactive": "ปิดใช้งาน",
       "upload": "อัปโหลด",
+      "uploading": "กำลังอัปโหลด...",
       "remove": "ลบ",
       "image": "รูปภาพ",
       "nameLabel": "ชื่อ",
@@ -357,7 +359,11 @@
     "chooseGallery": "เลือกจากคลังรูปภาพ",
     "takePhoto": "ถ่ายรูปจากกล้อง",
     "alignBarcode": "วางบาร์โค้ดให้ตรงกับกรอบ",
-    "scanning": "กำลังสแกน..."
+    "scanning": "กำลังสแกน...",
+    "foundExisting": "พบข้อมูลสินค้าเดิม",
+    "updateSuccess": "อัปเดตสินค้าสำเร็จ",
+    "createSuccess": "เพิ่มสินค้าสำเร็จ",
+    "saveError": "เกิดข้อผิดพลาดในการบันทึก"
   },
   "queue": {
     "welcome": "ยินดีต้อนรับสู่ Saysettha ODSC",
@@ -511,7 +517,10 @@
     "received": "รับเงินมา:",
     "change": "เงินทอน:",
     "close": "ปิดหน้าต่าง",
-    "reprint": "พิมพ์บิลซ้ำ"
+    "reprint": "พิมพ์บิลซ้ำ",
+    "paymentCash": "เงินสด",
+    "paymentTransfer": "เงินโอน",
+    "kip": "กีบ"
   },
   "ordering": {
     "title": "รายการยอดค้าง",
