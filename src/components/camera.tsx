@@ -11,7 +11,7 @@ interface CameraModalProps {
   onScan?: (data: string) => void;
   cameraType?: "IMAGE" | "BARCODE";
 }
-
+//
 export default function CameraModal({
   isOpen,
   onClose,
