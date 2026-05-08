@@ -23,6 +23,7 @@ import { OrderRight } from "./orderRight";
 import EmptyState from "@/components/common/empty-state";
 import { useCart } from "@/provider";
 import PaymentModal from "@/components/common/payment-modal";
+import CameraModal from "@/components/camera";
 import { useAuth } from "@/routes/AuthContext";
 import { useGetCategories, Category } from "@/services/category/useCategory";
 import {
@@ -47,6 +48,7 @@ export default function ProductOrderPage() {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [isMinimized, setIsMinimized] = useState(true);
   const [flyingItems, setFlyingItems] = useState<FlyingItem[]>([]);
+  const [isBarcodeScannerOpen, setIsBarcodeScannerOpen] = useState(false);
 
   const { cart, addToCart, clearCart, subtotal, setActiveTableId } = useCart();
 
@@ -68,7 +70,12 @@ export default function ProductOrderPage() {
   useEffect(() => {
     if (!user?.user?.storeId) return;
     if (!socket.connected) socket.connect();
-    const onConnect = () => socket.emit("JOIN:STORE", user.user.storeId);
+    const onConnect = () => {
+      socket.emit("JOIN:STORE", user.user.storeId);
+      if (user.user.id) {
+        socket.emit("JOIN:USER", user.user.id);
+      }
+    };
     const onScanned = (product: Product) => {
       addToCart(product);
       toast.success(t("sale.barcodeAdded", { name: product.name }), {
@@ -102,23 +109,25 @@ export default function ProductOrderPage() {
 
   const products = productResponse?.data || [];
 
+  const handleScan = (barcode: string) => {
+    if (barcode) {
+      handleBarcodeSearch(barcode);
+      setIsBarcodeScannerOpen(false);
+    }
+  };
+
   const handleBarcodeSearch = async (barcode: string) => {
     if (!barcode.trim() || !user?.user?.storeId) return;
     try {
       const product = await getProductByBarcode(
         barcode.trim(),
         user.user.storeId,
+        user.user.id,
       );
 
       if (product) {
-        addToCart(product);
         setSearchQuery("");
         setIsMinimized(false); // เปิด order panel ให้เห็นรายการที่เพิ่ม
-        toast.success(t("sale.barcodeAdded", { name: product.name }), {
-          duration: 1200,
-          position: "top-center",
-          style: { fontWeight: "bold" },
-        });
         // Auto focus กลับที่ input เพื่อยิง barcode ต่อได้เลย
         setTimeout(() => searchInputRef.current?.focus(), 100);
       } else {
@@ -224,32 +233,44 @@ export default function ProductOrderPage() {
             </Badge>
           </div>
 
-          <ScrollShadow
-            hideScrollBar
-            className="max-w-full w-0 min-w-full overflow-x-auto scrollbar-hide"
-            orientation="horizontal"
-            size={40}
-          >
-            <Tabs
-              aria-label="Product Categories"
-              classNames={{
-                tabList:
-                  "gap-4 lg:gap-6 flex-nowrap p-0 min-w-max border-b-2 border-divider",
-                cursor: "w-full bg-primary",
-                tab: "max-w-fit px-1 h-10 lg:h-12 flex-shrink-0",
-                tabContent:
-                  "group-data-[selected=true]:text-primary font-medium text-xs lg:text-sm whitespace-nowrap",
-              }}
-              color="primary"
-              selectedKey={selectedCategory}
-              variant="underlined"
-              onSelectionChange={(key) => setSelectedCategory(key as string)}
+          <div className="flex items-center gap-2 mb-2 lg:mb-4">
+            <ScrollShadow
+              hideScrollBar
+              className="flex-1 max-w-full overflow-x-auto scrollbar-hide"
+              orientation="horizontal"
+              size={40}
             >
-              {categories.map((cat) => (
-                <Tab key={cat.id} title={cat.label} />
-              ))}
-            </Tabs>
-          </ScrollShadow>
+              <Tabs
+                aria-label="Product Categories"
+                classNames={{
+                  tabList:
+                    "gap-4 lg:gap-6 flex-nowrap p-0 min-w-max border-b-2 border-divider",
+                  cursor: "w-full bg-primary",
+                  tab: "max-w-fit px-1 h-10 lg:h-12 flex-shrink-0",
+                  tabContent:
+                    "group-data-[selected=true]:text-primary font-medium text-xs lg:text-sm whitespace-nowrap",
+                }}
+                color="primary"
+                selectedKey={selectedCategory}
+                variant="underlined"
+                onSelectionChange={(key) => setSelectedCategory(key as string)}
+              >
+                {categories.map((cat) => (
+                  <Tab key={cat.id} title={cat.label} />
+                ))}
+              </Tabs>
+            </ScrollShadow>
+
+            <Button
+              isIconOnly
+              className="bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+              onPress={() => setIsBarcodeScannerOpen(true)}
+              radius="full"
+              variant="flat"
+            >
+              <Barcode size={20} />
+            </Button>
+          </div>
         </div>
 
         {/* Product Grid Area */}
@@ -355,6 +376,13 @@ export default function ProductOrderPage() {
           clearCart();
           refetchProducts();
         }}
+      />
+
+      <CameraModal
+        cameraType="BARCODE"
+        isOpen={isBarcodeScannerOpen}
+        onClose={() => setIsBarcodeScannerOpen(false)}
+        onScan={handleScan}
       />
 
       {/* Flying Animation Layer */}

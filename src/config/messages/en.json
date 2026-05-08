@@ -12,7 +12,11 @@
     "search": "Search",
     "filter": "Filter",
     "export": "Export",
-    "import": "Import"
+    "import": "Import",
+    "retake": "Retake",
+    "next": "Next",
+    "back": "Back",
+    "skip": "Skip"
   },
   "navigation": {
     "home": "Home",
@@ -27,6 +31,7 @@
     "forgotPassword": "Forgot Password",
     "resetPassword": "Reset Password",
     "email": "Email",
+    "backToLogin": "Back to Login",
     "emailOrUsername": "Email or Username",
     "emailOrUsernamePlaceholder": "Enter email or username",
     "password": "Password",
@@ -61,7 +66,6 @@
     "district": "District",
     "phone": "Phone Number",
     "phonePlaceholder": "Enter phone number...",
-    "backToLogin": "Back to Login",
     "registerButton": "Register",
     "registering": "Registering...",
     "registrationSuccess": "Registration successful! Welcome to the system.",
@@ -205,6 +209,7 @@
     },
     "common": {
       "no": "#",
+      "all": "All",
       "actions": "Actions",
       "search": "Search...",
       "total": "Total {{count}} items",
@@ -344,7 +349,9 @@
     "deleteConfirmMsg": "Are you sure you want to delete product {{name}}? This action cannot be undone.",
     "emptyTitle": "Product not found",
     "emptyDesc": "Try searching with different keywords or change category",
-    "category": "Category"
+    "category": "Category",
+    "chooseGallery": "Choose from Gallery",
+    "takePhoto": "Take Photo"
   },
   "queue": {
     "welcome": "Welcome to Saysettha ODSC",
@@ -658,7 +665,7 @@
     "submitting": "Submitting your data...",
     "submitSuccess": "Thank you for the information! Your system is ready.",
     "submitError": "An error occurred while submitting. Please try again.",
-    "completed": "Complete Survey",
+    "completed": "Completed",
     "step": "Step",
     "of": "of"
   }

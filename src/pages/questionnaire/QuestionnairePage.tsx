@@ -119,7 +119,7 @@ const QuestionnairePage: React.FC = () => {
       setCurrentPageIdx(currentPageIdx - 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
-      navigate("/login");
+      navigate("/");
     }
   };
 
@@ -352,24 +352,38 @@ const QuestionnairePage: React.FC = () => {
           </Card>
 
           <div className="mt-8 flex items-center justify-between gap-6 px-2">
-            <Button
-              variant="light"
-              onPress={handleBack}
-              startContent={<ChevronLeft size={20} />}
-              size="lg"
-              className="font-bold text-gray-400 hover:text-primary transition-colors h-14 px-6 rounded-2xl border-2 border-transparent hover:border-primary/20"
-            >
-              {currentPageIdx === 0 ? t("auth.backToLogin") : t("common.back")}
-            </Button>
+            {currentPageIdx > 0 ? (
+              <Button
+                variant="light"
+                onPress={handleBack}
+                startContent={<ChevronLeft size={20} />}
+                size="lg"
+                className="font-bold text-gray-400 hover:text-primary transition-colors h-14 px-6 rounded-2xl border-2 border-transparent hover:border-primary/20"
+              >
+                {t("common.back")}
+              </Button>
+            ) : (
+              <div /> // Placeholder to keep the 'between' layout
+            )}
             
-            <div className="flex-1 max-w-[200px]">
+            <div className="flex-1 max-w-[300px] flex items-center gap-3">
+              {currentPageIdx < pages.length - 1 && (
+                <Button
+                  variant="light"
+                  onPress={handleNext}
+                  size="lg"
+                  className="flex-1 h-14 font-bold text-gray-400 hover:text-primary transition-colors rounded-2xl"
+                >
+                  {t("common.skip")}
+                </Button>
+              )}
               <Button
                 color="primary"
                 onPress={handleNext}
                 isLoading={isSubmitting}
                 endContent={currentPageIdx === pages.length - 1 ? <ClipboardCheck size={20} /> : <ChevronRight size={20} />}
                 size="lg"
-                className="w-full h-14 font-black text-lg rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.15)] shadow-primary/40 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                className="flex-[2] h-14 font-black text-lg rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.15)] shadow-primary/40 hover:scale-[1.02] active:scale-[0.98] transition-all"
               >
                 {currentPageIdx === pages.length - 1 ? t("questionnaire.completed") : t("common.next")}
               </Button>

@@ -9,10 +9,16 @@ import {
   Select,
   SelectItem,
   Spinner,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
 } from "@heroui/react";
-import { Barcode, Tag, DollarSign, Package, Upload, X } from "lucide-react";
+import { Barcode, Tag, DollarSign, Package, Upload, X, Camera, Image as ImageIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useState, useRef, useEffect } from "react";
+
+import CameraModal from "@/components/camera";
 
 import { useUpdateProduct, Product } from "@/services/product/useProduct";
 import { useUploadImage } from "@/services/storage";
@@ -40,6 +46,9 @@ export default function EditProduct({
   const updateProductMutation = useUpdateProduct();
   const uploadImageMutation = useUploadImage();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [isBarcodeScannerOpen, setIsBarcodeScannerOpen] = useState(false);
 
   const [previewImage, setPreviewImage] = useState<string>("");
   const [formData, setFormData] = useState({
@@ -99,6 +108,14 @@ export default function EditProduct({
     setPreviewImage("");
   };
 
+  const handleTakePhoto = () => {
+    setIsCameraOpen(true);
+  };
+
+  const handleBarcodeScan = (data: string) => {
+    setFormData((prev) => ({ ...prev, barcode: data }));
+  };
+
   const handleSubmit = async (onModalClose: () => void) => {
     if (!product) return;
     try {
@@ -135,78 +152,111 @@ export default function EditProduct({
                   <label className="text-small font-medium text-default-700">
                     {t("product.image")}
                   </label>
-                  <div
-                    className={`
-                      relative group cursor-pointer
-                      w-full h-48 rounded-xl border-2 border-dashed 
-                      transition-all duration-200 ease-in-out
-                      flex flex-col items-center justify-center gap-3
-                      ${previewImage || formData.image ? "border-primary bg-primary/5" : "border-default-200 hover:border-primary hover:bg-default-50"}
-                    `}
-                    onClick={() => fileInputRef.current?.click()}
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={(e) => {
-                      e.preventDefault();
-                      const file = e.dataTransfer.files?.[0];
+                  <Dropdown>
+                    <DropdownTrigger>
+                      <div
+                        className={`
+                          relative group cursor-pointer
+                          w-full h-48 rounded-xl border-2 border-dashed 
+                          transition-all duration-200 ease-in-out
+                          flex flex-col items-center justify-center gap-3
+                          ${previewImage || formData.image ? "border-primary bg-primary/5" : "border-default-200 hover:border-primary hover:bg-default-50"}
+                        `}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          const file = e.dataTransfer.files?.[0];
 
-                      if (file) {
-                        handleUploadImage(file);
-                      }
-                    }}
-                  >
-                    {uploadImageMutation.isPending ? (
-                      <div className="flex flex-col items-center gap-2">
-                        <Spinner color="primary" size="lg" />
-                        <p className="text-small text-default-500">
-                          {t("settings.common.uploading")}
-                        </p>
+                          if (file) {
+                            handleUploadImage(file);
+                          }
+                        }}
+                      >
+                        {uploadImageMutation.isPending ? (
+                          <div className="flex flex-col items-center gap-2">
+                            <Spinner color="primary" size="lg" />
+                            <p className="text-small text-default-500">
+                              {t("settings.common.uploading")}
+                            </p>
+                          </div>
+                        ) : previewImage || formData.image ? (
+                          <>
+                            <img
+                              alt="Preview"
+                              className="w-full h-full object-contain rounded-lg p-2"
+                              src={getDisplayImageUrl(
+                                previewImage || formData.image,
+                              )}
+                            />
+                            <Button
+                              isIconOnly
+                              className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                              color="danger"
+                              size="sm"
+                              variant="flat"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                removeImage();
+                              }}
+                            >
+                              <X size={16} />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <div className="p-4 rounded-full bg-primary/10 text-primary">
+                              <Upload size={32} />
+                            </div>
+                            <div className="text-center">
+                              <p className="text-small font-semibold">
+                                {t("product.dragAndDrop")}
+                              </p>
+                              <p className="text-tiny text-default-400">
+                                {t("product.imageHint")}
+                              </p>
+                            </div>
+                          </>
+                        )}
                       </div>
-                    ) : previewImage || formData.image ? (
-                      <>
-                        <img
-                          alt="Preview"
-                          className="w-full h-full object-contain rounded-lg p-2"
-                          src={getDisplayImageUrl(
-                            previewImage || formData.image,
-                          )}
-                        />
-                        <Button
-                          isIconOnly
-                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                          color="danger"
-                          size="sm"
-                          variant="flat"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            removeImage();
-                          }}
-                        >
-                          <X size={16} />
-                        </Button>
-                      </>
-                    ) : (
-                      <>
-                        <div className="p-4 rounded-full bg-primary/10 text-primary">
-                          <Upload size={32} />
-                        </div>
-                        <div className="text-center">
-                          <p className="text-small font-semibold">
-                            {t("product.dragAndDrop")}
-                          </p>
-                          <p className="text-tiny text-default-400">
-                            {t("product.imageHint")}
-                          </p>
-                        </div>
-                      </>
-                    )}
-                    <input
-                      ref={fileInputRef}
-                      accept="image/*"
-                      className="hidden"
-                      type="file"
-                      onChange={handleImageChange}
-                    />
-                  </div>
+                    </DropdownTrigger>
+                    <DropdownMenu aria-label="Image Upload Options">
+                      <DropdownItem
+                        key="gallery"
+                        startContent={<ImageIcon size={18} />}
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        {t("product.chooseGallery")}
+                      </DropdownItem>
+                      <DropdownItem
+                        key="camera"
+                        startContent={<Camera size={18} />}
+                        onClick={handleTakePhoto}
+                      >
+                        {t("product.takePhoto")}
+                      </DropdownItem>
+                    </DropdownMenu>
+                  </Dropdown>
+
+                  <input
+                    ref={fileInputRef}
+                    accept="image/*"
+                    className="hidden"
+                    type="file"
+                    onChange={handleImageChange}
+                  />
+
+                  <CameraModal
+                    isOpen={isCameraOpen}
+                    onCapture={handleUploadImage}
+                    onClose={() => setIsCameraOpen(false)}
+                  />
+
+                  <CameraModal
+                    cameraType="BARCODE"
+                    isOpen={isBarcodeScannerOpen}
+                    onScan={handleBarcodeScan}
+                    onClose={() => setIsBarcodeScannerOpen(false)}
+                  />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -250,6 +300,18 @@ export default function EditProduct({
                     placeholder={t("product.barcode")}
                     startContent={
                       <Barcode className="text-default-400" size={18} />
+                    }
+                    endContent={
+                      formData.isBarcode && (
+                        <Button
+                          isIconOnly
+                          size="sm"
+                          variant="light"
+                          onClick={() => setIsBarcodeScannerOpen(true)}
+                        >
+                          <Camera size={18} className="text-primary" />
+                        </Button>
+                      )
                     }
                     value={formData.barcode}
                     variant="bordered"
