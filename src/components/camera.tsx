@@ -28,12 +28,16 @@ export default function CameraModal({
   const [isFrontCamera, setIsFrontCamera] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const scannerRef = useRef<Html5Qrcode | null>(null);
-
-  console.log("cameraType", cameraType);
+  const [hasError, setHasError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const startCamera = async (facingMode: "user" | "environment") => {
+    setHasError(false);
+    setErrorMessage("");
+
     if (cameraType === "BARCODE") {
-      startScanner(facingMode);
+      // Small delay to ensure the modal is rendered and #reader is in the DOM
+      setTimeout(() => startScanner(facingMode), 500);
       return;
     }
 
@@ -41,33 +45,68 @@ export default function CameraModal({
       if (stream) {
         stream.getTracks().forEach((track) => track.stop());
       }
+      
+      // Standard constraints
       const constraints = {
-        video: { facingMode },
+        video: { 
+          facingMode: { ideal: facingMode },
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        },
       };
+
       const newStream = await navigator.mediaDevices.getUserMedia(constraints);
       setStream(newStream);
       if (videoRef.current) {
         videoRef.current.srcObject = newStream;
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error accessing camera:", error);
+      setHasError(true);
+      setErrorMessage(error.message || "Could not access camera");
     }
   };
 
   const startScanner = async (facingMode: "user" | "environment") => {
+    const readerElement = document.getElementById("reader");
+    if (!readerElement) {
+      console.error("Scanner element #reader not found in DOM");
+      // Retry once after a short delay
+      setTimeout(() => {
+        if (document.getElementById("reader")) {
+          startScanner(facingMode);
+        } else {
+          setHasError(true);
+          setErrorMessage("Scanner element not found");
+        }
+      }, 500);
+      return;
+    }
+
     if (!scannerRef.current) {
       scannerRef.current = new Html5Qrcode("reader");
     }
+
     try {
       if (scannerRef.current.isScanning) {
         await scannerRef.current.stop();
       }
+      
       setIsScanning(true);
+      setHasError(false);
+
       await scannerRef.current.start(
-        { facingMode },
+        { facingMode: { ideal: facingMode } },
         {
-          fps: 10,
-          qrbox: { width: 256, height: 256 },
+          fps: 15,
+          qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
+            const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+            const qrboxSize = Math.floor(minEdge * 0.7);
+            return {
+              width: qrboxSize,
+              height: qrboxSize,
+            };
+          },
           aspectRatio: 1.0,
         },
         (decodedText: string) => {
@@ -78,22 +117,30 @@ export default function CameraModal({
         },
         () => {}, // ignore errors
       );
-    } catch (err) {
+    } catch (err: any) {
       console.error("Scanner start error:", err);
       setIsScanning(false);
+      setHasError(true);
+      setErrorMessage(err.message || "Failed to start scanner");
     }
   };
 
   const handleClose = async () => {
-    if (scannerRef.current && scannerRef.current.isScanning) {
-      await scannerRef.current.stop();
+    try {
+      if (scannerRef.current && scannerRef.current.isScanning) {
+        await scannerRef.current.stop();
+      }
+    } catch (e) {
+      console.error("Error stopping scanner:", e);
     }
+    
     if (stream) {
       stream.getTracks().forEach((track) => track.stop());
     }
     setStream(null);
     setCapturedImage(null);
     setIsScanning(false);
+    setHasError(false);
     onClose();
   };
 
@@ -105,8 +152,16 @@ export default function CameraModal({
       canvas.height = video.videoHeight;
       const ctx = canvas.getContext("2d");
       if (ctx) {
+        // Handle mirrored front camera
+        if (isFrontCamera) {
+          ctx.translate(canvas.width, 0);
+          ctx.scale(-1, 1);
+        }
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const dataUrl = canvas.toDataURL("image/jpeg");
+        // Reset transform
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
         setCapturedImage(dataUrl);
       }
     }
@@ -142,6 +197,13 @@ export default function CameraModal({
     } else {
       handleClose();
     }
+    
+    return () => {
+      // Cleanup on unmount or close
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+    };
   }, [isOpen]);
 
   useEffect(() => {
@@ -152,12 +214,16 @@ export default function CameraModal({
 
   useEffect(() => {
     return () => {
-      if (scannerRef.current && scannerRef.current.isScanning) {
-        scannerRef.current.stop().catch(console.error);
-      }
-      if (stream) {
-        stream.getTracks().forEach((track) => track.stop());
-      }
+      const cleanup = async () => {
+        if (scannerRef.current && scannerRef.current.isScanning) {
+          try {
+            await scannerRef.current.stop();
+          } catch (e) {
+            console.error("Cleanup stop error:", e);
+          }
+        }
+      };
+      cleanup();
     };
   }, []);
 
@@ -173,11 +239,47 @@ export default function CameraModal({
           header: "hidden",
           footer: "hidden",
         }}
+        motionProps={{
+          variants: {
+            enter: {
+              y: 0,
+              opacity: 1,
+              transition: {
+                duration: 0.3,
+                ease: "easeOut",
+              },
+            },
+            exit: {
+              y: 20,
+              opacity: 0,
+              transition: {
+                duration: 0.2,
+                ease: "easeIn",
+              },
+            },
+          },
+        }}
       >
         <ModalContent>
           <div className="relative flex flex-col items-center gap-4">
             <div className="relative w-full max-w-lg aspect-[3/4] bg-black rounded-3xl overflow-hidden shadow-2xl border-4 border-white/20">
-              {cameraType === "IMAGE" ? (
+              {hasError ? (
+                <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center text-white bg-gray-900/90">
+                  <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mb-4">
+                    <X className="text-red-500" size={32} />
+                  </div>
+                  <h3 className="text-xl font-bold mb-2">{t("camera.errorTitle") || "Camera Error"}</h3>
+                  <p className="text-sm text-gray-400 mb-6">{errorMessage || t("camera.errorDesc") || "Could not access camera. Please check permissions."}</p>
+                  <Button 
+                    color="primary" 
+                    variant="flat" 
+                    startContent={<RefreshCw size={18} />}
+                    onClick={() => startCamera(isFrontCamera ? "user" : "environment")}
+                  >
+                    {t("common.retry") || "Retry"}
+                  </Button>
+                </div>
+              ) : cameraType === "IMAGE" ? (
                 capturedImage ? (
                   <img
                     src={capturedImage}
@@ -197,7 +299,7 @@ export default function CameraModal({
               )}
 
               {/* Scan Overlay for Barcode Mode */}
-              {cameraType === "BARCODE" && !capturedImage && isScanning && (
+              {cameraType === "BARCODE" && !capturedImage && isScanning && !hasError && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
                   <div className="w-64 h-64 border-2 border-primary/50 rounded-2xl relative overflow-hidden bg-primary/5">
                     {/* Corner Brackets */}
@@ -215,7 +317,7 @@ export default function CameraModal({
                 </div>
               )}
 
-              <div className="absolute top-4 right-4 flex flex-col gap-2">
+              <div className="absolute top-4 right-4 flex flex-col gap-2 z-20">
                 <Button
                   isIconOnly
                   className="bg-black/40 backdrop-blur-md text-white hover:bg-black/60 border border-white/10"
@@ -224,7 +326,7 @@ export default function CameraModal({
                 >
                   <X size={20} />
                 </Button>
-                {!capturedImage && (
+                {!capturedImage && !hasError && (
                   <Button
                     isIconOnly
                     className="bg-black/40 backdrop-blur-md text-white hover:bg-black/60 border border-white/10"
@@ -237,7 +339,7 @@ export default function CameraModal({
               </div>
             </div>
 
-            {cameraType === "IMAGE" && (
+            {cameraType === "IMAGE" && !hasError && (
               <div className="flex items-center gap-8 p-6 bg-black/40 backdrop-blur-xl rounded-full border border-white/10">
                 {capturedImage ? (
                   <>
@@ -273,7 +375,7 @@ export default function CameraModal({
               </div>
             )}
 
-            {cameraType === "BARCODE" && (
+            {cameraType === "BARCODE" && !hasError && (
               <div className="flex items-center gap-3 p-4 bg-black/40 backdrop-blur-xl rounded-full border border-white/10">
                 <Scan className="text-primary animate-pulse" size={24} />
                 <span className="text-white font-medium">
