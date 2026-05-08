@@ -1,8 +1,31 @@
 import { Modal, ModalContent, Button } from "@heroui/react";
-import { X, RefreshCw, Check, Scan } from "lucide-react";
+import { X, RefreshCw, Check, Scan, Camera, ShieldCheck } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Html5Qrcode } from "html5-qrcode";
+
+// Polyfill for older browsers that don't have navigator.mediaDevices
+function ensureMediaDevices() {
+  if (navigator.mediaDevices === undefined) {
+    (navigator as any).mediaDevices = {};
+  }
+  if (navigator.mediaDevices.getUserMedia === undefined) {
+    navigator.mediaDevices.getUserMedia = (constraints: MediaStreamConstraints) => {
+      const getUserMedia =
+        (navigator as any).webkitGetUserMedia ||
+        (navigator as any).mozGetUserMedia ||
+        (navigator as any).msGetUserMedia;
+      if (!getUserMedia) {
+        return Promise.reject(
+          new Error("getUserMedia is not supported in this browser.")
+        );
+      }
+      return new Promise<MediaStream>((resolve, reject) => {
+        getUserMedia.call(navigator, constraints, resolve, reject);
+      });
+    };
+  }
+}
 
 interface CameraModalProps {
   isOpen: boolean;
@@ -30,50 +53,110 @@ export default function CameraModal({
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [permissionStatus, setPermissionStatus] = useState<
+    "idle" | "requesting" | "granted" | "denied"
+  >("idle");
 
-  const checkCameraPermission = async (): Promise<boolean> => {
-    // Check if mediaDevices API is available (requires HTTPS or localhost)
+  // Check if permission was already granted (skip permission screen)
+  const checkExistingPermission = async () => {
+    ensureMediaDevices();
+
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      setHasError(true);
-      setErrorMessage(
-        t("camera.unsupported") ||
-          "Camera is not supported in this browser or requires a secure connection (HTTPS)."
-      );
-      return false;
+      setPermissionStatus("idle");
+      return;
     }
 
-    // Check permission status via Permissions API if available
     if (navigator.permissions) {
       try {
         const result = await navigator.permissions.query({
           name: "camera" as PermissionName,
         });
-        if (result.state === "denied") {
-          setHasError(true);
-          setErrorMessage(
-            t("camera.permissionDenied") ||
-              "Camera permission has been denied. Please allow camera access in your browser settings."
-          );
-          return false;
+        if (result.state === "granted") {
+          // Already granted — skip permission screen, open camera directly
+          setPermissionStatus("granted");
+          return;
         }
       } catch {
-        // Permissions API query not supported for camera in some browsers — continue
+        // Permissions API not supported for camera in some browsers
       }
     }
 
-    return true;
+    // Not granted yet — show permission screen
+    setPermissionStatus("idle");
+  };
+
+  const requestCameraPermission = async () => {
+    setPermissionStatus("requesting");
+    setHasError(false);
+    setErrorMessage("");
+
+    // Apply polyfill for older browsers
+    ensureMediaDevices();
+
+    // After polyfill — still not available means truly unsupported
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setPermissionStatus("denied");
+      setHasError(true);
+      setErrorMessage(
+        t("camera.unsupported") ||
+          "Camera is not supported in this browser or requires a secure connection (HTTPS)."
+      );
+      return;
+    }
+
+    // Directly call getUserMedia to trigger the browser/OS permission prompt
+    try {
+      const testStream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: false,
+      });
+      // Permission granted — stop test stream immediately
+      testStream.getTracks().forEach((track) => track.stop());
+      setPermissionStatus("granted");
+    } catch (error: any) {
+      console.error("Permission request failed:", error);
+      setPermissionStatus("denied");
+      setHasError(true);
+      if (
+        error.name === "NotAllowedError" ||
+        error.name === "PermissionDeniedError"
+      ) {
+        setErrorMessage(
+          t("camera.permissionDenied") ||
+            "Camera permission has been denied. Please allow camera access in your browser/device settings and try again."
+        );
+      } else if (
+        error.name === "NotFoundError" ||
+        error.name === "DevicesNotFoundError"
+      ) {
+        setErrorMessage(
+          t("camera.notFound") || "No camera device found on this device."
+        );
+      } else if (error.name === "NotReadableError") {
+        setErrorMessage(
+          t("camera.inUse") ||
+            "Camera is already in use by another application."
+        );
+      } else if (error.name === "OverconstrainedError") {
+        setErrorMessage(
+          t("camera.overconstrained") ||
+            "No suitable camera found for the requested settings."
+        );
+      } else {
+        setErrorMessage(
+          error.message || t("camera.errorDesc") || "Could not access camera. Please check your settings."
+        );
+      }
+    }
   };
 
   const startCamera = async (facingMode: "user" | "environment") => {
     setHasError(false);
     setErrorMessage("");
 
-    const allowed = await checkCameraPermission();
-    if (!allowed) return;
-
     if (cameraType === "BARCODE") {
-      // Small delay to ensure the modal is rendered and #reader is in the DOM
-      setTimeout(() => startScanner(facingMode), 500);
+      // Wait for #reader to appear in the DOM then start scanner
+      waitForReaderAndStart(facingMode);
       return;
     }
 
@@ -82,12 +165,11 @@ export default function CameraModal({
         stream.getTracks().forEach((track) => track.stop());
       }
 
-      // Standard constraints
       const constraints = {
         video: {
           facingMode: { ideal: facingMode },
           width: { ideal: 1280 },
-          height: { ideal: 720 }
+          height: { ideal: 720 },
         },
       };
 
@@ -106,45 +188,55 @@ export default function CameraModal({
         );
       } else if (error.name === "NotFoundError") {
         setErrorMessage(
-          t("camera.notFound") ||
-            "No camera device found on this device."
+          t("camera.notFound") || "No camera device found on this device."
         );
       } else {
-        setErrorMessage(error.message || "Could not access camera");
+        setErrorMessage(error.message || t("camera.errorDesc") || "Could not access camera");
       }
     }
   };
 
+  // Wait until #reader element is in the DOM with real dimensions
+  const waitForReaderAndStart = (
+    facingMode: "user" | "environment",
+    retries = 10
+  ) => {
+    const check = () => {
+      const el = document.getElementById("reader");
+      if (el && el.offsetWidth > 0 && el.offsetHeight > 0) {
+        startScanner(facingMode);
+      } else if (retries > 0) {
+        setTimeout(() => waitForReaderAndStart(facingMode, retries - 1), 300);
+      } else {
+        setHasError(true);
+        setErrorMessage(t("camera.scannerNotFound") || "Scanner element not found");
+      }
+    };
+    setTimeout(check, 300);
+  };
+
   const startScanner = async (facingMode: "user" | "environment") => {
-    const readerElement = document.getElementById("reader");
-    if (!readerElement) {
-      console.error("Scanner element #reader not found in DOM");
-      // Retry once after a short delay
-      setTimeout(() => {
-        if (document.getElementById("reader")) {
-          startScanner(facingMode);
-        } else {
-          setHasError(true);
-          setErrorMessage("Scanner element not found");
+    // Always create a fresh scanner instance bound to the current #reader element
+    if (scannerRef.current) {
+      try {
+        if (scannerRef.current.isScanning) {
+          await scannerRef.current.stop();
         }
-      }, 500);
-      return;
+        await scannerRef.current.clear();
+      } catch {
+        // ignore cleanup errors
+      }
+      scannerRef.current = null;
     }
 
-    if (!scannerRef.current) {
-      scannerRef.current = new Html5Qrcode("reader");
-    }
+    scannerRef.current = new Html5Qrcode("reader");
 
     try {
-      if (scannerRef.current.isScanning) {
-        await scannerRef.current.stop();
-      }
-      
       setIsScanning(true);
       setHasError(false);
 
       await scannerRef.current.start(
-        { facingMode: { ideal: facingMode } },
+        { facingMode: facingMode },
         {
           fps: 15,
           qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
@@ -163,25 +255,29 @@ export default function CameraModal({
             handleClose();
           }
         },
-        () => {}, // ignore errors
+        () => {}, // ignore scan errors
       );
     } catch (err: any) {
       console.error("Scanner start error:", err);
       setIsScanning(false);
       setHasError(true);
-      setErrorMessage(err.message || "Failed to start scanner");
+      setErrorMessage(err.message || t("camera.scannerStartError") || "Failed to start scanner");
     }
   };
 
   const handleClose = async () => {
     try {
-      if (scannerRef.current && scannerRef.current.isScanning) {
-        await scannerRef.current.stop();
+      if (scannerRef.current) {
+        if (scannerRef.current.isScanning) {
+          await scannerRef.current.stop();
+        }
+        await scannerRef.current.clear();
       }
     } catch (e) {
       console.error("Error stopping scanner:", e);
     }
-    
+    scannerRef.current = null;
+
     if (stream) {
       stream.getTracks().forEach((track) => track.stop());
     }
@@ -189,6 +285,7 @@ export default function CameraModal({
     setCapturedImage(null);
     setIsScanning(false);
     setHasError(false);
+    setPermissionStatus("idle");
     onClose();
   };
 
@@ -241,18 +338,25 @@ export default function CameraModal({
 
   useEffect(() => {
     if (isOpen) {
-      startCamera(isFrontCamera ? "user" : "environment");
+      // Check if permission already granted — skip permission screen if so
+      checkExistingPermission();
     } else {
       handleClose();
     }
-    
+
     return () => {
-      // Cleanup on unmount or close
       if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach((track) => track.stop());
       }
     };
   }, [isOpen]);
+
+  // When permission becomes "granted", start the camera/scanner
+  useEffect(() => {
+    if (isOpen && permissionStatus === "granted") {
+      startCamera(isFrontCamera ? "user" : "environment");
+    }
+  }, [permissionStatus]);
 
   useEffect(() => {
     if (isOpen && videoRef.current && stream && cameraType === "IMAGE") {
@@ -311,21 +415,56 @@ export default function CameraModal({
         <ModalContent>
           <div className="relative flex flex-col items-center gap-4">
             <div className="relative w-full max-w-lg aspect-[3/4] bg-black rounded-3xl overflow-hidden shadow-2xl border-4 border-white/20">
-              {hasError ? (
-                <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center text-white bg-gray-900/90">
-                  <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mb-4">
-                    <X className="text-red-500" size={32} />
-                  </div>
-                  <h3 className="text-xl font-bold mb-2">{t("camera.errorTitle") || "Camera Error"}</h3>
-                  <p className="text-sm text-gray-400 mb-6">{errorMessage || t("camera.errorDesc") || "Could not access camera. Please check permissions."}</p>
-                  <Button 
-                    color="primary" 
-                    variant="flat" 
-                    startContent={<RefreshCw size={18} />}
-                    onClick={() => startCamera(isFrontCamera ? "user" : "environment")}
-                  >
-                    {t("common.retry") || "Retry"}
-                  </Button>
+              {permissionStatus !== "granted" ? (
+                <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center text-white bg-gray-900">
+                  {hasError ? (
+                    <>
+                      <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mb-4">
+                        <X className="text-red-500" size={32} />
+                      </div>
+                      <h3 className="text-xl font-bold mb-2">
+                        {t("camera.errorTitle") || "Camera Error"}
+                      </h3>
+                      <p className="text-sm text-gray-400 mb-6">
+                        {errorMessage || t("camera.errorDesc") || "Could not access camera. Please check permissions."}
+                      </p>
+                      <Button
+                        color="primary"
+                        variant="flat"
+                        startContent={<RefreshCw size={18} />}
+                        onClick={requestCameraPermission}
+                      >
+                        {t("common.retry") || "Retry"}
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <div className="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mb-5">
+                        <Camera className="text-primary" size={36} />
+                      </div>
+                      <h3 className="text-xl font-bold mb-2">
+                        {t("camera.permissionTitle") || "Camera Access Required"}
+                      </h3>
+                      <p className="text-sm text-gray-400 mb-2">
+                        {t("camera.permissionDesc") || "This app needs access to your camera to take photos or scan barcodes."}
+                      </p>
+                      <div className="flex items-center gap-2 text-xs text-gray-500 mb-6">
+                        <ShieldCheck size={14} />
+                        <span>{t("camera.privacyNote") || "Your camera data is not stored or shared."}</span>
+                      </div>
+                      <Button
+                        color="primary"
+                        size="lg"
+                        className="font-bold px-10"
+                        radius="full"
+                        startContent={<Camera size={20} />}
+                        isLoading={permissionStatus === "requesting"}
+                        onClick={requestCameraPermission}
+                      >
+                        {t("camera.allowCamera") || "Allow Camera"}
+                      </Button>
+                    </>
+                  )}
                 </div>
               ) : cameraType === "IMAGE" ? (
                 capturedImage ? (
@@ -374,7 +513,7 @@ export default function CameraModal({
                 >
                   <X size={20} />
                 </Button>
-                {!capturedImage && !hasError && (
+                {!capturedImage && !hasError && permissionStatus === "granted" && (
                   <Button
                     isIconOnly
                     className="bg-black/40 backdrop-blur-md text-white hover:bg-black/60 border border-white/10"
@@ -387,7 +526,7 @@ export default function CameraModal({
               </div>
             </div>
 
-            {cameraType === "IMAGE" && !hasError && (
+            {cameraType === "IMAGE" && !hasError && permissionStatus === "granted" && (
               <div className="flex items-center gap-8 p-6 bg-black/40 backdrop-blur-xl rounded-full border border-white/10">
                 {capturedImage ? (
                   <>
@@ -423,7 +562,7 @@ export default function CameraModal({
               </div>
             )}
 
-            {cameraType === "BARCODE" && !hasError && (
+            {cameraType === "BARCODE" && !hasError && permissionStatus === "granted" && (
               <div className="flex items-center gap-3 p-4 bg-black/40 backdrop-blur-xl rounded-full border border-white/10">
                 <Scan className="text-primary animate-pulse" size={24} />
                 <span className="text-white font-medium">

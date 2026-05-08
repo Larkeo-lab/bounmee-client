@@ -354,7 +354,11 @@
     "deleteConfirmMsg": "您确定要删除商品 {{name}} 吗？此操作不可撤销。",
     "emptyTitle": "未找到商品",
     "emptyDesc": "尝试使用不同关键词或更改分类",
-    "category": "类别"
+    "category": "类别",
+    "chooseGallery": "选择从相册",
+    "takePhoto": "拍照",
+    "alignBarcode": "请将条形码对准框内",
+    "scanning": "正在扫描..."
   },
   "queue": {
     "welcome": "欢迎来到 Saysettha ODSC",
@@ -671,5 +675,20 @@
     "completed": "完成",
     "step": "步骤",
     "of": "之"
+  },
+  "camera": {
+    "unsupported": "此浏览器不支持摄像头，或需要安全连接 (HTTPS)。",
+    "permissionDenied": "摄像头权限被拒绝。请在浏览器/设备设置中允许摄像头访问并重试。",
+    "notFound": "在此设备上未找到摄像头设备。",
+    "inUse": "摄像头已被另一个应用程序使用。",
+    "overconstrained": "未找到适合请求设置的摄像头。",
+    "errorTitle": "摄像头错误",
+    "errorDesc": "无法访问摄像头。请检查权限。",
+    "permissionTitle": "需要摄像头权限",
+    "permissionDesc": "此应用需要访问您的摄像头以拍照或扫描条形码。",
+    "privacyNote": "您的摄像头数据不会被存储或共享。",
+    "allowCamera": "允许摄像头",
+    "scannerNotFound": "未找到扫描器组件",
+    "scannerStartError": "扫描器启动失败"
   }
 }
