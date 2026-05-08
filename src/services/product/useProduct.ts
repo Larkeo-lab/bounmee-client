@@ -71,11 +71,12 @@ export const useGetProducts = (
 export const getProductByBarcode = async (
   barcode: string,
   storeId: string,
+  userId?: string,
 ): Promise<Product> => {
   const response = await axiosInstance.get(
     API_ENDPOINTS.PRODUCT.BARCODE(barcode),
     {
-      params: { storeId },
+      params: { storeId, userId },
     },
   );
 

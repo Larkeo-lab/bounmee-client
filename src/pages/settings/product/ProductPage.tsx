@@ -95,7 +95,7 @@ export default function ProductPage() {
 
     return () => clearTimeout(handler);
   }, [filterValue]);
-  const rowsPerPage = 10;
+  const rowsPerPage = 50;
 
   const { data: categoryResponse } = useGetCategories(user?.user?.storeId);
   const categories = categoryResponse?.data || [];
@@ -224,19 +224,19 @@ export default function ProductPage() {
         }}
       >
         <TableHeader>
-          <TableColumn key="no" className="h-12 text-small">
+          <TableColumn key="no" className="h-12 text-small hidden sm:table-cell">
             {t("settings.common.no")}
           </TableColumn>
           <TableColumn key="name" className="h-12 text-small">
             {t("settings.common.nameLabel")}
           </TableColumn>
-          <TableColumn key="price" className="h-12 text-small">
+          <TableColumn key="price" className="h-12 text-small hidden md:table-cell">
             {t("product.price")}
           </TableColumn>
           <TableColumn key="stockQty" className="h-12 text-small">
             {t("product.stockQty")}
           </TableColumn>
-          <TableColumn key="isActive" className="h-12 text-small">
+          <TableColumn key="isActive" className="h-12 text-small hidden sm:table-cell">
             {t("settings.common.status")}
           </TableColumn>
           <TableColumn key="actions" align="end" className="h-12 text-small">
@@ -260,35 +260,40 @@ export default function ProductPage() {
               key={item.id}
               className="cursor-pointer hover:bg-default-50 transition-colors h-16"
             >
-              <TableCell>
+              <TableCell className="hidden sm:table-cell">
                 <p className="text-bold text-small text-default-400">
                   {(page - 1) * rowsPerPage + index + 1}
                 </p>
               </TableCell>
               <TableCell>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 sm:gap-3">
                   {item.image ? (
                     <img
                       alt={item.name}
-                      className="w-10 h-10 rounded-lg object-cover border border-divider shadow-sm"
+                      className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg object-cover border border-divider shadow-sm"
                       src={getDisplayImageUrl(item.image)}
                     />
                   ) : (
-                    <div className="w-10 h-10 rounded-lg bg-default-100 flex items-center justify-center border border-divider">
-                      <ImageIcon className="text-default-400" size={20} />
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-default-100 flex items-center justify-center border border-divider">
+                      <ImageIcon className="text-default-400" size={16} />
                     </div>
                   )}
-                  <div className="flex flex-col">
-                    <p className="text-bold text-small capitalize">
+                  <div className="flex flex-col min-w-0">
+                    <p className="text-bold text-small capitalize truncate">
                       {item.name}
                     </p>
-                    <p className="text-bold text-tiny text-default-400">
-                      {item.barcode}
-                    </p>
+                    <div className="flex flex-wrap items-center gap-x-2">
+                      <p className="text-bold text-tiny text-default-400">
+                        {item.barcode}
+                      </p>
+                      <p className="text-bold text-tiny text-primary md:hidden">
+                        {formatNumber(item.price)} LAK
+                      </p>
+                    </div>
                   </div>
                 </div>
               </TableCell>
-              <TableCell>
+              <TableCell className="hidden md:table-cell">
                 <p className="text-bold text-small whitespace-nowrap">
                   {formatNumber(item.price)} LAK
                 </p>
@@ -309,7 +314,7 @@ export default function ProductPage() {
                   {formatNumber(item.stockQty)}
                 </Chip>
               </TableCell>
-              <TableCell>
+              <TableCell className="hidden sm:table-cell">
                 <Switch
                   isSelected={item.isActive}
                   size="sm"
@@ -326,7 +331,7 @@ export default function ProductPage() {
                 />
               </TableCell>
               <TableCell>
-                <div className="relative flex justify-end items-center gap-2">
+                <div className="relative flex justify-end items-center gap-1 sm:gap-2">
                   <Button
                     isIconOnly
                     size="sm"

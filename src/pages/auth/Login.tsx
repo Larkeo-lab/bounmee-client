@@ -47,7 +47,7 @@ export default function Login() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [identifier, setIdentifier] = React.useState<string>("");
 
-  const { login,/*  updateAuthState */ } = useAuth();
+  const { login /*  updateAuthState */ } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
 
@@ -58,7 +58,7 @@ export default function Login() {
   //     const result = await signInWithPopup(auth, provider);
   //     const user = result.user;
   //     const idToken = await user.getIdToken();
-      
+
   //     // Update visual state (optional but nice)
   //     setIdentifier(user.email || user.providerData?.[0]?.email || "");
 
@@ -84,24 +84,24 @@ export default function Login() {
   //     }
 
   //     const authData = await response.json();
-      
-  //     // Successfully logged in! 
+
+  //     // Successfully logged in!
   //     // Update global auth state
   //     updateAuthState(authData.data);
-      
+
   //     toast.success(t("common.success") || "Login Successful");
-      
+
   //     const userRole = authData.data.user?.role;
   //     const permissions = authData.data.user?.employee?.permission?.permissions;
 
   //     // Handle conditional navigation (same as manual login)
   //     if (userRole === "EMPLOYEE" && permissions) {
   //       if (permissions["table"]?.includes("view")) {
-  //         navigate("/tables");
+  //         navigate("/table");
   //       } else if (permissions["order"]?.includes("view")) {
   //         navigate("/order");
   //       } else if (permissions["product"]?.includes("view")) {
-  //         navigate("/product-order");
+  //         navigate("/saleGeneral");
   //       } else if (permissions["dashboard"]?.includes("view")) {
   //         navigate("/dashboard");
   //       } else {
@@ -125,7 +125,7 @@ export default function Login() {
   //       }
 
   //       // Default navigation for STORE_ADMIN or others
-  //       navigate("/tables");
+  //       navigate("/table");
   //     }
   //   } catch (error: any) {
   //     console.error("Social Login Error:", error);
@@ -171,28 +171,43 @@ export default function Login() {
       const userRole = authData?.user?.role;
       const permissions = authData?.user?.employee?.permission?.permissions;
 
-      // Conditional Navigation based on ROLE & PERMISSION
-      if (userRole === "EMPLOYEE" && permissions) {
-        if (permissions["table"]?.includes("view")) {
-          navigate("/tables");
-        } else if (permissions["order"]?.includes("view")) {
-          navigate("/order");
-        } else if (permissions["product"]?.includes("view")) {
-          navigate("/product-order");
-        } else if (permissions["dashboard"]?.includes("view")) {
-          navigate("/dashboard");
-        } else {
-          navigate("/settings/profile"); // Fallback fallback if no module permissions match
+      // Conditional Navigation based on ROLE & STORE TYPE & PERMISSION
+      const storeType = authData?.user?.store?.type;
+      const isAdmin = userRole === "SUPER_ADMIN" || userRole === "STORE_ADMIN";
+
+      const canAccess = (key: string) => {
+        if (permissions) {
+          return permissions[key]?.includes("read");
         }
+        return isAdmin; // Fallback for admins if no explicit permission record
+      };
+
+      let targetPath = "/settings/profile"; // Absolute fallback
+
+      if (storeType === "GENERAL_STORE") {
+        if (canAccess("pos")) targetPath = "/saleGeneral";
+        else if (canAccess("order")) targetPath = "/order";
+        else if (canAccess("dashboard")) targetPath = "/dashboard";
+      } else if (storeType === "CAFE") {
+        if (canAccess("cafe")) targetPath = "/saleCafe";
+        else if (canAccess("order")) targetPath = "/order";
+        else if (canAccess("dashboard")) targetPath = "/dashboard";
       } else {
-        // Check if questionnaire is completed
+        // RESTAURANT or others
+        if (canAccess("table")) targetPath = "/table";
+        else if (canAccess("cafe")) targetPath = "/saleCafe";
+        else if (canAccess("order")) targetPath = "/order";
+        else if (canAccess("dashboard")) targetPath = "/dashboard";
+      }
+
+      // Check if questionnaire is completed (Only for Admins/Store Owners)
+      if (isAdmin) {
         try {
           if (authData?.user?.storeId) {
             const completionStatus = await checkQuestionnaireCompletion({
-              storeId: authData.user.storeId
+              storeId: authData.user.storeId,
             });
 
-            console.log('completionStatus', completionStatus)
             if (!completionStatus.completed) {
               navigate("/questionnaire");
               return;
@@ -201,9 +216,9 @@ export default function Login() {
         } catch (error) {
           console.error("Failed to check questionnaire status:", error);
         }
-        
-        navigate("/tables"); // Default for Admin/Store Owner
       }
+
+      navigate(targetPath);
     } catch (err: any) {
       showErrorToast(err, "", "danger");
     } finally {
@@ -229,14 +244,14 @@ export default function Login() {
         <div className="relative z-10 flex flex-col items-center text-center text-white space-y-6">
           <div className="p-4 bg-white rounded-[2.5rem] shadow-2xl animate-float">
             <Image
-              alt="Dee POS Logo"
+              alt="Eezy POS Logo"
               className="w-40 sm:w-56"
               src={oneDoorLogo}
             />
           </div>
           <div className="space-y-4">
             <h1 className="text-4xl sm:text-5xl lg:text-7xl font-black tracking-tight drop-shadow-lg uppercase italic">
-              Dee POS
+              Eezy POS
             </h1>
             <p className="text-xl sm:text-2xl font-light opacity-90 max-w-lg mx-auto">
               {t("auth.welcomeMessage")}
@@ -372,7 +387,9 @@ export default function Login() {
 
               <div className="flex items-center gap-4 my-6">
                 <Divider className="flex-1" />
-                <span className="text-xs text-gray-400 uppercase tracking-widest">{t("auth.orContinueWith")}</span>
+                <span className="text-xs text-gray-400 uppercase tracking-widest">
+                  {t("auth.orContinueWith")}
+                </span>
                 <Divider className="flex-1" />
               </div>
 
@@ -412,7 +429,7 @@ export default function Login() {
             </p>
             <Divider className="my-8" />
             <p className="text-[10px] text-gray-400 font-mono uppercase tracking-[0.2em]">
-              Dee POS System &bull; Version {version.version}
+              Eezy POS System &bull; Version {version.version}
             </p>
           </div>
         </div>

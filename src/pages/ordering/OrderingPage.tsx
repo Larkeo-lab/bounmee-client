@@ -105,7 +105,7 @@ export default function OrderingPage() {
   }, [carts, tables, dismissedCarts]);
 
   const handleGoToTable = (tableId: string) => {
-    navigate(`/tables?tableId=${tableId}`);
+    navigate(`/table?tableId=${tableId}`);
   };
 
   return (

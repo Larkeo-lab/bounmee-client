@@ -1,7 +1,7 @@
 export type SiteConfig = typeof siteConfig;
 
 export const siteConfig = {
-  name: "Dee POS",
+  name: "Eezy POS",
   description: "POS Management System for Smart Sales.",
   navItems: [
     {

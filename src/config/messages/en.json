@@ -12,7 +12,11 @@
     "search": "Search",
     "filter": "Filter",
     "export": "Export",
-    "import": "Import"
+    "import": "Import",
+    "retake": "Retake",
+    "next": "Next",
+    "back": "Back",
+    "skip": "Skip"
   },
   "navigation": {
     "home": "Home",
@@ -27,6 +31,7 @@
     "forgotPassword": "Forgot Password",
     "resetPassword": "Reset Password",
     "email": "Email",
+    "backToLogin": "Back to Login",
     "emailOrUsername": "Email or Username",
     "emailOrUsernamePlaceholder": "Enter email or username",
     "password": "Password",
@@ -61,7 +66,6 @@
     "district": "District",
     "phone": "Phone Number",
     "phonePlaceholder": "Enter phone number...",
-    "backToLogin": "Back to Login",
     "registerButton": "Register",
     "registering": "Registering...",
     "registrationSuccess": "Registration successful! Welcome to the system.",
@@ -96,11 +100,11 @@
   },
   "pageNotFound": {
     "error": "ERROR",
-    "description": "Dee POS - Dee POS ",
+    "description": "Eezy POS - Page Not Found",
     "goBack": "Go Back"
   },
   "sidebar": {
-    "title": "Dee POS",
+    "title": "Eezy POS",
     "groups": {
       "system": "System",
       "menu": "Menu",
@@ -205,6 +209,7 @@
     },
     "common": {
       "no": "#",
+      "all": "All",
       "actions": "Actions",
       "search": "Search...",
       "total": "Total {{count}} items",
@@ -344,7 +349,11 @@
     "deleteConfirmMsg": "Are you sure you want to delete product {{name}}? This action cannot be undone.",
     "emptyTitle": "Product not found",
     "emptyDesc": "Try searching with different keywords or change category",
-    "category": "Category"
+    "category": "Category",
+    "chooseGallery": "Choose from Gallery",
+    "takePhoto": "Take Photo",
+    "alignBarcode": "Align barcode within the frame",
+    "scanning": "Scanning..."
   },
   "queue": {
     "welcome": "Welcome to Saysettha ODSC",
@@ -658,8 +667,23 @@
     "submitting": "Submitting your data...",
     "submitSuccess": "Thank you for the information! Your system is ready.",
     "submitError": "An error occurred while submitting. Please try again.",
-    "completed": "Complete Survey",
+    "completed": "Completed",
     "step": "Step",
     "of": "of"
+  },
+  "camera": {
+    "unsupported": "Camera is not supported in this browser or requires a secure connection (HTTPS).",
+    "permissionDenied": "Camera permission has been denied. Please allow camera access in your browser/device settings and try again.",
+    "notFound": "No camera device found on this device.",
+    "inUse": "Camera is already in use by another application.",
+    "overconstrained": "No suitable camera found for the requested settings.",
+    "errorTitle": "Camera Error",
+    "errorDesc": "Could not access camera. Please check permissions.",
+    "permissionTitle": "Camera Access Required",
+    "permissionDesc": "This app needs access to your camera to take photos or scan barcodes.",
+    "privacyNote": "Your camera data is not stored or shared.",
+    "allowCamera": "Allow Camera",
+    "scannerNotFound": "Scanner element not found",
+    "scannerStartError": "Failed to start scanner"
   }
 }

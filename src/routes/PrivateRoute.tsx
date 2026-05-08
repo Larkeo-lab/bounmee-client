@@ -78,7 +78,7 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({
       }
     }
     // Block access completely, safely redirect back to a globally allowed page to avoid Infinite Loop
-    return <Navigate to="/tables" replace />;
+    return <Navigate to="/table" replace />;
   }
   */
 

@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/assets/logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dee POS</title>
-    <meta key="title" content="Dee POS " property="og:title" />
-    <meta content="Smart Dee POS " property="og:description" />
-    <meta content="Smart Dee POS " name="description" />
+    <title>Eezy POS</title>
+    <meta key="title" content="Eezy POS " property="og:title" />
+    <meta content="Smart Eezy POS " property="og:description" />
+    <meta content="Smart Eezy POS " name="description" />
     <meta
       key="viewport"
       content="viewport-fit=cover, width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"
@@ -21,28 +21,40 @@
     ></script>
     <script>
       // 1. Prevent double-tap zoom (iOS Safari hack)
-      document.addEventListener('touchstart', function(event) {
-        if (event.touches.length > 1) {
-          event.preventDefault();
-        }
-      }, { passive: false });
+      document.addEventListener(
+        "touchstart",
+        function (event) {
+          if (event.touches.length > 1) {
+            event.preventDefault();
+          }
+        },
+        { passive: false },
+      );
 
       // 2. Prevent pinch-to-zoom (iOS Safari hack)
-      document.addEventListener('gesturestart', function(event) {
-        event.preventDefault();
-      }, { passive: false });
+      document.addEventListener(
+        "gesturestart",
+        function (event) {
+          event.preventDefault();
+        },
+        { passive: false },
+      );
 
       let lastTouchEnd = 0;
-      document.addEventListener('touchend', function(event) {
-        const now = (new Date()).getTime();
-        if (now - lastTouchEnd <= 300) {
-          event.preventDefault();
-        }
-        lastTouchEnd = now;
-      }, false);
+      document.addEventListener(
+        "touchend",
+        function (event) {
+          const now = new Date().getTime();
+          if (now - lastTouchEnd <= 300) {
+            event.preventDefault();
+          }
+          lastTouchEnd = now;
+        },
+        false,
+      );
     </script>
-    <script type="module" crossorigin src="/assets/index-D5tG14Fz.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-BtDjZh8o.css">
+    <script type="module" crossorigin src="/assets/index-DgjTEOF8.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-xsSiPLQR.css">
   </head>
   <body>
     <div id="root"></div>

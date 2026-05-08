@@ -34,7 +34,7 @@ import { useCart } from "@/provider";
 
 // Icons import
 
-import deePosLogo from "/assets/logo.png";
+import EezyPosLogo from "/assets/logo.png";
 const bgLineName = "/line-nam-bg.png";
 
 import { useAuth } from "@/routes/AuthContext";
@@ -65,19 +65,19 @@ const sidebarGroups: MenuGroup[] = [
     items: [
       {
         labelKey: "sidebar.menu.table",
-        href: "/tables",
+        href: "/table",
         icon: LayoutGrid,
         permissionKey: "table",
       },
       {
         labelKey: "sidebar.menu.pos",
-        href: "/product-order",
+        href: "/saleGeneral",
         icon: ShoppingCart,
         permissionKey: "pos",
       },
       {
         labelKey: "sidebar.menu.cafe",
-        href: "/cafe-order",
+        href: "/saleCafe",
         icon: ShoppingCart,
         permissionKey: "cafe",
       },
@@ -171,8 +171,8 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
     // StoreType Filtering logic
     if (storeType === "GENERAL_STORE") {
       if (
-        href === "/tables" ||
-        href === "/cafe-order" ||
+        href === "/table" ||
+        href === "/saleCafe" ||
         href === "/ordering" ||
         href === "/kitchen" ||
         href === "/chat"
@@ -180,18 +180,23 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
         return false;
     } else if (storeType === "RESTAURANT") {
       // Restaurant can see both tables and cafe
-      if (href === "/product-order") return false;
+      if (href === "/saleGeneral") return false;
     } else if (storeType === "CAFE") {
-      if (href === "/tables" || href === "/product-order" || href === "/chat")
+      if (href === "/table" || href === "/saleGeneral" || href === "/chat")
         return false;
     }
 
     // Permission logic
     if (!key) return true;
-    if (userRole === "SUPER_ADMIN" || userRole === "STORE_ADMIN") return true;
-    const modulePerms = userPermissions[key] as string[] | undefined;
 
-    if (modulePerms && modulePerms.includes("read")) return true;
+    if (userPermissions && userPermissions[key]) {
+      const modulePerms = userPermissions[key] as string[] | undefined;
+
+      return modulePerms?.includes("read") || false;
+    }
+
+    // Default bypass for Admins if no explicit permission record exists
+    if (userRole === "SUPER_ADMIN" || userRole === "STORE_ADMIN") return true;
 
     return false;
   };
@@ -544,9 +549,11 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
             <Image
               alt={user?.user?.store?.name || "Store Logo"}
               className="w-10 h-10 md:w-11 md:h-11 aspect-square object-cover border-2 border-white/20 flex-shrink-0"
-              fallbackSrc={deePosLogo}
+              fallbackSrc={EezyPosLogo}
               radius="full"
-              src={getDisplayImageUrl(user?.user?.store?.logoUrl) || deePosLogo}
+              src={
+                getDisplayImageUrl(user?.user?.store?.logoUrl) || EezyPosLogo
+              }
             />
 
             {/* Store Name (Status Text Removed) */}
