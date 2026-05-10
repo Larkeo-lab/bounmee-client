@@ -3,7 +3,7 @@ import { X, RefreshCw, Check, Scan, Camera, ShieldCheck } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Html5Qrcode } from "html5-qrcode";
-import jsQR from "jsqr";
+import { BrowserMultiFormatReader } from "@zxing/library";
 
 // Polyfill for older browsers that don't have navigator.mediaDevices
 function ensureMediaDevices() {
@@ -11,14 +11,16 @@ function ensureMediaDevices() {
     (navigator as any).mediaDevices = {};
   }
   if (navigator.mediaDevices.getUserMedia === undefined) {
-    navigator.mediaDevices.getUserMedia = (constraints: MediaStreamConstraints) => {
+    navigator.mediaDevices.getUserMedia = (
+      constraints: MediaStreamConstraints,
+    ) => {
       const getUserMedia =
         (navigator as any).webkitGetUserMedia ||
         (navigator as any).mozGetUserMedia ||
         (navigator as any).msGetUserMedia;
       if (!getUserMedia) {
         return Promise.reject(
-          new Error("getUserMedia is not supported in this browser.")
+          new Error("getUserMedia is not supported in this browser."),
         );
       }
       return new Promise<MediaStream>((resolve, reject) => {
@@ -96,13 +98,18 @@ export default function CameraModal({
 
     // After polyfill — still not available means not in a secure context
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      const isSecure = window.isSecureContext || location.protocol === "https:" || location.hostname === "localhost";
+      const isSecure =
+        window.isSecureContext ||
+        location.protocol === "https:" ||
+        location.hostname === "localhost";
       setPermissionStatus("denied");
       setHasError(true);
       setErrorMessage(
         !isSecure
-          ? (t("camera.requireHttps") || "ກ້ອງຕ້ອງໃຊ້ HTTPS ຫຼື localhost ເທົ່ານັ້ນ. ກະລຸນາເຂົ້າຜ່ານ https:// ຫຼື localhost.")
-          : (t("camera.unsupported") || "ບຣາວເຊີນີ້ບໍ່ຮອງຮັບກ້ອງ. ກະລຸນາໃຊ້ Chrome ຫຼື Safari.")
+          ? t("camera.requireHttps") ||
+              "ກ້ອງຕ້ອງໃຊ້ HTTPS ຫຼື localhost ເທົ່ານັ້ນ. ກະລຸນາເຂົ້າຜ່ານ https:// ຫຼື localhost."
+          : t("camera.unsupported") ||
+              "ບຣາວເຊີນີ້ບໍ່ຮອງຮັບກ້ອງ. ກະລຸນາໃຊ້ Chrome ຫຼື Safari.",
       );
       return;
     }
@@ -126,28 +133,30 @@ export default function CameraModal({
       ) {
         setErrorMessage(
           t("camera.permissionDenied") ||
-            "Camera permission has been denied. Please allow camera access in your browser/device settings and try again."
+            "Camera permission has been denied. Please allow camera access in your browser/device settings and try again.",
         );
       } else if (
         error.name === "NotFoundError" ||
         error.name === "DevicesNotFoundError"
       ) {
         setErrorMessage(
-          t("camera.notFound") || "No camera device found on this device."
+          t("camera.notFound") || "No camera device found on this device.",
         );
       } else if (error.name === "NotReadableError") {
         setErrorMessage(
           t("camera.inUse") ||
-            "Camera is already in use by another application."
+            "Camera is already in use by another application.",
         );
       } else if (error.name === "OverconstrainedError") {
         setErrorMessage(
           t("camera.overconstrained") ||
-            "No suitable camera found for the requested settings."
+            "No suitable camera found for the requested settings.",
         );
       } else {
         setErrorMessage(
-          error.message || t("camera.errorDesc") || "Could not access camera. Please check your settings."
+          error.message ||
+            t("camera.errorDesc") ||
+            "Could not access camera. Please check your settings.",
         );
       }
     }
@@ -199,7 +208,9 @@ export default function CameraModal({
             advancedSettings.whiteBalanceMode = "continuous";
           }
           if (Object.keys(advancedSettings).length > 0) {
-            await (videoTrack as any).applyConstraints({ advanced: [advancedSettings] });
+            await (videoTrack as any).applyConstraints({
+              advanced: [advancedSettings],
+            });
           }
         } catch {
           // Device doesn't support advanced settings — ignore
@@ -216,14 +227,16 @@ export default function CameraModal({
       if (error.name === "NotAllowedError") {
         setErrorMessage(
           t("camera.permissionDenied") ||
-            "Camera permission has been denied. Please allow camera access in your browser settings."
+            "Camera permission has been denied. Please allow camera access in your browser settings.",
         );
       } else if (error.name === "NotFoundError") {
         setErrorMessage(
-          t("camera.notFound") || "No camera device found on this device."
+          t("camera.notFound") || "No camera device found on this device.",
         );
       } else {
-        setErrorMessage(error.message || t("camera.errorDesc") || "Could not access camera");
+        setErrorMessage(
+          error.message || t("camera.errorDesc") || "Could not access camera",
+        );
       }
     }
   };
@@ -231,7 +244,7 @@ export default function CameraModal({
   // Wait until #reader element is in the DOM with real dimensions
   const waitForReaderAndStart = (
     facingMode: "user" | "environment",
-    retries = 10
+    retries = 10,
   ) => {
     const check = () => {
       const el = document.getElementById("reader");
@@ -241,7 +254,9 @@ export default function CameraModal({
         setTimeout(() => waitForReaderAndStart(facingMode, retries - 1), 300);
       } else {
         setHasError(true);
-        setErrorMessage(t("camera.scannerNotFound") || "Scanner element not found");
+        setErrorMessage(
+          t("camera.scannerNotFound") || "Scanner element not found",
+        );
       }
     };
     setTimeout(check, 300);
@@ -259,18 +274,17 @@ export default function CameraModal({
     }
   };
 
-  const nativeScanRef = useRef<{ stream: MediaStream; animId: number; canvas: HTMLCanvasElement } | null>(null);
+  const nativeScanRef = useRef<{
+    stream: MediaStream;
+    reader: BrowserMultiFormatReader;
+    videoElement: HTMLVideoElement;
+  } | null>(null);
 
-  // iOS scanner: video + canvas + jsQR (works on all iOS Safari versions)
+  // iOS scanner: video + zxing BrowserMultiFormatReader (supports all barcode formats)
   const startNativeScanner = async (facingMode: "user" | "environment") => {
     try {
       setIsScanning(true);
       setHasError(false);
-
-      const scannerStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: facingMode } },
-        audio: false,
-      });
 
       const readerEl = document.getElementById("reader");
       if (!readerEl) return;
@@ -279,50 +293,56 @@ export default function CameraModal({
       const video = document.createElement("video");
       video.setAttribute("playsinline", "true");
       video.setAttribute("webkit-playsinline", "true");
-      video.setAttribute("autoplay", "true");
       video.setAttribute("muted", "true");
       video.playsInline = true;
       video.muted = true;
       video.style.width = "100%";
       video.style.height = "100%";
       video.style.objectFit = "cover";
-      video.srcObject = scannerStream;
+      video.id = "ios-scanner-video";
       readerEl.appendChild(video);
-      await video.play();
 
-      const scanCanvas = document.createElement("canvas");
-      const ctx = scanCanvas.getContext("2d", { willReadFrequently: true });
+      const codeReader = new BrowserMultiFormatReader();
 
-      let detected = false;
-      const scanFrame = () => {
-        if (detected || !video.videoWidth || !ctx) {
-          if (!detected) {
-            nativeScanRef.current = { stream: scannerStream, animId: requestAnimationFrame(scanFrame), canvas: scanCanvas };
+      // Get available cameras and pick the back camera
+      const devices = await codeReader.listVideoInputDevices();
+      let deviceId: string | undefined;
+      if (facingMode === "environment") {
+        const backCam = devices.find(
+          (d) =>
+            d.label.toLowerCase().includes("back") ||
+            d.label.toLowerCase().includes("rear") ||
+            d.label.toLowerCase().includes("environment"),
+        );
+        deviceId = backCam?.deviceId || devices[devices.length - 1]?.deviceId;
+      } else {
+        const frontCam = devices.find(
+          (d) =>
+            d.label.toLowerCase().includes("front") ||
+            d.label.toLowerCase().includes("face"),
+        );
+        deviceId = frontCam?.deviceId || devices[0]?.deviceId;
+      }
+
+      await codeReader.decodeFromVideoDevice(
+        deviceId || null,
+        "ios-scanner-video",
+        (result, _error) => {
+          if (result) {
+            playScanSound();
+            if (onScan) onScan(result.getText());
+            handleClose();
           }
-          return;
-        }
+          // error is normal when no barcode is in frame — ignore
+        },
+      );
 
-        scanCanvas.width = video.videoWidth;
-        scanCanvas.height = video.videoHeight;
-        ctx.drawImage(video, 0, 0, scanCanvas.width, scanCanvas.height);
-
-        const imageData = ctx.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
-        const code = jsQR(imageData.data, imageData.width, imageData.height, {
-          inversionAttempts: "dontInvert",
-        });
-
-        if (code && code.data && !detected) {
-          detected = true;
-          playScanSound();
-          if (onScan) onScan(code.data);
-          handleClose();
-          return;
-        }
-
-        nativeScanRef.current = { stream: scannerStream, animId: requestAnimationFrame(scanFrame), canvas: scanCanvas };
+      const activeStream = video.srcObject as MediaStream;
+      nativeScanRef.current = {
+        stream: activeStream,
+        reader: codeReader,
+        videoElement: video,
       };
-
-      nativeScanRef.current = { stream: scannerStream, animId: requestAnimationFrame(scanFrame), canvas: scanCanvas };
     } catch (err: any) {
       console.error("Native scanner error:", err);
       setIsScanning(false);
@@ -333,8 +353,12 @@ export default function CameraModal({
 
   const stopNativeScanner = () => {
     if (nativeScanRef.current) {
-      cancelAnimationFrame(nativeScanRef.current.animId);
-      nativeScanRef.current.stream.getTracks().forEach((t) => t.stop());
+      try {
+        nativeScanRef.current.reader.reset();
+      } catch {
+        // ignore reset errors
+      }
+      nativeScanRef.current.stream?.getTracks().forEach((t) => t.stop());
       nativeScanRef.current = null;
     }
   };
@@ -395,7 +419,11 @@ export default function CameraModal({
       console.error("Scanner start error:", err);
       setIsScanning(false);
       setHasError(true);
-      setErrorMessage(err.message || t("camera.scannerStartError") || "Failed to start scanner");
+      setErrorMessage(
+        err.message ||
+          t("camera.scannerStartError") ||
+          "Failed to start scanner",
+      );
     }
   };
 
@@ -564,7 +592,9 @@ export default function CameraModal({
                         {t("camera.errorTitle") || "Camera Error"}
                       </h3>
                       <p className="text-sm text-gray-400 mb-6">
-                        {errorMessage || t("camera.errorDesc") || "Could not access camera. Please check permissions."}
+                        {errorMessage ||
+                          t("camera.errorDesc") ||
+                          "Could not access camera. Please check permissions."}
                       </p>
                       <Button
                         color="primary"
@@ -581,14 +611,19 @@ export default function CameraModal({
                         <Camera className="text-primary" size={36} />
                       </div>
                       <h3 className="text-xl font-bold mb-2">
-                        {t("camera.permissionTitle") || "Camera Access Required"}
+                        {t("camera.permissionTitle") ||
+                          "Camera Access Required"}
                       </h3>
                       <p className="text-sm text-gray-400 mb-2">
-                        {t("camera.permissionDesc") || "This app needs access to your camera to take photos or scan barcodes."}
+                        {t("camera.permissionDesc") ||
+                          "This app needs access to your camera to take photos or scan barcodes."}
                       </p>
                       <div className="flex items-center gap-2 text-xs text-gray-500 mb-6">
                         <ShieldCheck size={14} />
-                        <span>{t("camera.privacyNote") || "Your camera data is not stored or shared."}</span>
+                        <span>
+                          {t("camera.privacyNote") ||
+                            "Your camera data is not stored or shared."}
+                        </span>
                       </div>
                       <Button
                         color="primary"
@@ -626,23 +661,26 @@ export default function CameraModal({
               )}
 
               {/* Scan Overlay for Barcode Mode */}
-              {cameraType === "BARCODE" && !capturedImage && isScanning && !hasError && (
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-                  <div className="w-64 h-64 border-2 border-primary/50 rounded-2xl relative overflow-hidden bg-primary/5">
-                    {/* Corner Brackets */}
-                    <div className="absolute top-0 left-0 w-6 h-6 border-t-4 border-l-4 border-primary rounded-tl-lg" />
-                    <div className="absolute top-0 right-0 w-6 h-6 border-t-4 border-r-4 border-primary rounded-tr-lg" />
-                    <div className="absolute bottom-0 left-0 w-6 h-6 border-b-4 border-l-4 border-primary rounded-bl-lg" />
-                    <div className="absolute bottom-0 right-0 w-6 h-6 border-b-4 border-r-4 border-primary rounded-br-lg" />
+              {cameraType === "BARCODE" &&
+                !capturedImage &&
+                isScanning &&
+                !hasError && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                    <div className="w-64 h-64 border-2 border-primary/50 rounded-2xl relative overflow-hidden bg-primary/5">
+                      {/* Corner Brackets */}
+                      <div className="absolute top-0 left-0 w-6 h-6 border-t-4 border-l-4 border-primary rounded-tl-lg" />
+                      <div className="absolute top-0 right-0 w-6 h-6 border-t-4 border-r-4 border-primary rounded-tr-lg" />
+                      <div className="absolute bottom-0 left-0 w-6 h-6 border-b-4 border-l-4 border-primary rounded-bl-lg" />
+                      <div className="absolute bottom-0 right-0 w-6 h-6 border-b-4 border-r-4 border-primary rounded-br-lg" />
 
-                    {/* Animated Scan Line */}
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-b from-primary/80 to-transparent shadow-[0_0_15px_rgba(var(--heroui-primary-rgb),0.8)] animate-scan" />
+                      {/* Animated Scan Line */}
+                      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-b from-primary/80 to-transparent shadow-[0_0_15px_rgba(var(--heroui-primary-rgb),0.8)] animate-scan" />
+                    </div>
+                    <div className="absolute bottom-10 text-white text-sm font-bold bg-black/60 px-6 py-3 rounded-full backdrop-blur-md border border-white/20 shadow-xl">
+                      {t("product.alignBarcode")}
+                    </div>
                   </div>
-                  <div className="absolute bottom-10 text-white text-sm font-bold bg-black/60 px-6 py-3 rounded-full backdrop-blur-md border border-white/20 shadow-xl">
-                    {t("product.alignBarcode")}
-                  </div>
-                </div>
-              )}
+                )}
 
               <div className="absolute top-4 right-4 flex flex-col gap-2 z-20">
                 <Button
@@ -653,63 +691,69 @@ export default function CameraModal({
                 >
                   <X size={20} />
                 </Button>
-                {!capturedImage && !hasError && permissionStatus === "granted" && (
-                  <Button
-                    isIconOnly
-                    className="bg-black/40 backdrop-blur-md text-white hover:bg-black/60 border border-white/10"
-                    radius="full"
-                    onClick={switchCamera}
-                  >
-                    <RefreshCw size={20} />
-                  </Button>
-                )}
+                {!capturedImage &&
+                  !hasError &&
+                  permissionStatus === "granted" && (
+                    <Button
+                      isIconOnly
+                      className="bg-black/40 backdrop-blur-md text-white hover:bg-black/60 border border-white/10"
+                      radius="full"
+                      onClick={switchCamera}
+                    >
+                      <RefreshCw size={20} />
+                    </Button>
+                  )}
               </div>
             </div>
 
-            {cameraType === "IMAGE" && !hasError && permissionStatus === "granted" && (
-              <div className="flex items-center gap-8 p-6 bg-black/40 backdrop-blur-xl rounded-full border border-white/10">
-                {capturedImage ? (
-                  <>
+            {cameraType === "IMAGE" &&
+              !hasError &&
+              permissionStatus === "granted" && (
+                <div className="flex items-center gap-8 p-6 bg-black/40 backdrop-blur-xl rounded-full border border-white/10">
+                  {capturedImage ? (
+                    <>
+                      <Button
+                        className="bg-white/10 text-white hover:bg-white/20 border border-white/10 px-8"
+                        radius="full"
+                        startContent={<RefreshCw size={20} />}
+                        onClick={() => setCapturedImage(null)}
+                      >
+                        {t("common.retake")}
+                      </Button>
+                      <Button
+                        className="bg-primary text-white hover:bg-primary/90 px-10 font-bold shadow-lg shadow-primary/20"
+                        radius="full"
+                        startContent={<Check size={20} />}
+                        onClick={saveCapturedPhoto}
+                      >
+                        {t("common.save")}
+                      </Button>
+                    </>
+                  ) : (
                     <Button
-                      className="bg-white/10 text-white hover:bg-white/20 border border-white/10 px-8"
+                      isIconOnly
+                      className="w-20 h-20 bg-white hover:bg-gray-100 shadow-2xl transition-transform active:scale-90"
                       radius="full"
-                      startContent={<RefreshCw size={20} />}
-                      onClick={() => setCapturedImage(null)}
+                      onClick={capturePhoto}
                     >
-                      {t("common.retake")}
+                      <div className="w-16 h-16 rounded-full border-4 border-black/10 flex items-center justify-center">
+                        <div className="w-12 h-12 rounded-full bg-black/5" />
+                      </div>
                     </Button>
-                    <Button
-                      className="bg-primary text-white hover:bg-primary/90 px-10 font-bold shadow-lg shadow-primary/20"
-                      radius="full"
-                      startContent={<Check size={20} />}
-                      onClick={saveCapturedPhoto}
-                    >
-                      {t("common.save")}
-                    </Button>
-                  </>
-                ) : (
-                  <Button
-                    isIconOnly
-                    className="w-20 h-20 bg-white hover:bg-gray-100 shadow-2xl transition-transform active:scale-90"
-                    radius="full"
-                    onClick={capturePhoto}
-                  >
-                    <div className="w-16 h-16 rounded-full border-4 border-black/10 flex items-center justify-center">
-                      <div className="w-12 h-12 rounded-full bg-black/5" />
-                    </div>
-                  </Button>
-                )}
-              </div>
-            )}
+                  )}
+                </div>
+              )}
 
-            {cameraType === "BARCODE" && !hasError && permissionStatus === "granted" && (
-              <div className="flex items-center gap-3 p-4 bg-black/40 backdrop-blur-xl rounded-full border border-white/10">
-                <Scan className="text-primary animate-pulse" size={24} />
-                <span className="text-white font-medium">
-                  {t("product.scanning") || "Scanning..."}
-                </span>
-              </div>
-            )}
+            {cameraType === "BARCODE" &&
+              !hasError &&
+              permissionStatus === "granted" && (
+                <div className="flex items-center gap-3 p-4 bg-black/40 backdrop-blur-xl rounded-full border border-white/10">
+                  <Scan className="text-primary animate-pulse" size={24} />
+                  <span className="text-white font-medium">
+                    {t("product.scanning") || "Scanning..."}
+                  </span>
+                </div>
+              )}
           </div>
         </ModalContent>
       </Modal>
