@@ -25,6 +25,8 @@ import { useUploadImage } from "@/services/storage";
 import { Category } from "@/services/category/useCategory";
 import { getDisplayImageUrl } from "@/lib/utils";
 import { formatNumber, parseNumber } from "@/utils/numberFormat";
+import { useGetUnits, Unit } from "@/services/unit/useUnit";
+import { Layers } from "lucide-react";
 
 interface EditProductProps {
   isOpen: boolean;
@@ -59,6 +61,7 @@ export default function EditProduct({
     price: 0,
     stockQty: 0,
     categoryId: "",
+    unitId: "",
     image: "",
     isActive: true,
     isBarcode: false,
@@ -74,6 +77,7 @@ export default function EditProduct({
         price: Number(product.price),
         stockQty: Number(product.stockQty),
         categoryId: product.categoryId,
+        unitId: product.unitId || "",
         image: product.image || "",
         isActive: product.isActive,
         isBarcode: product.isBarcode || false,
@@ -115,6 +119,9 @@ export default function EditProduct({
   const handleBarcodeScan = (data: string) => {
     setFormData((prev) => ({ ...prev, barcode: data }));
   };
+
+  const { data: unitsResponse } = useGetUnits(storeId);
+  const units = unitsResponse?.data || [];
 
   const handleSubmit = async (onModalClose: () => void) => {
     if (!product) return;
@@ -259,10 +266,10 @@ export default function EditProduct({
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <Input
                     isRequired
-                    className="col-span-1 md:col-span-2"
+                    className="col-span-1 md:col-span-3"
                     label={t("settings.common.nameLabel")}
                     labelPlacement="outside"
                     placeholder={t("settings.common.nameLabel")}
@@ -295,6 +302,7 @@ export default function EditProduct({
                   </Select>
                   <Input
                     isDisabled={!formData.isBarcode}
+                    className="md:col-span-2"
                     label={t("product.barcode")}
                     labelPlacement="outside"
                     placeholder={t("product.barcode")}
@@ -340,6 +348,28 @@ export default function EditProduct({
                   >
                     {categories.map((cat: Category) => (
                       <SelectItem key={cat.id}>{cat.name}</SelectItem>
+                    ))}
+                  </Select>
+                  <Select
+                    label={t("product.unit")}
+                    labelPlacement="outside"
+                    placeholder={t("product.unit")}
+                    selectedKeys={
+                      formData.unitId ? [formData.unitId] : []
+                    }
+                    startContent={
+                      <Layers className="text-default-400" size={18} />
+                    }
+                    variant="bordered"
+                    onSelectionChange={(keys) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        unitId: Array.from(keys)[0] as string,
+                      }))
+                    }
+                  >
+                    {units.map((unit: Unit) => (
+                      <SelectItem key={unit.id}>{unit.name}</SelectItem>
                     ))}
                   </Select>
                   <Input
@@ -394,7 +424,7 @@ export default function EditProduct({
                       }))
                     }
                   />
-                 
+                  <div className="hidden md:block" />
                 </div>
               </div>
             </ModalBody>

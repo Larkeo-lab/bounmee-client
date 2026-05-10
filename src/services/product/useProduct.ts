@@ -18,6 +18,11 @@ export interface Product {
   isBarcode: boolean;
   createdAt: string;
   updatedAt: string;
+  unitId: string | null;
+  unit?: {
+    id: string;
+    name: string;
+  };
   category?: {
     id: string;
     name: string;
@@ -34,6 +39,7 @@ export interface CreateProductInput {
   categoryId: string;
   storeId: string;
   image?: string;
+  unitId?: string | null;
   isActive?: boolean;
   isBarcode?: boolean;
 }

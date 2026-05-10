@@ -525,7 +525,9 @@ export default function CustomerMenuPage() {
                       </h3>
                       <p className="text-primary font-black text-xs sm:text-sm">
                         {formatNumber(product.price)}{" "}
-                        <span className="text-[10px]">₭</span>
+                        <span className="text-[10px]">
+                          ກີບ{product.unit?.name ? `/${product.unit.name}` : ""}
+                        </span>
                       </p>
                       <Button
                         className="w-full font-bold text-[10px] sm:text-xs h-8 sm:h-9 min-w-0"

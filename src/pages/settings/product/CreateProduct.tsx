@@ -14,19 +14,33 @@ import {
   DropdownMenu,
   DropdownItem,
 } from "@heroui/react";
-import { Barcode, Tag, Package, Upload, X, Camera, Image as ImageIcon } from "lucide-react";
+import {
+  Barcode,
+  Tag,
+  Package,
+  Upload,
+  X,
+  Camera,
+  Image as ImageIcon,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
 import CameraModal from "@/components/camera";
 
 import { toast } from "react-hot-toast";
 
-import { useCreateProduct, useUpdateProduct, getProductByBarcode } from "@/services/product/useProduct";
+import {
+  useCreateProduct,
+  useUpdateProduct,
+  getProductByBarcode,
+} from "@/services/product/useProduct";
 import { useUploadImage } from "@/services/storage";
 import { Category } from "@/services/category/useCategory";
 import { getDisplayImageUrl } from "@/lib/utils";
 import { formatNumber, parseNumber } from "@/utils/numberFormat";
+import { useGetUnits, Unit } from "@/services/unit/useUnit";
+import { Layers } from "lucide-react";
 
 interface CreateProductProps {
   isOpen: boolean;
@@ -34,6 +48,7 @@ interface CreateProductProps {
   onClose: () => void;
   storeId: string;
   categories: Category[];
+  initialBarcode?: string;
 }
 
 export default function CreateProduct({
@@ -41,6 +56,7 @@ export default function CreateProduct({
   onOpenChange,
   storeId,
   categories,
+  initialBarcode,
 }: CreateProductProps) {
   const { t } = useTranslation();
   const createProductMutation = useCreateProduct();
@@ -60,12 +76,15 @@ export default function CreateProduct({
     price: 0,
     stockQty: 0,
     categoryId: "",
+    unitId: "",
     image: "",
     isActive: true,
     isBarcode: false,
   });
   const [isUpdateMode, setIsUpdateMode] = useState(false);
-  const [existingProductId, setExistingProductId] = useState<string | null>(null);
+  const [existingProductId, setExistingProductId] = useState<string | null>(
+    null,
+  );
 
   const resetForm = () => {
     setFormData({
@@ -76,6 +95,7 @@ export default function CreateProduct({
       price: 0,
       stockQty: 0,
       categoryId: "",
+      unitId: "",
       image: "",
       isActive: true,
       isBarcode: false,
@@ -84,6 +104,14 @@ export default function CreateProduct({
     setIsUpdateMode(false);
     setExistingProductId(null);
   };
+
+  // When opened with a scanned barcode, pre-fill and search
+  useEffect(() => {
+    if (isOpen && initialBarcode) {
+      setFormData((prev) => ({ ...prev, barcode: initialBarcode, isBarcode: true }));
+      handleBarcodeSearch(initialBarcode);
+    }
+  }, [isOpen, initialBarcode]);
 
   const handleOpenChange = (open: boolean) => {
     if (!open) resetForm();
@@ -139,6 +167,7 @@ export default function CreateProduct({
           price: Number(product.price),
           stockQty: Number(product.stockQty),
           categoryId: product.categoryId,
+          unitId: product.unitId || "",
           image: product.image || "",
           isActive: product.isActive,
           isBarcode: product.isBarcode || false,
@@ -156,6 +185,9 @@ export default function CreateProduct({
       setExistingProductId(null);
     }
   };
+
+  const { data: unitsResponse } = useGetUnits(storeId);
+  const units = unitsResponse?.data || [];
 
   const handleSubmit = async (onModalClose: () => void) => {
     try {
@@ -313,10 +345,10 @@ export default function CreateProduct({
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <Input
                     isRequired
-                    className="col-span-1 md:col-span-2"
+                    className="col-span-1 md:col-span-3"
                     label={t("settings.common.nameLabel")}
                     labelPlacement="outside"
                     placeholder={t("settings.common.nameLabel")}
@@ -349,6 +381,7 @@ export default function CreateProduct({
                   </Select>
                   <Input
                     isDisabled={!formData.isBarcode}
+                    className="md:col-span-2"
                     label={t("product.barcode")}
                     labelPlacement="outside"
                     placeholder={t("product.barcode")}
@@ -401,6 +434,7 @@ export default function CreateProduct({
                       <SelectItem key={cat.id}>{cat.name}</SelectItem>
                     ))}
                   </Select>
+
                   <Input
                     label={t("product.stockQty")}
                     labelPlacement="outside"
@@ -418,12 +452,34 @@ export default function CreateProduct({
                       }))
                     }
                   />
+                  <Select
+                    label={t("product.unit")}
+                    labelPlacement="outside"
+                    placeholder={t("product.unit")}
+                    selectedKeys={formData.unitId ? [formData.unitId] : []}
+                    startContent={
+                      <Layers className="text-default-400" size={18} />
+                    }
+                    variant="bordered"
+                    onSelectionChange={(keys) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        unitId: Array.from(keys)[0] as string,
+                      }))
+                    }
+                  >
+                    {units.map((unit: Unit) => (
+                      <SelectItem key={unit.id}>{unit.name}</SelectItem>
+                    ))}
+                  </Select>
                   <Input
                     label={t("product.cost")}
                     labelPlacement="outside"
                     placeholder="0"
                     startContent={
-                      <span className="text-default-400 font-bold text-small">{t("common.currency")}</span>
+                      <span className="text-default-400 font-bold text-small">
+                        {t("common.currency")}
+                      </span>
                     }
                     type="text"
                     value={formatNumber(formData.cost)}
@@ -441,7 +497,9 @@ export default function CreateProduct({
                     labelPlacement="outside"
                     placeholder="0"
                     startContent={
-                      <span className="text-default-400 font-bold text-small">{t("common.currency")}</span>
+                      <span className="text-default-400 font-bold text-small">
+                        {t("common.currency")}
+                      </span>
                     }
                     type="text"
                     value={formatNumber(formData.price)}
@@ -453,7 +511,7 @@ export default function CreateProduct({
                       }))
                     }
                   />
-                  
+                  <div className="hidden md:block" />
                 </div>
               </div>
             </ModalBody>
@@ -473,7 +531,9 @@ export default function CreateProduct({
                 }
                 onPress={() => handleSubmit(onModalClose)}
               >
-                {isUpdateMode ? t("settings.common.update") : t("settings.common.save")}
+                {isUpdateMode
+                  ? t("settings.common.update")
+                  : t("settings.common.save")}
               </Button>
             </ModalFooter>
           </>

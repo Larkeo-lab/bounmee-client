@@ -648,7 +648,7 @@ export default function Dashboard() {
                       size="sm"
                       variant="flat"
                     >
-                      {product.qty}
+                      {product.qty}{product.unitName ? ` ${product.unitName}` : ""}
                     </Chip>
                   </TableCell>
                   <TableCell className="text-center">

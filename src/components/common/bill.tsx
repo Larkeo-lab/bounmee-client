@@ -283,6 +283,8 @@ export default function BillModal({
     );
   }, [finalOrder, placedOrders]);
 
+  console.log("finalOrder", finalOrder);
+
   return (
     <Modal
       isDismissable
@@ -362,7 +364,7 @@ export default function BillModal({
 
                   <div className="flex justify-between items-center p-3 bg-default-100 rounded-2xl border border-divider">
                     <span className="text-xs font-bold text-default-600">
-                      ຮູບແບບการชຳລະ:
+                      ຮູບແບບການຊຳລະ:
                     </span>
                     <Chip
                       className="font-black text-[10px] uppercase"
@@ -386,9 +388,9 @@ export default function BillModal({
                   <div className="border-t border-dashed border-divider pt-4 space-y-4">
                     <div className="grid grid-cols-12 gap-1 text-[10px] font-black text-default-400 uppercase tracking-tighter text-left border-b border-divider pb-2">
                       <div className="col-span-1">#</div>
-                      <div className="col-span-5">ລາຍການ</div>
-                      <div className="col-span-1 text-center">ຈຳນວນ</div>
-                      <div className="col-span-2 text-right">ລາຄา</div>
+                      <div className="col-span-4">ລາຍການ</div>
+                      <div className="col-span-2 text-center">ຈຳນວນ</div>
+                      <div className="col-span-2 text-right">ລາຄາ</div>
                       <div className="col-span-3 text-right">ລວມ</div>
                     </div>
 
@@ -401,7 +403,10 @@ export default function BillModal({
                           const productName = item.product?.name || item.name;
                           const qty = item.qty || item.quantity;
                           const price = item.unitPrice || item.price;
+                          const unitName =
+                            item.product?.unit?.name || item.unitName || "";
 
+                          console.log("unitName", unitName);
                           return (
                             <div
                               key={idx}
@@ -410,11 +415,12 @@ export default function BillModal({
                               <div className="col-span-1 text-default-400 font-medium">
                                 {idx + 1}
                               </div>
-                              <div className="col-span-5 text-default-800 line-clamp-2 leading-tight">
+                              <div className="col-span-4 text-default-800 line-clamp-2 leading-tight">
                                 {productName}
                               </div>
-                              <div className="col-span-1 text-center text-primary font-black">
+                              <div className="col-span-2 text-center text-primary font-black">
                                 {qty}
+                                {unitName ? ` ${unitName}` : ""}
                               </div>
                               <div className="col-span-2 text-right text-default-500">
                                 {formatNumber(price)}

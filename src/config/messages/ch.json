@@ -286,6 +286,9 @@
       "zone": "区域",
       "selectZoneError": "保存前请选择一个区域"
     },
+    "product": {
+      "unitTitle": "管理单位"
+    },
     "storeProfile": {
       "title": "管理店铺资料",
       "subtitle": "更新店铺基本信息"

@@ -31,6 +31,7 @@ interface CartItem {
   price: number;
   quantity: number;
   image: string | null;
+  unitName?: string;
 }
 
 interface PaymentModalProps {
@@ -118,6 +119,7 @@ export default function PaymentModal({
           subTotal: Number(item.price) * Number(item.quantity),
           status: item.status,
           note: item.note || "",
+          unitName: item.unitName || "",
         })),
       });
 

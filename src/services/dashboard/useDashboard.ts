@@ -31,6 +31,7 @@ export interface TopSellingProduct {
   image?: string;
   qty: number;
   totalSales: number;
+  unitName?: string;
 }
 
 export interface DashboardData {
