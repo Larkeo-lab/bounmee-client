@@ -3,7 +3,7 @@ import { X, RefreshCw, Check, Scan, Camera, ShieldCheck } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Html5Qrcode } from "html5-qrcode";
-import { BrowserMultiFormatReader } from "@zxing/library";
+import Quagga from "@ericblade/quagga2";
 
 // Polyfill for older browsers that don't have navigator.mediaDevices
 function ensureMediaDevices() {
@@ -274,62 +274,90 @@ export default function CameraModal({
     }
   };
 
-  const nativeScanRef = useRef<{
-    stream: MediaStream;
-    reader: BrowserMultiFormatReader;
-    videoElement: HTMLVideoElement;
-  } | null>(null);
+  const nativeScanRef = useRef<boolean>(false);
 
-  // iOS scanner: zxing decodeFromConstraints (handles video internally, supports all barcode formats)
+  // iOS scanner: Quagga2 (reliable 1D barcode scanning on iOS Safari)
   const startNativeScanner = async (facingMode: "user" | "environment") => {
     try {
       setIsScanning(true);
       setHasError(false);
+      nativeScanRef.current = true;
 
       const readerEl = document.getElementById("reader");
       if (!readerEl) return;
 
-      // Create video with playsinline for iOS
       readerEl.innerHTML = "";
-      const video = document.createElement("video");
-      video.id = "ios-scanner-video";
-      video.playsInline = true;
-      video.muted = true;
-      video.setAttribute("playsinline", "");
-      video.setAttribute("webkit-playsinline", "");
-      video.style.cssText = "width:100%;height:100%;object-fit:cover;";
-      readerEl.appendChild(video);
 
-      const codeReader = new BrowserMultiFormatReader();
+      await new Promise<void>((resolve, reject) => {
+        Quagga.init(
+          {
+            inputStream: {
+              type: "LiveStream",
+              target: readerEl,
+              constraints: {
+                facingMode: facingMode,
+                width: { ideal: 1280 },
+                height: { ideal: 720 },
+              },
+            },
+            decoder: {
+              readers: [
+                "ean_reader",
+                "ean_8_reader",
+                "upc_reader",
+                "upc_e_reader",
+                "code_128_reader",
+                "code_39_reader",
+                "code_93_reader",
+                "codabar_reader",
+                "i2of5_reader",
+              ],
+              multiple: false,
+            },
+            locate: true,
+            frequency: 10,
+          },
+          (err: any) => {
+            if (err) {
+              reject(err);
+              return;
+            }
+            resolve();
+          },
+        );
+      });
 
-      await codeReader.decodeFromConstraints(
-        { video: { facingMode: { ideal: facingMode } }, audio: false },
-        "ios-scanner-video",
-        (result) => {
-          if (result) {
-            playScanSound();
-            if (onScan) onScan(result.getText());
-            handleClose();
-          }
-        },
-      );
-
-      // Re-apply playsinline after zxing starts (it may replace attributes)
-      const videoEl = document.getElementById("ios-scanner-video") as HTMLVideoElement;
+      // Ensure video has playsinline for iOS
+      const videoEl = readerEl.querySelector("video");
       if (videoEl) {
-        videoEl.playsInline = true;
         videoEl.setAttribute("playsinline", "");
         videoEl.setAttribute("webkit-playsinline", "");
+        videoEl.playsInline = true;
+        videoEl.style.width = "100%";
+        videoEl.style.height = "100%";
+        videoEl.style.objectFit = "cover";
       }
 
-      const activeStream = (videoEl || video).srcObject as MediaStream;
-      nativeScanRef.current = {
-        stream: activeStream,
-        reader: codeReader,
-        videoElement: videoEl || video,
-      };
+      // Hide Quagga's canvas overlays
+      const canvases = readerEl.querySelectorAll("canvas");
+      canvases.forEach((c) => {
+        c.style.display = "none";
+      });
+
+      Quagga.start();
+
+      Quagga.onDetected((result: any) => {
+        if (!nativeScanRef.current) return;
+        const code = result?.codeResult?.code;
+        if (code) {
+          nativeScanRef.current = false;
+          playScanSound();
+          if (onScan) onScan(code);
+          handleClose();
+        }
+      });
     } catch (err: any) {
-      console.error("Native scanner error:", err);
+      console.error("Quagga scanner error:", err);
       setIsScanning(false);
       setHasError(true);
       setErrorMessage(err.message || "Failed to start scanner");
@@ -338,13 +366,13 @@ export default function CameraModal({
 
   const stopNativeScanner = () => {
     if (nativeScanRef.current) {
-      try {
-        nativeScanRef.current.reader.reset();
-      } catch {
-        // ignore reset errors
-      }
-      nativeScanRef.current.stream?.getTracks().forEach((t) => t.stop());
-      nativeScanRef.current = null;
+      nativeScanRef.current = false;
+    }
+    try {
+      Quagga.stop();
+      Quagga.offDetected();
+    } catch {
+      // ignore stop errors
     }
   };
 
