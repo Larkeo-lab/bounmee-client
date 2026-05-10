@@ -280,7 +280,7 @@ export default function CameraModal({
     videoElement: HTMLVideoElement;
   } | null>(null);
 
-  // iOS scanner: video + zxing BrowserMultiFormatReader (supports all barcode formats)
+  // iOS scanner: zxing decodeFromConstraints (handles video internally, supports all barcode formats)
   const startNativeScanner = async (facingMode: "user" | "environment") => {
     try {
       setIsScanning(true);
@@ -289,59 +289,44 @@ export default function CameraModal({
       const readerEl = document.getElementById("reader");
       if (!readerEl) return;
 
+      // Create video with playsinline for iOS
       readerEl.innerHTML = "";
       const video = document.createElement("video");
-      video.setAttribute("playsinline", "true");
-      video.setAttribute("webkit-playsinline", "true");
-      video.setAttribute("muted", "true");
+      video.id = "ios-scanner-video";
       video.playsInline = true;
       video.muted = true;
-      video.style.width = "100%";
-      video.style.height = "100%";
-      video.style.objectFit = "cover";
-      video.id = "ios-scanner-video";
+      video.setAttribute("playsinline", "");
+      video.setAttribute("webkit-playsinline", "");
+      video.style.cssText = "width:100%;height:100%;object-fit:cover;";
       readerEl.appendChild(video);
 
       const codeReader = new BrowserMultiFormatReader();
 
-      // Get available cameras and pick the back camera
-      const devices = await codeReader.listVideoInputDevices();
-      let deviceId: string | undefined;
-      if (facingMode === "environment") {
-        const backCam = devices.find(
-          (d) =>
-            d.label.toLowerCase().includes("back") ||
-            d.label.toLowerCase().includes("rear") ||
-            d.label.toLowerCase().includes("environment"),
-        );
-        deviceId = backCam?.deviceId || devices[devices.length - 1]?.deviceId;
-      } else {
-        const frontCam = devices.find(
-          (d) =>
-            d.label.toLowerCase().includes("front") ||
-            d.label.toLowerCase().includes("face"),
-        );
-        deviceId = frontCam?.deviceId || devices[0]?.deviceId;
-      }
-
-      await codeReader.decodeFromVideoDevice(
-        deviceId || null,
+      await codeReader.decodeFromConstraints(
+        { video: { facingMode: { ideal: facingMode } }, audio: false },
         "ios-scanner-video",
-        (result, _error) => {
+        (result) => {
           if (result) {
             playScanSound();
             if (onScan) onScan(result.getText());
             handleClose();
           }
-          // error is normal when no barcode is in frame — ignore
         },
       );
 
-      const activeStream = video.srcObject as MediaStream;
+      // Re-apply playsinline after zxing starts (it may replace attributes)
+      const videoEl = document.getElementById("ios-scanner-video") as HTMLVideoElement;
+      if (videoEl) {
+        videoEl.playsInline = true;
+        videoEl.setAttribute("playsinline", "");
+        videoEl.setAttribute("webkit-playsinline", "");
+      }
+
+      const activeStream = (videoEl || video).srcObject as MediaStream;
       nativeScanRef.current = {
         stream: activeStream,
         reader: codeReader,
-        videoElement: video,
+        videoElement: videoEl || video,
       };
     } catch (err: any) {
       console.error("Native scanner error:", err);
