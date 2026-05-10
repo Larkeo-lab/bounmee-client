@@ -274,32 +274,63 @@ export default function CameraModal({
 
     scannerRef.current = new Html5Qrcode("reader");
 
-    // Detect iOS for compatible settings
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+    // iOS Safari: patch #reader so any <video> created inside gets playsinline
+    if (isIOS) {
+      const readerEl = document.getElementById("reader");
+      if (readerEl) {
+        const observer = new MutationObserver((mutations) => {
+          for (const m of mutations) {
+            m.addedNodes.forEach((node) => {
+              if (node instanceof HTMLVideoElement) {
+                node.setAttribute("playsinline", "true");
+                node.setAttribute("webkit-playsinline", "true");
+                node.playsInline = true;
+              }
+              if (node instanceof HTMLElement) {
+                const videos = node.querySelectorAll("video");
+                videos.forEach((v) => {
+                  v.setAttribute("playsinline", "true");
+                  v.setAttribute("webkit-playsinline", "true");
+                  v.playsInline = true;
+                });
+              }
+            });
+          }
+        });
+        observer.observe(readerEl, { childList: true, subtree: true });
+        // Auto-disconnect after 5s
+        setTimeout(() => observer.disconnect(), 5000);
+      }
+    }
 
     try {
       setIsScanning(true);
       setHasError(false);
 
+      // iOS: use simple config without videoConstraints to avoid conflicts
+      const scanConfig: any = {
+        fps: isIOS ? 5 : 15,
+        qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
+          const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+          const qrboxSize = Math.floor(minEdge * 0.7);
+          return { width: qrboxSize, height: qrboxSize };
+        },
+      };
+
+      // Only set videoConstraints on non-iOS — iOS works better with just facingMode
+      if (!isIOS) {
+        scanConfig.videoConstraints = {
+          facingMode: facingMode,
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+        };
+      }
+
       await scannerRef.current.start(
         { facingMode: facingMode },
-        {
-          fps: isIOS ? 10 : 15,
-          qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
-            const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
-            const qrboxSize = Math.floor(minEdge * 0.7);
-            return {
-              width: qrboxSize,
-              height: qrboxSize,
-            };
-          },
-          // Do NOT set aspectRatio — iOS rejects 1:1 and fails silently
-          videoConstraints: {
-            facingMode: facingMode,
-            width: { ideal: isIOS ? 1280 : 1920 },
-            height: { ideal: isIOS ? 720 : 1080 },
-          },
-        },
+        scanConfig,
         (decodedText: string) => {
           if (onScan) {
             playScanSound();
@@ -309,18 +340,6 @@ export default function CameraModal({
         },
         () => {}, // ignore scan errors
       );
-
-      // iOS Safari: ensure the video element created by Html5Qrcode has playsinline
-      if (isIOS) {
-        const readerEl = document.getElementById("reader");
-        if (readerEl) {
-          const video = readerEl.querySelector("video");
-          if (video) {
-            video.setAttribute("playsinline", "true");
-            video.setAttribute("webkit-playsinline", "true");
-          }
-        }
-      }
     } catch (err: any) {
       console.error("Scanner start error:", err);
       setIsScanning(false);
