@@ -3,6 +3,7 @@ import { X, RefreshCw, Check, Scan, Camera, ShieldCheck } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Html5Qrcode } from "html5-qrcode";
+import jsQR from "jsqr";
 
 // Polyfill for older browsers that don't have navigator.mediaDevices
 function ensureMediaDevices() {
@@ -258,9 +259,9 @@ export default function CameraModal({
     }
   };
 
-  const nativeScanRef = useRef<{ stream: MediaStream; animId: number } | null>(null);
+  const nativeScanRef = useRef<{ stream: MediaStream; animId: number; canvas: HTMLCanvasElement } | null>(null);
 
-  // Native barcode scanning using video + BarcodeDetector (works reliably on iOS Safari 17.2+)
+  // iOS scanner: video + canvas + jsQR (works on all iOS Safari versions)
   const startNativeScanner = async (facingMode: "user" | "environment") => {
     try {
       setIsScanning(true);
@@ -274,7 +275,6 @@ export default function CameraModal({
       const readerEl = document.getElementById("reader");
       if (!readerEl) return;
 
-      // Create video element manually with playsinline
       readerEl.innerHTML = "";
       const video = document.createElement("video");
       video.setAttribute("playsinline", "true");
@@ -290,35 +290,39 @@ export default function CameraModal({
       readerEl.appendChild(video);
       await video.play();
 
-      const detector = new (window as any).BarcodeDetector({
-        formats: ["ean_13", "ean_8", "upc_a", "upc_e", "code_128", "code_39", "code_93", "codabar", "itf", "qr_code", "data_matrix"],
-      });
+      const scanCanvas = document.createElement("canvas");
+      const ctx = scanCanvas.getContext("2d", { willReadFrequently: true });
 
       let detected = false;
-      const scanFrame = async () => {
-        if (detected || !video.videoWidth) {
+      const scanFrame = () => {
+        if (detected || !video.videoWidth || !ctx) {
           if (!detected) {
-            nativeScanRef.current = { stream: scannerStream, animId: requestAnimationFrame(scanFrame) };
+            nativeScanRef.current = { stream: scannerStream, animId: requestAnimationFrame(scanFrame), canvas: scanCanvas };
           }
           return;
         }
-        try {
-          const barcodes = await detector.detect(video);
-          if (barcodes.length > 0 && !detected) {
-            detected = true;
-            const result = barcodes[0].rawValue;
-            playScanSound();
-            if (onScan) onScan(result);
-            handleClose();
-            return;
-          }
-        } catch {
-          // detect can fail on some frames — ignore
+
+        scanCanvas.width = video.videoWidth;
+        scanCanvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0, scanCanvas.width, scanCanvas.height);
+
+        const imageData = ctx.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height, {
+          inversionAttempts: "dontInvert",
+        });
+
+        if (code && code.data && !detected) {
+          detected = true;
+          playScanSound();
+          if (onScan) onScan(code.data);
+          handleClose();
+          return;
         }
-        nativeScanRef.current = { stream: scannerStream, animId: requestAnimationFrame(scanFrame) };
+
+        nativeScanRef.current = { stream: scannerStream, animId: requestAnimationFrame(scanFrame), canvas: scanCanvas };
       };
 
-      nativeScanRef.current = { stream: scannerStream, animId: requestAnimationFrame(scanFrame) };
+      nativeScanRef.current = { stream: scannerStream, animId: requestAnimationFrame(scanFrame), canvas: scanCanvas };
     } catch (err: any) {
       console.error("Native scanner error:", err);
       setIsScanning(false);
@@ -338,13 +342,13 @@ export default function CameraModal({
   const startScanner = async (facingMode: "user" | "environment") => {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
-    // iOS: use native BarcodeDetector if available (Safari 17.2+)
-    if (isIOS && "BarcodeDetector" in window) {
+    // iOS: always use native video + jsQR (html5-qrcode is unreliable on iOS)
+    if (isIOS) {
       await startNativeScanner(facingMode);
       return;
     }
 
-    // Non-iOS or no BarcodeDetector: use html5-qrcode
+    // Non-iOS: use html5-qrcode
     if (scannerRef.current) {
       try {
         if (scannerRef.current.isScanning) {
@@ -359,57 +363,25 @@ export default function CameraModal({
 
     scannerRef.current = new Html5Qrcode("reader");
 
-    // iOS fallback: patch video elements with playsinline
-    if (isIOS) {
-      const readerEl = document.getElementById("reader");
-      if (readerEl) {
-        const observer = new MutationObserver((mutations) => {
-          for (const m of mutations) {
-            m.addedNodes.forEach((node) => {
-              if (node instanceof HTMLVideoElement) {
-                node.setAttribute("playsinline", "true");
-                node.setAttribute("webkit-playsinline", "true");
-                node.playsInline = true;
-              }
-              if (node instanceof HTMLElement) {
-                node.querySelectorAll("video").forEach((v) => {
-                  v.setAttribute("playsinline", "true");
-                  v.setAttribute("webkit-playsinline", "true");
-                  v.playsInline = true;
-                });
-              }
-            });
-          }
-        });
-        observer.observe(readerEl, { childList: true, subtree: true });
-        setTimeout(() => observer.disconnect(), 5000);
-      }
-    }
-
     try {
       setIsScanning(true);
       setHasError(false);
 
-      const scanConfig: any = {
-        fps: isIOS ? 5 : 15,
-        qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
-          const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
-          const qrboxSize = Math.floor(minEdge * 0.7);
-          return { width: qrboxSize, height: qrboxSize };
-        },
-      };
-
-      if (!isIOS) {
-        scanConfig.videoConstraints = {
-          facingMode: facingMode,
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
-        };
-      }
-
       await scannerRef.current.start(
         { facingMode: facingMode },
-        scanConfig,
+        {
+          fps: 15,
+          qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
+            const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+            const qrboxSize = Math.floor(minEdge * 0.7);
+            return { width: qrboxSize, height: qrboxSize };
+          },
+          videoConstraints: {
+            facingMode: facingMode,
+            width: { ideal: 1920 },
+            height: { ideal: 1080 },
+          },
+        },
         (decodedText: string) => {
           if (onScan) {
             playScanSound();
