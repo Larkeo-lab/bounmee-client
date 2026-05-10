@@ -258,8 +258,93 @@ export default function CameraModal({
     }
   };
 
+  const nativeScanRef = useRef<{ stream: MediaStream; animId: number } | null>(null);
+
+  // Native barcode scanning using video + BarcodeDetector (works reliably on iOS Safari 17.2+)
+  const startNativeScanner = async (facingMode: "user" | "environment") => {
+    try {
+      setIsScanning(true);
+      setHasError(false);
+
+      const scannerStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: facingMode } },
+        audio: false,
+      });
+
+      const readerEl = document.getElementById("reader");
+      if (!readerEl) return;
+
+      // Create video element manually with playsinline
+      readerEl.innerHTML = "";
+      const video = document.createElement("video");
+      video.setAttribute("playsinline", "true");
+      video.setAttribute("webkit-playsinline", "true");
+      video.setAttribute("autoplay", "true");
+      video.setAttribute("muted", "true");
+      video.playsInline = true;
+      video.muted = true;
+      video.style.width = "100%";
+      video.style.height = "100%";
+      video.style.objectFit = "cover";
+      video.srcObject = scannerStream;
+      readerEl.appendChild(video);
+      await video.play();
+
+      const detector = new (window as any).BarcodeDetector({
+        formats: ["ean_13", "ean_8", "upc_a", "upc_e", "code_128", "code_39", "code_93", "codabar", "itf", "qr_code", "data_matrix"],
+      });
+
+      let detected = false;
+      const scanFrame = async () => {
+        if (detected || !video.videoWidth) {
+          if (!detected) {
+            nativeScanRef.current = { stream: scannerStream, animId: requestAnimationFrame(scanFrame) };
+          }
+          return;
+        }
+        try {
+          const barcodes = await detector.detect(video);
+          if (barcodes.length > 0 && !detected) {
+            detected = true;
+            const result = barcodes[0].rawValue;
+            playScanSound();
+            if (onScan) onScan(result);
+            handleClose();
+            return;
+          }
+        } catch {
+          // detect can fail on some frames — ignore
+        }
+        nativeScanRef.current = { stream: scannerStream, animId: requestAnimationFrame(scanFrame) };
+      };
+
+      nativeScanRef.current = { stream: scannerStream, animId: requestAnimationFrame(scanFrame) };
+    } catch (err: any) {
+      console.error("Native scanner error:", err);
+      setIsScanning(false);
+      setHasError(true);
+      setErrorMessage(err.message || "Failed to start scanner");
+    }
+  };
+
+  const stopNativeScanner = () => {
+    if (nativeScanRef.current) {
+      cancelAnimationFrame(nativeScanRef.current.animId);
+      nativeScanRef.current.stream.getTracks().forEach((t) => t.stop());
+      nativeScanRef.current = null;
+    }
+  };
+
   const startScanner = async (facingMode: "user" | "environment") => {
-    // Always create a fresh scanner instance bound to the current #reader element
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+    // iOS: use native BarcodeDetector if available (Safari 17.2+)
+    if (isIOS && "BarcodeDetector" in window) {
+      await startNativeScanner(facingMode);
+      return;
+    }
+
+    // Non-iOS or no BarcodeDetector: use html5-qrcode
     if (scannerRef.current) {
       try {
         if (scannerRef.current.isScanning) {
@@ -274,9 +359,7 @@ export default function CameraModal({
 
     scannerRef.current = new Html5Qrcode("reader");
 
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-
-    // iOS Safari: patch #reader so any <video> created inside gets playsinline
+    // iOS fallback: patch video elements with playsinline
     if (isIOS) {
       const readerEl = document.getElementById("reader");
       if (readerEl) {
@@ -289,8 +372,7 @@ export default function CameraModal({
                 node.playsInline = true;
               }
               if (node instanceof HTMLElement) {
-                const videos = node.querySelectorAll("video");
-                videos.forEach((v) => {
+                node.querySelectorAll("video").forEach((v) => {
                   v.setAttribute("playsinline", "true");
                   v.setAttribute("webkit-playsinline", "true");
                   v.playsInline = true;
@@ -300,7 +382,6 @@ export default function CameraModal({
           }
         });
         observer.observe(readerEl, { childList: true, subtree: true });
-        // Auto-disconnect after 5s
         setTimeout(() => observer.disconnect(), 5000);
       }
     }
@@ -309,7 +390,6 @@ export default function CameraModal({
       setIsScanning(true);
       setHasError(false);
 
-      // iOS: use simple config without videoConstraints to avoid conflicts
       const scanConfig: any = {
         fps: isIOS ? 5 : 15,
         qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
@@ -319,7 +399,6 @@ export default function CameraModal({
         },
       };
 
-      // Only set videoConstraints on non-iOS — iOS works better with just facingMode
       if (!isIOS) {
         scanConfig.videoConstraints = {
           facingMode: facingMode,
@@ -338,7 +417,7 @@ export default function CameraModal({
             handleClose();
           }
         },
-        () => {}, // ignore scan errors
+        () => {},
       );
     } catch (err: any) {
       console.error("Scanner start error:", err);
@@ -349,6 +428,9 @@ export default function CameraModal({
   };
 
   const handleClose = async () => {
+    // Stop native scanner if running
+    stopNativeScanner();
+
     try {
       if (scannerRef.current) {
         if (scannerRef.current.isScanning) {
