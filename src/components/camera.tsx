@@ -93,13 +93,15 @@ export default function CameraModal({
     // Apply polyfill for older browsers
     ensureMediaDevices();
 
-    // After polyfill — still not available means truly unsupported
+    // After polyfill — still not available means not in a secure context
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      const isSecure = window.isSecureContext || location.protocol === "https:" || location.hostname === "localhost";
       setPermissionStatus("denied");
       setHasError(true);
       setErrorMessage(
-        t("camera.unsupported") ||
-          "Camera is not supported in this browser or requires a secure connection (HTTPS)."
+        !isSecure
+          ? (t("camera.requireHttps") || "ກ້ອງຕ້ອງໃຊ້ HTTPS ຫຼື localhost ເທົ່ານັ້ນ. ກະລຸນາເຂົ້າຜ່ານ https:// ຫຼື localhost.")
+          : (t("camera.unsupported") || "ບຣາວເຊີນີ້ບໍ່ຮອງຮັບກ້ອງ. ກະລຸນາໃຊ້ Chrome ຫຼື Safari.")
       );
       return;
     }
@@ -244,6 +246,18 @@ export default function CameraModal({
     setTimeout(check, 300);
   };
 
+  const playScanSound = () => {
+    try {
+      const audio = new Audio("/assets/void/scan_barcode.mp3");
+      audio.volume = 0.7;
+      audio.play().catch(() => {
+        // Autoplay blocked — ignore silently
+      });
+    } catch {
+      // Audio not supported — ignore
+    }
+  };
+
   const startScanner = async (facingMode: "user" | "environment") => {
     // Always create a fresh scanner instance bound to the current #reader element
     if (scannerRef.current) {
@@ -260,6 +274,9 @@ export default function CameraModal({
 
     scannerRef.current = new Html5Qrcode("reader");
 
+    // Detect iOS for compatible settings
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
     try {
       setIsScanning(true);
       setHasError(false);
@@ -267,7 +284,7 @@ export default function CameraModal({
       await scannerRef.current.start(
         { facingMode: facingMode },
         {
-          fps: 15,
+          fps: isIOS ? 10 : 15,
           qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
             const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
             const qrboxSize = Math.floor(minEdge * 0.7);
@@ -276,21 +293,34 @@ export default function CameraModal({
               height: qrboxSize,
             };
           },
-          aspectRatio: 1.0,
+          // Do NOT set aspectRatio — iOS rejects 1:1 and fails silently
           videoConstraints: {
             facingMode: facingMode,
-            width: { ideal: 1920 },
-            height: { ideal: 1080 },
+            width: { ideal: isIOS ? 1280 : 1920 },
+            height: { ideal: isIOS ? 720 : 1080 },
           },
         },
         (decodedText: string) => {
           if (onScan) {
+            playScanSound();
             onScan(decodedText);
             handleClose();
           }
         },
         () => {}, // ignore scan errors
       );
+
+      // iOS Safari: ensure the video element created by Html5Qrcode has playsinline
+      if (isIOS) {
+        const readerEl = document.getElementById("reader");
+        if (readerEl) {
+          const video = readerEl.querySelector("video");
+          if (video) {
+            video.setAttribute("playsinline", "true");
+            video.setAttribute("webkit-playsinline", "true");
+          }
+        }
+      }
     } catch (err: any) {
       console.error("Scanner start error:", err);
       setIsScanning(false);
@@ -374,7 +404,6 @@ export default function CameraModal({
 
   useEffect(() => {
     if (isOpen) {
-      // Check if permission already granted — skip permission screen if so
       checkExistingPermission();
     } else {
       handleClose();

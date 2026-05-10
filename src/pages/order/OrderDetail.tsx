@@ -207,6 +207,11 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({
                             <TableCell>
                               <span className="text-[11px] font-black text-default-700 bg-default-100 px-2 py-0.5 rounded-md">
                                 {item.qty}
+                                {((item as any).product?.unit?.name || (item as any).unitName) && (
+                                  <span className="text-[9px] font-medium text-default-400 ml-1">
+                                    {(item as any).product?.unit?.name || (item as any).unitName}
+                                  </span>
+                                )}
                               </span>
                             </TableCell>
                             <TableCell>

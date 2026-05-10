@@ -10,6 +10,7 @@ export interface OrderItemInput {
   subTotal: number;
   status?: string;
   note?: string;
+  unitName?: string;
 }
 
 export interface CreateOrderInput {
@@ -37,6 +38,10 @@ export interface OrderItem {
     barcode: string;
     price: number;
     image: string | null;
+    unit?: {
+      id: string;
+      name: string;
+    };
   };
 }
 

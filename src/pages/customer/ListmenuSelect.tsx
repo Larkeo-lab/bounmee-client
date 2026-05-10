@@ -13,7 +13,6 @@ import {
 } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import {
-  
   Plus,
   Minus,
   CheckCircle,
@@ -138,7 +137,7 @@ export default function ListmenuSelect({
 
                               <div className="flex items-center justify-between gap-2">
                                 <span className="text-primary font-black text-sm">
-                                  {formatNumber(item.price)} ₭
+                                  {formatNumber(item.price * item.quantity)} ₭
                                 </span>
 
                                 <div className="flex items-center gap-1.5 bg-default-100/80 rounded-xl p-1 shadow-inner border border-default-200">
@@ -277,7 +276,8 @@ export default function ListmenuSelect({
                                 </span>
                                 <div className="flex justify-between items-center mt-1">
                                   <span className="text-default-500 font-bold text-sm">
-                                    x{item.quantity}
+                                    x{item.quantity}{" "}
+                                    {(item.unitName || item.unit?.name) ? `${item.unitName || item.unit?.name}` : ""}
                                   </span>
                                   <Chip
                                     className="font-bold text-[10px]"

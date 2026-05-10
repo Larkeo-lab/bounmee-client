@@ -281,6 +281,9 @@
       "zone": "Zone",
       "selectZoneError": "Please select a zone before saving"
     },
+    "product": {
+      "unitTitle": "Manage Units"
+    },
     "storeProfile": {
       "title": "Manage Store Profile",
       "subtitle": "Update your store's basic information"
@@ -336,7 +339,9 @@
     "title": "Product Management",
     "subtitle": "Control and manage all products in your store",
     "addTitle": "Add New Product",
+    "scanBarcode": "Scan Barcode",
     "editTitle": "Edit Product",
+    "unit": "Unit",
     "barcodeType": "Barcode Type",
     "barcode": "Barcode",
     "hasBarcode": "Has Barcode",

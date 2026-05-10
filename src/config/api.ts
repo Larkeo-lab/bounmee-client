@@ -32,6 +32,10 @@ export const API_ENDPOINTS = {
     LIST: `${API_VERSION}/order`,
     DETAIL: (id: string) => `${API_VERSION}/order/${id}`,
   },
+  UNIT: {
+    LIST: `${API_VERSION}/unit`,
+    DETAIL: (id: string) => `${API_VERSION}/unit/${id}`,
+  },
   STORE: {
     LIST: `${API_VERSION}/store`,
     DETAIL: (id: string) => `${API_VERSION}/store/${id}`,

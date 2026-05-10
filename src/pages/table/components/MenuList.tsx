@@ -103,6 +103,7 @@ export const MenuList: React.FC<MenuListProps> = ({
                   {formatNumber(product.price)}{" "}
                   <span className="text-[8px] lg:text-[9px] font-medium text-default-400">
                     {t("table.cart.kip")}
+                    {product.unit?.name ? `/${product.unit.name}` : ""}
                   </span>
                 </p>
               </div>

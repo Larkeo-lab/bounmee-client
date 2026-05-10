@@ -337,6 +337,7 @@ export default function ProductOrderPage() {
                       {formatNumber(product.price)}{" "}
                       <span className="text-[8px] lg:text-[9px] font-medium text-default-400">
                         {t("sale.kip")}
+                        {product.unit?.name ? `/${product.unit.name}` : ""}
                       </span>
                     </p>
                   </CardFooter>

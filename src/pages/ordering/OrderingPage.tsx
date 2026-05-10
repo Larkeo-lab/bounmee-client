@@ -210,7 +210,7 @@ export default function OrderingPage() {
                               size="sm"
                               variant="flat"
                             >
-                              {item.name} x{item.quantity}
+                              {item.name} x{item.quantity}{item.unitName ? ` ${item.unitName}` : ""}
                             </Chip>
                           ))}
                           {order.items.length > 5 && (

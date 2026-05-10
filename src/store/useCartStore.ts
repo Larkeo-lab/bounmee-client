@@ -13,6 +13,7 @@ export interface CartItem {
   status: string;
   timestamp?: number;
   note?: string;
+  unitName?: string;
 }
 
 interface CartState {
@@ -177,6 +178,7 @@ export const useCartStore = create<CartState & CartActions>()(
             status,
             timestamp: Date.now(),
             note: note || undefined,
+            unitName: product.unit?.name || undefined,
           });
 
           toast.success(i18n.t("sale.itemAdded", { name: product.name }), {
