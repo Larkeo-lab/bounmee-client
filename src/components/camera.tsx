@@ -61,6 +61,7 @@ export default function CameraModal({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const lastScanResult = useRef<string>("");
   const scanCount = useRef<number>(0);
+  const isStartingRef = useRef<boolean>(false);
 
   // Pre-load audio and handle iOS unlock
   useEffect(() => {
@@ -305,8 +306,10 @@ export default function CameraModal({
 
 
   const startScanner = async (facingMode: "user" | "environment") => {
-    // Stop any existing scanners before starting a new one
+    if (isStartingRef.current) return;
+    isStartingRef.current = true;
 
+    // Stop any existing scanners before starting a new one
     if (scannerRef.current) {
       try {
         if (scannerRef.current.isScanning) {
@@ -319,41 +322,72 @@ export default function CameraModal({
       scannerRef.current = null;
     }
 
-    // Use Html5Qrcode for both iOS and Android (more robust than Quagga for modern Safari)
-    // We disable BarcodeDetector on iOS as it is often the cause of scanning issues in Safari
+    const readerEl = document.getElementById("reader");
+    if (!readerEl) {
+      isStartingRef.current = false;
+      return;
+    }
+
     scannerRef.current = new Html5Qrcode("reader");
 
     try {
       setIsScanning(true);
       setHasError(false);
 
+      // Intelligent camera selection for iOS (avoid ultra-wide lenses)
+      let cameraId: any = { facingMode: facingMode };
+      try {
+        const cameras = await Html5Qrcode.getCameras();
+        if (cameras && cameras.length > 0) {
+          // Look for a back camera that is NOT ultra-wide or wide
+          const backCamera = cameras.find(
+            (c) =>
+              c.label.toLowerCase().includes("back") &&
+              !c.label.toLowerCase().includes("ultra") &&
+              !c.label.toLowerCase().includes("wide"),
+          );
+          if (backCamera) {
+            cameraId = backCamera.id;
+          } else {
+            // Fallback to any back camera
+            const anyBack = cameras.find((c) =>
+              c.label.toLowerCase().includes("back"),
+            );
+            if (anyBack) cameraId = anyBack.id;
+          }
+        }
+      } catch (e) {
+        console.warn("Camera list fetch failed, falling back to facingMode", e);
+      }
+
       await scannerRef.current.start(
-        { facingMode: facingMode },
+        cameraId,
         {
-          fps: 10, // Lower FPS on mobile allows more CPU time per frame for accurate decoding
+          fps: 15, // Balanced FPS for speed vs CPU load
           qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
-            const width = Math.floor(viewfinderWidth * 0.75);
-            const height = Math.floor(viewfinderHeight * 0.35);
+            // Rectangular box is best for 1D barcodes
+            const width = Math.floor(viewfinderWidth * 0.8);
+            const height = Math.floor(viewfinderHeight * 0.3);
             return { width, height };
           },
           videoConstraints: {
             facingMode: facingMode,
-            width: { ideal: 1920 }, // High resolution (Full HD) for maximum clarity
-            height: { ideal: 1080 },
+            width: { ideal: 640 }, // 480p is the most reliable for real-time decoding
+            height: { ideal: 480 },
           },
+          // Limit formats to reduce false positives and speed up search
           formatsToSupport: [
             Html5QrcodeSupportedFormats.EAN_13,
             Html5QrcodeSupportedFormats.EAN_8,
             Html5QrcodeSupportedFormats.CODE_128,
-            Html5QrcodeSupportedFormats.CODE_39,
             Html5QrcodeSupportedFormats.UPC_A,
             Html5QrcodeSupportedFormats.UPC_E,
-            Html5QrcodeSupportedFormats.QR_CODE,
           ],
+          // Disable native detector on iOS to avoid buggy Safari implementation
           useBarCodeDetectorIfSupported: false,
         } as any,
         (decodedText: string) => {
-          // Accuracy logic: Require 2 consecutive identical scans to prevent false positives
+          // Rigorous validation: Require 3 consecutive identical scans to ensure 100% accuracy
           if (decodedText === lastScanResult.current) {
             scanCount.current++;
           } else {
@@ -361,13 +395,13 @@ export default function CameraModal({
             scanCount.current = 1;
           }
 
-          if (scanCount.current >= 2) {
+          if (scanCount.current >= 3) {
             if (onScan) {
               playScanSound();
               onScan(decodedText);
               handleClose();
             }
-            // Reset for next time
+            // Reset validation
             lastScanResult.current = "";
             scanCount.current = 0;
           }
@@ -383,11 +417,12 @@ export default function CameraModal({
           t("camera.scannerStartError") ||
           "Failed to start scanner",
       );
+    } finally {
+      isStartingRef.current = false;
     }
   };
 
   const handleClose = async () => {
-
     try {
       if (scannerRef.current) {
         if (scannerRef.current.isScanning) {
