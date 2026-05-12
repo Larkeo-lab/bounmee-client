@@ -3,7 +3,6 @@ import { X, RefreshCw, Check, Scan, Camera, ShieldCheck } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Html5Qrcode } from "html5-qrcode";
-import Quagga from "@ericblade/quagga2";
 
 // Polyfill for older browsers that don't have navigator.mediaDevices
 function ensureMediaDevices() {
@@ -274,118 +273,15 @@ export default function CameraModal({
     }
   };
 
-  const nativeScanRef = useRef<boolean>(false);
-
-  // iOS scanner: Quagga2 (reliable 1D barcode scanning on iOS Safari)
-  const startNativeScanner = async (facingMode: "user" | "environment") => {
-    try {
-      setIsScanning(true);
-      setHasError(false);
-      nativeScanRef.current = true;
-
-      const readerEl = document.getElementById("reader");
-      if (!readerEl) return;
-
-      readerEl.innerHTML = "";
-
-      await new Promise<void>((resolve, reject) => {
-        Quagga.init(
-          {
-            inputStream: {
-              type: "LiveStream",
-              target: readerEl,
-              constraints: {
-                facingMode: facingMode,
-                width: { ideal: 1280 },
-                height: { ideal: 720 },
-              },
-            },
-            decoder: {
-              readers: [
-                "ean_reader",
-                "ean_8_reader",
-                "upc_reader",
-                "upc_e_reader",
-                "code_128_reader",
-                "code_39_reader",
-                "code_93_reader",
-                "codabar_reader",
-                "i2of5_reader",
-              ],
-              multiple: false,
-            },
-            locate: true,
-            frequency: 10,
-          },
-          (err: any) => {
-            if (err) {
-              reject(err);
-              return;
-            }
-            resolve();
-          },
-        );
-      });
-
-      // Ensure video has playsinline for iOS
-      const videoEl = readerEl.querySelector("video");
-      if (videoEl) {
-        videoEl.setAttribute("playsinline", "");
-        videoEl.setAttribute("webkit-playsinline", "");
-        videoEl.playsInline = true;
-        videoEl.style.width = "100%";
-        videoEl.style.height = "100%";
-        videoEl.style.objectFit = "cover";
-      }
-
-      // Hide Quagga's canvas overlays
-      const canvases = readerEl.querySelectorAll("canvas");
-      canvases.forEach((c) => {
-        c.style.display = "none";
-      });
-
-      Quagga.start();
-
-      Quagga.onDetected((result: any) => {
-        if (!nativeScanRef.current) return;
-        const code = result?.codeResult?.code;
-        if (code) {
-          nativeScanRef.current = false;
-          playScanSound();
-          if (onScan) onScan(code);
-          handleClose();
-        }
-      });
-    } catch (err: any) {
-      console.error("Quagga scanner error:", err);
-      setIsScanning(false);
-      setHasError(true);
-      setErrorMessage(err.message || "Failed to start scanner");
-    }
-  };
-
-  const stopNativeScanner = () => {
-    if (nativeScanRef.current) {
-      nativeScanRef.current = false;
-    }
-    try {
-      Quagga.stop();
-      Quagga.offDetected();
-    } catch {
-      // ignore stop errors
-    }
-  };
 
   const startScanner = async (facingMode: "user" | "environment") => {
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    // Improved iOS/Safari detection (including modern iPads)
+    const isIOS =
+      /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 
-    // iOS: always use native video + jsQR (html5-qrcode is unreliable on iOS)
-    if (isIOS) {
-      await startNativeScanner(facingMode);
-      return;
-    }
+    // Stop any existing scanners before starting a new one
 
-    // Non-iOS: use html5-qrcode
     if (scannerRef.current) {
       try {
         if (scannerRef.current.isScanning) {
@@ -398,6 +294,8 @@ export default function CameraModal({
       scannerRef.current = null;
     }
 
+    // Use Html5Qrcode for both iOS and Android (more robust than Quagga for modern Safari)
+    // We disable BarcodeDetector on iOS as it is often the cause of scanning issues in Safari
     scannerRef.current = new Html5Qrcode("reader");
 
     try {
@@ -407,7 +305,7 @@ export default function CameraModal({
       await scannerRef.current.start(
         { facingMode: facingMode },
         {
-          fps: 15,
+          fps: isIOS ? 10 : 15,
           qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
             const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
             const qrboxSize = Math.floor(minEdge * 0.7);
@@ -415,10 +313,12 @@ export default function CameraModal({
           },
           videoConstraints: {
             facingMode: facingMode,
-            width: { ideal: 1920 },
-            height: { ideal: 1080 },
+            width: { ideal: isIOS ? 1280 : 1920 },
+            height: { ideal: isIOS ? 720 : 1080 },
           },
-        },
+          // Fix for iOS Safari: disable buggy native detector
+          useBarCodeDetectorIfSupported: false,
+        } as any,
         (decodedText: string) => {
           if (onScan) {
             playScanSound();
@@ -441,8 +341,6 @@ export default function CameraModal({
   };
 
   const handleClose = async () => {
-    // Stop native scanner if running
-    stopNativeScanner();
 
     try {
       if (scannerRef.current) {
