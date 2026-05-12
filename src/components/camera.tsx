@@ -2,7 +2,7 @@ import { Modal, ModalContent, Button } from "@heroui/react";
 import { X, RefreshCw, Check, Scan, Camera, ShieldCheck } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Html5Qrcode } from "html5-qrcode";
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
 
 // Polyfill for older browsers that don't have navigator.mediaDevices
 function ensureMediaDevices() {
@@ -58,6 +58,28 @@ export default function CameraModal({
   const [permissionStatus, setPermissionStatus] = useState<
     "idle" | "requesting" | "granted" | "denied"
   >("idle");
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Pre-load audio and handle iOS unlock
+  useEffect(() => {
+    const audio = new Audio("/assets/void/scan_barcode.mp3");
+    audio.preload = "auto";
+    audio.load();
+    audioRef.current = audio;
+  }, []);
+
+  const unlockAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.play().then(() => {
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current.currentTime = 0;
+        }
+      }).catch(() => {
+        // Silently fail if still blocked
+      });
+    }
+  };
 
   // Check if permission was already granted (skip permission screen)
   const checkExistingPermission = async () => {
@@ -262,24 +284,25 @@ export default function CameraModal({
   };
 
   const playScanSound = () => {
-    try {
-      const audio = new Audio("/assets/void/scan_barcode.mp3");
-      audio.volume = 0.7;
-      audio.play().catch(() => {
-        // Autoplay blocked — ignore silently
-      });
-    } catch {
-      // Audio not supported — ignore
+    if (audioRef.current) {
+      try {
+        audioRef.current.currentTime = 0;
+        audioRef.current.volume = 1.0;
+        const playPromise = audioRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(() => {
+            // Re-try unlocking if it was blocked
+            unlockAudio();
+          });
+        }
+      } catch (err) {
+        console.error("Audio play error:", err);
+      }
     }
   };
 
 
   const startScanner = async (facingMode: "user" | "environment") => {
-    // Improved iOS/Safari detection (including modern iPads)
-    const isIOS =
-      /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-
     // Stop any existing scanners before starting a new one
 
     if (scannerRef.current) {
@@ -305,17 +328,29 @@ export default function CameraModal({
       await scannerRef.current.start(
         { facingMode: facingMode },
         {
-          fps: isIOS ? 10 : 15,
+          fps: 20, // Increased FPS for smoother and faster detection
           qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
-            const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
-            const qrboxSize = Math.floor(minEdge * 0.7);
-            return { width: qrboxSize, height: qrboxSize };
+            // Rectangular box is much better for barcodes than a square one
+            const width = Math.floor(viewfinderWidth * 0.85);
+            const height = Math.floor(viewfinderHeight * 0.3);
+            return { width, height };
           },
+          aspectRatio: 1.777778, // 16:9 aspect ratio is standard for most mobile cameras
           videoConstraints: {
             facingMode: facingMode,
-            width: { ideal: isIOS ? 1280 : 1920 },
-            height: { ideal: isIOS ? 720 : 1080 },
+            width: { ideal: 1280 }, // 720p is the sweet spot for speed vs quality
+            height: { ideal: 720 },
           },
+          // Limit formats to common ones to speed up processing
+          formatsToSupport: [
+            Html5QrcodeSupportedFormats.EAN_13,
+            Html5QrcodeSupportedFormats.EAN_8,
+            Html5QrcodeSupportedFormats.CODE_128,
+            Html5QrcodeSupportedFormats.CODE_39,
+            Html5QrcodeSupportedFormats.UPC_A,
+            Html5QrcodeSupportedFormats.UPC_E,
+            Html5QrcodeSupportedFormats.QR_CODE,
+          ],
           // Fix for iOS Safari: disable buggy native detector
           useBarCodeDetectorIfSupported: false,
         } as any,
@@ -511,7 +546,10 @@ export default function CameraModal({
                         color="primary"
                         variant="flat"
                         startContent={<RefreshCw size={18} />}
-                        onClick={requestCameraPermission}
+                        onClick={() => {
+                          unlockAudio();
+                          requestCameraPermission();
+                        }}
                       >
                         {t("common.retry") || "Retry"}
                       </Button>
@@ -543,7 +581,10 @@ export default function CameraModal({
                         radius="full"
                         startContent={<Camera size={20} />}
                         isLoading={permissionStatus === "requesting"}
-                        onClick={requestCameraPermission}
+                        onClick={() => {
+                          unlockAudio();
+                          requestCameraPermission();
+                        }}
                       >
                         {t("camera.allowCamera") || "Allow Camera"}
                       </Button>
