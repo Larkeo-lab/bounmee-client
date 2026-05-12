@@ -59,6 +59,8 @@ export default function CameraModal({
     "idle" | "requesting" | "granted" | "denied"
   >("idle");
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const lastScanResult = useRef<string>("");
+  const scanCount = useRef<number>(0);
 
   // Pre-load audio and handle iOS unlock
   useEffect(() => {
@@ -328,20 +330,17 @@ export default function CameraModal({
       await scannerRef.current.start(
         { facingMode: facingMode },
         {
-          fps: 20, // Increased FPS for smoother and faster detection
+          fps: 10, // Lower FPS on mobile allows more CPU time per frame for accurate decoding
           qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
-            // Rectangular box is much better for barcodes than a square one
-            const width = Math.floor(viewfinderWidth * 0.85);
-            const height = Math.floor(viewfinderHeight * 0.3);
+            const width = Math.floor(viewfinderWidth * 0.75);
+            const height = Math.floor(viewfinderHeight * 0.35);
             return { width, height };
           },
-          aspectRatio: 1.777778, // 16:9 aspect ratio is standard for most mobile cameras
           videoConstraints: {
             facingMode: facingMode,
-            width: { ideal: 1280 }, // 720p is the sweet spot for speed vs quality
-            height: { ideal: 720 },
+            width: { ideal: 1920 }, // High resolution (Full HD) for maximum clarity
+            height: { ideal: 1080 },
           },
-          // Limit formats to common ones to speed up processing
           formatsToSupport: [
             Html5QrcodeSupportedFormats.EAN_13,
             Html5QrcodeSupportedFormats.EAN_8,
@@ -351,14 +350,26 @@ export default function CameraModal({
             Html5QrcodeSupportedFormats.UPC_E,
             Html5QrcodeSupportedFormats.QR_CODE,
           ],
-          // Fix for iOS Safari: disable buggy native detector
           useBarCodeDetectorIfSupported: false,
         } as any,
         (decodedText: string) => {
-          if (onScan) {
-            playScanSound();
-            onScan(decodedText);
-            handleClose();
+          // Accuracy logic: Require 2 consecutive identical scans to prevent false positives
+          if (decodedText === lastScanResult.current) {
+            scanCount.current++;
+          } else {
+            lastScanResult.current = decodedText;
+            scanCount.current = 1;
+          }
+
+          if (scanCount.current >= 2) {
+            if (onScan) {
+              playScanSound();
+              onScan(decodedText);
+              handleClose();
+            }
+            // Reset for next time
+            lastScanResult.current = "";
+            scanCount.current = 0;
           }
         },
         () => {},
