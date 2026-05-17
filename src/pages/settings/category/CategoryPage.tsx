@@ -29,7 +29,7 @@ import {
 } from "@/services/category/useCategory";
 import EmptyState from "@/components/common/empty-state";
 import ConfirmModal from "@/components/common/popup-confirm";
-import PendingModal from "@/components/common/pending-modal";
+
 
 export default function CategoryPage() {
   const { t } = useTranslation();
@@ -50,17 +50,7 @@ export default function CategoryPage() {
     onClose: onDeleteClose,
     onOpenChange: onDeleteOpenChange,
   } = useDisclosure();
-  const {
-    isOpen: isPendingOpen,
-    onOpen: onPendingOpen,
-    onOpenChange: onPendingOpenChange,
-  } = useDisclosure();
-  const {
-    isOpen: isRejectedOpen,
-    onOpen: onRejectedOpen,
-    onClose: onRejectedClose,
-    onOpenChange: onRejectedOpenChange,
-  } = useDisclosure();
+
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(
@@ -163,16 +153,7 @@ export default function CategoryPage() {
   };
 
   const handleCreateOpen = () => {
-    // @ts-ignore
-    const storeStatus = user?.user?.store?.status;
-
-    if (storeStatus === "PENDING") {
-      onPendingOpen();
-    } else if (storeStatus === "REJECTED") {
-      onRejectedOpen();
-    } else {
-      onCreateOpen();
-    }
+    onCreateOpen();
   };
 
   return (
@@ -290,6 +271,7 @@ export default function CategoryPage() {
                 <div className="space-y-4">
                   <Input
                     label={t("settings.category.nameLabel")}
+                    labelPlacement="outside"
                     placeholder={t("settings.category.namePlaceholder")}
                     value={formData.name}
                     variant="bordered"
@@ -343,6 +325,7 @@ export default function CategoryPage() {
                 <div className="space-y-4">
                   <Input
                     label={t("settings.common.nameLabel")}
+                    labelPlacement="outside"
                     placeholder={t("settings.common.namePlaceholder")}
                     value={formData.name}
                     variant="bordered"
@@ -391,19 +374,7 @@ export default function CategoryPage() {
         onOpenChange={onDeleteOpenChange}
       />
 
-      {/* Pending Status Modal */}
-      <PendingModal isOpen={isPendingOpen} onOpenChange={onPendingOpenChange} />
 
-      {/* Rejected Status Modal */}
-      <ConfirmModal
-        color="danger"
-        confirmText={t("settings.common.ok")}
-        isOpen={isRejectedOpen}
-        message={t("settings.common.rejectedMsg")}
-        title={t("settings.common.rejectedTitle")}
-        onConfirm={onRejectedClose}
-        onOpenChange={onRejectedOpenChange}
-      />
     </div>
   );
 }

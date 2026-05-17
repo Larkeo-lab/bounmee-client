@@ -26,7 +26,7 @@ import { useAuth } from "@/routes/AuthContext";
 
 // Version number
 
-import oneDoorLogo from "/assets/logo.png";
+import oneDoorLogo from "/assets/eezypos_logo.jpg";
 
 import LanguageSwitch from "@/components/common/language-switch";
 import { showErrorToast } from "@/config/error-messages";
@@ -250,7 +250,7 @@ export default function Login() {
             />
           </div>
           <div className="space-y-4">
-            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-black tracking-tight drop-shadow-lg uppercase italic">
+            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-black tracking-tight drop-shadow-lg uppercase">
               Eezy POS
             </h1>
             <p className="text-xl sm:text-2xl font-light opacity-90 max-w-lg mx-auto">

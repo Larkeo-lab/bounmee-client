@@ -34,7 +34,7 @@ import { useUploadImage } from "@/services/storage";
 import { getDisplayImageUrl } from "@/lib/utils";
 import EmptyState from "@/components/common/empty-state";
 import ConfirmModal from "@/components/common/popup-confirm";
-import PendingModal from "@/components/common/pending-modal";
+
 
 export default function BankPage() {
   const { t } = useTranslation();
@@ -55,17 +55,7 @@ export default function BankPage() {
     onClose: onDeleteClose,
     onOpenChange: onDeleteOpenChange,
   } = useDisclosure();
-  const {
-    isOpen: isPendingOpen,
-    onOpen: onPendingOpen,
-    onOpenChange: onPendingOpenChange,
-  } = useDisclosure();
-  const {
-    isOpen: isRejectedOpen,
-    onOpen: onRejectedOpen,
-    onClose: onRejectedClose,
-    onOpenChange: onRejectedOpenChange,
-  } = useDisclosure();
+
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedBank, setSelectedBank] = useState<Bank | null>(null);
@@ -179,16 +169,7 @@ export default function BankPage() {
   };
 
   const handleCreateOpen = () => {
-    // @ts-ignore
-    const storeStatus = user?.user?.store?.status;
-
-    if (storeStatus === "PENDING") {
-      onPendingOpen();
-    } else if (storeStatus === "REJECTED") {
-      onRejectedOpen();
-    } else {
-      onCreateOpen();
-    }
+    onCreateOpen();
   };
 
   const handleImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
@@ -361,6 +342,7 @@ export default function BankPage() {
       <Input
         isRequired
         label={t("settings.bank.bankName")}
+        labelPlacement="outside"
         placeholder={t("settings.bank.bankNamePlaceholder")}
         value={formData.name}
         variant="bordered"
@@ -589,19 +571,7 @@ export default function BankPage() {
         onOpenChange={onDeleteOpenChange}
       />
 
-      {/* Pending Status Modal */}
-      <PendingModal isOpen={isPendingOpen} onOpenChange={onPendingOpenChange} />
 
-      {/* Rejected Status Modal */}
-      <ConfirmModal
-        color="danger"
-        confirmText={t("settings.common.ok")}
-        isOpen={isRejectedOpen}
-        message={t("settings.common.rejectedMsg")}
-        title={t("settings.common.rejectedTitle")}
-        onConfirm={onRejectedClose}
-        onOpenChange={onRejectedOpenChange}
-      />
     </div>
   );
 }

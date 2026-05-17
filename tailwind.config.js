@@ -12,7 +12,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        lao: ["Nuanta", "sans-serif"],
+        sans: ["Arial", "sans-serif"],
+        lao: ["Nuanta", "Arial", "sans-serif"],
       },
       colors: {
         brand: {

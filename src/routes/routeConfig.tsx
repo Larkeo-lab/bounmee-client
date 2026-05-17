@@ -22,6 +22,9 @@ import MoneyRatePage from "@/pages/settings/moneyRate/MoneyRatePage";
 import OrderPage from "@/pages/order/OrderPage";
 import PermissionSetting from "@/pages/settings/permission-management/PermissionSetting";
 import AddRoleUser from "@/pages/settings/permission-management/AddRoleUser";
+import MemberPage from "@/pages/settings/member/MemberPage";
+import DebtHistoryPage from "@/pages/debtHistory/debtHistory";
+import DebtHistoryDetailPage from "@/pages/debtHistory/debtHistoryDetail";
 
 // Import route components
 
@@ -138,6 +141,13 @@ export const appRoutes: AppRoute[] = [
     permissionKey: "moneyRate",
   },
   {
+    path: "/settings/member",
+    element: <MemberPage />,
+    isPrivate: true,
+    requiresLayout: true,
+    permissionKey: "member_settings",
+  },
+  {
     path: "/settings/profile",
     element: <ProfilePage />,
     isPrivate: true,
@@ -172,6 +182,20 @@ export const appRoutes: AppRoute[] = [
     element: <OrderPage />,
     isPrivate: true,
     requiresLayout: true,
+  },
+  {
+    path: "/debt",
+    element: <DebtHistoryPage />,
+    isPrivate: true,
+    requiresLayout: true,
+    permissionKey: "debt",
+  },
+  {
+    path: "/debt/:id",
+    element: <DebtHistoryDetailPage />,
+    isPrivate: true,
+    requiresLayout: true,
+    permissionKey: "debt",
   },
   {
     path: "/table",

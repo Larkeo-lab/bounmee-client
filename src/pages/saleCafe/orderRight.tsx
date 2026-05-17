@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Button,
   Checkbox,
@@ -7,6 +7,7 @@ import {
   Chip,
   Input,
   Tooltip,
+  useDisclosure,
 } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import {
@@ -23,9 +24,10 @@ import {
 import clsx from "clsx";
 import { toast } from "react-hot-toast";
 
-import { useCart } from "@/provider";
+import { useCafeCart } from "@/hooks/useCafeCart";
 import { getDisplayImageUrl } from "@/lib/utils";
 import { formatNumber } from "@/utils/numberFormat";
+import ConfirmModal from "@/components/common/popup-confirm";
 
 interface OrderRightProps {
   isMinimized: boolean;
@@ -89,7 +91,42 @@ export const OrderRight: React.FC<OrderRightProps> = ({
     updateItemNote,
     subtotal,
     isConnected,
-  } = useCart();
+    allCarts,
+    activeCartId,
+    createNewBill,
+    switchCart,
+    removeCart,
+  } = useCafeCart();
+
+  const [billToRemove, setBillToRemove] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+
+  const {
+    isOpen: isBillDeleteOpen,
+    onOpen: onBillDeleteOpen,
+    onOpenChange: onBillDeleteOpenChange,
+  } = useDisclosure();
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const prevCartsCount = useRef(Object.keys(allCarts).length);
+
+  // Auto-scroll to new bill
+  useEffect(() => {
+    const currentCount = Object.keys(allCarts).length;
+    if (currentCount > prevCartsCount.current) {
+      setTimeout(() => {
+        if (scrollRef.current) {
+          scrollRef.current.scrollTo({
+            left: scrollRef.current.scrollWidth,
+            behavior: "smooth",
+          });
+        }
+      }, 100);
+    }
+    prevCartsCount.current = currentCount;
+  }, [allCarts]);
 
   const isEmpty = cart.length === 0;
 
@@ -107,6 +144,86 @@ export const OrderRight: React.FC<OrderRightProps> = ({
         {/* Mobile Drag Indicator */}
         <div className="flex justify-center pt-2 lg:hidden">
           <div className="w-10 h-1 bg-default-300 rounded-full mb-2" />
+        </div>
+
+        {/* Bill Switcher (Multi-Cart) */}
+        <div className="px-3 py-2 flex items-center gap-2 border-b border-divider bg-default-50/50">
+          <ScrollShadow
+            ref={scrollRef}
+            hideScrollBar
+            className="flex-grow flex items-center gap-2"
+            orientation="horizontal"
+          >
+            {Object.entries(allCarts).map(([id, items], index) => {
+              const isActive = id === activeCartId;
+              const itemCount = items.length;
+              const hasItems = itemCount > 0;
+              const billName = `${t("sale.billShort") || "ບິນ"} ${index + 1}`;
+
+              return (
+                <div
+                  key={id}
+                  className={clsx(
+                    "flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl cursor-pointer transition-all border-2",
+                    isActive
+                      ? "bg-primary text-white border-primary shadow-sm"
+                      : hasItems
+                        ? "bg-white border-divider hover:border-primary/50"
+                        : "bg-white border-danger/30 hover:border-danger/60",
+                    !isActive && !hasItems && "opacity-60",
+                  )}
+                  onClick={() => switchCart(id)}
+                >
+                  <span className="text-xs font-bold whitespace-nowrap">
+                    {billName}
+                  </span>
+                  <Chip
+                    className={clsx(
+                      "h-4 min-w-4 px-1 text-[10px] font-black",
+                      isActive
+                        ? "bg-white text-primary"
+                        : hasItems
+                          ? "bg-primary/10 text-primary"
+                          : "bg-danger/10 text-danger",
+                    )}
+                    size="sm"
+                    variant="flat"
+                  >
+                    {itemCount}
+                  </Chip>
+                  {id !== "default" && (
+                    <button
+                      className={clsx(
+                        "ml-1 p-0.5 rounded-full hover:bg-black/10 transition-colors",
+                        isActive ? "text-white/80" : "text-default-400",
+                      )}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (hasItems) {
+                          setBillToRemove({ id, name: billName });
+                          onBillDeleteOpen();
+                        } else {
+                          removeCart(id);
+                        }
+                      }}
+                    >
+                      <Plus className="rotate-45" size={12} />
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </ScrollShadow>
+
+          <Button
+            isIconOnly
+            className="flex-shrink-0 w-8 h-8 rounded-xl bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all"
+            size="sm"
+            variant="flat"
+            onClick={createNewBill}
+          >
+            <Plus size={18} />
+          </Button>
         </div>
 
         <div className="p-3 border-b border-divider flex items-center justify-between bg-primary/5 flex-shrink-0">
@@ -586,6 +703,25 @@ export const OrderRight: React.FC<OrderRightProps> = ({
           onClick={() => setIsMinimized(true)}
         />
       )}
+
+      {/* Confirm Delete Bill Modal (Multi-Cart) */}
+      <ConfirmModal
+        color="danger"
+        icon={<Trash2 size={24} />}
+        isOpen={isBillDeleteOpen}
+        message={
+          t("sale.confirmDeleteBillMsg", { name: billToRemove?.name }) ||
+          `ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລົບ ${billToRemove?.name}? ຂໍ້ມູນສິນຄ້າໃນບິນນີ້ຈະຫາຍໄປທັງໝົດ`
+        }
+        title={t("sale.confirmDeleteBill") || "ຢືນຢັນການລົບບິນ"}
+        onConfirm={() => {
+          if (billToRemove) {
+            removeCart(billToRemove.id);
+            setBillToRemove(null);
+          }
+        }}
+        onOpenChange={onBillDeleteOpenChange}
+      />
     </>
   );
 };

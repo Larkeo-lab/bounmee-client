@@ -19,7 +19,7 @@ import {
 
 import { formatNumber } from "@/utils/numberFormat";
 import { getDisplayImageUrl } from "@/lib/utils";
-import { useCart } from "@/provider";
+import { useGeneralCart } from "@/hooks/useGeneralCart";
 import ConfirmModal from "@/components/common/popup-confirm";
 
 interface OrderRightProps {
@@ -34,8 +34,18 @@ export const OrderRight: React.FC<OrderRightProps> = ({
   onPaymentOpen,
 }) => {
   const { t } = useTranslation();
-  const { cart, removeFromCart, updateQuantity, clearCart, subtotal } =
-    useCart();
+  const {
+    cart,
+    removeFromCart,
+    updateQuantity,
+    clearCart,
+    subtotal,
+    allCarts,
+    activeCartId,
+    createNewBill,
+    switchCart,
+    removeCart,
+  } = useGeneralCart();
 
   const {
     isOpen: isRemoveOpen,
@@ -52,6 +62,36 @@ export const OrderRight: React.FC<OrderRightProps> = ({
     name: string;
     status: string;
   } | null>(null);
+  const [billToRemove, setBillToRemove] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+  const prevCartsCount = React.useRef(Object.keys(allCarts).length);
+
+  // Auto-scroll to new bill
+  React.useEffect(() => {
+    const currentCount = Object.keys(allCarts).length;
+    if (currentCount > prevCartsCount.current) {
+      // Small timeout to wait for the DOM to update
+      setTimeout(() => {
+        if (scrollRef.current) {
+          scrollRef.current.scrollTo({
+            left: scrollRef.current.scrollWidth,
+            behavior: "smooth",
+          });
+        }
+      }, 100);
+    }
+    prevCartsCount.current = currentCount;
+  }, [allCarts]);
+
+  const {
+    isOpen: isBillDeleteOpen,
+    onOpen: onBillDeleteOpen,
+    onOpenChange: onBillDeleteOpenChange,
+  } = useDisclosure();
 
   const isEmpty = cart.length === 0;
 
@@ -85,6 +125,86 @@ export const OrderRight: React.FC<OrderRightProps> = ({
       >
         <div className="flex flex-col items-center pt-2 pb-1 lg:hidden">
           <div className="w-10 h-1 bg-default-300 rounded-full mb-2" />
+        </div>
+
+        {/* Bill Switcher (Multi-Cart) */}
+        <div className="px-4 py-2 flex items-center gap-2 border-b border-divider bg-default-50/50">
+          <ScrollShadow
+            ref={scrollRef}
+            hideScrollBar
+            className="flex-grow flex items-center gap-2"
+            orientation="horizontal"
+          >
+            {Object.entries(allCarts).map(([id, items], index) => {
+              const isActive = id === activeCartId;
+              const itemCount = items.length;
+              const hasItems = itemCount > 0;
+              const billName = `${t("sale.billShort") || "ບິນ"} ${index + 1}`;
+
+              return (
+                <div
+                  key={id}
+                  className={clsx(
+                    "flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl cursor-pointer transition-all border-2",
+                    isActive
+                      ? "bg-primary text-white border-primary shadow-sm"
+                      : hasItems
+                        ? "bg-white border-divider hover:border-primary/50"
+                        : "bg-white border-danger/30 hover:border-danger/60",
+                    !isActive && !hasItems && "opacity-60",
+                  )}
+                  onClick={() => switchCart(id)}
+                >
+                  <span className="text-xs font-bold whitespace-nowrap">
+                    {billName}
+                  </span>
+                  <Chip
+                    className={clsx(
+                      "h-4 min-w-4 px-1 text-[10px] font-black",
+                      isActive
+                        ? "bg-white text-primary"
+                        : hasItems
+                          ? "bg-primary/10 text-primary"
+                          : "bg-danger/10 text-danger",
+                    )}
+                    size="sm"
+                    variant="flat"
+                  >
+                    {itemCount}
+                  </Chip>
+                  {id !== "default" && (
+                    <button
+                      className={clsx(
+                        "ml-1 p-0.5 rounded-full hover:bg-black/10 transition-colors",
+                        isActive ? "text-white/80" : "text-default-400",
+                      )}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (hasItems) {
+                          setBillToRemove({ id, name: billName });
+                          onBillDeleteOpen();
+                        } else {
+                          removeCart(id);
+                        }
+                      }}
+                    >
+                      <Plus className="rotate-45" size={12} />
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </ScrollShadow>
+
+          <Button
+            isIconOnly
+            className="flex-shrink-0 w-8 h-8 rounded-xl bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all"
+            size="sm"
+            variant="flat"
+            onClick={createNewBill}
+          >
+            <Plus size={18} />
+          </Button>
         </div>
 
         <div className="px-4 py-2 border-b border-divider flex items-center justify-between bg-primary/5">
@@ -124,59 +244,59 @@ export const OrderRight: React.FC<OrderRightProps> = ({
         </div>
 
         <ScrollShadow
-          className="flex-grow p-4 space-y-4 overflow-y-auto scrollbar-hide"
+          className="flex-grow px-3 py-2 space-y-2.5 overflow-y-auto scrollbar-hide"
           size={0}
         >
           {cart.map((item) => (
             <div
               key={item.id}
-              className="flex gap-3 group items-center border-b border-divider border-dashed pb-3 last:border-b-0 last:pb-0"
+              className="flex gap-2.5 group items-center border-b border-divider border-dashed pb-2.5 last:border-b-0 last:pb-0"
             >
               <Image
-                className="w-14 h-14 object-cover rounded-xl shadow-sm"
+                className="w-11 h-11 object-cover rounded-lg shadow-sm"
                 src={getDisplayImageUrl(item.image)}
               />
-              <div className="flex-grow flex flex-col justify-between py-0.5">
+              <div className="flex-grow flex flex-col justify-between">
                 <div className="flex justify-between items-start gap-2">
-                  <span className="font-bold text-[13px] lg:text-sm line-clamp-1">
+                  <span className="font-bold text-[12px] lg:text-[13px] line-clamp-1">
                     {item.name}
                   </span>
                 </div>
-                <div className="flex justify-between items-center mt-1">
-                  <span className="text-primary font-black text-xs lg:text-sm">
+                <div className="flex justify-between items-center mt-0.5">
+                  <span className="text-primary font-black text-[11px] lg:text-xs">
                     {formatNumber(item.price * item.quantity)}{" "}
-                    <span className="text-[10px] font-normal">
+                    <span className="text-[9px] font-normal">
                       {t("sale.kip")}
                     </span>
                   </span>
-                  <div className="flex items-center gap-1 bg-default-100 rounded-lg p-0.5 border border-default-200">
+                  <div className="flex items-center gap-1 bg-default-100 rounded-md p-0.5 border border-default-200">
                     <Button
                       isIconOnly
-                      className="min-w-7 h-7 w-7"
+                      className="min-w-6 h-6 w-6"
                       size="sm"
                       variant="light"
                       onClick={() => updateQuantity(item.id, item.status, -1)}
                     >
-                      <Minus size={12} />
+                      <Minus size={10} />
                     </Button>
-                    <span className="w-6 text-center font-bold text-xs">
+                    <span className="w-5 text-center font-bold text-[11px]">
                       {item.quantity}
                     </span>
                     <Button
                       isIconOnly
-                      className="min-w-7 h-7 w-7"
+                      className="min-w-6 h-6 w-6"
                       size="sm"
                       variant="light"
                       onClick={() => updateQuantity(item.id, item.status, 1)}
                     >
-                      <Plus size={12} />
+                      <Plus size={10} />
                     </Button>
                   </div>
                 </div>
               </div>
               <Button
                 isIconOnly
-                className="min-w-8 h-8 w-8 ml-2"
+                className="min-w-7 h-7 w-7 ml-1"
                 color="danger"
                 size="sm"
                 variant="flat"
@@ -184,7 +304,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                   handleRemoveClick(item.id, item.name, item.status)
                 }
               >
-                <Trash2 size={16} />
+                <Trash2 size={14} />
               </Button>
             </div>
           ))}
@@ -259,6 +379,22 @@ export const OrderRight: React.FC<OrderRightProps> = ({
         title={t("sale.confirmClear")}
         onConfirm={confirmClear}
         onOpenChange={onClearOpenChange}
+      />
+
+      {/* Confirm Delete Bill Modal (Multi-Cart) */}
+      <ConfirmModal
+        color="danger"
+        icon={<Trash2 size={24} />}
+        isOpen={isBillDeleteOpen}
+        message={t("sale.confirmDeleteBillMsg", { name: billToRemove?.name }) || `คุณแน่ใจหรือไม่ว่าต้องการลบบิล ${billToRemove?.name}? ข้อมูลสินค้าในบิลนี้จะหายไปทั้งหมด`}
+        title={t("sale.confirmDeleteBill") || "ยืนยันการลบบิล"}
+        onConfirm={() => {
+          if (billToRemove) {
+            removeCart(billToRemove.id);
+            setBillToRemove(null);
+          }
+        }}
+        onOpenChange={onBillDeleteOpenChange}
       />
     </>
   );

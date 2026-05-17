@@ -22,6 +22,7 @@ import {
   X,
   Camera,
   Image as ImageIcon,
+  Plus,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useState, useRef, useEffect } from "react";
@@ -36,10 +37,10 @@ import {
   getProductByBarcode,
 } from "@/services/product/useProduct";
 import { useUploadImage } from "@/services/storage";
-import { Category } from "@/services/category/useCategory";
+import { Category, useCreateCategory } from "@/services/category/useCategory";
 import { getDisplayImageUrl } from "@/lib/utils";
 import { formatNumber, parseNumber } from "@/utils/numberFormat";
-import { useGetUnits, Unit } from "@/services/unit/useUnit";
+import { useGetUnits, Unit, useCreateUnit } from "@/services/unit/useUnit";
 import { Layers } from "lucide-react";
 
 interface CreateProductProps {
@@ -62,7 +63,15 @@ export default function CreateProduct({
   const createProductMutation = useCreateProduct();
   const updateProductMutation = useUpdateProduct();
   const uploadImageMutation = useUploadImage();
+  const createCategoryMutation = useCreateCategory();
+  const createUnitMutation = useCreateUnit();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+
+  const [isAddUnitOpen, setIsAddUnitOpen] = useState(false);
+  const [newUnitName, setNewUnitName] = useState("");
 
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [isBarcodeScannerOpen, setIsBarcodeScannerOpen] = useState(false);
@@ -108,7 +117,11 @@ export default function CreateProduct({
   // When opened with a scanned barcode, pre-fill and search
   useEffect(() => {
     if (isOpen && initialBarcode) {
-      setFormData((prev) => ({ ...prev, barcode: initialBarcode, isBarcode: true }));
+      setFormData((prev) => ({
+        ...prev,
+        barcode: initialBarcode,
+        isBarcode: true,
+      }));
       handleBarcodeSearch(initialBarcode);
     }
   }, [isOpen, initialBarcode]);
@@ -189,6 +202,8 @@ export default function CreateProduct({
   const { data: unitsResponse } = useGetUnits(storeId);
   const units = unitsResponse?.data || [];
 
+  const isPriceInvalid = formData.price > 0 && formData.cost > 0 && formData.price < formData.cost;
+
   const handleSubmit = async (onModalClose: () => void) => {
     try {
       if (isUpdateMode && existingProductId) {
@@ -219,326 +234,480 @@ export default function CreateProduct({
     }
   };
 
+  const handleCreateCategory = async () => {
+    if (!newCategoryName.trim()) return;
+    try {
+      const response = await createCategoryMutation.mutateAsync({
+        name: newCategoryName,
+        storeId: storeId,
+      });
+      const categoryData = response.data?.data;
+      if (categoryData?.id) {
+        setFormData((prev) => ({ ...prev, categoryId: categoryData.id }));
+      }
+      setNewCategoryName("");
+      setIsAddCategoryOpen(false);
+    } catch (error) {
+      console.error("Failed to create category:", error);
+    }
+  };
+
+  const handleCreateUnit = async () => {
+    if (!newUnitName.trim()) return;
+    try {
+      const response = await createUnitMutation.mutateAsync({
+        name: newUnitName,
+        storeId: storeId,
+      });
+      const unitData = response.data?.data;
+      if (unitData?.id) {
+        setFormData((prev) => ({ ...prev, unitId: unitData.id }));
+      }
+      setNewUnitName("");
+      setIsAddUnitOpen(false);
+    } catch (error) {
+      console.error("Failed to create unit:", error);
+    }
+  };
+
   return (
-    <Modal
-      isOpen={isOpen}
-      scrollBehavior="inside"
-      size="2xl"
-      onOpenChange={handleOpenChange}
-    >
-      <ModalContent>
-        {(onModalClose) => (
-          <>
-            <ModalHeader className="flex flex-col gap-1 text-xl font-bold text-primary">
-              {isUpdateMode ? t("product.editTitle") : t("product.addTitle")}
-            </ModalHeader>
-            <ModalBody>
-              <div className="flex flex-col gap-6 py-2">
-                <div className="flex flex-col gap-2">
-                  <label className="text-small font-medium text-default-700">
-                    {t("product.image")}
-                  </label>
-                  <Dropdown>
-                    <DropdownTrigger>
-                      <div
-                        className={`
+    <>
+      <Modal
+        isOpen={isOpen}
+        scrollBehavior="inside"
+        size="2xl"
+        onOpenChange={handleOpenChange}
+      >
+        <ModalContent>
+          {(onModalClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1 text-xl font-bold text-primary">
+                {isUpdateMode ? t("product.editTitle") : t("product.addTitle")}
+              </ModalHeader>
+              <ModalBody>
+                <div className="flex flex-col gap-6 py-2">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-small font-medium text-default-700">
+                      {t("product.image")}
+                    </label>
+                    <Dropdown>
+                      <DropdownTrigger>
+                        <div
+                          className={`
                           relative group cursor-pointer
                           w-full h-48 rounded-xl border-2 border-dashed 
                           transition-all duration-200 ease-in-out
                           flex flex-col items-center justify-center gap-3
                           ${previewImage || formData.image ? "border-primary bg-primary/5" : "border-default-200 hover:border-primary hover:bg-default-50"}
                         `}
-                        onDragOver={(e) => e.preventDefault()}
-                        onDrop={(e) => {
-                          e.preventDefault();
-                          const file = e.dataTransfer.files?.[0];
+                          onDragOver={(e) => e.preventDefault()}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            const file = e.dataTransfer.files?.[0];
 
-                          if (file) {
-                            handleUploadImage(file);
-                          }
-                        }}
-                      >
-                        {uploadImageMutation.isPending ? (
-                          <div className="flex flex-col items-center gap-2">
-                            <Spinner color="primary" size="lg" />
-                            <p className="text-small text-default-500">
-                              {t("settings.common.uploading")}
-                            </p>
-                          </div>
-                        ) : previewImage || formData.image ? (
-                          <>
-                            <img
-                              alt="Preview"
-                              className="w-full h-full object-contain rounded-lg p-2"
-                              src={getDisplayImageUrl(
-                                previewImage || formData.image,
-                              )}
-                            />
-                            <Button
-                              isIconOnly
-                              className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                              color="danger"
-                              size="sm"
-                              variant="flat"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                removeImage();
-                              }}
-                            >
-                              <X size={16} />
-                            </Button>
-                          </>
-                        ) : (
-                          <>
-                            <div className="p-4 rounded-full bg-primary/10 text-primary">
-                              <Upload size={32} />
-                            </div>
-                            <div className="text-center">
-                              <p className="text-small font-semibold">
-                                {t("product.dragAndDrop")}
-                              </p>
-                              <p className="text-tiny text-default-400">
-                                {t("product.imageHint")}
-                              </p>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    </DropdownTrigger>
-                    <DropdownMenu aria-label="Image Upload Options">
-                      <DropdownItem
-                        key="gallery"
-                        startContent={<ImageIcon size={18} />}
-                        onClick={() => fileInputRef.current?.click()}
-                      >
-                        {t("product.chooseGallery")}
-                      </DropdownItem>
-                      <DropdownItem
-                        key="camera"
-                        startContent={<Camera size={18} />}
-                        onClick={handleTakePhoto}
-                      >
-                        {t("product.takePhoto")}
-                      </DropdownItem>
-                    </DropdownMenu>
-                  </Dropdown>
-
-                  <input
-                    ref={fileInputRef}
-                    accept="image/*"
-                    className="hidden"
-                    type="file"
-                    onChange={handleImageChange}
-                  />
-
-                  <CameraModal
-                    isOpen={isCameraOpen}
-                    onCapture={handleUploadImage}
-                    onClose={() => setIsCameraOpen(false)}
-                  />
-
-                  <CameraModal
-                    cameraType="BARCODE"
-                    isOpen={isBarcodeScannerOpen}
-                    onScan={handleBarcodeScan}
-                    onClose={() => setIsBarcodeScannerOpen(false)}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Input
-                    isRequired
-                    className="col-span-1 md:col-span-3"
-                    label={t("settings.common.nameLabel")}
-                    labelPlacement="outside"
-                    placeholder={t("settings.common.nameLabel")}
-                    value={formData.name}
-                    variant="bordered"
-                    onValueChange={(val) =>
-                      setFormData((prev) => ({ ...prev, name: val }))
-                    }
-                  />
-                  <Select
-                    label={t("product.barcodeType")}
-                    labelPlacement="outside"
-                    placeholder={t("product.barcodeType")}
-                    selectedKeys={formData.isBarcode ? ["yes"] : ["no"]}
-                    variant="bordered"
-                    onSelectionChange={(keys) => {
-                      const val = Array.from(keys)[0] === "yes";
-
-                      setFormData((prev) => ({
-                        ...prev,
-                        isBarcode: val,
-                        barcode: val ? prev.barcode : "",
-                      }));
-                    }}
-                  >
-                    <SelectItem key={"yes"}>
-                      {t("product.hasBarcode")}
-                    </SelectItem>
-                    <SelectItem key={"no"}>{t("product.noBarcode")}</SelectItem>
-                  </Select>
-                  <Input
-                    isDisabled={!formData.isBarcode}
-                    className="md:col-span-2"
-                    label={t("product.barcode")}
-                    labelPlacement="outside"
-                    placeholder={t("product.barcode")}
-                    startContent={
-                      <Barcode className="text-default-400" size={18} />
-                    }
-                    endContent={
-                      formData.isBarcode && (
-                        <Button
-                          isIconOnly
-                          size="sm"
-                          variant="light"
-                          onClick={() => setIsBarcodeScannerOpen(true)}
+                            if (file) {
+                              handleUploadImage(file);
+                            }
+                          }}
                         >
-                          <Camera size={18} className="text-primary" />
-                        </Button>
-                      )
-                    }
-                    value={formData.barcode}
-                    variant="bordered"
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        handleBarcodeSearch(formData.barcode);
-                      }
-                    }}
-                    onValueChange={(val) =>
-                      setFormData((prev) => ({ ...prev, barcode: val }))
-                    }
-                  />
-                  <Select
-                    isRequired
-                    label={t("product.category")}
-                    labelPlacement="outside"
-                    placeholder={t("product.category")}
-                    selectedKeys={
-                      formData.categoryId ? [formData.categoryId] : []
-                    }
-                    startContent={
-                      <Tag className="text-default-400" size={18} />
-                    }
-                    variant="bordered"
-                    onSelectionChange={(keys) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        categoryId: Array.from(keys)[0] as string,
-                      }))
-                    }
-                  >
-                    {categories.map((cat: Category) => (
-                      <SelectItem key={cat.id}>{cat.name}</SelectItem>
-                    ))}
-                  </Select>
+                          {uploadImageMutation.isPending ? (
+                            <div className="flex flex-col items-center gap-2">
+                              <Spinner color="primary" size="lg" />
+                              <p className="text-small text-default-500">
+                                {t("settings.common.uploading")}
+                              </p>
+                            </div>
+                          ) : previewImage || formData.image ? (
+                            <>
+                              <img
+                                alt="Preview"
+                                className="w-full h-full object-contain rounded-lg p-2"
+                                src={getDisplayImageUrl(
+                                  previewImage || formData.image,
+                                )}
+                              />
+                              <Button
+                                isIconOnly
+                                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                                color="danger"
+                                size="sm"
+                                variant="flat"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  removeImage();
+                                }}
+                              >
+                                <X size={16} />
+                              </Button>
+                            </>
+                          ) : (
+                            <>
+                              <div className="p-4 rounded-full bg-primary/10 text-primary">
+                                <Upload size={32} />
+                              </div>
+                              <div className="text-center">
+                                <p className="text-small font-semibold">
+                                  {t("product.dragAndDrop")}
+                                </p>
+                                <p className="text-tiny text-default-400">
+                                  {t("product.imageHint")}
+                                </p>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </DropdownTrigger>
+                      <DropdownMenu aria-label="Image Upload Options">
+                        <DropdownItem
+                          key="gallery"
+                          startContent={<ImageIcon size={18} />}
+                          onClick={() => fileInputRef.current?.click()}
+                        >
+                          {t("product.chooseGallery")}
+                        </DropdownItem>
+                        <DropdownItem
+                          key="camera"
+                          startContent={<Camera size={18} />}
+                          onClick={handleTakePhoto}
+                        >
+                          {t("product.takePhoto")}
+                        </DropdownItem>
+                      </DropdownMenu>
+                    </Dropdown>
 
-                  <Input
-                    label={t("product.stockQty")}
-                    labelPlacement="outside"
-                    placeholder="0"
-                    startContent={
-                      <Package className="text-default-400" size={18} />
-                    }
-                    type="text"
-                    value={formatNumber(formData.stockQty)}
-                    variant="bordered"
-                    onValueChange={(val) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        stockQty: parseNumber(val),
-                      }))
-                    }
-                  />
-                  <Select
-                    label={t("product.unit")}
-                    labelPlacement="outside"
-                    placeholder={t("product.unit")}
-                    selectedKeys={formData.unitId ? [formData.unitId] : []}
-                    startContent={
-                      <Layers className="text-default-400" size={18} />
-                    }
-                    variant="bordered"
-                    onSelectionChange={(keys) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        unitId: Array.from(keys)[0] as string,
-                      }))
-                    }
-                  >
-                    {units.map((unit: Unit) => (
-                      <SelectItem key={unit.id}>{unit.name}</SelectItem>
-                    ))}
-                  </Select>
-                  <Input
-                    label={t("product.cost")}
-                    labelPlacement="outside"
-                    placeholder="0"
-                    startContent={
-                      <span className="text-default-400 font-bold text-small">
-                        {t("common.currency")}
-                      </span>
-                    }
-                    type="text"
-                    value={formatNumber(formData.cost)}
-                    variant="bordered"
-                    onValueChange={(val) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        cost: parseNumber(val),
-                      }))
-                    }
-                  />
-                  <Input
-                    isRequired
-                    label={t("product.price")}
-                    labelPlacement="outside"
-                    placeholder="0"
-                    startContent={
-                      <span className="text-default-400 font-bold text-small">
-                        {t("common.currency")}
-                      </span>
-                    }
-                    type="text"
-                    value={formatNumber(formData.price)}
-                    variant="bordered"
-                    onValueChange={(val) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        price: parseNumber(val),
-                      }))
-                    }
-                  />
-                  <div className="hidden md:block" />
+                    <input
+                      ref={fileInputRef}
+                      accept="image/*"
+                      className="hidden"
+                      type="file"
+                      onChange={handleImageChange}
+                    />
+
+                    <CameraModal
+                      isOpen={isCameraOpen}
+                      onCapture={handleUploadImage}
+                      onClose={() => setIsCameraOpen(false)}
+                    />
+
+                    <CameraModal
+                      cameraType="BARCODE"
+                      isOpen={isBarcodeScannerOpen}
+                      onScan={handleBarcodeScan}
+                      onClose={() => setIsBarcodeScannerOpen(false)}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Input
+                      isRequired
+                      className="col-span-1 md:col-span-3"
+                      label={t("settings.common.nameLabel")}
+                      labelPlacement="outside"
+                      placeholder={t("settings.common.nameLabel")}
+                      value={formData.name}
+                      variant="bordered"
+                      onValueChange={(val) =>
+                        setFormData((prev) => ({ ...prev, name: val }))
+                      }
+                    />
+                    <Select
+                      label={t("product.barcodeType")}
+                      labelPlacement="outside"
+                      placeholder={t("product.barcodeType")}
+                      selectedKeys={formData.isBarcode ? ["yes"] : ["no"]}
+                      variant="bordered"
+                      onSelectionChange={(keys) => {
+                        const val = Array.from(keys)[0] === "yes";
+
+                        setFormData((prev) => ({
+                          ...prev,
+                          isBarcode: val,
+                          barcode: val ? prev.barcode : "",
+                        }));
+                      }}
+                    >
+                      <SelectItem key={"yes"}>
+                        {t("product.hasBarcode")}
+                      </SelectItem>
+                      <SelectItem key={"no"}>
+                        {t("product.noBarcode")}
+                      </SelectItem>
+                    </Select>
+                    <Input
+                      isDisabled={!formData.isBarcode}
+                      className="md:col-span-2"
+                      label={t("product.barcode")}
+                      labelPlacement="outside"
+                      placeholder={t("product.barcode")}
+                      startContent={
+                        <Barcode className="text-default-400" size={18} />
+                      }
+                      endContent={
+                        formData.isBarcode && (
+                          <Button
+                            isIconOnly
+                            size="sm"
+                            variant="light"
+                            onClick={() => setIsBarcodeScannerOpen(true)}
+                          >
+                            <Camera size={18} className="text-primary" />
+                          </Button>
+                        )
+                      }
+                      value={formData.barcode}
+                      variant="bordered"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          handleBarcodeSearch(formData.barcode);
+                        }
+                      }}
+                      onValueChange={(val) =>
+                        setFormData((prev) => ({ ...prev, barcode: val }))
+                      }
+                    />
+                    <Select
+                      label={
+                        <span>
+                          {t("product.category")}{" "}
+                          <span className="text-danger">*</span>
+                        </span>
+                      }
+                      labelPlacement="outside"
+                      placeholder={t("product.category")}
+                      selectedKeys={
+                        formData.categoryId ? [formData.categoryId] : []
+                      }
+                      startContent={
+                        <Tag className="text-default-400" size={18} />
+                      }
+                      variant="bordered"
+                      onSelectionChange={(keys) => {
+                        const selected = Array.from(keys)[0] as string;
+                        if (selected === "ADD_NEW") {
+                          setIsAddCategoryOpen(true);
+                        } else {
+                          setFormData((prev) => ({
+                            ...prev,
+                            categoryId: selected,
+                          }));
+                        }
+                      }}
+                    >
+                      {[
+                        ...categories.map((cat: Category) => (
+                          <SelectItem key={cat.id}>{cat.name}</SelectItem>
+                        )),
+                        <SelectItem
+                          key="ADD_NEW"
+                          className="text-primary font-bold border-t border-divider rounded-none mt-2"
+                          startContent={<Plus size={18} />}
+                        >
+                          {t("settings.category.addTitle") ||
+                            "เพิ่มหมวดหมู่ใหม่"}
+                        </SelectItem>,
+                      ]}
+                    </Select>
+
+                    <Input
+                      label={t("product.stockQty")}
+                      labelPlacement="outside"
+                      placeholder="0"
+                      startContent={
+                        <Package className="text-default-400" size={18} />
+                      }
+                      type="text"
+                      value={formatNumber(formData.stockQty)}
+                      variant="bordered"
+                      onValueChange={(val) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          stockQty: parseNumber(val),
+                        }))
+                      }
+                    />
+                    <Select
+                      label={t("product.unit")}
+                      labelPlacement="outside"
+                      placeholder={t("product.unit")}
+                      selectedKeys={formData.unitId ? [formData.unitId] : []}
+                      startContent={
+                        <Layers className="text-default-400" size={18} />
+                      }
+                      variant="bordered"
+                      onSelectionChange={(keys) => {
+                        const selected = Array.from(keys)[0] as string;
+                        if (selected === "ADD_NEW") {
+                          setIsAddUnitOpen(true);
+                        } else {
+                          setFormData((prev) => ({
+                            ...prev,
+                            unitId: selected,
+                          }));
+                        }
+                      }}
+                    >
+                      {[
+                        ...units.map((unit: Unit) => (
+                          <SelectItem key={unit.id}>{unit.name}</SelectItem>
+                        )),
+                        <SelectItem
+                          key="ADD_NEW"
+                          className="text-primary font-bold border-t border-divider rounded-none mt-2"
+                          startContent={<Plus size={18} />}
+                        >
+                          {t("settings.unit.addTitle") || "เพิ่มหน่วยใหม่"}
+                        </SelectItem>,
+                      ]}
+                    </Select>
+                    <Input
+                      label={t("product.cost")}
+                      labelPlacement="outside"
+                      placeholder="0"
+                      startContent={
+                        <span className="text-default-400 font-bold text-small">
+                          {t("common.currency")}
+                        </span>
+                      }
+                      type="text"
+                      value={formatNumber(formData.cost)}
+                      variant="bordered"
+                      onValueChange={(val) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          cost: parseNumber(val),
+                        }))
+                      }
+                    />
+                    <Input
+                      isRequired
+                      label={t("product.price")}
+                      labelPlacement="outside"
+                      placeholder="0"
+                      startContent={
+                        <span className="text-default-400 font-bold text-small">
+                          {t("common.currency")}
+                        </span>
+                      }
+                      type="text"
+                      value={formatNumber(formData.price)}
+                      variant="bordered"
+                      errorMessage={
+                        isPriceInvalid ? t("product.priceError") || "ລາຄາຂາຍຕ້ອງສູງກວ່າ ຫຼື ເທົ່າກັບຕົ້ນທຶນ" : ""
+                      }
+                      isInvalid={isPriceInvalid}
+                      onValueChange={(val) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          price: parseNumber(val),
+                        }))
+                      }
+                    />
+                    <div className="hidden md:block" />
+                  </div>
                 </div>
-              </div>
-            </ModalBody>
-            <ModalFooter>
-              <Button color="danger" variant="flat" onPress={onModalClose}>
-                {t("settings.common.cancel")}
-              </Button>
-              <Button
-                color="primary"
-                isDisabled={
-                  !formData.name || !formData.categoryId || formData.price <= 0
-                }
-                isLoading={
-                  createProductMutation.isPending ||
-                  updateProductMutation.isPending ||
-                  uploadImageMutation.isPending
-                }
-                onPress={() => handleSubmit(onModalClose)}
-              >
-                {isUpdateMode
-                  ? t("settings.common.update")
-                  : t("settings.common.save")}
-              </Button>
-            </ModalFooter>
-          </>
-        )}
-      </ModalContent>
-    </Modal>
+              </ModalBody>
+              <ModalFooter>
+                <Button color="danger" variant="flat" onPress={onModalClose}>
+                  {t("settings.common.cancel")}
+                </Button>
+                <Button
+                  color="primary"
+                  isDisabled={
+                    !formData.name ||
+                    !formData.categoryId ||
+                    formData.price <= 0 ||
+                    isPriceInvalid
+                  }
+                  isLoading={
+                    createProductMutation.isPending ||
+                    updateProductMutation.isPending ||
+                    uploadImageMutation.isPending
+                  }
+                  onPress={() => handleSubmit(onModalClose)}
+                >
+                  {isUpdateMode
+                    ? t("settings.common.update")
+                    : t("settings.common.save")}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
+      <Modal
+        isOpen={isAddCategoryOpen}
+        onClose={() => setIsAddCategoryOpen(false)}
+        placement="center"
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader>{t("settings.category.addTitle")}</ModalHeader>
+              <ModalBody>
+                <Input
+                  autoFocus
+                  placeholder={t("settings.category.namePlaceholder")}
+                  value={newCategoryName}
+                  variant="bordered"
+                  onValueChange={setNewCategoryName}
+                />
+              </ModalBody>
+              <ModalFooter>
+                <Button variant="flat" onPress={onClose}>
+                  {t("settings.common.cancel")}
+                </Button>
+                <Button
+                  color="primary"
+                  isLoading={createCategoryMutation.isPending}
+                  onPress={handleCreateCategory}
+                >
+                  {t("settings.common.save")}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
+      <Modal
+        isOpen={isAddUnitOpen}
+        onClose={() => setIsAddUnitOpen(false)}
+        placement="center"
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader>
+                {t("settings.unit.addTitle") || "เพิ่มหน่วยใหม่"}
+              </ModalHeader>
+              <ModalBody>
+                <Input
+                  autoFocus
+                  placeholder={
+                    t("settings.unit.namePlaceholder") || "ระบุชื่อหน่วย"
+                  }
+                  value={newUnitName}
+                  variant="bordered"
+                  onValueChange={setNewUnitName}
+                />
+              </ModalBody>
+              <ModalFooter>
+                <Button variant="flat" onPress={onClose}>
+                  {t("settings.common.cancel")}
+                </Button>
+                <Button
+                  color="primary"
+                  isLoading={createUnitMutation.isPending}
+                  onPress={handleCreateUnit}
+                >
+                  {t("settings.common.save")}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+    </>
   );
 }

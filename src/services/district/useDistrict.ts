@@ -5,8 +5,10 @@ import { API_ENDPOINTS } from "@/config/api";
 
 export interface District {
   id: string;
-  name: string;
-  provinceId: string;
+  code: string;
+  nameLo: string;
+  nameEn: string;
+  provinceCode: string;
 }
 
 export const getDistrictsByProvince = async (

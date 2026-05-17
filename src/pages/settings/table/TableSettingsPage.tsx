@@ -27,7 +27,7 @@ import { useAuth } from "@/routes/AuthContext";
 import { useGetTables } from "@/services/table/useTable";
 import { useGetZones } from "@/services/table/useZone";
 import ConfirmModal from "@/components/common/popup-confirm";
-import PendingModal from "@/components/common/pending-modal";
+
 
 const columns = (t: any) => [
   { name: t("settings.common.no"), uid: "id", sortable: true },
@@ -70,17 +70,7 @@ export default function TableSettingsPage() {
     type: "table" | "zone";
     id: string;
   } | null>(null);
-  const {
-    isOpen: isPendingOpen,
-    onOpen: onPendingOpen,
-    onOpenChange: onPendingOpenChange,
-  } = useDisclosure();
-  const {
-    isOpen: isRejectedOpen,
-    onOpen: onRejectedOpen,
-    onClose: onRejectedClose,
-    onOpenChange: onRejectedOpenChange,
-  } = useDisclosure();
+
 
   const { mutateAsync: updateTable, isPending: isUpdatingTable } =
     useUpdateTable();
@@ -134,19 +124,7 @@ export default function TableSettingsPage() {
   }, [sortDescriptor, items]);
 
   const handleOpenModal = (type: "table" | "zone", item: any = null) => {
-    // @ts-ignore
-    const storeStatus = user?.user?.store?.status;
 
-    if (!item && storeStatus === "PENDING") {
-      onPendingOpen();
-
-      return;
-    }
-    if (!item && storeStatus === "REJECTED") {
-      onRejectedOpen();
-
-      return;
-    }
     setModalType(type);
     setSelectedItem(item);
     setIsEditing(!!item);
@@ -407,19 +385,7 @@ export default function TableSettingsPage() {
         onOpenChange={onDeleteOpenChange}
       />
 
-      {/* Pending Status Modal */}
-      <PendingModal isOpen={isPendingOpen} onOpenChange={onPendingOpenChange} />
 
-      {/* Rejected Status Modal */}
-      <ConfirmModal
-        color="danger"
-        confirmText={t("settings.common.ok")}
-        isOpen={isRejectedOpen}
-        message={t("settings.common.rejectedMsg")}
-        title={t("settings.common.rejectedTitle")}
-        onConfirm={onRejectedClose}
-        onOpenChange={onRejectedOpenChange}
-      />
     </div>
   );
 }

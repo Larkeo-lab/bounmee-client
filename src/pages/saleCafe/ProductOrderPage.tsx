@@ -22,7 +22,7 @@ import { OrderRight } from "./orderRight";
 import CameraModal from "@/components/camera";
 
 import EmptyState from "@/components/common/empty-state";
-import { useCart } from "@/provider";
+import { useCafeCart } from "@/hooks/useCafeCart";
 import PaymentModal from "@/components/common/payment-modal";
 import ConfirmModal from "@/components/common/popup-confirm";
 import { useAuth } from "@/routes/AuthContext";
@@ -53,14 +53,8 @@ export default function ProductOrderPage() {
   } = useDisclosure();
   const [isMinimized, setIsMinimized] = useState(true);
   const [flyingItems, setFlyingItems] = useState<FlyingItem[]>([]);
-  const {
-    cart,
-    addToCart,
-    removeFromCart,
-    clearCart,
-    subtotal,
-    setActiveTableId,
-  } = useCart();
+  const { cart, addToCart, removeFromCart, clearCart, subtotal } =
+    useCafeCart();
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [selectedCartItems, setSelectedCartItems] = useState<string[]>([]);
   const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
@@ -81,19 +75,18 @@ export default function ProductOrderPage() {
   } = useDisclosure();
   const [isBarcodeScannerOpen, setIsBarcodeScannerOpen] = useState(false);
 
-  useEffect(() => {
-    setActiveTableId(null);
-  }, [setActiveTableId]);
-
   // Sync selection with cart
   useEffect(() => {
-    setSelectedCartItems((prev) =>
-      prev.filter((uId) =>
+    setSelectedCartItems((prev) => {
+      const next = prev.filter((uId) =>
         cart.some(
           (item) => `${item.id}-${item.status}-${item.note || ""}` === uId,
         ),
-      ),
-    );
+      );
+      // 🛡️ Guard: Update only if the list actually changed to prevent infinite loops
+      if (next.length === prev.length) return prev;
+      return next;
+    });
   }, [cart]);
 
   const toggleNote = (uId: string) => {
@@ -384,7 +377,7 @@ export default function ProductOrderPage() {
                           )}
                         >
                           {remainingStock > 0
-                            ? `${remainingStock}`
+                            ? `${remainingStock} ${product?.unit?.name || ""}`
                             : t("sale.outOfStock")}
                         </div>
                       </div>

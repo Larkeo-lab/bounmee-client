@@ -21,7 +21,7 @@ import { toast } from "react-hot-toast";
 import { OrderRight } from "./orderRight";
 
 import EmptyState from "@/components/common/empty-state";
-import { useCart } from "@/provider";
+import { useGeneralCart } from "@/hooks/useGeneralCart";
 import PaymentModal from "@/components/common/payment-modal";
 import CameraModal from "@/components/camera";
 import { useAuth } from "@/routes/AuthContext";
@@ -50,11 +50,7 @@ export default function ProductOrderPage() {
   const [flyingItems, setFlyingItems] = useState<FlyingItem[]>([]);
   const [isBarcodeScannerOpen, setIsBarcodeScannerOpen] = useState(false);
 
-  const { cart, addToCart, clearCart, subtotal, setActiveTableId } = useCart();
-
-  useEffect(() => {
-    setActiveTableId(null);
-  }, [setActiveTableId]);
+  const { cart, addToCart, clearCart, subtotal } = useGeneralCart();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -304,14 +300,14 @@ export default function ProductOrderPage() {
                         className={clsx(
                           "px-2 py-0.5 rounded-full text-[9px] lg:text-[10px] font-bold text-white shadow-lg backdrop-blur-md",
                           product.stockQty > 10
-                            ? "bg-green-500/80"
+                            ? "bg-primary/80"
                             : product.stockQty > 0
                               ? "bg-orange-500/80"
                               : "bg-red-500/80",
                         )}
                       >
                         {product.stockQty > 0
-                          ? `${product.stockQty}`
+                          ? `${product?.stockQty} ${product?.unit?.name}`
                           : t("sale.outOfStock")}
                       </div>
                     </div>

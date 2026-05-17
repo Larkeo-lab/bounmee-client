@@ -17,7 +17,7 @@ import {
   Textarea,
   Input,
 } from "@heroui/react";
-import { Save, CornerDownRight } from "lucide-react";
+import { Save, CornerDownRight, Shield } from "lucide-react";
 import { z } from "zod";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
@@ -35,6 +35,7 @@ type PermissionId =
   | "pos"
   | "cafe"
   | "order"
+  | "debt"
   | "ordering"
   | "kitchen"
   | "table"
@@ -104,6 +105,11 @@ export default function AddRoleUser() {
     {
       id: "order",
       name: "sidebar.menu.order",
+      permissions: { read: false },
+    },
+    {
+      id: "debt",
+      name: "sidebar.menu.debt",
       permissions: { read: false },
     },
     {
@@ -204,9 +210,7 @@ export default function AddRoleUser() {
       );
     }
     if (storeType === "RESTAURANT") {
-      return allPermissions.filter(
-        (p) => !["pos"].includes(p.id),
-      );
+      return allPermissions.filter((p) => !["pos"].includes(p.id));
     }
 
     return allPermissions;
@@ -437,7 +441,17 @@ export default function AddRoleUser() {
   ];
 
   return (
-    <>
+    <div className="space-y-6 m-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-primary flex items-center gap-2">
+            <Shield size={28} />
+            {isEditMode ? t("permission.editTitle") : t("permission.addTitle")}
+          </h1>
+          <p className="text-default-500">{t("permission.subtitle")}</p>
+        </div>
+      </div>
+
       <Breadcrum items={breadcrumbItems} />
 
       <Card className="py-4" shadow="sm">
@@ -474,10 +488,9 @@ export default function AddRoleUser() {
           <Table
             aria-label="Permissions table"
             classNames={{
-              base: "max-h-[520px]",
-              table: "min-h-[280px]",
-              // wrapper: "shadow-none",
-              th: "text-sm",
+              wrapper:
+                "shadow-sm border border-divider rounded-xl overflow-hidden p-0",
+              th: "bg-default-50 text-default-600 font-bold h-12",
               td: "text-sm",
             }}
             shadow="sm"
@@ -596,6 +609,6 @@ export default function AddRoleUser() {
           </Button>
         </CardFooter>
       </Card>
-    </>
+    </div>
   );
 }

@@ -14,18 +14,19 @@ import {
   DropdownMenu,
   DropdownItem,
 } from "@heroui/react";
-import { Barcode, Tag, Package, Upload, X, Camera, Image as ImageIcon } from "lucide-react";
-import { useTranslation } from "react-i18next";
+import { Barcode, Tag, Package, Upload, X, Camera, Image as ImageIcon, Plus } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import { toast } from "react-hot-toast";
 
 import CameraModal from "@/components/camera";
 
 import { useUpdateProduct, Product } from "@/services/product/useProduct";
 import { useUploadImage } from "@/services/storage";
-import { Category } from "@/services/category/useCategory";
+import { Category, useCreateCategory } from "@/services/category/useCategory";
 import { getDisplayImageUrl } from "@/lib/utils";
 import { formatNumber, parseNumber } from "@/utils/numberFormat";
-import { useGetUnits, Unit } from "@/services/unit/useUnit";
+import { useGetUnits, Unit, useCreateUnit } from "@/services/unit/useUnit";
 import { Layers } from "lucide-react";
 
 interface EditProductProps {
@@ -67,6 +68,14 @@ export default function EditProduct({
     isBarcode: false,
   });
 
+  const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
+  const [isAddUnitOpen, setIsAddUnitOpen] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [newUnitName, setNewUnitName] = useState("");
+
+  const createCategoryMutation = useCreateCategory();
+  const createUnitMutation = useCreateUnit();
+
   useEffect(() => {
     if (product) {
       setFormData({
@@ -93,7 +102,7 @@ export default function EditProduct({
       setPreviewImage(previewUrl);
       const imageName = await uploadImageMutation.mutateAsync(file);
 
-      setFormData((prev) => ({ ...prev, image: imageName }));
+      setFormData((prev: any) => ({ ...prev, image: imageName }));
     } catch (error) {
       console.error("Failed to upload image:", error);
     }
@@ -108,7 +117,7 @@ export default function EditProduct({
   };
 
   const removeImage = () => {
-    setFormData((prev) => ({ ...prev, image: "" }));
+    setFormData((prev: any) => ({ ...prev, image: "" }));
     setPreviewImage("");
   };
 
@@ -117,11 +126,51 @@ export default function EditProduct({
   };
 
   const handleBarcodeScan = (data: string) => {
-    setFormData((prev) => ({ ...prev, barcode: data }));
+    setFormData((prev: any) => ({ ...prev, barcode: data }));
   };
 
   const { data: unitsResponse } = useGetUnits(storeId);
   const units = unitsResponse?.data || [];
+
+  const handleCreateCategory = async () => {
+    if (!newCategoryName.trim()) return;
+    try {
+      const response = await createCategoryMutation.mutateAsync({
+        name: newCategoryName,
+        storeId: storeId,
+      });
+      const categoryData = response.data?.data;
+
+      if (categoryData?.id) {
+        setFormData((prev) => ({ ...prev, categoryId: categoryData.id }));
+      }
+      setNewCategoryName("");
+      setIsAddCategoryOpen(false);
+    } catch (error) {
+      console.error("Failed to create category:", error);
+    }
+  };
+
+  const handleCreateUnit = async () => {
+    if (!newUnitName.trim()) return;
+    try {
+      const response = await createUnitMutation.mutateAsync({
+        name: newUnitName,
+        storeId: storeId,
+      });
+      const unitData = response.data?.data;
+
+      if (unitData?.id) {
+        setFormData((prev) => ({ ...prev, unitId: unitData.id }));
+      }
+      setNewUnitName("");
+      setIsAddUnitOpen(false);
+    } catch (error) {
+      console.error("Failed to create unit:", error);
+    }
+  };
+
+  const isPriceInvalid = formData.price > 0 && formData.cost > 0 && formData.price < formData.cost;
 
   const handleSubmit = async (onModalClose: () => void) => {
     if (!product) return;
@@ -134,6 +183,7 @@ export default function EditProduct({
         id: product.id,
         storeId: storeId,
       });
+      toast.success(t("product.updateSuccess") || "ອັບເດດສິນຄ້າສຳເລັດ");
       onModalClose();
     } catch (error) {
       console.error("Failed to update product:", error);
@@ -141,7 +191,8 @@ export default function EditProduct({
   };
 
   return (
-    <Modal
+    <>
+      <Modal
       isOpen={isOpen}
       scrollBehavior="inside"
       size="2xl"
@@ -339,16 +390,32 @@ export default function EditProduct({
                       <Tag className="text-default-400" size={18} />
                     }
                     variant="bordered"
-                    onSelectionChange={(keys) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        categoryId: Array.from(keys)[0] as string,
-                      }))
-                    }
+                    onSelectionChange={(keys) => {
+                      const selected = Array.from(keys)[0] as string;
+
+                      if (selected === "ADD_NEW") {
+                        setIsAddCategoryOpen(true);
+                      } else {
+                        setFormData((prev: any) => ({
+                          ...prev,
+                          categoryId: selected,
+                        }));
+                      }
+                    }}
                   >
-                    {categories.map((cat: Category) => (
-                      <SelectItem key={cat.id}>{cat.name}</SelectItem>
-                    ))}
+                    {[
+                      ...categories.map((cat: Category) => (
+                        <SelectItem key={cat.id}>{cat.name}</SelectItem>
+                      )),
+                      <SelectItem
+                        key="ADD_NEW"
+                        className="text-primary font-bold border-t border-divider rounded-none mt-2"
+                        startContent={<Plus size={18} />}
+                      >
+                        {t("settings.category.addTitle") ||
+                          "เพิ่มหมวดหมู่ใหม่"}
+                      </SelectItem>,
+                    ]}
                   </Select>
                   <Select
                     label={t("product.unit")}
@@ -361,16 +428,31 @@ export default function EditProduct({
                       <Layers className="text-default-400" size={18} />
                     }
                     variant="bordered"
-                    onSelectionChange={(keys) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        unitId: Array.from(keys)[0] as string,
-                      }))
-                    }
+                    onSelectionChange={(keys) => {
+                      const selected = Array.from(keys)[0] as string;
+
+                      if (selected === "ADD_NEW") {
+                        setIsAddUnitOpen(true);
+                      } else {
+                        setFormData((prev: any) => ({
+                          ...prev,
+                          unitId: selected,
+                        }));
+                      }
+                    }}
                   >
-                    {units.map((unit: Unit) => (
-                      <SelectItem key={unit.id}>{unit.name}</SelectItem>
-                    ))}
+                    {[
+                      ...units.map((unit: Unit) => (
+                        <SelectItem key={unit.id}>{unit.name}</SelectItem>
+                      )),
+                      <SelectItem
+                        key="ADD_NEW"
+                        className="text-primary font-bold border-t border-divider rounded-none mt-2"
+                        startContent={<Plus size={18} />}
+                      >
+                        {t("settings.unit.addTitle") || "เพิ่มหน่วยใหม่"}
+                      </SelectItem>,
+                    ]}
                   </Select>
                   <Input
                     label={t("product.stockQty")}
@@ -417,6 +499,10 @@ export default function EditProduct({
                     type="text"
                     value={formatNumber(formData.price)}
                     variant="bordered"
+                    errorMessage={
+                      isPriceInvalid ? t("product.priceError") || "ລາຄາຂາຍຕ້ອງສູງກວ່າ ຫຼື ເທົ່າກັບຕົ້ນທຶນ" : ""
+                    }
+                    isInvalid={isPriceInvalid}
                     onValueChange={(val) =>
                       setFormData((prev) => ({
                         ...prev,
@@ -435,7 +521,7 @@ export default function EditProduct({
               <Button
                 color="primary"
                 isDisabled={
-                  !formData.name || !formData.categoryId || formData.price <= 0
+                  !formData.name || !formData.categoryId || formData.price <= 0 || isPriceInvalid
                 }
                 isLoading={
                   updateProductMutation.isPending ||
@@ -449,6 +535,81 @@ export default function EditProduct({
           </>
         )}
       </ModalContent>
-    </Modal>
+      </Modal>
+
+      <Modal
+        isOpen={isAddCategoryOpen}
+        placement="center"
+        onClose={() => setIsAddCategoryOpen(false)}
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader>{t("settings.category.addTitle")}</ModalHeader>
+              <ModalBody>
+                <Input
+                  autoFocus
+                  placeholder={t("settings.category.namePlaceholder")}
+                  value={newCategoryName}
+                  variant="bordered"
+                  onValueChange={setNewCategoryName}
+                />
+              </ModalBody>
+              <ModalFooter>
+                <Button variant="flat" onPress={onClose}>
+                  {t("settings.common.cancel")}
+                </Button>
+                <Button
+                  color="primary"
+                  isLoading={createCategoryMutation.isPending}
+                  onPress={handleCreateCategory}
+                >
+                  {t("settings.common.save")}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
+      <Modal
+        isOpen={isAddUnitOpen}
+        placement="center"
+        onClose={() => setIsAddUnitOpen(false)}
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader>
+                {t("settings.unit.addTitle") || "เพิ่มหน่วยใหม่"}
+              </ModalHeader>
+              <ModalBody>
+                <Input
+                  autoFocus
+                  placeholder={
+                    t("settings.unit.namePlaceholder") || "ระบุชื่อหน่วย"
+                  }
+                  value={newUnitName}
+                  variant="bordered"
+                  onValueChange={setNewUnitName}
+                />
+              </ModalBody>
+              <ModalFooter>
+                <Button variant="flat" onPress={onClose}>
+                  {t("settings.common.cancel")}
+                </Button>
+                <Button
+                  color="primary"
+                  isLoading={createUnitMutation.isPending}
+                  onPress={handleCreateUnit}
+                >
+                  {t("settings.common.save")}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+    </>
   );
 }

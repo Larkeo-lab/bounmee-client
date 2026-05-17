@@ -34,7 +34,7 @@ import { useCart } from "@/provider";
 
 // Icons import
 
-import EezyPosLogo from "/assets/logo.png";
+import EezyPosLogo from "/assets/eezypos_logo.jpg";
 const bgLineName = "/line-nam-bg.png";
 
 import { useAuth } from "@/routes/AuthContext";
@@ -92,6 +92,12 @@ const sidebarGroups: MenuGroup[] = [
         href: "/order",
         icon: History,
         permissionKey: "order",
+      },
+      {
+        labelKey: "sidebar.menu.debt",
+        href: "/debt",
+        icon: History,
+        permissionKey: "debt",
       },
       {
         labelKey: "sidebar.menu.ordering",

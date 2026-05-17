@@ -11,6 +11,8 @@ import {
   BadgeDollarSign,
   ChevronRight,
   Armchair,
+  UserCheck,
+  ShieldCheck,
 } from "lucide-react";
 
 import { useAuth } from "@/routes/AuthContext";
@@ -85,7 +87,7 @@ const settingsItems: SettingItem[] = [
     titleKey: "sidebar.menu.managePermission",
     descriptionKey: "settings.description.employee", // Fallback description
     href: "/permission-manage",
-    icon: Users, // Using Users as a fallback icon
+    icon: ShieldCheck,
     color: "bg-red-500/10 text-red-500",
     permissionKey: "role_permission",
   },
@@ -96,6 +98,14 @@ const settingsItems: SettingItem[] = [
     icon: Armchair,
     color: "bg-amber-500/10 text-amber-500",
     permissionKey: "table_settings",
+  },
+  {
+    titleKey: "sidebar.menu.manageMember",
+    descriptionKey: "settings.description.member",
+    href: "/settings/member",
+    icon: UserCheck,
+    color: "bg-amber-500/10 text-amber-500",
+    permissionKey: "member_settings",
   },
 ];
 

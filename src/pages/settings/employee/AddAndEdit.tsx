@@ -227,6 +227,7 @@ export default function AddAndEdit({
         <Input
           isRequired
           label={t("employee.name")}
+          labelPlacement="outside"
           placeholder={t("employee.name")}
           startContent={<User className="text-default-400" size={18} />}
           value={formData.name}
@@ -236,6 +237,7 @@ export default function AddAndEdit({
         <Input
           isRequired
           label={t("employee.phone")}
+          labelPlacement="outside"
           placeholder="20XXXXXXXX"
           startContent={<Phone className="text-default-400" size={18} />}
           value={formData.phone}
@@ -245,6 +247,7 @@ export default function AddAndEdit({
         <Input
           isRequired
           label={t("employee.username")}
+          labelPlacement="outside"
           placeholder={t("employee.username")}
           startContent={<User className="text-default-400" size={18} />}
           value={formData.userName}
@@ -255,6 +258,7 @@ export default function AddAndEdit({
           <Input
             isRequired
             label={t("employee.password")}
+            labelPlacement="outside"
             placeholder={t("employee.password")}
             startContent={<Lock className="text-default-400" size={18} />}
             type="password"
@@ -266,6 +270,7 @@ export default function AddAndEdit({
         <Select
           className="md:col-span-2"
           label={t("employee.permissions")}
+          labelPlacement="outside"
           placeholder={t("employee.permissions")}
           selectedKeys={formData.permissionId ? [formData.permissionId] : []}
           startContent={<Shield className="text-default-400" size={18} />}

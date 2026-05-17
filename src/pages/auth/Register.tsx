@@ -40,7 +40,7 @@ import { useGetDistrictsByProvince } from "@/services/district/useDistrict";
 import LanguageSwitch from "@/components/common/language-switch";
 import { showErrorToast } from "@/config/error-messages";
 
-import oneDoorLogo from "/assets/logo.png";
+import oneDoorLogo from "/assets/eezypos_logo.jpg";
 
 import {
   trackButtonClick,
@@ -364,9 +364,10 @@ export default function Register() {
             />
           </div>
           <div className="space-y-4">
-            <h1 className="text-4xl lg:text-7xl font-black tracking-tight drop-shadow-lg uppercase italic">
+            <h1 className="text-4xl lg:text-7xl font-black tracking-tight drop-shadow-lg uppercase">
               Eezy POS
             </h1>
+
             <p className="text-xl lg:text-2xl font-light opacity-90 max-w-lg mx-auto">
               {t("auth.welcomeMessage")}
               <span className="block text-sm mt-2 opacity-70">

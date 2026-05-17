@@ -14,10 +14,6 @@ import {
   Image,
   Card,
   CardBody,
-  Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
-  DropdownItem,
   ScrollShadow,
   Tabs,
   Tab,
@@ -26,10 +22,7 @@ import {
   Eye,
   Receipt,
   Download,
-  Filter,
   Search,
-  Calendar,
-  ShoppingBag,
   Landmark,
   LayoutGrid,
   Coffee,
@@ -46,6 +39,7 @@ import { formatNumber } from "@/utils/numberFormat";
 import GlobalPagination from "@/components/common/globle-pagination";
 import { exportOrdersToExcel } from "@/utils/exportOrder";
 import EmptyState from "@/components/common/empty-state";
+import FilterDate from "@/components/common/fillterDate";
 
 export default function OrderPage() {
   const { t } = useTranslation();
@@ -61,7 +55,9 @@ export default function OrderPage() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedSource, setSelectedSource] = useState<string>("ALL");
-
+  const IS_GENERAL_STORE = user?.user?.store?.type === "GENERAL_STORE";
+  const IS_CAFE = user?.user?.store?.type === "CAFE";
+  const IS_RESTAURANT = user?.user?.store?.type === "RESTAURANT";
   // Debounce search
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -161,6 +157,8 @@ export default function OrderPage() {
         return t("order.paymentCash") || "ເງິນສົດ";
       case "TRANSFER":
         return t("order.paymentTransfer") || "ເງິນໂອນ";
+      case "TRANSFER_CASH":
+        return t("order.paymentTransferCash") || "ເງິນໂອນ + ເງິນສົດ";
       default:
         return method;
     }
@@ -253,6 +251,17 @@ export default function OrderPage() {
               </div>
               <ScrollShadow className="max-h-[34px] overflow-y-auto" size={20}>
                 <div className="flex flex-wrap gap-x-3 gap-y-1">
+                  {/* ✨ ระบุเงินสด (Cash) */}
+                  <div className="flex items-center gap-1.5 text-[9px] text-default-500">
+                    <div className="w-1.5 h-1.5 rounded-full bg-success" />
+                    <span className="font-semibold">
+                      {t("order.paymentCash") || "ເງິນສົດ"}:
+                    </span>
+                    <span className="font-bold text-success">
+                      {formatNumber(totalCash)}
+                    </span>
+                  </div>
+
                   {transfersByBank.map((bank: any) => (
                     <div
                       key={bank.name}
@@ -279,7 +288,7 @@ export default function OrderPage() {
 
       {/* Filter Bar - Mobile Optimized */}
       <div className="flex flex-col gap-2 bg-white/70 dark:bg-gray-800/70 backdrop-blur-md p-2 rounded-2xl border border-divider shadow-sm">
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 items-center">
           <Input
             isClearable
             className="flex-grow"
@@ -290,81 +299,16 @@ export default function OrderPage() {
             variant="flat"
             onValueChange={setSearch}
           />
-          <Dropdown placement="bottom-end">
-            <DropdownTrigger>
-              <Button isIconOnly color="primary" size="sm" variant="flat">
-                <Filter size={18} />
-              </Button>
-            </DropdownTrigger>
-            <DropdownMenu
-              aria-label={t("order.filterTime")}
-              className="font-bold"
-              onAction={(key: any) => {
-                const today = dayjs().format("YYYY-MM-DD");
-                let start = today;
-                let end = today;
-
-                switch (key) {
-                  case "today":
-                    start = today;
-                    break;
-                  case "yesterday":
-                    start = dayjs().subtract(1, "day").format("YYYY-MM-DD");
-                    end = start;
-                    break;
-                  case "3days":
-                    start = dayjs().subtract(2, "day").format("YYYY-MM-DD");
-                    break;
-                  case "7days":
-                    start = dayjs().subtract(6, "day").format("YYYY-MM-DD");
-                    break;
-                  case "1month":
-                    start = dayjs().subtract(1, "month").format("YYYY-MM-DD");
-                    break;
-                }
-                setStartDate(start);
-                setEndDate(end);
-              }}
-            >
-              <DropdownItem
-                key="today"
-                startContent={<Calendar className="text-success" size={14} />}
-              >
-                {t("order.today")}
-              </DropdownItem>
-              <DropdownItem key="yesterday">
-                {t("order.yesterday")}
-              </DropdownItem>
-              <DropdownItem key="3days">{t("order.last3Days")}</DropdownItem>
-              <DropdownItem key="7days">{t("order.last7Days")}</DropdownItem>
-              <DropdownItem key="1month">{t("order.lastMonth")}</DropdownItem>
-            </DropdownMenu>
-          </Dropdown>
-        </div>
-
-        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-0.5">
-          <div className="flex-shrink-0 flex items-center gap-1.5 bg-default-100 p-1 rounded-lg border border-divider">
-            <span className="text-[9px] font-black text-default-400 px-1 uppercase">
-              {t("order.start")}
-            </span>
-            <input
-              className="bg-transparent border-none text-[10px] font-bold outline-none"
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-            />
-          </div>
-          <div className="flex-shrink-0 flex items-center gap-1.5 bg-default-100 p-1 rounded-lg border border-divider">
-            <span className="text-[9px] font-black text-default-400 px-1 uppercase">
-              {t("order.end")}
-            </span>
-            <input
-              className="bg-transparent border-none text-[10px] font-bold outline-none"
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-            />
-          </div>
+          <FilterDate
+            endDate={endDate}
+            startDate={startDate}
+            onEndDateChange={setEndDate}
+            onFilter={(start, end) => {
+              setStartDate(start);
+              setEndDate(end);
+            }}
+            onStartDateChange={setStartDate}
+          />
         </div>
       </div>
 
@@ -409,7 +353,7 @@ export default function OrderPage() {
             }
           />
           {/* Only show Table tab for Restaurants */}
-          {user?.user?.store?.type === "RESTAURANT" && (
+          {IS_RESTAURANT && (
             <Tab
               key="TABLE"
               title={
@@ -437,38 +381,8 @@ export default function OrderPage() {
             />
           )}
 
-          {/* Only show Direct tab for General stores and Restaurants */}
-          {user?.user?.store?.type === "GENERAL_STORE" && (
-            <Tab
-              key="DIRECT"
-              title={
-                <div className="flex items-center gap-2">
-                  <ShoppingBag
-                    className={
-                      selectedSource === "DIRECT"
-                        ? "text-primary"
-                        : "text-default-400"
-                    }
-                    size={18}
-                  />
-                  <span className="text-sm">{t("order.fromShop")}</span>
-                  {sourceCounts.DIRECT > 0 && (
-                    <Chip
-                      className="h-4 text-[9px] font-bold"
-                      size="sm"
-                      variant="flat"
-                    >
-                      {sourceCounts.DIRECT}
-                    </Chip>
-                  )}
-                </div>
-              }
-            />
-          )}
-
           {/* Only show Cafe tab for Cafes and Restaurants */}
-          {(user?.user?.store?.type === "CAFE" ||
-            user?.user?.store?.type === "RESTAURANT") && (
+          {(IS_CAFE || IS_RESTAURANT) && (
             <Tab
               key="CAFE"
               title={
@@ -512,7 +426,6 @@ export default function OrderPage() {
                 key={item.id}
                 isPressable
                 className="border-none bg-white rounded-none shadow-none border-b border-divider/60 hover:bg-default-50 transition-all active:scale-[0.99] w-full"
-                onPress={() => handleViewDetail(item)}
               >
                 <CardBody className="p-4">
                   <div className="flex justify-between items-start mb-3">
@@ -617,13 +530,35 @@ export default function OrderPage() {
               <TableColumn key="itemsCount">
                 {t("order.tableItems")}
               </TableColumn>
-              <TableColumn key="table">{t("order.tableTable")}</TableColumn>
+              {IS_RESTAURANT ? (
+                <TableColumn key="table">{t("order.tableTable")}</TableColumn>
+              ) : (
+                <TableColumn key="table" className="hidden w-0 p-0 h-0">
+                  {null}
+                </TableColumn>
+              )}
               <TableColumn key="date">{t("order.tableDateTime")}</TableColumn>
               <TableColumn key="employee">
                 {t("order.tableEmployeeCol")}
               </TableColumn>
               <TableColumn key="payment">{t("order.tablePayment")}</TableColumn>
               <TableColumn key="total">{t("order.tableTotal")}</TableColumn>
+              <TableColumn key="realMoney">
+                {t("order.realMoney") || "ຍອດເງິນຕົວຈິງ"}
+              </TableColumn>
+              <TableColumn key="receivedAmount">
+                {t("order.receivedAmount") || "ເງິນຮັບມາ"}
+              </TableColumn>
+
+              <TableColumn key="discount">
+                {t("order.discount") || "ສ່ວນຫຼຸດ"}
+              </TableColumn>
+              <TableColumn key="change">
+                {t("order.change") || "ເງິນທອນ"}
+              </TableColumn>
+              <TableColumn key="paymentStatus">
+                {t("order.paymentStatus") || "ສະຖານະຊຳລະ"}
+              </TableColumn>
               <TableColumn key="actions">{t("order.tableAction")}</TableColumn>
             </TableHeader>
             <TableBody
@@ -634,8 +569,7 @@ export default function OrderPage() {
               {(item: any) => (
                 <TableRow
                   key={item.id}
-                  className="hover:bg-default-50 transition-colors cursor-pointer"
-                  onClick={() => handleViewDetail(item)}
+                  className="hover:bg-default-50 transition-colors"
                 >
                   <TableCell className="font-bold text-xs">
                     {item.displayIndex}
@@ -646,30 +580,108 @@ export default function OrderPage() {
                   <TableCell className="font-bold text-xs">
                     {item.items.length} {t("order.tableItems")}
                   </TableCell>
-                  <TableCell className="font-bold text-primary text-xs">
-                    {item.businessType === "CAFE"
-                      ? "Cafe"
-                      : item.table?.name || "-"}
-                  </TableCell>
+                  {IS_RESTAURANT ? (
+                    <TableCell className="font-bold text-primary text-xs">
+                      {item.businessType === "CAFE"
+                        ? "Cafe"
+                        : item.table?.name || "-"}
+                    </TableCell>
+                  ) : (
+                    <TableCell className="hidden">{null}</TableCell>
+                  )}
                   <TableCell className="text-[10px] font-medium text-default-500">
                     {dayjs(item.createdAt).format("DD/MM/YYYY HH:mm")}
                   </TableCell>
                   <TableCell className="text-xs font-semibold">
                     {item.employee?.name || t("order.owner")}
                   </TableCell>
-                  <TableCell>
-                    <Chip
-                      className="font-bold h-5 text-[10px]"
-                      color={getPaymentMethodColor(item.paymentMethod)}
-                      size="sm"
-                      variant="flat"
-                    >
-                      {getPaymentMethodLabel(item.paymentMethod)}
-                    </Chip>
-                  </TableCell>
+                  {item.isDebt ? (
+                    <TableCell>
+                      <Chip
+                        className="font-bold h-5 text-[10px]"
+                        color="danger"
+                        size="sm"
+                        variant="flat"
+                      >
+                        ຕິດໜີ້
+                      </Chip>
+                    </TableCell>
+                  ) : (
+                    <TableCell>
+                      <Chip
+                        className="font-bold h-5 text-[10px]"
+                        color={getPaymentMethodColor(item.paymentMethod)}
+                        size="sm"
+                        variant="flat"
+                      >
+                        {getPaymentMethodLabel(item.paymentMethod)}
+                      </Chip>
+                    </TableCell>
+                  )}
                   <TableCell className="font-black text-sm text-primary">
                     {formatNumber(item.totalAmount)} {t("order.kip") || "ກີບ"}
                   </TableCell>
+                  <TableCell className="font-black text-sm text-primary">
+                    {formatNumber(
+                      Number(item.totalAmount) + Number(item.discountAmount),
+                    )}{" "}
+                    {t("order.kip") || "ກີບ"}
+                  </TableCell>
+                  <TableCell className="font-bold text-sm text-default-600">
+                    {Number(item.receivedAmount) > 0 ? (
+                      <span>
+                        {formatNumber(item.receivedAmount)}{" "}
+                        {t("order.kip") || "ກີບ"}
+                      </span>
+                    ) : (
+                      <span className="text-default-300">-</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="font-bold text-xs text-danger">
+                    {item.isDiscount ? (
+                      <div className="flex flex-col">
+                        <span className="text-danger">
+                          -{formatNumber(item.discountAmount)}{" "}
+                          {t("order.kip") || "ກີບ"}
+                        </span>
+                        <span className="text-[10px] text-default-400">
+                          ({item.discountPercent}%)
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-default-300">-</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="font-bold text-sm text-success">
+                    {Number(item.change) > 0 ? (
+                      <span>
+                        {formatNumber(item.change)} {t("order.kip") || "ກີບ"}
+                      </span>
+                    ) : (
+                      <span className="text-default-300">-</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      className="h-5 text-[9px] font-black"
+                      color={
+                        item.paymentStatus === "PAID"
+                          ? "success"
+                          : item.paymentStatus === "PARTIALLY_PAID"
+                            ? "warning"
+                            : "danger"
+                      }
+                      size="sm"
+                      variant="flat"
+                    >
+                      {item.paymentStatus === "PAID"
+                        ? t("order.paid") || "ຊຳລະແລ້ວ"
+                        : item.paymentStatus === "PARTIALLY_PAID"
+                          ? t("order.partiallyPaid") || "ຊຳລະບາງສ່ວນ"
+                          : t("order.unpaid") || "ຍັງບໍ່ຊຳລະ"}
+                    </Chip>
+                  </TableCell>
+
                   <TableCell>
                     <Button
                       isIconOnly
@@ -689,9 +701,10 @@ export default function OrderPage() {
       </div>
 
       <OrderDetail
+        IS_GENERAL_STORE={IS_GENERAL_STORE}
         isOpen={isOpen}
-        selectedOrder={selectedOrder}
         onOpenChange={onOpenChange}
+        selectedOrder={selectedOrder}
       />
     </div>
   );

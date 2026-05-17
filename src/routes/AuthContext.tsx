@@ -7,7 +7,11 @@ import React, {
 } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { useAuthService, useRegisterService } from "@/services/auth/useAuth";
+import {
+  useAuthService,
+  useRegisterService,
+  useRefreshTokenService,
+} from "@/services/auth/useAuth";
 import { AuthData } from "@/types";
 import { useCartStore } from "@/store/useCartStore";
 import i18n from "@/config/i18n";
@@ -143,6 +147,60 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     checkAuthStatus();
   }, []);
+
+  const refreshAuthToken = useCallback(async () => {
+    try {
+      const userDataStr = localStorage.getItem("authPOS");
+
+      if (!userDataStr) return;
+      const userData = JSON.parse(userDataStr);
+
+      if (!userData?.refreshToken) return;
+
+      const response = await useRefreshTokenService({
+        refreshToken: userData.refreshToken,
+      });
+
+      if (response?.accessToken) {
+        const newData = {
+          ...userData,
+          accessToken: response.accessToken,
+          refreshToken: response.refreshToken || userData.refreshToken,
+        };
+
+        setUser(newData);
+        localStorage.setItem("authPOS", JSON.stringify(newData));
+        console.log("Token refreshed successfully");
+      }
+    } catch (error) {
+      console.error("Token refresh failed:", error);
+      // If refresh fails, we might want to logout, but let's be careful
+      // logout();
+    }
+  }, []);
+
+  // Periodic token refresh check
+  useEffect(() => {
+    if (!isAuthenticated || !user?.accessToken) return;
+
+    // Check every 1 minute
+    const interval = setInterval(() => {
+      const decoded = decodeJWT(user.accessToken);
+
+      if (decoded && decoded.exp) {
+        const currentTime = Math.floor(Date.now() / 1000);
+        const timeUntilExpiry = decoded.exp - currentTime;
+
+        // If less than 5 minutes left, refresh
+        if (timeUntilExpiry < 300) {
+          console.log("Token near expiry, refreshing...");
+          refreshAuthToken();
+        }
+      }
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, [isAuthenticated, user?.accessToken, refreshAuthToken]);
 
   const login = async (userData: { identifier: string; password: string }) => {
     const response: any = await useAuthService(userData);

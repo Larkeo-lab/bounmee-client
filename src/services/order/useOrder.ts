@@ -17,13 +17,25 @@ export interface CreateOrderInput {
   totalAmount: number;
   receivedAmount: number;
   change: number;
-  paymentMethod: "CASH" | "TRANSFER";
+  paymentMethod: "CASH" | "TRANSFER" | "TRANSFER_CASH";
   storeId: string;
-  employeeId: string | null;
+  employeeId?: string | null;
   bankId?: string | null;
-  tableId?: string | null;
-  businessType?: "RETAIL" | "CAFE";
   items: OrderItemInput[];
+  tableId?: string | null;
+  zoneId?: string | null;
+  businessType?: "RETAIL" | "CAFE";
+  discountAmount?: number;
+  isDiscount?: boolean;
+  discountPercent?: number;
+  isDebt?: boolean;
+  debtAmount?: number;
+  transferAmount?: number;
+  cashAmount?: number;
+  creditCardAmount?: number;
+  memberId?: string | null;
+  dueDate?: string | null;
+  paymentStatus?: "PAID" | "UNPAID" | "PARTIALLY_PAID";
 }
 
 export interface OrderItem {
@@ -32,6 +44,7 @@ export interface OrderItem {
   qty: number;
   unitPrice: number;
   subTotal: number;
+  unitName?: string | null;
   product: {
     id: string;
     name: string;
@@ -51,7 +64,7 @@ export interface Order {
   totalAmount: number;
   receivedAmount: number;
   change: number;
-  paymentMethod: "CASH" | "TRANSFER";
+  paymentMethod: "CASH" | "TRANSFER" | "TRANSFER_CASH";
   storeId: string;
   employee?: {
     name: string;
@@ -65,6 +78,22 @@ export interface Order {
   };
   businessType?: "RETAIL" | "CAFE";
   items: OrderItem[];
+  discountAmount?: number;
+  isDiscount?: boolean;
+  discountPercent?: number;
+  isDebt?: boolean;
+  debtAmount?: number;
+  transferAmount?: number;
+  cashAmount?: number;
+  creditCardAmount?: number;
+  memberId?: string | null;
+  member?: {
+    id: string;
+    name: string;
+    phone: string;
+  };
+  dueDate?: string | null;
+  paymentStatus: "PAID" | "UNPAID" | "PARTIALLY_PAID";
   createdAt: string;
   updatedAt: string;
 }
@@ -79,8 +108,11 @@ export interface OrdersResponse {
   };
   summary?: {
     totalAmount: number;
+    totalDiscount: number;
     totalCash: number;
     totalTransfer: number;
+    totalDebt: number;
+    totalCreditCard: number;
     transfersByBank: {
       name: string;
       logoUrl?: string;
@@ -97,6 +129,8 @@ export interface OrderFilters {
   endDate?: string;
   search?: string;
   employeeId?: string;
+  isDiscount?: boolean;
+  isDebt?: boolean;
 }
 
 export const createOrder = async (data: CreateOrderInput) => {
@@ -122,6 +156,7 @@ export const useCreateOrder = () => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       // Also might want to invalidate products if stock changes
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
   });
 };
@@ -131,5 +166,58 @@ export const useGetOrders = (filters: OrderFilters) => {
     queryKey: ["orders", filters],
     queryFn: () => getOrders(filters),
     enabled: !!filters.storeId,
+  });
+};
+
+export const useGetOrder = (id: string) => {
+  return useQuery({
+    queryKey: ["order", id],
+    queryFn: async () => {
+      const response = await axiosInstance.get(API_ENDPOINTS.ORDER.DETAIL(id));
+      return response.data;
+    },
+    enabled: !!id,
+  });
+};
+
+export const useUpdateOrderStatus = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      id,
+      paymentStatus,
+      receivedAmount,
+      note,
+      bankId,
+      paymentMethod,
+    }: {
+      id: string;
+      paymentStatus: string;
+      receivedAmount?: number;
+      note?: string;
+      bankId?: string | null;
+      paymentMethod?: string;
+    }) =>
+      axiosInstance.patch(`${API_ENDPOINTS.ORDER.LIST}/status/${id}`, {
+        paymentStatus,
+        receivedAmount,
+        note,
+        bankId,
+        paymentMethod,
+      }),
+    onSuccess: () => {
+      console.log("Order status updated, refetching debt queries...");
+      queryClient.refetchQueries({
+        queryKey: ["members-debt"],
+        exact: false,
+      });
+      queryClient.refetchQueries({
+        queryKey: ["member-debt-details"],
+        exact: false,
+      });
+      queryClient.invalidateQueries({ queryKey: ["orders"], exact: false });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"], exact: false });
+    },
   });
 };

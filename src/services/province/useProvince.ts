@@ -5,8 +5,9 @@ import { API_ENDPOINTS } from "@/config/api";
 
 export interface Province {
   id: string;
-  name: string;
   code: string;
+  nameLo: string;
+  nameEn: string;
 }
 export interface ProvinceFilters {
   limit?: number;

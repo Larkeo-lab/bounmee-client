@@ -112,7 +112,11 @@ export function showErrorToast(
 
   // Handle USER_ALREADY_EXISTS with duplicatedField info
   let description = "";
-  if (errorCode === "USER_ALREADY_EXISTS" && error?.response?.data?.errors?.duplicatedField) {
+  const apiErrors = error?.response?.data?.errors;
+  
+  if (Array.isArray(apiErrors) && apiErrors.length > 0 && apiErrors[0]?.message) {
+    description = apiErrors[0].message;
+  } else if (errorCode === "USER_ALREADY_EXISTS" && error?.response?.data?.errors?.duplicatedField) {
     const field = error.response.data.errors.duplicatedField;
     const fieldLabel = FIELD_LABELS[field] || field;
     description = `${fieldLabel} ນີ້ຖືກລົງທະບຽນແລ້ວ ກະລຸນາໃຊ້${fieldLabel}ອື່ນ`;

@@ -28,7 +28,6 @@ import { getDisplayImageUrl } from "@/lib/utils";
 import { useGetStoreDetail } from "@/services/store/useStore";
 import EmptyState from "@/components/common/empty-state";
 import ConfirmModal from "@/components/common/popup-confirm";
-import PendingModal from "@/components/common/pending-modal";
 
 export default function EmployeePage() {
   const { t } = useTranslation();
@@ -44,17 +43,6 @@ export default function EmployeePage() {
     onOpen: onDeleteOpen,
     onClose: onDeleteClose,
     onOpenChange: onDeleteOpenChange,
-  } = useDisclosure();
-  const {
-    isOpen: isPendingOpen,
-    onOpen: onPendingOpen,
-    onOpenChange: onPendingOpenChange,
-  } = useDisclosure();
-  const {
-    isOpen: isRejectedOpen,
-    onOpen: onRejectedOpen,
-    onClose: onRejectedClose,
-    onOpenChange: onRejectedOpenChange,
   } = useDisclosure();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -150,17 +138,8 @@ export default function EmployeePage() {
   };
 
   const handleCreateOpen = () => {
-    // @ts-ignore
-    const storeStatus = user?.user?.store?.status;
-
-    if (storeStatus === "PENDING") {
-      onPendingOpen();
-    } else if (storeStatus === "REJECTED") {
-      onRejectedOpen();
-    } else {
-      setSelectedEmployee(null);
-      onFormOpen();
-    }
+    setSelectedEmployee(null);
+    onFormOpen();
   };
 
   const handleDeleteOpen = (item: any) => {
@@ -322,20 +301,6 @@ export default function EmployeePage() {
         title={t("settings.common.confirmDelete")}
         onConfirm={() => handleDeleteSubmit(onDeleteClose)}
         onOpenChange={onDeleteOpenChange}
-      />
-
-      {/* Pending Status Modal */}
-      <PendingModal isOpen={isPendingOpen} onOpenChange={onPendingOpenChange} />
-
-      {/* Rejected Status Modal */}
-      <ConfirmModal
-        color="danger"
-        confirmText={t("settings.common.ok")}
-        isOpen={isRejectedOpen}
-        message={t("settings.common.rejectedMsg")}
-        title={t("settings.common.rejectedTitle")}
-        onConfirm={onRejectedClose}
-        onOpenChange={onRejectedOpenChange}
       />
     </div>
   );

@@ -2,7 +2,7 @@
   "common": {
     "welcome": "ຍິນດີຕ້ອນຮັບ",
     "loading": "ກຳລັງໂຫລດ...",
-    "error": "ຜິດພາດ",
+    "error": "ຜິດພาด",
     "success": "ສຳເລັດ",
     "cancel": "ຍົກເລີກ",
     "save": "ບັນທຶກ",
@@ -18,7 +18,19 @@
     "next": "ຖັດໄປ",
     "back": "ກັບຄືນ",
     "skip": "ຂ້າມ",
-    "currency": "₭"
+    "currency": "₭",
+    "viewDetail": "ເບິ່ງລາຍລະອຽດ",
+    "payment": "ຊຳລະ",
+    "confirm": "ຢືນຢັນ",
+    "confirmPayment": "ຢືນຢັນການຊຳລະເງິນ",
+    "debt": "ຕິດໜີ້"
+  },
+  "member": {
+    "no": "ລຳດັບ",
+    "name": "ຊື່ລູກຄ້າ",
+    "phone": "ເບີໂທລະສັບ",
+    "unit": "ຄົນ",
+    "searchPlaceholder": "ຄົ້ນຫາຊື່ ຫຼື ເບີໂທ..."
   },
   "navigation": {
     "home": "ໜ້າຫຼັກ",
@@ -172,8 +184,46 @@
       "manageTable": "ຈັດການໂຕະ ແລະ ໂຊນ",
       "table": "ຫນ້າໂຕະ",
       "kitchen": "ລະບົບຫ້ອງຄົວ",
-      "chat": "ສົນທະນາກັບລູກຄ້າ"
+      "chat": "ສົນทະນາກັບລູກຄ້າ",
+      "manageMember": "ຈັດການສະມາຊິກ",
+      "debt": "ປະຫວັດການຕິດໜີ້"
     }
+  },
+  "debt": {
+    "title": "ປະຫວັດການຕິດໜີ້",
+    "desc": "ຈັດການ ແລະ ຕິດຕາມບິນທີ່ຍັງບໍ່ທັນຊຳລະ",
+    "detailTitle": "ລາຍລະອຽດການຕິດໜີ້",
+    "repaymentHistory": "ປະຫວັດການຊຳລະ",
+    "unpaidOrders": "ບິນທີ່ຄ້າງຊຳລະ",
+    "totalMembers": "ລວມທັງໝົດ",
+    "unpaidCount": "ຈຳນວນບິນທີ່ຄ້າງ",
+    "empty": "ບໍ່ມີລາຍຊື່ລູກຄ້າທີ່ຕິດໜີ້",
+    "unit": "ບິນ",
+    "totalDebtOrders": "ຈຳນວນລາຍການຕິດໜີ້",
+    "totalDebtAmount": "ຍອດໜີ້ທັງໝົດ",
+    "status": "ສະຖານະ",
+    "pendingFollowup": "ມີລາຍການທີ່ຕ້ອງຕິດຕາມ",
+    "searchPlaceholder": "ຄົ້ນຫາຕາມເລກບິນ ຫຼື ຊື່ລູກຄ້າ...",
+    "customer": "ລູກຄ້າ",
+    "generalCustomer": "ລູກຄ້າທົ່ວໄປ",
+    "debtAmount": "ຍອດໜີ້",
+    "dueDate": "ກຳນົດຊຳລະ",
+    "payment": "ຊຳລະໜີ້",
+    "modalTitle": "ຕິດໜີ້ (Debt)",
+    "enterAmount": "ຍອດເງິນທີ່ຕິດໜີ້",
+    "searchMember": "ຄົ້ນຫາສະມາຊິກ (ຊື່ ຫຼື ເບີໂທ)...",
+    "loading": "ກຳລັງໂຫຼດຂໍ້ມູນ...",
+    "memberNotFound": "ບໍ່ພົບຂໍ້ມູນສະມາຊິກ",
+    "addNewMember": "ເພີ່ມສະມາຊິກໃໝ່",
+    "memberName": "ຊື່ສະມາຊິກ",
+    "enterName": "ປ້ອນຊື່...",
+    "memberPhone": "ເບີໂທລະສັບ",
+    "enterPhone": "ປ້ອນເບີໂທ...",
+    "saveMember": "ບັນທຶກສະມາຊິກ",
+    "confirmDebt": "ຢືນຢັນການຕິດໜີ້",
+    "fillAllFields": "ກະລຸນາປ້ອນຂໍ້ມູນໃຫ້ຄົບຖ້ວນ",
+    "selectMemberMsg": "ກະລຸນາເລືອກສະມາຊິກ",
+    "pastDueDateMsg": "ວັນທີກຳນົດສົ່ງບໍ່ສາມາດເປັນວັນທີໃນອະດີດໄດ້"
   },
   "kitchen": {
     "title": "ໜ້າຈໍຫ້ອງຄົວ (Kitchen)",
@@ -211,7 +261,8 @@
       "printer": "ຕັ້ງຄ່າເຄື່ອງພິມ ແລະ ການພິມບິນ",
       "profile": "ອັບເດດຂໍ້ມູນສ່ວຕົວ ແລະ ລະຫັດຜ່ານ",
       "moneyRate": "ຈັດການອັດຕາແລກປ່ຽນເງິນຕາ",
-      "table": "ຈັດການໂຊນ ແລະ ໂຕະ"
+      "table": "ຈັດการໂຊນ ແລະ ໂຕະ",
+      "member": "ຈັດການຂໍ້ມູນສະມາຊິກ ແລະ ແຕ້ມສະສົມ"
     },
     "common": {
       "no": "#",
@@ -286,12 +337,34 @@
       "zone": "ໂຊນ",
       "selectZoneError": "ກະລຸນາເລືອກໂຊນກ່ອນບັນທຶກ"
     },
+    "unit": {
+      "addTitle": "ເພີ່ມໜ່ວຍສິນຄ້າໃໝ່",
+      "nameLabel": "ຊື່ໜ່ວຍສິນຄ້າ",
+      "namePlaceholder": "ລະບຸຊື່ໜ່ວຍສິນຄ້າ..."
+    },
     "product": {
       "unitTitle": "ຈັດການໜ່ວຍສິນຄ້າ"
     },
     "storeProfile": {
       "title": "ຈັດການໂປຟາຍຮ້ານ",
       "subtitle": "ອັບເດດຂໍ້ມູນພື້ນຖານຂອງຮ້ານທ່ານ"
+    },
+    "member": {
+      "title": "ຈັດການສະມາຊິກ",
+      "subtitle": "ຈັດການຂໍ້ມູນລູກຄ້າ ແລະ ສະມາຊິກທັງໝົດໃນຮ້ານຂອງທ່ານ",
+      "addTitle": "ເພີ່ມສະມາຊິກໃໝ່",
+      "editTitle": "ແກ້ໄຂຂໍ້ມູນສະມາຊິກ",
+      "nameLabel": "ຊື່ສະມາຊິກ",
+      "namePlaceholder": "ລະບຸຊື່ສະມາຊິກ...",
+      "phoneLabel": "ເບີໂທລະສັບ",
+      "phonePlaceholder": "ລະບຸເບີໂທລະສັບ...",
+      "pointsLabel": "ແຕ້ມສະສົມ",
+      "pointsPlaceholder": "0",
+      "searchPlaceholder": "ຄົ້ນຫາຊື່ ຫຼື ເບີໂທ...",
+      "no": "ລຳດັບ",
+      "name": "ຊື່ລູກຄ້າ",
+      "phone": "ເບີໂທລະສັບ",
+      "unit": "ຄົນ"
     }
   },
   "profile": {
@@ -554,13 +627,35 @@
     "priceUnit": "ລາຄາ/ຊິ້ນ",
     "qty": "ຈຳນວນ",
     "subtotal": "ລວມ",
+    "realMoney": "ຍອດເງິນຕົວຈິງ",
     "received": "ຮັບເງິນມາ:",
+    "receivedAmount": "ເງິນຮັບມາ",
     "change": "ເງິນທອນ:",
     "close": "ປິດໜ້າຕ່າງ",
     "reprint": "ພິມບິນຄືນ",
     "paymentCash": "ເງິນສົດ",
     "paymentTransfer": "ເງິນໂອນ",
-    "kip": "ກີບ"
+    "paymentTransferCash": "ໂອນ + ສົດ",
+    "memberInfo": "ຂໍ້ມູນລູກຄ້າສະມາຊິກ",
+    "memberName": "ຊື່ລູກຄ້າ",
+    "memberPhone": "ເບີໂທລະສັບ",
+    "totalBeforeDiscount": "ຍອດລວມກ່ອນຫຼຸດ",
+    "discount": "ສ່ວນຫຼຸດ",
+    "total": "ຍອດລວມຊຳລະ",
+    "debtAmount": "ຍອດຕິດໜີ້",
+    "dueDate": "ວັນທີກຳນົດສົ່ງ",
+    "paymentStatus": "ສະຖານະຊຳລະ",
+    "paymentMethod": "ວິທີຊຳລະ",
+    "phone": "ເບີໂທ",
+    "cash": "ເງິນສົດ",
+    "transfer": "ເງິນໂອນ",
+    "paid": "ຊຳລະແລ້ວ",
+    "partiallyPaid": "ຊຳລະບາງສ່ວນ",
+    "unpaid": "ຍັງບໍ່ຊຳລະ",
+    "unit": "ບິນ",
+    "kip": "ກີບ",
+    "note": "ໝາຍເຫດ",
+    "quickFilter": "ຕົວຕອງດ່ວນ"
   },
   "ordering": {
     "title": "ລາຍການອໍເດີ",
@@ -588,6 +683,10 @@
     "confirmRemoveItem": "ທ່ານຕ້ອງການລົບລາຍການ \"{{name}}\" ອອກແທ້ຫຼືບໍ່?",
     "confirmClear": "ຢືນຢັນການລ້າງຕະກ້າ?",
     "confirmClearMsg": "ທ່ານຕ້ອງການລ້າງລາຍການທັງໝົດໃນຕະກ້າແທ້ຫຼືບໍ່?",
+    "confirmDeleteBill": "ຢືນຢັນການລົບບິນ",
+    "confirmDeleteBillMsg": "ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລົບບິນ {{name}}? ຂໍ້ມູນສິນຄ້າໃນບິນນີ້ຈະຫາຍໄປທັງໝົດ.",
+    "mainBill": "ບິນຫຼັກ",
+    "billShort": "ບິນ",
     "selectedItems": "ລາຍການທີ່ເລືອກ",
     "selectAll": "ເລືອກທັງໝົດ",
     "selectedCount": "ເລືອກແລ້ວ: {{count}} ລາຍການ",
@@ -704,5 +803,39 @@
     "allowCamera": "ອະນຸຍາດໃຊ້ກ້ອງ",
     "scannerNotFound": "ບໍ່ພົບອົງປະກອບສະແກນເນີ",
     "scannerStartError": "ບໍ່ສາມາດເລີ່ມຕົ້ນສະແກນເນີໄດ້"
+  },
+  "payment": {
+    "title": "ຊຳລະເງິນ",
+    "success": "ຊຳລະເງິນສຳເລັດແລ້ວ!",
+    "failed": "ການຊຳລະເງິນຫຼົ້ມເຫຼວ ກະລຸນາລອງໃໝ່",
+    "debtSuccess": "ບັນທຶກການຕິດໜີ້ສຳເລັດ!",
+    "debtFailed": "ການບັນທຶກການຕິດໜີ້ຫຼົ້ມເຫຼວ",
+    "cash": "ເງິນສົດ",
+    "transfer": "ເງິນໂອນ",
+    "cashTransfer": "ເງີນສົດແລະໂອນ",
+    "total": "ຍອດລວມ",
+    "kip": "ກີບ",
+    "discount": "ສ່ວນຫຼຸດ",
+    "byAmount": "ເປັນເງິນ",
+    "byPercent": "ເປັນ %",
+    "grandTotal": "ຍອດລວມທີ່ຕ້ອງຈ່າຍ",
+    "cashAmount": "ຈ່າຍເງິນສົດ",
+    "transferAmount": "ຈ່າຍເງິນໂອນ",
+    "selectBankTransfer": "ເລືອກທະນາຄານ (ສຳລັບເງິນໂອນ)",
+    "selectCurrency": "ເລືອກສະກຸນເງິນ",
+    "receivedAmount": "ຈຳນວນເງິນທີ່ຮັບມາ",
+    "change": "ເງິນທອນ",
+    "selectBank": "ເລືອກທະນາຄານ",
+    "loadingBanks": "ກຳລັງໂຫຼດລາຍການທະນາຄານ...",
+    "noBankFound": "ບໍ່ພົບຂໍ້ມູນທະນາຄານ",
+    "exactAmount": "ເຕັ້ມຈຳນວນ",
+    "clearAll": "ລຶບທັງໝົດ",
+    "scanQrMsg": "ກະລຸນາສະແກນ QR ເພື່ອໂອນເງິນ",
+    "transferMoneyMsg": "ກະລຸນາໂອນເງິນ",
+    "checkSlipMsg": "ກະລຸນາກວດສອບຫຼັກຖານການໂອນ",
+    "correctCheckMsg": "ໃຫ້ຖືກຕ້ອງກ່ອນກົດຢືນຢັນ"
+  },
+  "validation": {
+    "phoneNumberRequired": "ກະລຸນາປ້ອນເບີໂທລະສັບໃຫ້ຄົບ 8 ຕົວເລກ"
   }
 }

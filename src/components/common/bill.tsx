@@ -283,8 +283,6 @@ export default function BillModal({
     );
   }, [finalOrder, placedOrders]);
 
-  console.log("finalOrder", finalOrder);
-
   return (
     <Modal
       isDismissable

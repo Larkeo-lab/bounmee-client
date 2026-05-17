@@ -1,3 +1,9 @@
+/**
+ * Provider — ໂຄງສ້າງຫຼັກຂອງແອັບ ແລະ Hook ສຳລັບລະບົບໂຕະອາຫານ
+ *
+ * useCart() — ໃຊ້ສຳລັບ: Table, Kitchen, Ordering, Navbar, Sidebar
+ * ⚠️ ບໍ່ໃຊ້ສຳລັບ Cafe ແລະ General → ໃຫ້ໃຊ້ useCafeCart() ແລະ useGeneralCart() ແທນ
+ */
 import React, { useEffect } from "react";
 import { I18nProvider } from "@react-aria/i18n";
 import { HeroUIProvider } from "@heroui/react";
@@ -6,29 +12,44 @@ import { Toaster } from "react-hot-toast";
 
 import { AuthProvider } from "./routes/AuthContext";
 import { useCartStore, CartItem } from "./store/useCartStore";
-import { useCartSync } from "./hooks/useCartSync";
+import { useTableCartSync } from "./hooks/useTableCartSync";
 import { useWifiConnect } from "./hooks/wifiConnect";
 import { ChatProvider } from "./contexts/ChatContext";
 
 export type { CartItem };
 
+const EMPTY_ARRAY: CartItem[] = [];
+
+/**
+ * useCart — Hook ສຳລັບລະບົບໂຕະອາຫານ (Table/Kitchen/Ordering)
+ *
+ * ໃຊ້ activeTableId ໂດຍກົງ (ບໍ່ມີ Prefix)
+ * ຂໍ້ມູນຖືກ Sync ກັບ Server ຜ່ານ Socket.io
+ */
 export const useCart = () => {
   const store = useCartStore();
 
+  // ໃຊ້ activeTableId ໂດຍກົງ (ສຳລັບລະບົບໂຕະອາຫານ)
   const currentCartId = store.activeTableId || "default";
-  const cart = store.carts[currentCartId] || [];
+  const cart = store.carts[currentCartId] || EMPTY_ARRAY;
 
+  // ຄິດໄລ່ຍອດລວມ
   const subtotal = cart.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0,
   );
 
-  // Derived Statistics
-  const kitchenCount = Object.values(store.carts).reduce((acc, items) => {
+  // ຄິດໄລ່ສະຖິຕິ (ສຳລັບ Kitchen ແລະ Ordering badges)
+  // ນັບສະເພາະ carts ທີ່ເປັນໂຕະອາຫານ (ບໍ່ມີ ":" ໃນ ID)
+  const tableCarts = Object.fromEntries(
+    Object.entries(store.carts).filter(([id]) => !id.includes(":")),
+  );
+
+  const kitchenCount = Object.values(tableCarts).reduce((acc, items) => {
     return acc + items.filter((i) => i.status === "COOKING").length;
   }, 0);
 
-  const orderingCount = Object.entries(store.carts).reduce(
+  const orderingCount = Object.entries(tableCarts).reduce(
     (acc, [tableId, items]) => {
       if (tableId === "default") return acc;
       const pendingItems = items.filter((i) => i.status === "PENDING");
@@ -50,6 +71,10 @@ export const useCart = () => {
     subtotal,
     orderingCount,
     kitchenCount,
+    allCarts: tableCarts,
+    activeCartId: currentCartId,
+    switchCart: store.setActiveTableId,
+    removeCart: store.removeCart,
     clearCart: () => store.clearTableCart(currentCartId),
   };
 };
@@ -68,7 +93,7 @@ export const Provider: React.FC<{ children: React.ReactNode }> = ({
   }, [isConnected, rtt, setConnectivity]);
 
   // 2. Initialize Sync (Hook now uses Zustand internally)
-  useCartSync();
+  useTableCartSync();
 
   return (
     <I18nProvider locale="en-GB">

@@ -116,7 +116,9 @@ export default function TablePage() {
     if (tables.length > 0) {
       const newCarts: Record<string, any[]> = {};
       tables.forEach((t: any) => {
-        if (t.activeCart && Array.isArray(t.activeCart)) {
+        // ✨ ໂຫລດອໍເດີ້ສະເພາະໂຕະທີ່ບໍ່ຫວ່າງເທົ່ານັ້ນ (ປ້ອງກັນຂໍ້ມູນເກົ່າຄ້າງໃນໂຕະ AVAILABLE)
+        const isAvailable = !t.status || t.status.toUpperCase() === "AVAILABLE";
+        if (!isAvailable && t.activeCart && Array.isArray(t.activeCart)) {
           newCarts[t.id] = t.activeCart;
         }
       });

@@ -30,3 +30,15 @@ export const useRegisterService = async (data: any) => {
     throw error;
   }
 };
+export const useRefreshTokenService = async (data: { refreshToken: string }) => {
+  try {
+    const response: any = await axiosInstance.post(
+      API_ENDPOINTS.AUTH.REFRESH_TOKEN,
+      data,
+    );
+
+    return response?.data;
+  } catch (error) {
+    throw error;
+  }
+};

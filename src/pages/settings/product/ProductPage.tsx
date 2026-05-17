@@ -146,6 +146,13 @@ export default function ProductPage() {
   const handleAddProductOpen = () => {
     // @ts-ignore
     const storeStatus = user?.user?.store?.status;
+    const canAddTrial = products.length < 5;
+
+    if (canAddTrial) {
+      setScannedBarcode("");
+      onCreateOpen();
+      return;
+    }
 
     if (storeStatus === "PENDING") {
       onPendingOpen();
@@ -160,12 +167,20 @@ export default function ProductPage() {
   const handleScanBarcode = () => {
     // @ts-ignore
     const storeStatus = user?.user?.store?.status;
+    const canAddTrial = products.length < 5;
+
+    if (canAddTrial) {
+      setScannedBarcode("");
+      setIsBarcodeScannerOpen(true);
+      return;
+    }
 
     if (storeStatus === "PENDING") {
       onPendingOpen();
     } else if (storeStatus === "REJECTED") {
       onRejectedOpen();
     } else {
+      setScannedBarcode("");
       setIsBarcodeScannerOpen(true);
     }
   };
@@ -302,6 +317,12 @@ export default function ProductPage() {
                 key="price"
                 className="h-12 text-small hidden md:table-cell"
               >
+                {t("product.cost")}
+              </TableColumn>
+              <TableColumn
+                key="price"
+                className="h-12 text-small hidden md:table-cell"
+              >
                 {t("product.price")}
               </TableColumn>
               <TableColumn key="stockQty" className="h-12 text-small">
@@ -376,6 +397,11 @@ export default function ProductPage() {
                         </div>
                       </div>
                     </div>
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    <p className="text-bold text-small whitespace-nowrap">
+                      {formatNumber(item.cost)} LAK
+                    </p>
                   </TableCell>
                   <TableCell className="hidden md:table-cell">
                     <p className="text-bold text-small whitespace-nowrap">

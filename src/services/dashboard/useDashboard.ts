@@ -9,6 +9,10 @@ export interface DashboardSummary {
   totalProfit: number;
   totalEmployee: number;
   totalMenu: number;
+  totalDiscount: number;
+  totalDebt: number;
+  totalTransfer: number;
+  totalCash: number;
 }
 
 export interface RevenueTrend {
@@ -34,11 +38,23 @@ export interface TopSellingProduct {
   unitName?: string;
 }
 
+export interface UpcomingDebt {
+  id: string;
+  orderNumber: string;
+  totalAmount: number;
+  debtAmount: number;
+  dueDate: string;
+  memberName: string;
+  memberPhone: string;
+  paymentStatus: "PAID" | "UNPAID" | "PARTIALLY_PAID";
+}
+
 export interface DashboardData {
   summary: DashboardSummary;
   revenueTrend: RevenueTrend[];
   paymentChannel: PaymentChannel[];
   topSellingProducts: TopSellingProduct[];
+  upcomingDebts: UpcomingDebt[];
 }
 
 export interface DashboardFilters {

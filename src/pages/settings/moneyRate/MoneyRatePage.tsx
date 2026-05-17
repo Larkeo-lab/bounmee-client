@@ -38,7 +38,7 @@ import {
 import { formatNumber, parseNumber } from "@/utils/numberFormat";
 import EmptyState from "@/components/common/empty-state";
 import ConfirmModal from "@/components/common/popup-confirm";
-import PendingModal from "@/components/common/pending-modal";
+
 
 export default function MoneyRatePage() {
   const { t, i18n } = useTranslation();
@@ -60,17 +60,7 @@ export default function MoneyRatePage() {
     onClose: onDeleteClose,
     onOpenChange: onDeleteOpenChange,
   } = useDisclosure();
-  const {
-    isOpen: isPendingOpen,
-    onOpen: onPendingOpen,
-    onOpenChange: onPendingOpenChange,
-  } = useDisclosure();
-  const {
-    isOpen: isRejectedOpen,
-    onOpen: onRejectedOpen,
-    onClose: onRejectedClose,
-    onOpenChange: onRejectedOpenChange,
-  } = useDisclosure();
+
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRate, setSelectedRate] = useState<MoneyRate | null>(null);
@@ -186,16 +176,7 @@ export default function MoneyRatePage() {
   };
 
   const handleCreateOpen = () => {
-    // @ts-ignore
-    const storeStatus = user?.user?.store?.status;
-
-    if (storeStatus === "PENDING") {
-      onPendingOpen();
-    } else if (storeStatus === "REJECTED") {
-      onRejectedOpen();
-    } else {
-      onCreateOpen();
-    }
+    onCreateOpen();
   };
 
   const rateForm = (
@@ -203,6 +184,7 @@ export default function MoneyRatePage() {
       <Input
         isRequired
         label={`${t("settings.common.nameLabel")} (Name)`}
+        labelPlacement="outside"
         placeholder={t("settings.moneyRate.title")}
         value={formData.name}
         variant="bordered"
@@ -213,6 +195,7 @@ export default function MoneyRatePage() {
         <Input
           isRequired
           label={t("settings.moneyRate.sellRate")}
+          labelPlacement="outside"
           placeholder="0.00"
           startContent={<TrendingUp className="text-success" size={18} />}
           value={formData.rateSell}
@@ -224,6 +207,7 @@ export default function MoneyRatePage() {
         <Input
           isRequired
           label="ອັດຕາຊື้ (Buy Rate)"
+          labelPlacement="outside"
           placeholder="0.00"
           startContent={<TrendingDown className="text-danger" size={18} />}
           value={formData.rateBuy}
@@ -441,19 +425,7 @@ export default function MoneyRatePage() {
         onOpenChange={onDeleteOpenChange}
       />
 
-      {/* Pending Status Modal */}
-      <PendingModal isOpen={isPendingOpen} onOpenChange={onPendingOpenChange} />
 
-      {/* Rejected Status Modal */}
-      <ConfirmModal
-        color="danger"
-        confirmText={t("settings.common.ok")}
-        isOpen={isRejectedOpen}
-        message={t("settings.common.rejectedMsg")}
-        title={t("settings.common.rejectedTitle")}
-        onConfirm={onRejectedClose}
-        onOpenChange={onRejectedOpenChange}
-      />
     </div>
   );
 }

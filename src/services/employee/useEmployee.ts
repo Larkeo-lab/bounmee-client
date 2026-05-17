@@ -3,6 +3,7 @@ import { toast } from "react-hot-toast";
 
 import { axiosInstance } from "@/lib/axios";
 import { API_ENDPOINTS } from "@/config/api";
+import i18n from "@/config/i18n";
 
 export interface User {
   id: string;
@@ -80,11 +81,18 @@ export const useCreateEmployee = () => {
       toast.success("ເພີ່ມຂໍ້ມູນພະນັກງານສຳເລັດ");
     },
     onError: (error: any) => {
-      const message =
+      const apiErrors = error?.response?.data?.errors;
+      const rawMessage =
+        (Array.isArray(apiErrors) && apiErrors.length > 0 && apiErrors[0]?.message) ||
         error.response?.data?.message ||
-        "ເກີດຂໍ້ຜິດພາດໃນການເພີ່ມຂໍ້ມູນພະນັກງານ";
+        "";
 
-      toast.error(message);
+      const finalMessage =
+        rawMessage === "Phone number is required"
+          ? i18n.t("validation.phoneNumberRequired")
+          : rawMessage || i18n.t("employee.createError", { defaultValue: "ເກີດຂໍ້ຜິດພາດໃນການເພີ່ມຂໍ້ມູນພະນັກງານ" });
+
+      toast.error(finalMessage);
     },
   });
 };
@@ -101,8 +109,19 @@ export const useUpdateEmployee = () => {
       });
       toast.success("ອັບເດດຂໍ້ມູນພະນັກງານສຳເລັດ");
     },
-    onError: () => {
-      toast.error("ເກີດຂໍ້ຜິດພາດໃນການອັບເດດຂໍ້ມູນພະນັກງານ");
+    onError: (error: any) => {
+      const apiErrors = error?.response?.data?.errors;
+      const rawMessage =
+        (Array.isArray(apiErrors) && apiErrors.length > 0 && apiErrors[0]?.message) ||
+        error.response?.data?.message ||
+        "";
+
+      const finalMessage =
+        rawMessage === "Phone number is required"
+          ? i18n.t("validation.phoneNumberRequired")
+          : rawMessage || i18n.t("employee.updateError", { defaultValue: "ເກີດຂໍ້ຜິດພາດໃນການອັບເດດຂໍ້ມູນພະນັກງານ" });
+
+      toast.error(finalMessage);
     },
   });
 };

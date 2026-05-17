@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, type ChangeEvent } from "react";
+import { useState, useEffect, useRef, useMemo, type ChangeEvent } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Card,
@@ -8,6 +8,8 @@ import {
   Image,
   Spinner,
   Textarea,
+  Select,
+  SelectItem,
 } from "@heroui/react";
 import {
   Store as StoreIcon,
@@ -22,11 +24,14 @@ import {
 
 import { useAuth } from "@/routes/AuthContext";
 import { useGetStoreDetail, useUpdateStore } from "@/services/store/useStore";
+import { useGetAllProvinces } from "@/services/province/useProvince";
+import { useGetDistrictsByProvince } from "@/services/district/useDistrict";
 import { useUploadImage } from "@/services/storage";
 import { getDisplayImageUrl } from "@/lib/utils";
 
 export default function ProfilePage() {
   const { user } = useAuth();
+  const isNotAdmin = user?.user?.role !== "STORE_ADMIN";
   const { t, i18n } = useTranslation();
   const { data: storeResponse, isLoading } = useGetStoreDetail(
     user?.user?.store?.id,
@@ -44,8 +49,8 @@ export default function ProfilePage() {
     email: "",
     logoUrl: "",
     language: "LA" as string,
-    province: "",
-    district: "",
+    provinceId: "",
+    districtId: "",
   });
   const [previewImage, setPreviewImage] = useState<string>("");
 
@@ -61,18 +66,14 @@ export default function ProfilePage() {
         email: adminUser?.email || "",
         logoUrl: store.logoUrl || "",
         language: currentLang,
-        province:
-          currentLang === "LA"
-            ? store.province?.nameLo || store.province?.nameEn || ""
-            : store.province?.nameEn || store.province?.nameLo || "",
-        district:
-          currentLang === "LA"
-            ? store.district?.nameLo || store.district?.nameEn || ""
-            : store.district?.nameEn || store.district?.nameLo || "",
+        provinceId: store.provinceId || "",
+        districtId: store.districtId || "",
       });
       setPreviewImage(store.logoUrl || "");
     }
   }, [store, i18n.language]);
+
+  console.log("user", user?.user?.role);
 
   const handleImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -101,7 +102,7 @@ export default function ProfilePage() {
   };
 
   const handleSubmit = async () => {
-    if (!store?.id) return;
+    if (!store?.id || isNotAdmin) return;
     try {
       await updateStoreMutation.mutateAsync({
         ...formData,
@@ -112,6 +113,15 @@ export default function ProfilePage() {
     }
   };
 
+  const { data: provinces = [] } = useGetAllProvinces();
+
+  const selectedProvinceCode = useMemo(() => {
+    return provinces.find((p) => p.id === formData.provinceId)?.code;
+  }, [provinces, formData.provinceId]);
+
+  const { data: districts = [] } =
+    useGetDistrictsByProvince(selectedProvinceCode);
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -121,13 +131,11 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="p-2 bg-primary/10 rounded-lg text-primary">
-          <StoreIcon size={28} />
-        </div>
+    <div className="m-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
         <div>
-          <h1 className="text-2xl font-bold text-primary">
+          <h1 className="text-2xl font-bold text-primary flex items-center gap-2">
+            <StoreIcon size={28} />
             {t("settings.storeProfile.title")}
           </h1>
           <p className="text-default-500">
@@ -142,17 +150,18 @@ export default function ProfilePage() {
             {/* Logo Section */}
             <div className="flex flex-col items-center gap-4">
               <label className="text-sm font-medium text-default-700 w-full text-center md:text-left">
-                {t("settings.bank.logo")}
+                {t("settings.common.image")}
               </label>
               <div
                 className={`
-                  relative group cursor-pointer
+                  relative group
+                  ${isNotAdmin ? "cursor-not-allowed opacity-80" : "cursor-pointer"}
                   w-48 h-48 rounded-2xl border-2 border-dashed 
                   transition-all duration-200 ease-in-out
                   flex items-center justify-center overflow-hidden
                   ${previewImage || formData.logoUrl ? "border-primary bg-primary/5" : "border-default-200 hover:border-primary hover:bg-default-50"}
                 `}
-                onClick={() => fileInputRef.current?.click()}
+                onClick={() => !isNotAdmin && fileInputRef.current?.click()}
               >
                 {uploadImageMutation.isPending ? (
                   <Spinner color="primary" />
@@ -163,15 +172,17 @@ export default function ProfilePage() {
                       className="w-full h-full object-cover"
                       src={getDisplayImageUrl(previewImage || formData.logoUrl)}
                     />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white">
-                      <Upload size={24} />
-                    </div>
+                    {!isNotAdmin && (
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white">
+                        <Upload size={24} />
+                      </div>
+                    )}
                   </>
                 ) : (
                   <div className="flex flex-col items-center gap-2 text-default-400">
                     <Upload size={32} />
                     <span className="text-sm">
-                      {t("settings.common.upload")} {t("settings.bank.logo")}
+                      {t("settings.common.upload")} {t("settings.common.image")}
                     </span>
                   </div>
                 )}
@@ -183,7 +194,7 @@ export default function ProfilePage() {
                   onChange={handleImageChange}
                 />
               </div>
-              {(previewImage || formData.logoUrl) && (
+              {(previewImage || formData.logoUrl) && !isNotAdmin && (
                 <Button
                   color="danger"
                   size="sm"
@@ -198,8 +209,9 @@ export default function ProfilePage() {
 
             {/* Form Section */}
             <div className="flex-1 space-y-6">
-              <div className="grid grid-cols-1 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Input
+                  isDisabled={isNotAdmin}
                   label={t("auth.storeName")}
                   labelPlacement="outside"
                   placeholder={t("auth.storeNamePlaceholder")}
@@ -214,6 +226,7 @@ export default function ProfilePage() {
                 />
 
                 <Input
+                  isDisabled={isNotAdmin}
                   label={t("auth.phone")}
                   labelPlacement="outside"
                   placeholder={t("auth.phonePlaceholder")}
@@ -228,6 +241,8 @@ export default function ProfilePage() {
                 />
 
                 <Input
+                  isDisabled={isNotAdmin}
+                  className="md:col-span-2"
                   label={t("auth.email")}
                   labelPlacement="outside"
                   placeholder={t("auth.emailOrUsernamePlaceholder")}
@@ -239,31 +254,71 @@ export default function ProfilePage() {
                   }
                 />
 
-                <Input
-                  isReadOnly
+                <Select
+                  isDisabled={isNotAdmin}
                   label={t("auth.province")}
                   labelPlacement="outside"
                   placeholder={t("auth.province")}
+                  selectedKeys={
+                    formData.provinceId ? [formData.provinceId] : []
+                  }
                   startContent={
                     <MapPin className="text-default-400" size={18} />
                   }
-                  value={formData.province}
                   variant="bordered"
-                />
+                  onSelectionChange={(keys) => {
+                    const val = Array.from(keys)[0] as string;
+                    setFormData({
+                      ...formData,
+                      provinceId: val,
+                      districtId: "",
+                    });
+                  }}
+                >
+                  {provinces.map((p) => (
+                    <SelectItem
+                      key={p.id}
+                      textValue={
+                        formData.language === "LA" ? p.nameLo : p.nameEn
+                      }
+                    >
+                      {formData.language === "LA" ? p.nameLo : p.nameEn}
+                    </SelectItem>
+                  ))}
+                </Select>
 
-                <Input
-                  isReadOnly
+                <Select
+                  isDisabled={isNotAdmin || !formData.provinceId}
                   label={t("auth.district")}
                   labelPlacement="outside"
                   placeholder={t("auth.district")}
+                  selectedKeys={
+                    formData.districtId ? [formData.districtId] : []
+                  }
                   startContent={
                     <MapPin className="text-default-400" size={18} />
                   }
-                  value={formData.district}
                   variant="bordered"
-                />
+                  onSelectionChange={(keys) => {
+                    const val = Array.from(keys)[0] as string;
+                    setFormData({ ...formData, districtId: val });
+                  }}
+                >
+                  {districts.map((d) => (
+                    <SelectItem
+                      key={d.id}
+                      textValue={
+                        formData.language === "LA" ? d.nameLo : d.nameEn
+                      }
+                    >
+                      {formData.language === "LA" ? d.nameLo : d.nameEn}
+                    </SelectItem>
+                  ))}
+                </Select>
 
                 <Textarea
+                  isDisabled={isNotAdmin}
+                  className="md:col-span-2"
                   label={t("auth.address")}
                   labelPlacement="outside"
                   minRows={3}
@@ -281,6 +336,7 @@ export default function ProfilePage() {
 
               <div className="flex justify-end pt-4">
                 <Button
+                  isDisabled={isNotAdmin}
                   className="font-bold px-8"
                   color="primary"
                   isLoading={updateStoreMutation.isPending}

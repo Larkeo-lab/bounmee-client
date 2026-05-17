@@ -17,27 +17,38 @@ export interface CartItem {
 }
 
 interface CartState {
+  // ເກັບຂໍ້ມູນກະຕ່າສິນຄ້າແຍກຕາມ ID ຂອງບິນ ຫຼື ໂຕະ
   carts: { [tableId: string]: CartItem[] };
+  // ID ຂອງໂຕະທີ່ກຳລັງໃຊ້ງານຢູ່ (ສຳລັບລະບົບໂຕະອາຫານ)
   activeTableId: string | null;
+  // ID ຂອງບິນ Cafe ທີ່ກຳລັງໃຊ້ງານ
+  activeCafeBillId: string;
+  // ID ຂອງບິນ General ທີ່ກຳລັງໃຊ້ງານ
+  activeGeneralBillId: string;
+  // ເກັບຂໍ້ມູນການປິດແຈ້ງເຕືອນອໍເດີໃໝ່
   dismissedCarts: { [tableId: string]: { [itemId: string]: number } };
+  // ສະຖານະການເຊື່ອມຕໍ່ WiFi
   isConnected: boolean;
+  // ຄ່າຄວາມຊ້າຂອງເຄືອຂ່າຍ (Ping)
   rtt: number | null;
 }
 
 interface CartActions {
-  addToCart: (product: any) => void;
-  removeFromCart: (id: string, status: string, note?: string) => void;
+  addToCart: (product: any, tableId?: string) => void;
+  removeFromCart: (id: string, status: string, note?: string, tableId?: string) => void;
   updateQuantity: (
     id: string,
     status: string,
     delta: number,
     note?: string,
+    tableId?: string,
   ) => void;
   setQuantity: (
     id: string,
     status: string,
     value: string,
     note?: string,
+    tableId?: string,
   ) => void;
   updateStatus: (uniqueIds: string[], status: string, tableId?: string) => void;
   updateItemNote: (
@@ -45,13 +56,18 @@ interface CartActions {
     status: string,
     oldNote: string | undefined,
     newNote: string,
+    tableId?: string,
   ) => void;
   clearTableCart: (tableId: string) => void;
   setActiveTableId: (id: string | null) => void;
+  setActiveCafeBillId: (id: string) => void;
+  setActiveGeneralBillId: (id: string) => void;
   setTableCart: (tableId: string, cart: CartItem[], isOverwrite?: boolean) => void;
   dismissTable: (tableId: string) => void;
   setConnectivity: (isConnected: boolean, rtt: number | null) => void;
   mergeCarts: (local: CartItem[], incoming: any[]) => CartItem[];
+  createNewBill: (prefix?: string) => void;
+  removeCart: (tableId: string) => void;
   resetCart: () => void;
 }
 
@@ -61,15 +77,26 @@ export const useCartStore = create<CartState & CartActions>()(
       // --- State ---
       carts: {},
       activeTableId: null,
+      activeCafeBillId: "CAFE:default",
+      activeGeneralBillId: "GENERAL:default",
       dismissedCarts: {},
       isConnected: false,
       rtt: null,
 
       // --- Actions ---
+      // ອັບເດດສະຖານະການເຊື່ອມຕໍ່
       setConnectivity: (isConnected, rtt) => set({ isConnected, rtt }),
 
+      // ກຳນົດ ID ຂອງໂຕະທີ່ກຳລັງໃຊ້ງານ (ສຳລັບລະບົບໂຕະອາຫານເທົ່ານັ້ນ)
       setActiveTableId: (id) => set({ activeTableId: id }),
 
+      // ກຳນົດ ID ຂອງບິນ Cafe ທີ່ກຳລັງໃຊ້ງານ
+      setActiveCafeBillId: (id) => set({ activeCafeBillId: id }),
+
+      // ກຳນົດ ID ຂອງບິນ General ທີ່ກຳລັງໃຊ້ງານ
+      setActiveGeneralBillId: (id) => set({ activeGeneralBillId: id }),
+
+      // ຟັງຊັນຮວມຂໍ້ມູນກະຕ່າຈາກ Local ແລະ Server (ໃຊ້ສຳລັບການ Sync ຂໍ້ມູນ)
       mergeCarts: (local: CartItem[], incoming: any[]): CartItem[] => {
         const mergedMap = new Map<string, CartItem>();
         const allItems = [
@@ -112,9 +139,14 @@ export const useCartStore = create<CartState & CartActions>()(
         return Array.from(mergedMap.values());
       },
 
-      addToCart: (product: any) => {
+      // ເພີ່ມສິນຄ້າເຂົ້າກະຕ່າ
+      addToCart: (product: any, tableId?: string) => {
         const { activeTableId, carts } = get();
-        const currentTableId = activeTableId || "default";
+        const currentTableId = tableId || activeTableId || "default";
+
+        // If activeTableId is null but product has a suggested type/prefix (future-proofing)
+        // For now, we rely on the hook setting the activeTableId with prefix.
+        
         const currentCart = carts[currentTableId] || [];
 
         const status = (product.status || "PENDING").toUpperCase();
@@ -190,9 +222,10 @@ export const useCartStore = create<CartState & CartActions>()(
         set({ carts: { ...carts, [currentTableId]: nextCart } });
       },
 
-      removeFromCart: (id, status, note) => {
+      // ລົບສິນຄ້າອອກຈາກກະຕ່າ
+      removeFromCart: (id, status, note, tableId) => {
         const { activeTableId, carts } = get();
-        const currentTableId = activeTableId || "default";
+        const currentTableId = tableId || activeTableId || "default";
         const currentCart = carts[currentTableId] || [];
 
         const nextCart = currentCart.filter(
@@ -207,9 +240,10 @@ export const useCartStore = create<CartState & CartActions>()(
         set({ carts: { ...carts, [currentTableId]: nextCart } });
       },
 
-      updateQuantity: (id, status, delta, note) => {
+      // ອັບເດດຈຳນວນສິນຄ້າ (ເພີ່ມ ຫຼື ຫຼຸດ)
+      updateQuantity: (id, status, delta, note, tableId) => {
         const { activeTableId, carts } = get();
-        const currentTableId = activeTableId || "default";
+        const currentTableId = tableId || activeTableId || "default";
         const currentCart = carts[currentTableId] || [];
 
         const nextCart = currentCart.map((item) => {
@@ -244,9 +278,10 @@ export const useCartStore = create<CartState & CartActions>()(
         set({ carts: { ...carts, [currentTableId]: nextCart } });
       },
 
-      setQuantity: (id, status, value, note) => {
+      // ກຳນົດຈຳນວນສິນຄ້າໂດຍກົງຈາກການພິມ
+      setQuantity: (id, status, value, note, tableId) => {
         const { activeTableId, carts } = get();
-        const currentTableId = activeTableId || "default";
+        const currentTableId = tableId || activeTableId || "default";
         const currentCart = carts[currentTableId] || [];
 
         const newQty = value === "" ? 0 : parseInt(value);
@@ -279,6 +314,7 @@ export const useCartStore = create<CartState & CartActions>()(
         set({ carts: { ...carts, [currentTableId]: nextCart } });
       },
 
+      // ອັບເດດສະຖານະຂອງສິນຄ້າ (ເຊັ່ນ: ກຳລັງປຸງແຕ່ງ, ເສີບແລ້ວ)
       updateStatus: (uniqueIds, status, tableId) => {
         const { activeTableId, carts } = get();
         const targetStatus = status.toUpperCase();
@@ -321,9 +357,10 @@ export const useCartStore = create<CartState & CartActions>()(
         });
       },
 
-      updateItemNote: (id, status, oldNote, newNote) => {
+      // ອັບເດດໝາຍເຫດຂອງສິນຄ້າ
+      updateItemNote: (id, status, oldNote, newNote, tableId) => {
         const { activeTableId, carts } = get();
-        const currentTableId = activeTableId || "default";
+        const currentTableId = tableId || activeTableId || "default";
         const currentCart = carts[currentTableId] || [];
 
         const normalizedOldNote = (oldNote || "").trim();
@@ -367,6 +404,7 @@ export const useCartStore = create<CartState & CartActions>()(
         set({ carts: { ...carts, [currentTableId]: nextCart } });
       },
 
+      // ລ້າງຂໍ້ມູນສິນຄ້າໃນກະຕ່າຂອງບິນ ຫຼື ໂຕະນັ້ນໆ
       clearTableCart: (tableId) => {
         const { carts } = get();
         const nextCarts = { ...carts };
@@ -375,6 +413,7 @@ export const useCartStore = create<CartState & CartActions>()(
         set({ carts: nextCarts });
       },
 
+      // ກຳນົດຂໍ້ມູນກະຕ່າໃຫ້ບິນ ຫຼື ໂຕະໂດຍກົງ (ໃຊ້ຕອນດຶງຂໍ້ມູນຈາກ Server)
       setTableCart: (tableId, cartData, isOverwrite = false) => {
         const { carts, mergeCarts } = get();
         const localCart = carts[tableId] || [];
@@ -387,6 +426,7 @@ export const useCartStore = create<CartState & CartActions>()(
         set({ carts: { ...carts, [tableId]: mergedCart } });
       },
 
+      // ປິດການແຈ້ງເຕືອນອໍເດີໃໝ່ສຳລັບໂຕະນັ້ນໆ
       dismissTable: (tableId) => {
         const { carts, dismissedCarts } = get();
         const snapshot: { [itemId: string]: number } = {};
@@ -400,10 +440,63 @@ export const useCartStore = create<CartState & CartActions>()(
         set({ dismissedCarts: { ...dismissedCarts, [tableId]: snapshot } });
       },
 
+      // ສ້າງບິນໃໝ່ (Multi-Cart) ໂດຍສາມາດກຳນົດ Prefix ຕາມປະເພດ (Cafe/General)
+      createNewBill: (prefix?: string) => {
+        const { carts } = get();
+        const billId = prefix ? `${prefix}:bill-${Date.now()}` : `bill-${Date.now()}`;
+
+        const updates: Partial<CartState> = {
+          carts: { ...carts, [billId]: [] },
+        };
+
+        // ອັບເດດ Active ID ຕາມປະເພດ
+        if (prefix === "CAFE") {
+          updates.activeCafeBillId = billId;
+        } else if (prefix === "GENERAL") {
+          updates.activeGeneralBillId = billId;
+        } else {
+          updates.activeTableId = billId;
+        }
+
+        set(updates);
+
+        toast.success(i18n.t("sale.newBillCreated") || "ສ້າງບິນໃໝ່ແລ້ວ", {
+          duration: 800,
+          position: "top-center",
+        });
+      },
+
+      // ລົບບິນ ຫຼື ໂຕະອອກຈາກລະບົບ
+      removeCart: (tableId: string) => {
+        const { carts, activeCafeBillId, activeGeneralBillId, activeTableId } = get();
+        const nextCarts = { ...carts };
+
+        delete nextCarts[tableId];
+
+        const updates: Partial<CartState> = { carts: nextCarts };
+
+        // ຊອກຫາບິນຖັດໄປຕາມປະເພດ
+        if (tableId.startsWith("CAFE:") && activeCafeBillId === tableId) {
+          const remaining = Object.keys(nextCarts).filter((id) => id.startsWith("CAFE:"));
+          updates.activeCafeBillId = remaining.length > 0 ? remaining[0] : "CAFE:default";
+        } else if (tableId.startsWith("GENERAL:") && activeGeneralBillId === tableId) {
+          const remaining = Object.keys(nextCarts).filter((id) => id.startsWith("GENERAL:"));
+          updates.activeGeneralBillId = remaining.length > 0 ? remaining[0] : "GENERAL:default";
+        } else if (activeTableId === tableId) {
+          const remaining = Object.keys(nextCarts).filter((id) => !id.includes(":"));
+          updates.activeTableId = remaining.length > 0 ? remaining[0] : "default";
+        }
+
+        set(updates);
+      },
+
+      // ລ້າງຂໍ້ມູນກະຕ່າທັງໝົດ ແລະ ເລີ່ມຕົ້ນໃໝ່
       resetCart: () => {
         set({
-          carts: {},
-          activeTableId: null,
+          carts: { default: [] },
+          activeTableId: "default",
+          activeCafeBillId: "CAFE:default",
+          activeGeneralBillId: "GENERAL:default",
           dismissedCarts: {},
         });
       },
@@ -414,6 +507,8 @@ export const useCartStore = create<CartState & CartActions>()(
       partialize: (state) => ({
         carts: state.carts,
         dismissedCarts: state.dismissedCarts,
+        activeCafeBillId: state.activeCafeBillId,
+        activeGeneralBillId: state.activeGeneralBillId,
       }),
     },
   ),
