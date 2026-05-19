@@ -22,6 +22,8 @@ import {
   Mail,
 } from "lucide-react";
 
+import { useNavigate } from "react-router-dom";
+
 import { useAuth } from "@/routes/AuthContext";
 import { useGetStoreDetail, useUpdateStore } from "@/services/store/useStore";
 import { useGetAllProvinces } from "@/services/province/useProvince";
@@ -29,8 +31,9 @@ import { useGetDistrictsByProvince } from "@/services/district/useDistrict";
 import { useUploadImage } from "@/services/storage";
 import { getDisplayImageUrl } from "@/lib/utils";
 
-export default function ProfilePage() {
+export default function ProfileEdit() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const isNotAdmin = user?.user?.role !== "STORE_ADMIN";
   const { t, i18n } = useTranslation();
   const { data: storeResponse, isLoading } = useGetStoreDetail(
@@ -73,7 +76,7 @@ export default function ProfilePage() {
     }
   }, [store, i18n.language]);
 
-  console.log("user", user?.user?.role);
+  console.log("user", user);
 
   const handleImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -108,6 +111,7 @@ export default function ProfilePage() {
         ...formData,
         id: store.id,
       });
+      navigate("/settings/profile");
     } catch (error) {
       console.error("Failed to update store:", error);
     }
@@ -334,7 +338,14 @@ export default function ProfilePage() {
                 />
               </div>
 
-              <div className="flex justify-end pt-4">
+              <div className="flex justify-end gap-3 pt-4">
+                <Button
+                  variant="flat"
+                  onPress={() => navigate("/settings/profile")}
+                  className="font-bold px-6"
+                >
+                  ຍົກເລີກ
+                </Button>
                 <Button
                   isDisabled={isNotAdmin}
                   className="font-bold px-8"

@@ -38,9 +38,9 @@ export default function DebtHistoryDetailPage() {
           onPress={() => navigate(-1)}
           className="mb-4"
         >
-          {t("common.back") || "ກັບຄືນ"}
+          {t("common.back")}
         </Button>
-        <EmptyState message={t("order.notFound") || "ບໍ່ພົບຂໍ້ມູນລາຍການ"} />
+        <EmptyState message={t("order.notFound")} />
       </div>
     );
   }
@@ -59,7 +59,7 @@ export default function DebtHistoryDetailPage() {
         <div>
           <h1 className="text-xl sm:text-2xl font-black text-primary flex items-center gap-2">
             <Receipt size={24} />
-            {t("debt.detailTitle") || "ລາຍລະອຽດການຕິດໜີ້"}
+            {t("debt.detailTitle")}
           </h1>
           <p className="text-xs text-default-500 font-medium">
             {t("order.billNo")} {order.orderNumber} • {dayjs(order.createdAt).format("DD/MM/YYYY HH:mm")}

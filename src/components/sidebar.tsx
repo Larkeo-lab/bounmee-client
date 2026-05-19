@@ -88,16 +88,26 @@ const sidebarGroups: MenuGroup[] = [
         permissionKey: "dashboard",
       },
       {
-        labelKey: "sidebar.menu.order",
-        href: "/order",
+        labelKey: "sidebar.menu.historyGroup",
+        href: "/history",
         icon: History,
-        permissionKey: "order",
-      },
-      {
-        labelKey: "sidebar.menu.debt",
-        href: "/debt",
-        icon: History,
-        permissionKey: "debt",
+        children: [
+          {
+            labelKey: "sidebar.menu.order",
+            href: "/order",
+            permissionKey: "order",
+          },
+          {
+            labelKey: "sidebar.menu.debt",
+            href: "/debt",
+            permissionKey: "debt",
+          },
+          {
+            labelKey: "sidebar.menu.productUpdateHistory",
+            href: "/product-update-history",
+            permissionKey: "product",
+          },
+        ],
       },
       {
         labelKey: "sidebar.menu.ordering",
@@ -207,26 +217,64 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
     return false;
   };
 
+  const filterMenuItems = (items: MenuItem[]): MenuItem[] => {
+    return items
+      .map((item) => {
+        const mappedItem = { ...item };
+
+        if (item.href === "/chat") {
+          mappedItem.badge = totalChatUnread;
+        } else if (item.href === "/ordering") {
+          mappedItem.badge = orderingCount;
+        } else if (item.href === "/kitchen") {
+          mappedItem.badge = kitchenCount;
+        }
+
+        if (item.children && item.children.length > 0) {
+          mappedItem.children = filterMenuItems(item.children);
+        }
+
+        return mappedItem;
+      })
+      .filter((item) => {
+        if (item.children !== undefined) {
+          if (!canAccess(item.permissionKey, item.href)) return false;
+          return item.children.length > 0;
+        }
+
+        return canAccess(item.permissionKey, item.href);
+      });
+  };
+
   const filteredGroups = sidebarGroups
     .map((group) => ({
       ...group,
-      items: group.items
-        .map((item) => {
-          if (item.href === "/chat") {
-            return { ...item, badge: totalChatUnread };
-          }
-          if (item.href === "/ordering") {
-            return { ...item, badge: orderingCount };
-          }
-          if (item.href === "/kitchen") {
-            return { ...item, badge: kitchenCount };
-          }
-
-          return item;
-        })
-        .filter((item) => canAccess(item.permissionKey, item.href)),
+      items: filterMenuItems(group.items),
     }))
     .filter((group) => group.items.length > 0);
+
+  // Auto-expand menus when location changes
+  useEffect(() => {
+    setExpandedMenus((prev) => {
+      const newExpanded = new Set(prev);
+      let updated = false;
+
+      sidebarGroups.forEach((group) => {
+        group.items.forEach((item) => {
+          if (item.children && item.children.length > 0) {
+            if (item.children.some((child) => child.href === location.pathname)) {
+              if (!newExpanded.has(item.href)) {
+                newExpanded.add(item.href);
+                updated = true;
+              }
+            }
+          }
+        });
+      });
+
+      return updated ? newExpanded : prev;
+    });
+  }, [location.pathname]);
 
   // Session Expiry States
   const [isExpModalOpen, setIsExpModalOpen] = useState(false);

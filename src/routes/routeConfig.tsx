@@ -16,7 +16,8 @@ import ProductPage from "@/pages/settings/product/ProductPage";
 import CategoryPage from "@/pages/settings/category/CategoryPage";
 import BankPage from "@/pages/settings/bank/BankPage";
 import EmployeePage from "@/pages/settings/employee/EmployeePage";
-import ProfilePage from "@/pages/settings/profile/ProfilePage";
+import ProfileDetail from "@/pages/settings/profile/ProfileDetail";
+import ProfileEdit from "@/pages/settings/profile/ProfileEdit";
 import SettingsPage from "@/pages/settings/SettingsPage";
 import MoneyRatePage from "@/pages/settings/moneyRate/MoneyRatePage";
 import OrderPage from "@/pages/order/OrderPage";
@@ -25,6 +26,7 @@ import AddRoleUser from "@/pages/settings/permission-management/AddRoleUser";
 import MemberPage from "@/pages/settings/member/MemberPage";
 import DebtHistoryPage from "@/pages/debtHistory/debtHistory";
 import DebtHistoryDetailPage from "@/pages/debtHistory/debtHistoryDetail";
+import ProductUpdateHistoryPage from "@/pages/productUpdateHistory/ProductUpdateHistoryPage";
 
 // Import route components
 
@@ -149,7 +151,13 @@ export const appRoutes: AppRoute[] = [
   },
   {
     path: "/settings/profile",
-    element: <ProfilePage />,
+    element: <ProfileDetail />,
+    isPrivate: true,
+    requiresLayout: true,
+  },
+  {
+    path: "/settings/profile/edit",
+    element: <ProfileEdit />,
     isPrivate: true,
     requiresLayout: true,
   },
@@ -196,6 +204,13 @@ export const appRoutes: AppRoute[] = [
     isPrivate: true,
     requiresLayout: true,
     permissionKey: "debt",
+  },
+  {
+    path: "/product-update-history",
+    element: <ProductUpdateHistoryPage />,
+    isPrivate: true,
+    requiresLayout: true,
+    permissionKey: "product",
   },
   {
     path: "/table",

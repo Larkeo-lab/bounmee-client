@@ -172,7 +172,9 @@
       "statisticsReport": "ລາຍງານສະຖິຕິ",
       "setting": "ຕັ້ງຄ່າ",
       "language": "ປ່ຽນພາສາ",
+      "historyGroup": "ປະຫວັດຕ່າງໆ",
       "order": "ປະຫວັດການຂາຍ",
+      "productUpdateHistory": "ປະຫວັດການແກ້ໄຂສິນຄ້າ",
       "ordering": "ລາຍການສັ່ງຊື້",
       "manageProduct": "ຈັດການສິນຄ້າ",
       "manageCategory": "ຈັດການປະເພດສິນຄ້າ",
@@ -201,6 +203,10 @@
     "unit": "ບິນ",
     "totalDebtOrders": "ຈຳນວນລາຍການຕິດໜີ້",
     "totalDebtAmount": "ຍອດໜີ້ທັງໝົດ",
+    "totalAmount": "ຍອດໜີ້ລວມທັງໝົດ",
+    "totalPaidAmount": "ຈ່າຍແລ້ວທັງໝົດ",
+    "remainingDebt": "ຍັງບໍ່ທັນຈ່າຍ",
+    "paidAmount": "ຊຳລະແລ້ວ",
     "status": "ສະຖານະ",
     "pendingFollowup": "ມີລາຍການທີ່ຕ້ອງຕິດຕາມ",
     "searchPlaceholder": "ຄົ້ນຫາຕາມເລກບິນ ຫຼື ຊື່ລູກຄ້າ...",
@@ -347,7 +353,18 @@
     },
     "storeProfile": {
       "title": "ຈັດການໂປຟາຍຮ້ານ",
-      "subtitle": "ອັບເດດຂໍ້ມູນພື້ນຖານຂອງຮ້ານທ່ານ"
+      "subtitle": "ລາຍລະອຽດຂໍ້ມູນຮ້ານຄ້າ ແລະ ໄລຍະເວລາແພັກເກຈ",
+      "editStore": "ແກ້ໄຂຂໍ້ມູນຮ້ານ",
+      "noLogo": "ບໍ່ມີໂລໂກ້",
+      "storeInfo": "ຂໍ້ມູນຮ້ານຄ້າ",
+      "startDate": "ວັນທີເລີ່ມໃຊ້",
+      "endDate": "ວັນທີສິ້ນສຸດ",
+      "remainingDays": "ຈຳນວນວັນທີ່ເຫຼືອ",
+      "days": "ມື້",
+      "packageType": "ປະເພດແພັກເກຈ",
+      "packageTRY": "ທົດລອງ",
+      "packageMONTHLY": "ລາຍເດືອນ",
+      "packageYEARLY": "ລາຍປີ"
     },
     "member": {
       "title": "ຈັດການສະມາຊິກ",
@@ -559,6 +576,8 @@
     "last3Days": "3 ມື້ຜ່ານມາ",
     "last7Days": "7 ມື້ຜ່ານມາ",
     "lastMonth": "1 ເດືອນຜ່ານມາ",
+    "last3Months": "3 ເດືອນຜ່ານມາ",
+    "last5Months": "5 ເດືອນຜ່ານມາ",
     "lastYear": "1 ປີຜ່ານມາ",
     "totalSales": "ຍອດຂາຍທັງໝົດ",
     "totalExpenses": "ລາຍຈ່າຍທັງໝົດ",
@@ -602,6 +621,8 @@
     "last3Days": "3 ມື້ຜ່ານມາ",
     "last7Days": "7 ມື້ຜ່ານມາ",
     "lastMonth": "1 ເດືອນຜ່ານມາ",
+    "last3Months": "3 ເດືອນຜ່ານມາ",
+    "last5Months": "5 ເດືອນຜ່ານມາ",
     "start": "ເລີ່ມ",
     "end": "ຈົບ",
     "all": "ທັງໝົດ",
@@ -655,7 +676,8 @@
     "unit": "ບິນ",
     "kip": "ກີບ",
     "note": "ໝາຍເຫດ",
-    "quickFilter": "ຕົວຕອງດ່ວນ"
+    "quickFilter": "ຕົວຕອງດ່ວນ",
+    "notFound": "ບໍ່ພົບຂໍ້ມູນລາຍການ"
   },
   "ordering": {
     "title": "ລາຍການອໍເດີ",
@@ -837,5 +859,24 @@
   },
   "validation": {
     "phoneNumberRequired": "ກະລຸນາປ້ອນເບີໂທລະສັບໃຫ້ຄົບ 8 ຕົວເລກ"
+  },
+  "productUpdateHistory": {
+    "title": "ປະຫວັດການແກ້ໄຂສິນຄ້າ",
+    "subtitle": "ເບິ່ງລາຍລະອຽດການປັບປຸງ ລາຄາ, ຕົ້ນທຶນ ແລະ ຈຳນວນສະຕ໋ອກ ຂອງສິນຄ້າ",
+    "searchPlaceholder": "ຄົ້ນຫາຊື່ສິນຄ້າ...",
+    "emptyState": "ບໍ່ພົບຂໍ້ມູນປະຫວັດການແກ້ໄຂສິນຄ້າ",
+    "unknownName": "ບໍ່ລະບຸ",
+    "noBarcode": "ບໍ່ມີບາໂຄ້ດ",
+    "table": {
+      "image": "ຮູບພາບ",
+      "productName": "ຊື່ສິນຄ້າ",
+      "oldCost": "ລາຄາຊື້ເກົ່າ",
+      "newCost": "ລາຄາຊື້ໃໝ່",
+      "oldPrice": "ລາຄາຂາຍເກົ່າ",
+      "newPrice": "ລາຄາຂາຍໃໝ່",
+      "oldStock": "ຈຳນວນເດີມ",
+      "newStock": "ຈຳນວນໃໝ່",
+      "updatedAt": "ວັນທີແກ້ໄຂ"
+    }
   }
 }

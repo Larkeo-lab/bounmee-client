@@ -2,35 +2,50 @@ import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import dayjs from "dayjs";
 
-import { Order } from "@/services/order/useOrder";
 
-export const exportOrdersToExcel = async (orders: Order[]) => {
-  if (!orders || orders.length === 0) {
-    alert("ບໍ່ມີຂໍ້ມູນໃຫ້ສົ່ງອອກ");
+export interface ExcelColumn {
+  header: string;
+  key: string;
+  width?: number;
+  format?: "currency" | "number" | "text" | "date";
+  align?: "left" | "center" | "right";
+}
 
+export interface ExportExcelParams<T> {
+  data: T[];
+  columns: ExcelColumn[];
+  fileName?: string;
+  sheetName?: string;
+  summaryColumns?: { key: string; label?: string }[];
+}
+
+/**
+ * Global function for exporting any array of data to an Excel file
+ */
+export const exportToExcel = async <T extends Record<string, any>>({
+  data,
+  columns,
+  fileName = "Export",
+  sheetName = "Sheet1",
+  summaryColumns = [],
+}: ExportExcelParams<T>) => {
+  if (!data || data.length === 0) {
+    alert("ບໍ່ມີຂໍ້ມູນໃຫ້ສົ່ງອອກ"); // No data to export
     return;
   }
 
   const workbook = new ExcelJS.Workbook();
-  const worksheet = workbook.addWorksheet("ລາຍງານການຂາຍ");
+  const worksheet = workbook.addWorksheet(sheetName);
 
   // 1. Define columns with widths
-  worksheet.columns = [
-    { header: "ລຳດັບ", key: "index", width: 8 },
-    { header: "ວັນທີ / ເວລາ", key: "date", width: 25 },
-    { header: "ເລກທີບິນ", key: "orderNumber", width: 20 },
-    { header: "ພະນັກງານ", key: "employee", width: 20 },
-    { header: "ການຊຳລະ", key: "payment", width: 15 },
-    { header: "ທະນາຄານ", key: "bank", width: 20 },
-    { header: "ຍອດລວມ", key: "total", width: 18 },
-    { header: "ຮັບເງິນ", key: "received", width: 18 },
-    { header: "ເງິນທອນ", key: "change", width: 15 },
-    { header: "ລາຍການ", key: "items", width: 10 },
-  ];
+  worksheet.columns = columns.map((col) => ({
+    header: col.header,
+    key: col.key,
+    width: col.width || 15,
+  }));
 
   // 2. Style header row
   const headerRow = worksheet.getRow(1);
-
   headerRow.height = 32;
   headerRow.eachCell((cell) => {
     cell.fill = {
@@ -54,80 +69,86 @@ export const exportOrdersToExcel = async (orders: Order[]) => {
   });
 
   // 3. Add data rows
-  orders.forEach((order, idx) => {
-    const row = worksheet.addRow({
-      index: idx + 1,
-      date: dayjs(order.createdAt).format("DD/MM/YYYY HH:mm:ss"),
-      orderNumber: order.orderNumber,
-      employee: order.employee?.name || "ເຈົ້າຂອງຮ້ານ",
-      payment: order.paymentMethod === "CASH" ? "ເງິນສົດ" : "ເງິນໂອນ",
-      bank: order.bank?.name || "-",
-      total: Number(order.totalAmount || 0),
-      received: Number(order.receivedAmount || 0),
-      change: Number(order.change || 0),
-      items: order.items?.length || 0,
-    });
+  data.forEach((item, idx) => {
+    // Inject auto-increment index if requested
+    const rowData: Record<string, any> = { ...item };
+    if (columns.some((c) => c.key === "index") && rowData["index"] === undefined) {
+      rowData["index"] = idx + 1;
+    }
 
+    const row = worksheet.addRow(rowData);
     row.height = 25;
 
-    // Formatting numbers
-    row.getCell("total").numFmt = '#,##0 "ກີບ"';
-    row.getCell("received").numFmt = '#,##0 "ກີບ"';
-    row.getCell("change").numFmt = '#,##0 "ກີບ"';
-
-    // Alignment and font
-    row.eachCell((cell) => {
+    // Formatting based on column definition
+    columns.forEach((col, colIdx) => {
+      const cell = row.getCell(colIdx + 1);
       cell.font = { name: "Phetsarath OT", size: 10 };
-      cell.alignment = { vertical: "middle" };
       cell.border = {
         top: { style: "thin", color: { argb: "FFEDEDED" } },
         left: { style: "thin", color: { argb: "FFEDEDED" } },
         bottom: { style: "thin", color: { argb: "FFEDEDED" } },
         right: { style: "thin", color: { argb: "FFEDEDED" } },
       };
-    });
 
-    // Center specific columns
-    row.getCell("index").alignment = {
-      horizontal: "center",
-      vertical: "middle",
-    };
-    row.getCell("payment").alignment = {
-      horizontal: "center",
-      vertical: "middle",
-    };
-    row.getCell("items").alignment = {
-      horizontal: "center",
-      vertical: "middle",
-    };
+      if (col.format === "currency") {
+        cell.numFmt = '#,##0 "ກີບ"';
+      } else if (col.format === "number") {
+        cell.numFmt = "#,##0";
+      }
+
+      cell.alignment = {
+        vertical: "middle",
+        horizontal:
+          col.align ||
+          (["currency", "number"].includes(col.format as string) ? "right" : "left"),
+      };
+    });
   });
 
   // 4. Summary Row (Footer)
-  const totalAmount = orders.reduce(
-    (sum, o) => sum + Number(o.totalAmount || 0),
-    0,
-  );
+  if (summaryColumns.length > 0) {
+    worksheet.addRow([]); // Blank row
 
-  worksheet.addRow([]); // Blank row
-  const summaryRow = worksheet.addRow({
-    bank: "ລວມທັງໝົດ:",
-    total: totalAmount,
-  });
+    const summaryData: Record<string, any> = {};
 
-  summaryRow.height = 30;
-  summaryRow.getCell("bank").font = {
-    bold: true,
-    size: 12,
-    name: "Phetsarath OT",
-  };
-  summaryRow.getCell("total").font = {
-    bold: true,
-    size: 12,
-    name: "Phetsarath OT",
-    color: { argb: "FFB91C1C" },
-  }; // Red for total
-  summaryRow.getCell("total").numFmt = '#,##0 "ກີບ"';
-  summaryRow.getCell("total").alignment = { vertical: "middle" };
+    summaryColumns.forEach((sc) => {
+      if (sc.label) {
+        summaryData[sc.key] = sc.label;
+      } else {
+        const sum = data.reduce((acc, curr) => acc + Number(curr[sc.key] || 0), 0);
+        summaryData[sc.key] = sum;
+      }
+    });
+
+    const summaryRow = worksheet.addRow(summaryData);
+    summaryRow.height = 30;
+
+    columns.forEach((col, colIdx) => {
+      const cell = summaryRow.getCell(colIdx + 1);
+      if (summaryData[col.key] !== undefined) {
+        cell.font = {
+          bold: true,
+          size: 12,
+          name: "Phetsarath OT",
+          color: summaryColumns.find((s) => s.key === col.key && !s.label)
+            ? { argb: "FFB91C1C" }
+            : undefined,
+        };
+        if (col.format === "currency") {
+          cell.numFmt = '#,##0 "ກີບ"';
+        } else if (col.format === "number") {
+          cell.numFmt = "#,##0";
+        }
+        
+        cell.alignment = {
+          vertical: "middle",
+          horizontal:
+            col.align ||
+            (["currency", "number"].includes(col.format as string) ? "right" : "left"),
+        };
+      }
+    });
+  }
 
   // 5. Generate and Download file
   const buffer = await workbook.xlsx.writeBuffer();
@@ -135,5 +156,5 @@ export const exportOrdersToExcel = async (orders: Order[]) => {
     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   });
 
-  saveAs(blob, `POS_Orders_${dayjs().format("YYYYMMDD_HHmm")}.xlsx`);
+  saveAs(blob, `${fileName}_${dayjs().format("YYYYMMDD_HHmm")}.xlsx`);
 };

@@ -98,7 +98,7 @@ export default function ConfirmDebtModal({
                 </div>
                 <div className="flex flex-col">
                   <span className="text-xl font-black">
-                    {t("debt.payment") || "ຊຳລະໜີ້"}
+                    {t("debt.payment")}
                   </span>
                   <span className="text-[10px] text-default-400 font-bold uppercase tracking-widest">
                     #{order?.orderNumber}
@@ -110,7 +110,7 @@ export default function ConfirmDebtModal({
               <div className="space-y-6">
                 <div className="flex flex-col gap-2">
                   <label className="text-xs font-black text-default-500 uppercase tracking-widest px-1">
-                    {t("order.paymentMethod") || "ວິທີການຊຳລະ"}
+                    {t("order.paymentMethod")}
                   </label>
                   <div className="grid grid-cols-2 gap-3">
                     <Button
@@ -122,7 +122,7 @@ export default function ConfirmDebtModal({
                       startContent={<Banknote size={20} />}
                       onPress={() => setPaymentMethod("CASH")}
                     >
-                      {t("order.cash") || "ເງິນສົດ"}
+                      {t("order.cash")}
                     </Button>
                     <Button
                       className={`h-14 font-bold border-2 ${
@@ -133,7 +133,7 @@ export default function ConfirmDebtModal({
                       startContent={<Landmark size={20} />}
                       onPress={() => setPaymentMethod("TRANSFER")}
                     >
-                      {t("order.transfer") || "ເງິນໂອນ"}
+                      {t("order.transfer")}
                     </Button>
                   </div>
                 </div>
@@ -141,7 +141,7 @@ export default function ConfirmDebtModal({
                 {paymentMethod === "TRANSFER" && (
                   <div className="space-y-4 animate-in fade-in slide-in-from-top-4 duration-300">
                     <p className="text-default-500 text-sm font-black uppercase tracking-wider px-1">
-                      {t("order.selectBank") || "ເລືອກທະນາຄານ"}
+                      {t("order.selectBank")}
                     </p>
                     {isLoadingBanks ? (
                       <div className="flex justify-center py-4">
@@ -194,8 +194,7 @@ export default function ConfirmDebtModal({
                           {selectedBankData.name}
                         </p>
                         <p className="text-[10px] text-default-500 font-bold uppercase tracking-widest mt-1">
-                          {t("order.scanToPay") ||
-                            "ກະລຸນາສະແກນ QR ເພື່ອໂອນເງິນ"}
+                          {t("order.scanToPay")}
                         </p>
                       </div>
                     )}
@@ -206,7 +205,7 @@ export default function ConfirmDebtModal({
                   <CardBody className="p-4 flex flex-row justify-between items-center">
                     <div className="flex flex-col">
                       <span className="text-xs font-bold text-primary-600 uppercase tracking-wider">
-                        {t("debt.debtAmount") || "ຍອດໜີ້ທີ່ຄ້າງ"}
+                        {t("debt.debtAmount")}
                       </span>
                       <span className="text-3xl font-black text-primary">
                         {formatNumber(debtAmount)}{" "}
@@ -222,7 +221,7 @@ export default function ConfirmDebtModal({
                 <div className="space-y-4">
                   <div className="flex flex-col gap-2">
                     <label className="text-xs font-black text-default-500 uppercase tracking-widest px-1">
-                      {t("order.receivedAmount") || "ຈຳນວນເງິນທີ່ຊຳລະ"}
+                      {t("order.receivedAmount")}
                     </label>
                     <Input
                       type="text"
@@ -247,7 +246,7 @@ export default function ConfirmDebtModal({
 
                 <div className="flex flex-col gap-2">
                   <label className="text-xs font-black text-primary-500 uppercase tracking-widest px-1">
-                    {t("order.change") || "ເງິນທອນ: "}
+                    {t("order.change")}{" "}
                     {formatNumber(Math.max(0, receivedAmount - debtAmount))}
                   </label>
                 </div>
@@ -265,7 +264,7 @@ export default function ConfirmDebtModal({
                 onPress={handleConfirm}
                 startContent={!isLoading && <CheckCircle2 size={20} />}
               >
-                {t("common.confirmPayment") || "ຢືນຢັນການຊຳລະ"}
+                {t("common.confirmPayment")}
               </Button>
             </ModalFooter>
           </>

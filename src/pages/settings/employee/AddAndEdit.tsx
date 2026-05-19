@@ -13,7 +13,10 @@ import {
   Spinner,
   Image,
 } from "@heroui/react";
-import { User, Phone, Lock, Shield, Upload, X, Edit2 } from "lucide-react";
+import { User, Phone, Lock, Shield, Upload, X, Edit2, KeyRound } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "react-hot-toast";
+import { axiosInstance } from "@/lib/axios";
 
 import {
   useCreateEmployee,
@@ -56,6 +59,22 @@ export default function AddAndEdit({
   const createEmployeeMutation = useCreateEmployee();
   const updateEmployeeMutation = useUpdateEmployee();
   const uploadImageMutation = useUploadImage();
+
+  const changePasswordMutation = useMutation({
+    mutationFn: ({ password, userId }: { password: string; userId: string }) =>
+      axiosInstance.put("/api/v1/auth/change-password", {
+        password,
+        userId,
+      }),
+    onSuccess: () => {
+      toast.success("ປ່ຽນລະຫັດຜ່ານສຳເລັດ");
+      setFormData((prev) => ({ ...prev, password: "" }));
+    },
+    onError: () => {
+      toast.error("ເກີດຂໍ້ຜິດພາດໃນການປ່ຽນລະຫັດຜ່ານ");
+    },
+  });
+
   const { data: permissionResponse } = useGetPermissions();
   const permissionsData = permissionResponse?.data || [];
 
@@ -64,9 +83,9 @@ export default function AddAndEdit({
       setFormData({
         name: selectedEmployee.name || "",
         logoUrl: selectedEmployee.logoUrl || "",
-        phone: selectedEmployee.phone || "",
-        userName: selectedEmployee.userName || "",
-        language: selectedEmployee.language || "LA",
+        phone: selectedEmployee.phone || selectedEmployee.users?.[0]?.phone || "",
+        userName: selectedEmployee.userName || selectedEmployee.users?.[0]?.userName || "",
+        language: selectedEmployee.language || selectedEmployee.users?.[0]?.language || "LA",
         password: "",
         permissionId: selectedEmployee.permissionId || "",
         businessType: selectedEmployee.businessType || "RESTAURANT",
@@ -142,11 +161,11 @@ export default function AddAndEdit({
       updateData.name = formData.name;
     if (formData.logoUrl !== selectedEmployee.logoUrl)
       updateData.logoUrl = formData.logoUrl;
-    if (formData.phone !== selectedEmployee.phone)
+    if (formData.phone !== (selectedEmployee.phone || selectedEmployee.users?.[0]?.phone))
       updateData.phone = formData.phone;
-    if (formData.userName !== selectedEmployee.userName)
+    if (formData.userName !== (selectedEmployee.userName || selectedEmployee.users?.[0]?.userName))
       updateData.userName = formData.userName;
-    if (formData.language !== selectedEmployee.language)
+    if (formData.language !== (selectedEmployee.language || selectedEmployee.users?.[0]?.language))
       updateData.language = formData.language;
     if (formData.password) updateData.password = formData.password;
     if (formData.permissionId !== selectedEmployee.permissionId)
@@ -254,19 +273,42 @@ export default function AddAndEdit({
           variant="bordered"
           onValueChange={(val) => setFormData({ ...formData, userName: val })}
         />
-        {!selectedEmployee && (
+        <div className="flex flex-col gap-2">
           <Input
-            isRequired
+            isRequired={!selectedEmployee}
             label={t("employee.password")}
             labelPlacement="outside"
-            placeholder={t("employee.password")}
+            placeholder={selectedEmployee ? "ປ້ອນລະຫັດຜ່ານໃໝ່ເພື່ອປ່ຽນ" : t("employee.password")}
             startContent={<Lock className="text-default-400" size={18} />}
             type="password"
             value={formData.password}
             variant="bordered"
             onValueChange={(val) => setFormData({ ...formData, password: val })}
           />
-        )}
+          {selectedEmployee && formData.password && formData.password.length >= 6 && (
+            <Button
+              color="warning"
+              variant="flat"
+              size="sm"
+              startContent={<KeyRound size={14} />}
+              className="font-bold w-fit mt-1"
+              onPress={() => {
+                const userId = selectedEmployee?.users?.[0]?.id;
+                if (userId) {
+                  changePasswordMutation.mutate({
+                    password: formData.password,
+                    userId,
+                  });
+                } else {
+                  toast.error("ບໍ່ພົບຂໍ້ມູນຜູ້ໃຊ້");
+                }
+              }}
+              isLoading={changePasswordMutation.isPending}
+            >
+              ປ່ຽນລະຫັດຜ່ານ
+            </Button>
+          )}
+        </div>
         <Select
           className="md:col-span-2"
           label={t("employee.permissions")}

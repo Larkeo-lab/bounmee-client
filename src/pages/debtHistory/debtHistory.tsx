@@ -40,7 +40,7 @@ import {
 import toast from "react-hot-toast";
 import { formatNumber } from "@/utils/numberFormat";
 import GlobalPagination from "@/components/common/globle-pagination";
-import { exportOrdersToExcel } from "@/utils/exportOrder";
+import { exportToExcel, ExcelColumn } from "@/utils/exportOrder";
 import EmptyState from "@/components/common/empty-state";
 import FilterDate from "@/components/common/fillterDate";
 
@@ -180,6 +180,45 @@ export default function DebtHistoryPage() {
     }
   };
 
+  const handleExport = async () => {
+    if (!orders || orders.length === 0) return;
+
+    const columns: ExcelColumn[] = [
+      { header: "ລຳດັບ", key: "index", width: 8, align: "center" },
+      { header: "ວັນທີ / ເວລາ", key: "date", width: 25 },
+      { header: "ເລກທີບິນ", key: "orderNumber", width: 20 },
+      { header: "ພະນັກງານ", key: "employee", width: 20 },
+      { header: "ລູກຄ້າ", key: "customer", width: 20 },
+      { header: "ຍອດຕິດໜີ້", key: "total", width: 18, format: "currency" },
+      { header: "ຊຳລະແລ້ວ", key: "received", width: 18, format: "currency" },
+      { header: "ຍັງເຫຼືອ", key: "debt", width: 18, format: "currency" },
+      { header: "ສະຖານະ", key: "status", width: 15, align: "center" },
+    ];
+
+    const data = orders.map((order: any) => ({
+      date: dayjs(order.createdAt).format("DD/MM/YYYY HH:mm:ss"),
+      orderNumber: order.orderNumber,
+      employee: order.employee?.name || "ເຈົ້າຂອງຮ້ານ",
+      customer: order.customer?.name || "ລູກຄ້າທົ່ວໄປ",
+      total: Number(order.totalAmount || 0),
+      received: Number(order.receivedAmount || 0),
+      debt: Number(order.debtAmount || 0),
+      status: order.paymentStatus === "PAID" 
+        ? "ຊຳລະແລ້ວ" 
+        : order.paymentStatus === "PARTIALLY_PAID" 
+          ? "ຊຳລະບາງສ່ວນ" 
+          : "ຍັງບໍ່ຊຳລະ",
+    }));
+
+    await exportToExcel({
+      data,
+      columns,
+      fileName: "POS_Debt_History",
+      sheetName: "ລາຍງານໜີ້ສິນ",
+      summaryColumns: [{ key: "customer", label: "ລວມທັງໝົດ:" }, { key: "total" }, { key: "received" }, { key: "debt" }],
+    });
+  };
+
   return (
     <div className="h-[calc(100vh-64px)] sm:h-auto flex flex-col overflow-hidden sm:overflow-visible space-y-3 sm:space-y-4 p-2 sm:p-4 lg:p-6 bg-default-50/50">
       {/* Header section */}
@@ -187,10 +226,10 @@ export default function DebtHistoryPage() {
         <div>
           <h1 className="text-lg sm:text-2xl font-black text-danger flex items-center gap-2">
             <TrendingDown className="sm:size-7" size={22} />
-            {t("debt.title") || "ປະຫວັດການຕິດໜີ້"}
+            {t("debt.title")}
           </h1>
           <p className="text-[10px] sm:text-xs text-default-500 font-medium">
-            {t("debt.desc") || "ຈັດການ ແລະ ຕິດຕາມລາຍການທີ່ຍັງບໍ່ທັນຊຳລະ"}
+            {t("debt.desc")}
           </p>
         </div>
         <Button
@@ -199,7 +238,7 @@ export default function DebtHistoryPage() {
           size="sm"
           startContent={<Download size={16} />}
           variant="flat"
-          onPress={() => exportOrdersToExcel(orders)}
+          onPress={handleExport}
         >
           {t("order.exportExcel")}
         </Button>
@@ -212,7 +251,7 @@ export default function DebtHistoryPage() {
             <CardBody className="p-3 sm:p-4 overflow-hidden relative">
               <div className="relative z-10">
                 <p className="text-orange-100 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider mb-0.5">
-                  {t("debt.totalDebtOrders") || "ຈຳນວນລາຍການຕິດໜີ້"}
+                  {t("debt.totalDebtOrders")}
                 </p>
                 <h2 className="text-xl sm:text-2xl font-black">
                   {totalOrders}
@@ -230,10 +269,10 @@ export default function DebtHistoryPage() {
             <CardBody className="p-3 sm:p-4 overflow-hidden relative">
               <div className="relative z-10">
                 <p className="text-blue-100 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider mb-0.5">
-                  {t("debt.totalAmount") || "ຍອດໜີ້ລວມທັງໝົດ"}
+                  {t("debt.totalAmount")}
                 </p>
                 <h2 className="text-xl sm:text-2xl font-black truncate">
-                  {formatNumber(totalAmount)} {t("order.kip") || "ກີບ"}
+                  {formatNumber(totalAmount)} {t("order.kip")}
                 </h2>
               </div>
               <Landmark
@@ -248,10 +287,10 @@ export default function DebtHistoryPage() {
             <CardBody className="p-3 sm:p-4 overflow-hidden relative">
               <div className="relative z-10">
                 <p className="text-emerald-100 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider mb-0.5">
-                  {t("debt.totalPaidAmount") || "ຈ່າຍແລ້ວທັງໝົດ"}
+                  {t("debt.totalPaidAmount")}
                 </p>
                 <h2 className="text-xl sm:text-2xl font-black truncate">
-                  {formatNumber(totalPaidAmount)} {t("order.kip") || "ກີບ"}
+                  {formatNumber(totalPaidAmount)} {t("order.kip")}
                 </h2>
               </div>
               <CheckCircle2
@@ -266,10 +305,10 @@ export default function DebtHistoryPage() {
             <CardBody className="p-3 sm:p-4 overflow-hidden relative">
               <div className="relative z-10">
                 <p className="text-rose-100 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider mb-0.5">
-                  {t("debt.remainingDebt") || "ຍັງບໍ່ທັນຈ່າຍ"}
+                  {t("debt.remainingDebt")}
                 </p>
                 <h2 className="text-xl sm:text-2xl font-black truncate">
-                  {formatNumber(totalDebt)} {t("order.kip") || "ກີບ"}
+                  {formatNumber(totalDebt)} {t("order.kip")}
                 </h2>
               </div>
               <AlertCircle
@@ -287,9 +326,7 @@ export default function DebtHistoryPage() {
           <Input
             isClearable
             className="flex-grow"
-            placeholder={
-              t("debt.searchPlaceholder") || "ຄົ້ນຫາຕາມເລກບິນ ຫຼື ຊື່ລູກຄ້າ..."
-            }
+            placeholder={t("debt.searchPlaceholder")}
             size="sm"
             startContent={<Search className="text-primary/60" size={16} />}
             value={search}
@@ -344,29 +381,27 @@ export default function DebtHistoryPage() {
                   </div>
                   <div className="flex flex-col gap-1 mb-2">
                     <span className="text-[10px] text-default-400 font-bold uppercase tracking-wider">
-                      {t("debt.customer") || "ລູກຄ້າ"}:
+                      {t("debt.customer")}:
                     </span>
                     <span className="text-xs font-bold text-default-700">
-                      {item.member?.name ||
-                        t("debt.generalCustomer") ||
-                        "ລູກຄ້າທົ່ວໄປ"}
+                      {item.member?.name || t("debt.generalCustomer")}
                     </span>
                   </div>
                   <div className="flex justify-between items-center bg-danger-50/30 p-2.5 rounded-2xl border border-danger/10">
                     <div className="flex flex-col">
                       <span className="text-[9px] text-danger-400 font-black uppercase tracking-wider">
-                        {t("debt.debtAmount") || "ຍອດໜີ້"}
+                        {t("debt.debtAmount")}
                       </span>
                       <span className="text-base font-black text-danger">
                         {formatNumber(
                           item.totalAmount - (item.receivedAmount || 0),
                         )}{" "}
-                        {t("order.kip") || "ກີບ"}
+                        {t("order.kip")}
                       </span>
                     </div>
                     <div className="text-right flex flex-col items-end">
                       <span className="text-[9px] text-default-400 font-black uppercase tracking-wider">
-                        {t("debt.dueDate") || "ກຳນົດຊຳລະ"}
+                        {t("debt.dueDate")}
                       </span>
                       <span className="text-[10px] font-bold text-default-700">
                         {item.dueDate
@@ -387,7 +422,7 @@ export default function DebtHistoryPage() {
                         handleViewDetail(item);
                       }}
                     >
-                      {t("common.viewDetail") || "ເບິ່ງລາຍລະອຽດ"}
+                      {t("common.viewDetail")}
                     </Button>
                     <Button
                       fullWidth
@@ -399,7 +434,7 @@ export default function DebtHistoryPage() {
                         handlePayment(item);
                       }}
                     >
-                      {t("common.payment") || "ຊຳລະ"}
+                      {t("common.payment")}
                     </Button>
                   </div>
                 </CardBody>
@@ -449,23 +484,23 @@ export default function DebtHistoryPage() {
                 {t("order.tableOrder")}
               </TableColumn>
               <TableColumn key="customer">
-                {t("debt.customer") || "ລູກຄ້າ"}
+                {t("debt.customer")}
               </TableColumn>
               <TableColumn key="date">{t("order.tableDateTime")}</TableColumn>
               <TableColumn key="dueDate">
-                {t("debt.dueDate") || "ກຳນົດຊຳລະ"}
+                {t("debt.dueDate")}
               </TableColumn>
               <TableColumn key="total">
-                {t("debt.totalAmount") || "ຍອດທັງໝົດ"}
+                {t("order.tableTotal")}
               </TableColumn>
               <TableColumn key="paid">
-                {t("debt.paidAmount") || "ຊຳລະແລ້ວ"}
+                {t("debt.paidAmount")}
               </TableColumn>
               <TableColumn key="debt">
-                {t("debt.debtAmount") || "ຍອດໜີ້"}
+                {t("debt.debtAmount")}
               </TableColumn>
               <TableColumn key="status">
-                {t("debt.status") || "ສະຖານະ"}
+                {t("debt.status")}
               </TableColumn>
               <TableColumn key="actions">{t("order.tableAction")}</TableColumn>
             </TableHeader>
@@ -486,9 +521,7 @@ export default function DebtHistoryPage() {
                     #{item.orderNumber}
                   </TableCell>
                   <TableCell className="text-xs font-bold">
-                    {item.member?.name ||
-                      t("debt.generalCustomer") ||
-                      "ລູກຄ້າທົ່ວໄປ"}
+                    {item.member?.name || t("debt.generalCustomer")}
                   </TableCell>
                   <TableCell className="text-[10px] font-medium text-default-500">
                     {dayjs(item.createdAt).format("DD/MM/YYYY HH:mm")}
@@ -530,7 +563,7 @@ export default function DebtHistoryPage() {
                           e.stopPropagation();
                           handleViewDetail(item);
                         }}
-                        title={t("common.viewDetail") || "View Details"}
+                        title={t("common.viewDetail")}
                       >
                         <Eye size={18} />
                       </Button>
@@ -544,7 +577,7 @@ export default function DebtHistoryPage() {
                           e.stopPropagation();
                           handlePayment(item);
                         }}
-                        title={t("common.payment") || "Payment"}
+                        title={t("common.payment")}
                       >
                         <HandCoins size={18} />
                       </Button>

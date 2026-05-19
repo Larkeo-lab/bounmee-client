@@ -37,7 +37,7 @@ import { useGetOrders, Order } from "@/services/order/useOrder";
 import { getDisplayImageUrl } from "@/lib/utils";
 import { formatNumber } from "@/utils/numberFormat";
 import GlobalPagination from "@/components/common/globle-pagination";
-import { exportOrdersToExcel } from "@/utils/exportOrder";
+import { exportToExcel, ExcelColumn } from "@/utils/exportOrder";
 import EmptyState from "@/components/common/empty-state";
 import FilterDate from "@/components/common/fillterDate";
 
@@ -164,6 +164,43 @@ export default function OrderPage() {
     }
   };
 
+  const handleExport = async () => {
+    if (!orders || orders.length === 0) return;
+
+    const columns: ExcelColumn[] = [
+      { header: "ລຳດັບ", key: "index", width: 8, align: "center" },
+      { header: "ວັນທີ / ເວລາ", key: "date", width: 25 },
+      { header: "ເລກທີບິນ", key: "orderNumber", width: 20 },
+      { header: "ພະນັກງານ", key: "employee", width: 20 },
+      { header: "ການຊຳລະ", key: "payment", width: 15, align: "center" },
+      { header: "ທະນາຄານ", key: "bank", width: 20 },
+      { header: "ຍອດລວມ", key: "total", width: 18, format: "currency" },
+      { header: "ຮັບເງິນ", key: "received", width: 18, format: "currency" },
+      { header: "ເງິນທອນ", key: "change", width: 15, format: "currency" },
+      { header: "ລາຍການ", key: "items", width: 10, align: "center" },
+    ];
+
+    const data = orders.map((order: Order) => ({
+      date: dayjs(order.createdAt).format("DD/MM/YYYY HH:mm:ss"),
+      orderNumber: order.orderNumber,
+      employee: order.employee?.name || "ເຈົ້າຂອງຮ້ານ",
+      payment: order.paymentMethod === "CASH" ? "ເງິນສົດ" : "ເງິນໂອນ",
+      bank: order.bank?.name || "-",
+      total: Number(order.totalAmount || 0),
+      received: Number(order.receivedAmount || 0),
+      change: Number(order.change || 0),
+      items: order.items?.length || 0,
+    }));
+
+    await exportToExcel({
+      data,
+      columns,
+      fileName: "POS_Orders",
+      sheetName: "ລາຍງານການຂາຍ",
+      summaryColumns: [{ key: "bank", label: "ລວມທັງໝົດ:" }, { key: "total" }],
+    });
+  };
+
   return (
     <div className="h-[calc(100vh-64px)] sm:h-auto flex flex-col overflow-hidden sm:overflow-visible space-y-3 sm:space-y-4 p-2 sm:p-4 lg:p-6 bg-default-50/50">
       {/* Header section - Mobile Optimized */}
@@ -183,7 +220,7 @@ export default function OrderPage() {
           size="sm"
           startContent={<Download size={16} />}
           variant="flat"
-          onPress={() => exportOrdersToExcel(orders)}
+          onPress={handleExport}
         >
           {t("order.exportExcel")}
         </Button>

@@ -101,4 +101,8 @@ export const API_ENDPOINTS = {
     DETAIL: (id: string) => `${API_VERSION}/member/${id}`,
     DEBT: `${API_VERSION}/member/debt`,
   },
+  PRODUCT_UPDATE_HISTORY: {
+    LIST: `${API_VERSION}/product-update-history`,
+    DETAIL: (id: string) => `${API_VERSION}/product-update-history/${id}`,
+  },
 };

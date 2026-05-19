@@ -14,7 +14,16 @@ import {
   DropdownMenu,
   DropdownItem,
 } from "@heroui/react";
-import { Barcode, Tag, Package, Upload, X, Camera, Image as ImageIcon, Plus } from "lucide-react";
+import {
+  Barcode,
+  Tag,
+  Package,
+  Upload,
+  X,
+  Camera,
+  Image as ImageIcon,
+  Plus,
+} from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-hot-toast";
@@ -170,7 +179,8 @@ export default function EditProduct({
     }
   };
 
-  const isPriceInvalid = formData.price > 0 && formData.cost > 0 && formData.price < formData.cost;
+  const isPriceInvalid =
+    formData.price > 0 && formData.cost > 0 && formData.price < formData.cost;
 
   const handleSubmit = async (onModalClose: () => void) => {
     if (!product) return;
@@ -180,6 +190,7 @@ export default function EditProduct({
         cost: Number(formData.cost),
         price: Number(formData.price),
         stockQty: Number(formData.stockQty),
+        unitId: formData.unitId || null,
         id: product.id,
         storeId: storeId,
       });
@@ -193,348 +204,358 @@ export default function EditProduct({
   return (
     <>
       <Modal
-      isOpen={isOpen}
-      scrollBehavior="inside"
-      size="2xl"
-      onOpenChange={onOpenChange}
-    >
-      <ModalContent>
-        {(onModalClose) => (
-          <>
-            <ModalHeader className="flex flex-col gap-1 text-xl font-bold text-primary">
-              {t("product.editTitle")}
-            </ModalHeader>
-            <ModalBody>
-              <div className="flex flex-col gap-6 py-2">
-                <div className="flex flex-col gap-2">
-                  <label className="text-small font-medium text-default-700">
-                    {t("product.image")}
-                  </label>
-                  <Dropdown>
-                    <DropdownTrigger>
-                      <div
-                        className={`
+        isOpen={isOpen}
+        scrollBehavior="inside"
+        size="2xl"
+        onOpenChange={onOpenChange}
+      >
+        <ModalContent>
+          {(onModalClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1 text-xl font-bold text-primary">
+                {t("product.editTitle")}
+              </ModalHeader>
+              <ModalBody>
+                <div className="flex flex-col gap-6 py-2">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-small font-medium text-default-700">
+                      {t("product.image")}
+                    </label>
+                    <Dropdown>
+                      <DropdownTrigger>
+                        <div
+                          className={`
                           relative group cursor-pointer
                           w-full h-48 rounded-xl border-2 border-dashed 
                           transition-all duration-200 ease-in-out
                           flex flex-col items-center justify-center gap-3
                           ${previewImage || formData.image ? "border-primary bg-primary/5" : "border-default-200 hover:border-primary hover:bg-default-50"}
                         `}
-                        onDragOver={(e) => e.preventDefault()}
-                        onDrop={(e) => {
-                          e.preventDefault();
-                          const file = e.dataTransfer.files?.[0];
+                          onDragOver={(e) => e.preventDefault()}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            const file = e.dataTransfer.files?.[0];
 
-                          if (file) {
-                            handleUploadImage(file);
-                          }
-                        }}
-                      >
-                        {uploadImageMutation.isPending ? (
-                          <div className="flex flex-col items-center gap-2">
-                            <Spinner color="primary" size="lg" />
-                            <p className="text-small text-default-500">
-                              {t("settings.common.uploading")}
-                            </p>
-                          </div>
-                        ) : previewImage || formData.image ? (
-                          <>
-                            <img
-                              alt="Preview"
-                              className="w-full h-full object-contain rounded-lg p-2"
-                              src={getDisplayImageUrl(
-                                previewImage || formData.image,
-                              )}
-                            />
-                            <Button
-                              isIconOnly
-                              className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                              color="danger"
-                              size="sm"
-                              variant="flat"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                removeImage();
-                              }}
-                            >
-                              <X size={16} />
-                            </Button>
-                          </>
-                        ) : (
-                          <>
-                            <div className="p-4 rounded-full bg-primary/10 text-primary">
-                              <Upload size={32} />
-                            </div>
-                            <div className="text-center">
-                              <p className="text-small font-semibold">
-                                {t("product.dragAndDrop")}
-                              </p>
-                              <p className="text-tiny text-default-400">
-                                {t("product.imageHint")}
-                              </p>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    </DropdownTrigger>
-                    <DropdownMenu aria-label="Image Upload Options">
-                      <DropdownItem
-                        key="gallery"
-                        startContent={<ImageIcon size={18} />}
-                        onClick={() => fileInputRef.current?.click()}
-                      >
-                        {t("product.chooseGallery")}
-                      </DropdownItem>
-                      <DropdownItem
-                        key="camera"
-                        startContent={<Camera size={18} />}
-                        onClick={handleTakePhoto}
-                      >
-                        {t("product.takePhoto")}
-                      </DropdownItem>
-                    </DropdownMenu>
-                  </Dropdown>
-
-                  <input
-                    ref={fileInputRef}
-                    accept="image/*"
-                    className="hidden"
-                    type="file"
-                    onChange={handleImageChange}
-                  />
-
-                  <CameraModal
-                    isOpen={isCameraOpen}
-                    onCapture={handleUploadImage}
-                    onClose={() => setIsCameraOpen(false)}
-                  />
-
-                  <CameraModal
-                    cameraType="BARCODE"
-                    isOpen={isBarcodeScannerOpen}
-                    onScan={handleBarcodeScan}
-                    onClose={() => setIsBarcodeScannerOpen(false)}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Input
-                    isRequired
-                    className="col-span-1 md:col-span-3"
-                    label={t("settings.common.nameLabel")}
-                    labelPlacement="outside"
-                    placeholder={t("settings.common.nameLabel")}
-                    value={formData.name}
-                    variant="bordered"
-                    onValueChange={(val) =>
-                      setFormData((prev) => ({ ...prev, name: val }))
-                    }
-                  />
-                  <Select
-                    label={t("product.barcodeType")}
-                    labelPlacement="outside"
-                    placeholder={t("product.barcodeType")}
-                    selectedKeys={formData.isBarcode ? ["yes"] : ["no"]}
-                    variant="bordered"
-                    onSelectionChange={(keys) => {
-                      const val = Array.from(keys)[0] === "yes";
-
-                      setFormData((prev) => ({
-                        ...prev,
-                        isBarcode: val,
-                        barcode: val ? prev.barcode : "",
-                      }));
-                    }}
-                  >
-                    <SelectItem key={"yes"}>
-                      {t("product.hasBarcode")}
-                    </SelectItem>
-                    <SelectItem key={"no"}>{t("product.noBarcode")}</SelectItem>
-                  </Select>
-                  <Input
-                    isDisabled={!formData.isBarcode}
-                    className="md:col-span-2"
-                    label={t("product.barcode")}
-                    labelPlacement="outside"
-                    placeholder={t("product.barcode")}
-                    startContent={
-                      <Barcode className="text-default-400" size={18} />
-                    }
-                    endContent={
-                      formData.isBarcode && (
-                        <Button
-                          isIconOnly
-                          size="sm"
-                          variant="light"
-                          onClick={() => setIsBarcodeScannerOpen(true)}
+                            if (file) {
+                              handleUploadImage(file);
+                            }
+                          }}
                         >
-                          <Camera size={18} className="text-primary" />
-                        </Button>
-                      )
-                    }
-                    value={formData.barcode}
-                    variant="bordered"
-                    onValueChange={(val) =>
-                      setFormData((prev) => ({ ...prev, barcode: val }))
-                    }
-                  />
-                  <Select
-                    isRequired
-                    label={t("product.category")}
-                    labelPlacement="outside"
-                    placeholder={t("product.category")}
-                    selectedKeys={
-                      formData.categoryId ? [formData.categoryId] : []
-                    }
-                    startContent={
-                      <Tag className="text-default-400" size={18} />
-                    }
-                    variant="bordered"
-                    onSelectionChange={(keys) => {
-                      const selected = Array.from(keys)[0] as string;
+                          {uploadImageMutation.isPending ? (
+                            <div className="flex flex-col items-center gap-2">
+                              <Spinner color="primary" size="lg" />
+                              <p className="text-small text-default-500">
+                                {t("settings.common.uploading")}
+                              </p>
+                            </div>
+                          ) : previewImage || formData.image ? (
+                            <>
+                              <img
+                                alt="Preview"
+                                className="w-full h-full object-contain rounded-lg p-2"
+                                src={getDisplayImageUrl(
+                                  previewImage || formData.image,
+                                )}
+                              />
+                              <Button
+                                isIconOnly
+                                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                                color="danger"
+                                size="sm"
+                                variant="flat"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  removeImage();
+                                }}
+                              >
+                                <X size={16} />
+                              </Button>
+                            </>
+                          ) : (
+                            <>
+                              <div className="p-4 rounded-full bg-primary/10 text-primary">
+                                <Upload size={32} />
+                              </div>
+                              <div className="text-center">
+                                <p className="text-small font-semibold">
+                                  {t("product.dragAndDrop")}
+                                </p>
+                                <p className="text-tiny text-default-400">
+                                  {t("product.imageHint")}
+                                </p>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </DropdownTrigger>
+                      <DropdownMenu aria-label="Image Upload Options">
+                        <DropdownItem
+                          key="gallery"
+                          startContent={<ImageIcon size={18} />}
+                          onClick={() => fileInputRef.current?.click()}
+                        >
+                          {t("product.chooseGallery")}
+                        </DropdownItem>
+                        <DropdownItem
+                          key="camera"
+                          startContent={<Camera size={18} />}
+                          onClick={handleTakePhoto}
+                        >
+                          {t("product.takePhoto")}
+                        </DropdownItem>
+                      </DropdownMenu>
+                    </Dropdown>
 
-                      if (selected === "ADD_NEW") {
-                        setIsAddCategoryOpen(true);
-                      } else {
-                        setFormData((prev: any) => ({
-                          ...prev,
-                          categoryId: selected,
-                        }));
-                      }
-                    }}
-                  >
-                    {[
-                      ...categories.map((cat: Category) => (
-                        <SelectItem key={cat.id}>{cat.name}</SelectItem>
-                      )),
-                      <SelectItem
-                        key="ADD_NEW"
-                        className="text-primary font-bold border-t border-divider rounded-none mt-2"
-                        startContent={<Plus size={18} />}
-                      >
-                        {t("settings.category.addTitle") ||
-                          "เพิ่มหมวดหมู่ใหม่"}
-                      </SelectItem>,
-                    ]}
-                  </Select>
-                  <Select
-                    label={t("product.unit")}
-                    labelPlacement="outside"
-                    placeholder={t("product.unit")}
-                    selectedKeys={
-                      formData.unitId ? [formData.unitId] : []
-                    }
-                    startContent={
-                      <Layers className="text-default-400" size={18} />
-                    }
-                    variant="bordered"
-                    onSelectionChange={(keys) => {
-                      const selected = Array.from(keys)[0] as string;
+                    <input
+                      ref={fileInputRef}
+                      accept="image/*"
+                      className="hidden"
+                      type="file"
+                      onChange={handleImageChange}
+                    />
 
-                      if (selected === "ADD_NEW") {
-                        setIsAddUnitOpen(true);
-                      } else {
-                        setFormData((prev: any) => ({
-                          ...prev,
-                          unitId: selected,
-                        }));
+                    <CameraModal
+                      isOpen={isCameraOpen}
+                      onCapture={handleUploadImage}
+                      onClose={() => setIsCameraOpen(false)}
+                    />
+
+                    <CameraModal
+                      cameraType="BARCODE"
+                      isOpen={isBarcodeScannerOpen}
+                      onScan={handleBarcodeScan}
+                      onClose={() => setIsBarcodeScannerOpen(false)}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Input
+                      isRequired
+                      className="col-span-1 md:col-span-3"
+                      label={t("settings.common.nameLabel")}
+                      labelPlacement="outside"
+                      placeholder={t("settings.common.nameLabel")}
+                      value={formData.name}
+                      variant="bordered"
+                      onValueChange={(val) =>
+                        setFormData((prev) => ({ ...prev, name: val }))
                       }
-                    }}
-                  >
-                    {[
-                      ...units.map((unit: Unit) => (
-                        <SelectItem key={unit.id}>{unit.name}</SelectItem>
-                      )),
-                      <SelectItem
-                        key="ADD_NEW"
-                        className="text-primary font-bold border-t border-divider rounded-none mt-2"
-                        startContent={<Plus size={18} />}
-                      >
-                        {t("settings.unit.addTitle") || "เพิ่มหน่วยใหม่"}
-                      </SelectItem>,
-                    ]}
-                  </Select>
-                  <Input
-                    label={t("product.stockQty")}
-                    labelPlacement="outside"
-                    placeholder="0"
-                    startContent={
-                      <Package className="text-default-400" size={18} />
-                    }
-                    type="text"
-                    value={formatNumber(formData.stockQty)}
-                    variant="bordered"
-                    onValueChange={(val) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        stockQty: parseNumber(val),
-                      }))
-                    }
-                  />
-                   <Input
-                    label={t("product.cost")}
-                    labelPlacement="outside"
-                    placeholder="0"
-                    startContent={
-                      <span className="text-default-400 font-bold text-small">{t("common.currency")}</span>
-                    }
-                    type="text"
-                    value={formatNumber(formData.cost)}
-                    variant="bordered"
-                    onValueChange={(val) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        cost: parseNumber(val),
-                      }))
-                    }
-                  />
-                  <Input
-                    isRequired
-                    label={t("product.price")}
-                    labelPlacement="outside"
-                    placeholder="0"
-                    startContent={
-                      <span className="text-default-400 font-bold text-small">{t("common.currency")}</span>
-                    }
-                    type="text"
-                    value={formatNumber(formData.price)}
-                    variant="bordered"
-                    errorMessage={
-                      isPriceInvalid ? t("product.priceError") || "ລາຄາຂາຍຕ້ອງສູງກວ່າ ຫຼື ເທົ່າກັບຕົ້ນທຶນ" : ""
-                    }
-                    isInvalid={isPriceInvalid}
-                    onValueChange={(val) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        price: parseNumber(val),
-                      }))
-                    }
-                  />
-                  <div className="hidden md:block" />
+                    />
+                    <Select
+                      label={t("product.barcodeType")}
+                      labelPlacement="outside"
+                      placeholder={t("product.barcodeType")}
+                      selectedKeys={formData.isBarcode ? ["yes"] : ["no"]}
+                      variant="bordered"
+                      onSelectionChange={(keys) => {
+                        const val = Array.from(keys)[0] === "yes";
+
+                        setFormData((prev) => ({
+                          ...prev,
+                          isBarcode: val,
+                          barcode: val ? prev.barcode : "",
+                        }));
+                      }}
+                    >
+                      <SelectItem key={"yes"}>
+                        {t("product.hasBarcode")}
+                      </SelectItem>
+                      <SelectItem key={"no"}>
+                        {t("product.noBarcode")}
+                      </SelectItem>
+                    </Select>
+                    <Input
+                      isDisabled={!formData.isBarcode}
+                      className="md:col-span-2"
+                      label={t("product.barcode")}
+                      labelPlacement="outside"
+                      placeholder={t("product.barcode")}
+                      startContent={
+                        <Barcode className="text-default-400" size={18} />
+                      }
+                      endContent={
+                        formData.isBarcode && (
+                          <Button
+                            isIconOnly
+                            size="sm"
+                            variant="light"
+                            onClick={() => setIsBarcodeScannerOpen(true)}
+                          >
+                            <Camera size={18} className="text-primary" />
+                          </Button>
+                        )
+                      }
+                      value={formData.barcode}
+                      variant="bordered"
+                      onValueChange={(val) =>
+                        setFormData((prev) => ({ ...prev, barcode: val }))
+                      }
+                    />
+                    <Select
+                      isRequired
+                      label={t("product.category")}
+                      labelPlacement="outside"
+                      placeholder={t("product.category")}
+                      selectedKeys={
+                        formData.categoryId ? [formData.categoryId] : []
+                      }
+                      startContent={
+                        <Tag className="text-default-400" size={18} />
+                      }
+                      variant="bordered"
+                      onSelectionChange={(keys) => {
+                        const selected = Array.from(keys)[0] as string;
+
+                        if (selected === "ADD_NEW") {
+                          setIsAddCategoryOpen(true);
+                        } else {
+                          setFormData((prev: any) => ({
+                            ...prev,
+                            categoryId: selected,
+                          }));
+                        }
+                      }}
+                    >
+                      {[
+                        ...categories.map((cat: Category) => (
+                          <SelectItem key={cat.id}>{cat.name}</SelectItem>
+                        )),
+                        <SelectItem
+                          key="ADD_NEW"
+                          className="text-primary font-bold border-t border-divider rounded-none mt-2"
+                          startContent={<Plus size={18} />}
+                        >
+                          {t("settings.category.addTitle") ||
+                            "เพิ่มหมวดหมู่ใหม่"}
+                        </SelectItem>,
+                      ]}
+                    </Select>
+                    <Select
+                      label={t("product.unit")}
+                      labelPlacement="outside"
+                      placeholder={t("product.unit")}
+                      selectedKeys={formData.unitId ? [formData.unitId] : []}
+                      startContent={
+                        <Layers className="text-default-400" size={18} />
+                      }
+                      variant="bordered"
+                      onSelectionChange={(keys) => {
+                        const selected = Array.from(keys)[0] as string;
+
+                        if (selected === "ADD_NEW") {
+                          setIsAddUnitOpen(true);
+                        } else {
+                          setFormData((prev: any) => ({
+                            ...prev,
+                            unitId: selected,
+                          }));
+                        }
+                      }}
+                    >
+                      {[
+                        ...units.map((unit: Unit) => (
+                          <SelectItem key={unit.id}>{unit.name}</SelectItem>
+                        )),
+                        <SelectItem
+                          key="ADD_NEW"
+                          className="text-primary font-bold border-t border-divider rounded-none mt-2"
+                          startContent={<Plus size={18} />}
+                        >
+                          {t("settings.unit.addTitle") || "เพิ่มหน่วยใหม่"}
+                        </SelectItem>,
+                      ]}
+                    </Select>
+                    <Input
+                      label={t("product.stockQty")}
+                      labelPlacement="outside"
+                      placeholder="0"
+                      startContent={
+                        <Package className="text-default-400" size={18} />
+                      }
+                      type="text"
+                      value={formatNumber(formData.stockQty)}
+                      variant="bordered"
+                      onValueChange={(val) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          stockQty: parseNumber(val),
+                        }))
+                      }
+                    />
+                    <Input
+                      label={t("product.cost")}
+                      labelPlacement="outside"
+                      placeholder="0"
+                      startContent={
+                        <span className="text-default-400 font-bold text-small">
+                          {t("common.currency")}
+                        </span>
+                      }
+                      type="text"
+                      value={formatNumber(formData.cost)}
+                      variant="bordered"
+                      onValueChange={(val) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          cost: parseNumber(val),
+                        }))
+                      }
+                    />
+                    <Input
+                      isRequired
+                      label={t("product.price")}
+                      labelPlacement="outside"
+                      placeholder="0"
+                      startContent={
+                        <span className="text-default-400 font-bold text-small">
+                          {t("common.currency")}
+                        </span>
+                      }
+                      type="text"
+                      value={formatNumber(formData.price)}
+                      variant="bordered"
+                      errorMessage={
+                        isPriceInvalid
+                          ? t("product.priceError") ||
+                            "ລາຄາຂາຍຕ້ອງສູງກວ່າ ຫຼື ເທົ່າກັບຕົ້ນທຶນ"
+                          : ""
+                      }
+                      isInvalid={isPriceInvalid}
+                      onValueChange={(val) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          price: parseNumber(val),
+                        }))
+                      }
+                    />
+                    <div className="hidden md:block" />
+                  </div>
                 </div>
-              </div>
-            </ModalBody>
-            <ModalFooter>
-              <Button color="danger" variant="flat" onPress={onModalClose}>
-                {t("settings.common.cancel")}
-              </Button>
-              <Button
-                color="primary"
-                isDisabled={
-                  !formData.name || !formData.categoryId || formData.price <= 0 || isPriceInvalid
-                }
-                isLoading={
-                  updateProductMutation.isPending ||
-                  uploadImageMutation.isPending
-                }
-                onPress={() => handleSubmit(onModalClose)}
-              >
-                {t("settings.common.update")}
-              </Button>
-            </ModalFooter>
-          </>
-        )}
-      </ModalContent>
+              </ModalBody>
+              <ModalFooter>
+                <Button color="danger" variant="flat" onPress={onModalClose}>
+                  {t("settings.common.cancel")}
+                </Button>
+                <Button
+                  color="primary"
+                  isDisabled={
+                    !formData.name ||
+                    !formData.categoryId ||
+                    formData.price <= 0 ||
+                    isPriceInvalid
+                  }
+                  isLoading={
+                    updateProductMutation.isPending ||
+                    uploadImageMutation.isPending
+                  }
+                  onPress={() => handleSubmit(onModalClose)}
+                >
+                  {t("settings.common.update")}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
       </Modal>
 
       <Modal

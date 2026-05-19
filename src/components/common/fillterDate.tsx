@@ -33,11 +33,14 @@ const FilterDate: React.FC<FilterDateProps> = ({
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   const presets = [
-    { key: "today", label: t("order.today"), color: "success" },
-    { key: "yesterday", label: t("order.yesterday"), color: "primary" },
-    { key: "3days", label: t("order.last3Days"), color: "warning" },
-    { key: "7days", label: t("order.last7Days"), color: "danger" },
-    { key: "1month", label: t("order.lastMonth"), color: "secondary" },
+    { key: "today", label: t("order.today") || "ມື້ນີ້", color: "success" },
+    { key: "yesterday", label: t("order.yesterday") || "ມື້ວານ", color: "primary" },
+    { key: "3days", label: t("order.last3Days") || "3 ມື້ກ່ອນ", color: "warning" },
+    { key: "7days", label: t("order.last7Days") || "7 ມື້ກ່ອນ", color: "danger" },
+    { key: "1month", label: t("order.lastMonth") || "1 ເດືອນກ່ອນ", color: "secondary" },
+    { key: "3month", label: t("order.last3Months") || "3 ເດືອນກ່ອນ", color: "secondary" },
+    { key: "5month", label: t("order.last5Months") || "5 ເດືອນກ່ອນ", color: "secondary" },
+    { key: "1year", label: t("order.lastYear") || "1 ປີກ່ອນ", color: "secondary" },
   ];
 
   const handlePresetClick = (key: string, onClose: () => void) => {
@@ -62,6 +65,15 @@ const FilterDate: React.FC<FilterDateProps> = ({
       case "1month":
         start = dayjs().subtract(1, "month").format("YYYY-MM-DD");
         break;
+      case "3month":
+        start = dayjs().subtract(3, "month").format("YYYY-MM-DD");
+        break;
+      case "5month":
+        start = dayjs().subtract(5, "month").format("YYYY-MM-DD");
+        break;
+      case "1year":
+        start = dayjs().subtract(1, "year").format("YYYY-MM-DD");
+        break;
     }
     onFilter(start, end);
     onClose();
@@ -84,7 +96,7 @@ const FilterDate: React.FC<FilterDateProps> = ({
         backdrop="blur"
         isOpen={isOpen}
         placement="center"
-        size="md"
+        size="2xl"
         onOpenChange={onOpenChange}
       >
         <ModalContent>
@@ -135,7 +147,7 @@ const FilterDate: React.FC<FilterDateProps> = ({
                     <span className="text-[10px] font-black text-default-400 uppercase px-1">
                       {t("order.quickFilter") || "ຕົວຕອງດ່ວນ"}
                     </span>
-                    <div className="grid grid-cols-1 gap-2">
+                    <div className="grid grid-cols-3 gap-2">
                       {presets.map((preset) => (
                         <Card
                           isPressable
@@ -143,16 +155,21 @@ const FilterDate: React.FC<FilterDateProps> = ({
                           className="border-none bg-default-50 hover:bg-primary/5 transition-all shadow-none"
                           onPress={() => handlePresetClick(preset.key, onClose)}
                         >
-                          <CardBody className="py-3 px-4 flex flex-row items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className={`p-2 rounded-xl bg-${preset.color}/10 text-${preset.color}`}>
-                                <Clock size={18} />
+                          <CardBody className="py-2 px-3 flex flex-row items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div
+                                className={`p-1.5 rounded-xl bg-${preset.color}/10 text-${preset.color}`}
+                              >
+                                <Clock size={16} />
                               </div>
-                              <span className="font-bold text-default-700">
+                              <span className="font-bold text-sm text-default-700 truncate max-w-[80px]">
                                 {preset.label}
                               </span>
                             </div>
-                            <ChevronRight className="text-default-300" size={18} />
+                            <ChevronRight
+                              className="text-default-300 flex-shrink-0"
+                              size={16}
+                            />
                           </CardBody>
                         </Card>
                       ))}

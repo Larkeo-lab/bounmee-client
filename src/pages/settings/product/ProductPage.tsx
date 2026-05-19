@@ -314,7 +314,7 @@ export default function ProductPage() {
                 {t("settings.common.nameLabel")}
               </TableColumn>
               <TableColumn
-                key="price"
+                key="cost"
                 className="h-12 text-small hidden md:table-cell"
               >
                 {t("product.cost")}

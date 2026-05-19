@@ -168,8 +168,10 @@
       "statisticsReport": "Statistics Report",
       "setting": "Settings",
       "language": "Language",
+      "historyGroup": "History Records",
       "order": "Order History",
       "ordering": "Order List",
+      "productUpdateHistory": "Product Update History",
       "manageProduct": "Product Management",
       "manageCategory": "Category Management",
       "manageBank": "Bank Management",
@@ -196,6 +198,10 @@
     "unit": "Person",
     "totalDebtOrders": "Total Debt Orders",
     "totalDebtAmount": "Total Debt Amount",
+    "totalAmount": "Total Debt",
+    "totalPaidAmount": "Total Paid",
+    "remainingDebt": "Remaining Debt",
+    "paidAmount": "Paid Amount",
     "status": "Status",
     "pendingFollowup": "Pending Follow-up",
     "searchPlaceholder": "Search by bill no or customer name...",
@@ -341,7 +347,18 @@
     },
     "storeProfile": {
       "title": "Manage Store Profile",
-      "subtitle": "Update your store's basic information"
+      "subtitle": "Store details and package duration",
+      "editStore": "Edit Store Info",
+      "noLogo": "No Logo",
+      "storeInfo": "Store Information",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "remainingDays": "Remaining Days",
+      "days": "days",
+      "packageType": "Package Type",
+      "packageTRY": "Trial",
+      "packageMONTHLY": "Monthly",
+      "packageYEARLY": "Yearly"
     }
   },
   "profile": {
@@ -536,6 +553,8 @@
     "last3Days": "Last 3 Days",
     "last7Days": "Last 7 Days",
     "lastMonth": "Last Month",
+    "last3Months": "Last 3 Months",
+    "last5Months": "Last 5 Months",
     "lastYear": "Last Year",
     "totalSales": "Total Sales",
     "totalExpenses": "Total Expenses",
@@ -579,6 +598,8 @@
     "last3Days": "Last 3 Days",
     "last7Days": "Last 7 Days",
     "lastMonth": "Last Month",
+    "last3Months": "Last 3 Months",
+    "last5Months": "Last 5 Months",
     "start": "Start",
     "end": "End",
     "all": "All",
@@ -633,7 +654,8 @@
     "kip": "Kip",
     "note": "Note",
     "quickFilter": "Quick Filter",
-    "unit": "Bills"
+    "unit": "Bills",
+    "notFound": "Order not found"
   },
   "ordering": {
     "title": "Active Orders",
@@ -815,5 +837,24 @@
   },
   "validation": {
     "phoneNumberRequired": "Phone number is required 8 digits"
+  },
+  "productUpdateHistory": {
+    "title": "Product Update History",
+    "subtitle": "View details of product price, cost, and stock updates",
+    "searchPlaceholder": "Search product name...",
+    "emptyState": "No product update history found",
+    "unknownName": "Unknown",
+    "noBarcode": "No barcode",
+    "table": {
+      "image": "Image",
+      "productName": "Product Name",
+      "oldCost": "Old Cost",
+      "newCost": "New Cost",
+      "oldPrice": "Old Price",
+      "newPrice": "New Price",
+      "oldStock": "Old Stock",
+      "newStock": "New Stock",
+      "updatedAt": "Updated At"
+    }
   }
 }

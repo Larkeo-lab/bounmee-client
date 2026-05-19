@@ -41,6 +41,7 @@ import { Category, useCreateCategory } from "@/services/category/useCategory";
 import { getDisplayImageUrl } from "@/lib/utils";
 import { formatNumber, parseNumber } from "@/utils/numberFormat";
 import { useGetUnits, Unit, useCreateUnit } from "@/services/unit/useUnit";
+import { useCreateProductUpdateHistory } from "@/services/productUpdateHistory/useProductUpdateHistory";
 import { Layers } from "lucide-react";
 
 interface CreateProductProps {
@@ -62,6 +63,7 @@ export default function CreateProduct({
   const { t } = useTranslation();
   const createProductMutation = useCreateProduct();
   const updateProductMutation = useUpdateProduct();
+  const createProductUpdateHistoryMutation = useCreateProductUpdateHistory();
   const uploadImageMutation = useUploadImage();
   const createCategoryMutation = useCreateCategory();
   const createUnitMutation = useCreateUnit();
@@ -94,6 +96,11 @@ export default function CreateProduct({
   const [existingProductId, setExistingProductId] = useState<string | null>(
     null,
   );
+  const [originalProduct, setOriginalProduct] = useState<{
+    cost: number;
+    price: number;
+    stockQty: number;
+  } | null>(null);
 
   const resetForm = () => {
     setFormData({
@@ -112,6 +119,7 @@ export default function CreateProduct({
     setPreviewImage("");
     setIsUpdateMode(false);
     setExistingProductId(null);
+    setOriginalProduct(null);
   };
 
   // When opened with a scanned barcode, pre-fill and search
@@ -188,14 +196,21 @@ export default function CreateProduct({
         setPreviewImage(product.image || "");
         setIsUpdateMode(true);
         setExistingProductId(product.id);
+        setOriginalProduct({
+          cost: Number(product.cost),
+          price: Number(product.price),
+          stockQty: Number(product.stockQty),
+        });
         toast.success(t("product.foundExisting") || "พบข้อมูลสินค้าเดิม");
       } else {
         setIsUpdateMode(false);
         setExistingProductId(null);
+        setOriginalProduct(null);
       }
     } catch (error) {
       setIsUpdateMode(false);
       setExistingProductId(null);
+      setOriginalProduct(null);
     }
   };
 
@@ -213,17 +228,67 @@ export default function CreateProduct({
           cost: Number(formData.cost),
           price: Number(formData.price),
           stockQty: Number(formData.stockQty),
+          unitId: formData.unitId || null,
           storeId: storeId,
         });
+
+        if (originalProduct) {
+          const oldCost = originalProduct.cost;
+          const newCost = Number(formData.cost);
+          const oldPrice = originalProduct.price;
+          const newPrice = Number(formData.price);
+          const oldStockQty = originalProduct.stockQty;
+          const newStockQty = Number(formData.stockQty);
+
+          if (
+            oldCost !== newCost ||
+            oldPrice !== newPrice ||
+            oldStockQty !== newStockQty
+          ) {
+            try {
+              await createProductUpdateHistoryMutation.mutateAsync({
+                productId: existingProductId,
+                oldCost,
+                newCost,
+                oldPrice,
+                newPrice,
+                oldStockQty,
+                newStockQty,
+              });
+            } catch (historyError) {
+              console.error("Failed to save product history:", historyError);
+            }
+          }
+        }
+
         toast.success(t("product.updateSuccess") || "อัปเดตสินค้าสำเร็จ");
       } else {
-        await createProductMutation.mutateAsync({
+        const createRes = await createProductMutation.mutateAsync({
           ...formData,
           cost: Number(formData.cost),
           price: Number(formData.price),
           stockQty: Number(formData.stockQty),
+          unitId: formData.unitId || null,
           storeId: storeId,
         });
+
+        const createdProduct = createRes?.data;
+        if (createdProduct?.id) {
+          try {
+            await createProductUpdateHistoryMutation.mutateAsync({
+              productId: createdProduct.id,
+              oldCost: 0,
+              newCost: Number(formData.cost),
+              oldPrice: 0,
+              newPrice: Number(formData.price),
+              oldStockQty: 0,
+              newStockQty: Number(formData.stockQty),
+            });
+          } catch (historyError) {
+            console.error("Failed to save product history:", historyError);
+          }
+        }
+
         toast.success(t("product.createSuccess") || "เพิ่มสินค้าสำเร็จ");
       }
       resetForm();

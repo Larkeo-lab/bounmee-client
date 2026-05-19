@@ -165,7 +165,9 @@
       "statisticsReport": "统计报告",
       "setting": "设置",
       "language": "语言",
+      "historyGroup": "各类历史记录",
       "order": "销售历史",
+      "productUpdateHistory": "产品更新历史",
       "ordering": "点单列表",
       "manageProduct": "商品管理",
       "manageCategory": "分类管理",
@@ -193,6 +195,10 @@
     "unit": "人",
     "totalDebtOrders": "欠款订单总数",
     "totalDebtAmount": "总欠款金额",
+    "totalAmount": "总欠款",
+    "totalPaidAmount": "总已付",
+    "remainingDebt": "剩余欠款",
+    "paidAmount": "已付金额",
     "status": "状态",
     "pendingFollowup": "有待跟进项目",
     "searchPlaceholder": "按账单号或客户名称搜索...",
@@ -338,7 +344,18 @@
     },
     "storeProfile": {
       "title": "管理店铺资料",
-      "subtitle": "更新店铺基本信息"
+      "subtitle": "商店详细信息和套餐期限",
+      "editStore": "编辑店铺信息",
+      "noLogo": "无标志",
+      "storeInfo": "店铺信息",
+      "startDate": "开始日期",
+      "endDate": "结束日期",
+      "remainingDays": "剩余天数",
+      "days": "天",
+      "packageType": "套餐类型",
+      "packageTRY": "试用",
+      "packageMONTHLY": "月度",
+      "packageYEARLY": "年度"
     }
   },
   "profile": {
@@ -531,6 +548,8 @@
     "last3Days": "最近3天",
     "last7Days": "最近7天",
     "lastMonth": "上个月",
+    "last3Months": "前 3 个月",
+    "last5Months": "前 5 个月",
     "lastYear": "去年",
     "totalSales": "总销售额",
     "totalExpenses": "总支出",
@@ -574,6 +593,8 @@
     "last3Days": "最近3天",
     "last7Days": "最近7天",
     "lastMonth": "上个月",
+    "last3Months": "前 3 个月",
+    "last5Months": "前 5 个月",
     "start": "开始",
     "end": "结束",
     "all": "全部",
@@ -627,7 +648,8 @@
     "member": "会员",
     "kip": "基普",
     "note": "备注",
-    "quickFilter": "快速筛选"
+    "quickFilter": "快速筛选",
+    "notFound": "未找到订单"
   },
   "ordering": {
     "title": "当前点单",
@@ -809,5 +831,24 @@
   },
   "validation": {
     "phoneNumberRequired": "手机号码必填 8 "
+  },
+  "productUpdateHistory": {
+    "title": "产品更新历史",
+    "subtitle": "查看产品价格、成本和库存更新的详细信息",
+    "searchPlaceholder": "搜索产品名称...",
+    "emptyState": "未找到产品更新历史",
+    "unknownName": "未指定",
+    "noBarcode": "无条形码",
+    "table": {
+      "image": "图片",
+      "productName": "产品名称",
+      "oldCost": "旧成本",
+      "newCost": "新成本",
+      "oldPrice": "旧价格",
+      "newPrice": "新价格",
+      "oldStock": "旧库存",
+      "newStock": "新库存",
+      "updatedAt": "更新时间"
+    }
   }
 }

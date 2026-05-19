@@ -171,7 +171,9 @@
       "statisticsReport": "รายงานสถิติ",
       "setting": "ตั้งค่า",
       "language": "เปลี่ยนภาษา",
+      "historyGroup": "ประวัติต่างๆ",
       "order": "ประวัติการขาย",
+      "productUpdateHistory": "ประวัติการแก้ไขสินค้า",
       "ordering": "รายการสั่งซื้อ",
       "manageProduct": "จัดการสินค้า",
       "manageCategory": "จัดการประเภทสินค้า",
@@ -200,6 +202,10 @@
     "unit": "คน",
     "totalDebtOrders": "จำนวนรายการค้างชำระ",
     "totalDebtAmount": "ยอดหนี้ทั้งหมด",
+    "totalAmount": "ยอดหนี้รวมทั้งหมด",
+    "totalPaidAmount": "จ่ายแล้วทั้งหมด",
+    "remainingDebt": "ยังไม่จ่าย",
+    "paidAmount": "ชำระแล้ว",
     "status": "สถานะ",
     "pendingFollowup": "มีรายการที่ต้องติดตาม",
     "searchPlaceholder": "ค้นหาตามเลขบิล หรือ ชื่อลูกค้า...",
@@ -345,7 +351,18 @@
     },
     "storeProfile": {
       "title": "จัดการโปรไฟล์ร้าน",
-      "subtitle": "อัปเดตข้อมูลพื้นฐานของร้านคุณ"
+      "subtitle": "รายละเอียดข้อมูลร้านค้าและระยะเวลาแพ็คเกจ",
+      "editStore": "แก้ไขข้อมูลร้าน",
+      "noLogo": "ไม่มีโลโก้",
+      "storeInfo": "ข้อมูลร้านค้า",
+      "startDate": "วันที่เริ่มใช้งาน",
+      "endDate": "วันที่สิ้นสุด",
+      "remainingDays": "จำนวนวันที่เหลือ",
+      "days": "วัน",
+      "packageType": "ประเภทแพ็คเกจ",
+      "packageTRY": "ทดลองใช้งาน",
+      "packageMONTHLY": "รายเดือน",
+      "packageYEARLY": "รายปี"
     }
   },
   "profile": {
@@ -506,6 +523,8 @@
     "last3Days": "3 วันที่ผ่านมา",
     "last7Days": "7 วันที่ผ่านมา",
     "lastMonth": "1 เดือนที่ผ่านมา",
+    "last3Months": "3 เดือนที่ผ่านมา",
+    "last5Months": "5 เดือนที่ผ่านมา",
     "lastYear": "1 ปีที่ผ่านมา",
     "totalSales": "ยอดขายทั้งหมด",
     "totalExpenses": "รายจ่ายทั้งหมด",
@@ -549,6 +568,8 @@
     "last3Days": "3 วันที่ผ่านมา",
     "last7Days": "7 วันที่ผ่านมา",
     "lastMonth": "1 เดือนที่ผ่านมา",
+    "last3Months": "3 เดือนที่ผ่านมา",
+    "last5Months": "5 เดือนที่ผ่านมา",
     "start": "เริ่ม",
     "end": "จบ",
     "all": "ทั้งหมด",
@@ -603,7 +624,8 @@
     "member": "สมาชิก",
     "kip": "กีบ",
     "note": "หมายเหตุ",
-    "quickFilter": "ตัวกรองด่วน"
+    "quickFilter": "ตัวกรองด่วน",
+    "notFound": "ไม่พบข้อมูลรายการ"
   },
   "ordering": {
     "title": "รายการยอดค้าง",
@@ -785,5 +807,24 @@
   },
   "validation": {
     "phoneNumberRequired": "กรุณากรอกเบอร์โทรศัพท์ให้ครบ 8 ตัวเลข"
+  },
+  "productUpdateHistory": {
+    "title": "ประวัติการแก้ไขสินค้า",
+    "subtitle": "ดูรายละเอียดการปรับปรุง ราคา, ต้นทุน และจำนวนสต๊อก ของสินค้า",
+    "searchPlaceholder": "ค้นหาชื่อสินค้า...",
+    "emptyState": "ไม่พบข้อมูลประวัติการแก้ไขสินค้า",
+    "unknownName": "ไม่ระบุ",
+    "noBarcode": "ไม่มีบาร์โค้ด",
+    "table": {
+      "image": "รูปภาพ",
+      "productName": "ชื่อสินค้า",
+      "oldCost": "ราคาซื้อเก่า",
+      "newCost": "ราคาซื้อใหม่",
+      "oldPrice": "ราคาขายเก่า",
+      "newPrice": "ราคาขายใหม่",
+      "oldStock": "จำนวนเดิม",
+      "newStock": "จำนวนใหม่",
+      "updatedAt": "วันที่แก้ไข"
+    }
   }
 }

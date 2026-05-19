@@ -85,6 +85,8 @@ export default function EmployeePage() {
           language: u.language,
           permissionId: emp?.permission?.id || null,
           businessType: emp?.businessType || null,
+          isActive: u.isActive,
+          email: u.email,
           originalEmployee: emp,
         };
       })
@@ -207,21 +209,59 @@ export default function EmployeePage() {
         }}
       >
         <TableHeader>
-          <TableColumn>{t("employee.name")}</TableColumn>
-          <TableColumn>{t("employee.phone")}</TableColumn>
-          <TableColumn>{t("employee.username")}</TableColumn>
-          <TableColumn>{t("employee.role")}</TableColumn>
-          <TableColumn className="text-center">
+          <TableColumn align="start" className="w-[8%] min-w-[50px]">
+            #
+          </TableColumn>
+          <TableColumn align="start" className="w-[27%] min-w-[180px]">
+            ຂໍ້ມູນຜູ້ໃຊ້
+          </TableColumn>
+          <TableColumn align="start" className="w-[18%] min-w-[130px]">
+            ເບີໂທລະສັບ
+          </TableColumn>
+          <TableColumn align="start" className="w-[18%] min-w-[130px]">
+            ຊື່ຜູ້ໃຊ້ / ອີເມວ
+          </TableColumn>
+          <TableColumn
+            align="center"
+            className="text-center w-[12%] min-w-[90px]"
+          >
+            ບົດບາດ
+          </TableColumn>
+          <TableColumn
+            align="center"
+            className="text-center w-[12%] min-w-[90px]"
+          >
+            ສະຖານະ
+          </TableColumn>
+          <TableColumn
+            align="center"
+            className="text-center w-[5%] min-w-[80px]"
+          >
             {t("settings.common.actions")}
           </TableColumn>
         </TableHeader>
         <TableBody emptyContent={<EmptyState />} isLoading={isLoading}>
-          {items.map((item) => (
+          {items.map((item, index) => (
             <TableRow key={item.id}>
-              <TableCell>
+              <TableCell className="text-left">
+                {(page - 1) * rowsPerPage + index + 1}
+              </TableCell>
+              <TableCell className="text-left">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full overflow-hidden border border-divider bg-default-50">
-                    {item.logoUrl ? (
+                  <div className="w-10 h-10 rounded-full overflow-hidden border border-divider bg-default-50 shrink-0">
+                    {item.role === "STORE_ADMIN" ? (
+                      store?.logoUrl ? (
+                        <Image
+                          alt={store.name}
+                          className="w-full h-full object-cover"
+                          src={getDisplayImageUrl(store.logoUrl)}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-default-400">
+                          <User size={20} />
+                        </div>
+                      )
+                    ) : item.logoUrl ? (
                       <Image
                         alt={item.name}
                         className="w-full h-full object-cover"
@@ -233,23 +273,45 @@ export default function EmployeePage() {
                       </div>
                     )}
                   </div>
-                  <span className="font-semibold">{item.name}</span>
+                  <span className="font-semibold">
+                    {item.role === "STORE_ADMIN" ? store?.name : item.name}
+                  </span>
                 </div>
               </TableCell>
-              <TableCell>{item.phone || "-"}</TableCell>
-              <TableCell>{item.userName || "-"}</TableCell>
-              <TableCell>
+              <TableCell className="text-left">{item.phone || "-"}</TableCell>
+              <TableCell className="text-left font-mono text-xs">
+                <div className="flex flex-col">
+                  <span>{item.userName || ""}</span>
+                  {item.email && (
+                    <span className="text-[15px] text-default-400">
+                      {item.email}
+                    </span>
+                  )}
+                </div>
+              </TableCell>
+              <TableCell className="text-center">
                 <Chip
                   color={item.role === "STORE_ADMIN" ? "warning" : "primary"}
                   size="sm"
                   variant="flat"
+                  className="font-bold text-[10px]"
                 >
                   {item.role === "STORE_ADMIN"
                     ? t("employee.admin")
                     : t("employee.staff")}
                 </Chip>
               </TableCell>
-              <TableCell>
+              <TableCell className="text-center">
+                <Chip
+                  size="sm"
+                  color={item.isActive ? "success" : "danger"}
+                  variant="dot"
+                  className="font-bold text-[10px]"
+                >
+                  {item.isActive ? "ເປີດໃຊ້ງານ" : "ປິດໃຊ້ງານ"}
+                </Chip>
+              </TableCell>
+              <TableCell className="text-center">
                 <div className="flex items-center justify-center gap-2">
                   <Button
                     isIconOnly
