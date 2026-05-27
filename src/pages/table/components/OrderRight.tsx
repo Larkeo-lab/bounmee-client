@@ -12,6 +12,9 @@ import {
   QrCode,
   Banknote,
   ChevronDown,
+  PenLine,
+  X,
+  Save,
 } from "lucide-react";
 import clsx from "clsx";
 import { toast } from "react-hot-toast";
@@ -41,6 +44,10 @@ interface OrderRightProps {
   onPaymentOpen: () => void;
   onCloseTableOpen: () => void;
   updateTablePending: boolean;
+  editingOrderNumber?: string;
+  onCancelEdit?: () => void;
+  onUpdateOrder?: () => void;
+  isUpdatingOrder?: boolean;
 }
 
 const getStatusDisplay = (status: string, t: any) => {
@@ -80,7 +87,12 @@ export const OrderRight: React.FC<OrderRightProps> = ({
   onPaymentOpen,
   onCloseTableOpen,
   updateTablePending,
+  editingOrderNumber,
+  onCancelEdit,
+  onUpdateOrder,
+  isUpdatingOrder,
 }) => {
+  const isEditing = !!editingOrderNumber;
   const { t } = useTranslation();
   const {
     cart,
@@ -91,6 +103,8 @@ export const OrderRight: React.FC<OrderRightProps> = ({
     isConnected, // 🌐 Get connection status
   } = useCart();
   const [isSending, setIsSending] = React.useState(false);
+
+  console.log('filteredCart', filteredCart)
 
   return (
     <div
@@ -104,6 +118,15 @@ export const OrderRight: React.FC<OrderRightProps> = ({
         <div className="w-10 h-1 bg-default-300 rounded-full" />
       </div>
 
+      {isEditing && (
+        <div className="px-3 py-1.5 bg-secondary/10 border-b border-secondary/30 flex items-center gap-1.5 text-secondary">
+          <PenLine size={12} />
+          <span className="text-[11px] font-black">
+            {t("sale.editingOrder", { orderNumber: editingOrderNumber })}
+          </span>
+        </div>
+      )}
+
       <div className="p-2 md:p-3 border-b border-divider flex items-center justify-between bg-primary/5 flex-shrink-0">
         <div className="flex flex-col flex-grow">
           <div className="flex items-center gap-2 font-bold text-base md:text-lg">
@@ -114,11 +137,11 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                 : t("table.cart.selectPrompt")}
             </span>
           </div>
-            {selectedTable && (
-              <p className="text-xs text-default-500">
-                {t("table.seats", { count: selectedTable.capacity })}
-              </p>
-            )}
+          {selectedTable && (
+            <p className="text-xs text-default-500">
+              {t("table.seats", { count: selectedTable.capacity })}
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-1">
           {/* Mobile Minimize instead of Close Table when Menu is open */}
@@ -194,11 +217,10 @@ export const OrderRight: React.FC<OrderRightProps> = ({
             ].map((status) => (
               <button
                 key={status.value}
-                className={`px-2 py-1 text-[9px] lg:text-[10px] font-bold rounded-lg transition-all whitespace-nowrap outline-none border-[0.5px] ${
-                  statusFilter === status.value
+                className={`px-2 py-1 text-[9px] lg:text-[10px] font-bold rounded-lg transition-all whitespace-nowrap outline-none border-[0.5px] ${statusFilter === status.value
                     ? "bg-primary text-white border-primary shadow-md shadow-primary/30 scale-[1.02]"
                     : "bg-default-100 text-default-500 border-default-200 hover:bg-default-200 hover:text-default-700"
-                }`}
+                  }`}
                 onClick={() => {
                   setStatusFilter(status.value);
                   setSelectedCartItems([]);
@@ -261,9 +283,11 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                       <div className="flex items-center gap-2">
                         <div className="flex items-center gap-2">
                           {item.note && (
-                            <div
+                            <button
+                              type="button"
+                              aria-label="Toggle Note"
                               className={clsx(
-                                "p-1.5 rounded-full cursor-pointer transition-all border",
+                                "p-1.5 rounded-full cursor-pointer transition-all border outline-none",
                                 expandedNotes.has(uniqueId)
                                   ? "bg-primary text-white border-primary"
                                   : "bg-danger-50 text-danger border-danger-100",
@@ -271,7 +295,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                               onClick={() => toggleNote(uniqueId)}
                             >
                               <MessageSquare size={14} strokeWidth={2.5} />
-                            </div>
+                            </button>
                           )}
 
                           {(() => {
@@ -435,7 +459,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                   audio
                     .play()
                     .catch((e) => console.log("Audio play blocked:", e));
-                } catch (e) {}
+                } catch (e) { }
               } catch (error) {
                 toast.error(t("table.cart.updateError"));
               } finally {
@@ -526,46 +550,71 @@ export const OrderRight: React.FC<OrderRightProps> = ({
         </div>
 
         <div className="grid grid-cols-2 gap-2">
-          <Button
-            className="h-9 md:h-10 font-bold text-xs"
-            color="danger"
-            isLoading={updateTablePending}
-            startContent={<Trash2 size={14} />}
-            variant="flat"
-            onClick={() => {
-              if (!selectedTable) return;
-              if (cart.length > 0) {
-                toast.error(t("table.cart.closeTableError"), {
-                  style: {
-                    fontWeight: "bold",
-                    borderRadius: "12px",
-                  },
-                });
+          {isEditing ? (
+            <Button
+              className="h-9 md:h-10 font-bold text-xs"
+              color="danger"
+              startContent={<X size={14} />}
+              variant="flat"
+              onClick={onCancelEdit}
+            >
+              {t("sale.cancelEdit")}
+            </Button>
+          ) : (
+            <Button
+              className="h-9 md:h-10 font-bold text-xs"
+              color="danger"
+              isLoading={updateTablePending}
+              startContent={<Trash2 size={14} />}
+              variant="flat"
+              onClick={() => {
+                if (!selectedTable) return;
+                if (cart.length > 0) {
+                  toast.error(t("table.cart.closeTableError"), {
+                    style: {
+                      fontWeight: "bold",
+                      borderRadius: "12px",
+                    },
+                  });
 
-                return;
+                  return;
+                }
+                onCloseTableOpen();
+              }}
+            >
+              {t("table.cart.closeTable")}
+            </Button>
+          )}
+          {isEditing ? (
+            <Button
+              className="h-9 md:h-10 font-black text-sm shadow-md shadow-primary/20"
+              color="primary"
+              isDisabled={!selectedTable || cart.length === 0}
+              isLoading={isUpdatingOrder}
+              startContent={!isUpdatingOrder && <Save size={16} />}
+              onPress={onUpdateOrder}
+            >
+              {t("sale.update")}
+            </Button>
+          ) : (
+            <Button
+              className="h-9 md:h-10 font-black text-sm shadow-md shadow-primary/20"
+              color="primary"
+              isDisabled={
+                !selectedTable ||
+                cart.length === 0 ||
+                !cart.every(
+                  (item) =>
+                    item.status?.toUpperCase() === "SERVED" ||
+                    item.status?.toUpperCase() === "CANCEL",
+                )
               }
-              onCloseTableOpen();
-            }}
-          >
-            {t("table.cart.closeTable")}
-          </Button>
-          <Button
-            className="h-9 md:h-10 font-black text-sm shadow-md shadow-primary/20"
-            color="primary"
-            isDisabled={
-              !selectedTable ||
-              cart.length === 0 ||
-              !cart.every(
-                (item) =>
-                  item.status?.toUpperCase() === "SERVED" ||
-                  item.status?.toUpperCase() === "CANCEL",
-              )
-            }
-            startContent={<Banknote size={16} />}
-            onPress={onPaymentOpen}
-          >
-            {t("table.cart.next")}
-          </Button>
+              startContent={<Banknote size={16} />}
+              onPress={onPaymentOpen}
+            >
+              {t("table.cart.next")}
+            </Button>
+          )}
         </div>
       </div>
     </div>

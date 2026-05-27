@@ -561,6 +561,7 @@
     "totalProfit": "Total Profit",
     "totalEmployees": "Total Employees",
     "totalMenus": "Total Menus",
+    "totalProducts": "Total Products",
     "revenueTrend": "Revenue Trend",
     "salesStats": "Past Sales Statistics",
     "revenue": "Revenue",
@@ -709,6 +710,11 @@
     "totalSummary": "Total:",
     "next": "Next",
     "cancel": "Cancel",
+    "cancelEdit": "Cancel Edit",
+    "update": "Update",
+    "updateOrderSuccess": "Order updated successfully",
+    "updateOrderFailed": "Failed to update order",
+    "editingOrder": "Editing Order #{{orderNumber}}",
     "offlineKitchen": "⚠️ Currently Offline! Order will be sent to kitchen once back online.",
     "offlineSync": "⚠️ Currently Offline! Data will sync once back online.",
     "updateSuccess": "Update successful",
@@ -837,6 +843,20 @@
   },
   "validation": {
     "phoneNumberRequired": "Phone number is required 8 digits"
+  },
+  "printBarcode": {
+    "title": "Print Barcode",
+    "subtitle": "Select products and print barcodes",
+    "generate": "Generate Barcode",
+    "selectSize": "Select Size",
+    "size1": "1 per row",
+    "size2": "2 per row",
+    "size3": "3 per row",
+    "selectedProducts": "Selected Products",
+    "barcodeCode": "Barcode Code",
+    "quantity": "Quantity",
+    "preview": "Barcode Preview",
+    "print": "Print"
   },
   "productUpdateHistory": {
     "title": "Product Update History",

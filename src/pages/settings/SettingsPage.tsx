@@ -13,6 +13,7 @@ import {
   Armchair,
   UserCheck,
   ShieldCheck,
+  Barcode,
 } from "lucide-react";
 
 import { useAuth } from "@/routes/AuthContext";
@@ -104,6 +105,14 @@ const settingsItems: SettingItem[] = [
     descriptionKey: "settings.description.member",
     href: "/settings/member",
     icon: UserCheck,
+    color: "bg-amber-500/10 text-amber-500",
+    permissionKey: "member_settings",
+  },
+  {
+    titleKey: "sidebar.menu.create-barcode",
+    descriptionKey: "settings.description.member",
+    href: "/settings/create-barcode",
+    icon: Barcode,
     color: "bg-amber-500/10 text-amber-500",
     permissionKey: "member_settings",
   },

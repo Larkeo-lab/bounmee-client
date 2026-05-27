@@ -32,6 +32,7 @@ export const API_ENDPOINTS = {
     CREATE: `${API_VERSION}/order`,
     LIST: `${API_VERSION}/order`,
     DETAIL: (id: string) => `${API_VERSION}/order/${id}`,
+    UPDATE_ITEMS: (id: string) => `${API_VERSION}/order/items/${id}`,
   },
   UNIT: {
     LIST: `${API_VERSION}/unit`,

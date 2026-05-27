@@ -556,6 +556,7 @@
     "totalProfit": "总利润",
     "totalEmployees": "总员工数",
     "totalMenus": "菜单总数",
+    "totalProducts": "商品总数",
     "revenueTrend": "收入趋势",
     "salesStats": "历年销售统计",
     "revenue": "收入",
@@ -831,6 +832,20 @@
   },
   "validation": {
     "phoneNumberRequired": "手机号码必填 8 "
+  },
+  "printBarcode": {
+    "title": "打印条形码",
+    "subtitle": "选择产品并打印条形码",
+    "generate": "生成条形码",
+    "selectSize": "选择尺寸",
+    "size1": "1 个",
+    "size2": "2 个",
+    "size3": "3 个",
+    "selectedProducts": "已选产品",
+    "barcodeCode": "条形码编号",
+    "quantity": "数量",
+    "preview": "条形码预览",
+    "print": "打印"
   },
   "productUpdateHistory": {
     "title": "产品更新历史",

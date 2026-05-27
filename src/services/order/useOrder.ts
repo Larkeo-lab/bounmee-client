@@ -73,7 +73,9 @@ export interface Order {
     name: string;
     logoUrl?: string;
   };
+  tableId?: string | null;
   table?: {
+    id?: string;
     name: string;
   };
   businessType?: "RETAIL" | "CAFE";
@@ -177,6 +179,29 @@ export const useGetOrder = (id: string) => {
       return response.data;
     },
     enabled: !!id,
+  });
+};
+
+export interface UpdateOrderItemsInput {
+  items: OrderItemInput[];
+  totalAmount: number;
+  discountAmount?: number;
+  isDiscount?: boolean;
+  discountPercent?: number;
+}
+
+export const useUpdateOrderItems = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateOrderItemsInput }) =>
+      axiosInstance.patch(API_ENDPOINTS.ORDER.UPDATE_ITEMS(id), data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["order"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
   });
 };
 

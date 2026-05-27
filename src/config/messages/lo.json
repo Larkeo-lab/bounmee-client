@@ -584,6 +584,7 @@
     "totalProfit": "ກຳໄລ່ທັງຫມົດ",
     "totalEmployees": "ຈຳນວນພະນັກງານ",
     "totalMenus": "ຈຳນວນເມນູ",
+    "totalProducts": "ຈຳນວນສິນຄ້າ",
     "revenueTrend": "ທ່າອ່ຽງລາຍຮັບ",
     "salesStats": "ສະຖິຕິການຂາຍທີຜ່ານມາ",
     "revenue": "ລາຍຮັບ",
@@ -731,6 +732,11 @@
     "totalSummary": "ທັງໝົດ:",
     "next": "ຕໍ່ໄປ",
     "cancel": "ຍົກເລີກ",
+    "cancelEdit": "ຍົກເລີກການແກ້ໄຂ",
+    "update": "ອັບເດດ",
+    "updateOrderSuccess": "ອັບເດດອໍເດີສຳເລັດແລ້ວ",
+    "updateOrderFailed": "ອັບເດດອໍເດີບໍ່ສຳເລັດ",
+    "editingOrder": "ກຳລັງແກ້ໄຂບິນ #{{orderNumber}}",
     "offlineKitchen": "⚠️ ຕອນນີ້ Offline! ອໍເດີ້ຈະຖືກສົ່ງໄປຄົວທັນທີເມື່ອເນັດກັບມາ.",
     "offlineSync": "⚠️ ຕອນນີ້ Offline! ຂໍ້ມູນຈະອັບເດດໄປຍັງເຄື່ອງອື່ນເມື່ອເນັດກັບມາ.",
     "updateSuccess": "ອັບເດດສະຖານະສຳເລັດ",
@@ -859,6 +865,20 @@
   },
   "validation": {
     "phoneNumberRequired": "ກະລຸນາປ້ອນເບີໂທລະສັບໃຫ້ຄົບ 8 ຕົວເລກ"
+  },
+  "printBarcode": {
+    "title": "ພິມບາໂຄ້ດ",
+    "subtitle": "ເລືອກສິນຄ້າແລ້ວພິມບາໂຄ້ດ",
+    "generate": "ສ້າງບາໂຄ້ດ",
+    "selectSize": "ເລືອກຂະໜາດ",
+    "size1": "1 ດວງ",
+    "size2": "2 ດວງ",
+    "size3": "3 ດວງ",
+    "selectedProducts": "ລາຍການສິນຄ້າທີ່ເລືອກ",
+    "barcodeCode": "ລະຫັດບາໂຄ້ດ",
+    "quantity": "ຈຳນວນ",
+    "preview": "ຮູບແບບຕົວຢ່າງ Barcode",
+    "print": "ພິມ"
   },
   "productUpdateHistory": {
     "title": "ປະຫວັດການແກ້ໄຂສິນຄ້າ",

@@ -22,6 +22,7 @@ export default function Dashboard() {
   const [endDate, setEndDate] = useState(
     dayjs().endOf("month").format("YYYY-MM-DD"),
   );
+  const storeType = user?.user?.store?.type;
 
   const {
     data: dashboard,
@@ -66,6 +67,8 @@ export default function Dashboard() {
 
     return stats;
   }, [totalCash, totalTransfer, totalDebt]);
+
+  console.log('user', user.user.store.type)
 
   const transfersByBank = useMemo(() => {
     return (
@@ -133,7 +136,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <SummarySection summary={summary} />
+      <SummarySection summary={summary} storeType={storeType} />
 
       <ChartsSection
         paymentStatsMapped={paymentStatsMapped}

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import clsx from "clsx";
 import { QRCodeSVG } from "qrcode.react";
@@ -30,6 +30,7 @@ import {
   Trash2, // Added Trash2
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "react-hot-toast";
 
 import { TableCart } from "./components/TableCart";
 import { OrderRight } from "./components/OrderRight";
@@ -45,13 +46,20 @@ import EmptyState from "@/components/common/empty-state";
 import ConfirmModal from "@/components/common/popup-confirm";
 import { useCart } from "@/provider";
 import { useCartStore } from "@/store/useCartStore";
+import { useUpdateOrderItems } from "@/services/order/useOrder";
 import PaymentModal from "@/components/common/payment-modal";
 
 export default function TablePage() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const targetTableId = searchParams.get("tableId");
+  const [editingOrder, setEditingOrder] = useState<{
+    id: string;
+    orderNumber: string;
+    tableId: string;
+  } | null>(null);
   const { t } = useTranslation();
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const {
@@ -173,6 +181,11 @@ export default function TablePage() {
   // useEffect: ซิงค์ข้อมูลตะกร้าสินค้าของโต๊ะที่เลือกมาไว้ใน Provider ส่วนกลาง
   useEffect(() => {
     if (selectedTable?.id && Array.isArray(selectedTable.activeCart)) {
+      // โหมดแก้ไข order: ใช้ข้อมูลที่โหลดมาจาก editOrder เลย ห้ามล้าง
+      if (editingOrder?.tableId === selectedTable.id) {
+        return;
+      }
+
       // ถ้าเปลี่ยนโต๊ะ หรือ โต๊ะเดิมแต่สถานะเป็น AVAILABLE (เพิ่งเปิดใหม่)
       // ให้ซิงค์ข้อมูลจากเซิร์ฟเวอร์ทุกครั้ง
       const isNewSelection = syncedTableRef.current !== selectedTable.id;
@@ -200,6 +213,7 @@ export default function TablePage() {
     clearTableCart,
     selectedTable?.status,
     selectedTable?.activeCart,
+    editingOrder?.tableId,
   ]);
 
   // useEffect: อัปเดต ID โต๊ะที่กำลังใช้งานใน Cart context เพื่อให้จัดการตะกร้าได้ถูกโต๊ะ
@@ -223,6 +237,99 @@ export default function TablePage() {
       }
     }
   }, [targetTableId, tables, selectedTable]);
+
+  // โหลด order ที่จะแก้ไขเข้ามาในตะกร้าของโต๊ะ (จากปุ่ม Edit ในหน้า Order)
+  useEffect(() => {
+    const editOrder = (location.state as any)?.editOrder;
+
+    if (!editOrder?.items?.length || !editOrder.tableId) return;
+    if (tables.length === 0) return;
+
+    const table = tables.find((tbl: any) => tbl.id === editOrder.tableId);
+
+    if (!table) return;
+
+    const items = editOrder.items.map((item: any) => ({
+      id: item.product?.id || item.productId,
+      name: item.product?.name || "",
+      price: Number(item.unitPrice),
+      image: item.product?.image || null,
+      quantity: Number(item.qty),
+      stockQty: item.product?.stockQty ?? 9999,
+      status: "SERVED",
+      timestamp: Date.now(),
+      note: item.note || undefined,
+      unitName: item.unitName || item.product?.unit?.name || undefined,
+    }));
+
+    syncedTableRef.current = editOrder.tableId;
+    useCartStore.getState().setTableCart(editOrder.tableId, items, true);
+
+    setEditingOrder({
+      id: editOrder.id,
+      orderNumber: editOrder.orderNumber,
+      tableId: editOrder.tableId,
+    });
+    setSelectedTable({ ...table, status: "OCCUPIED", activeCart: items });
+
+    navigate(location.pathname, { replace: true, state: null });
+  }, [location.state, location.pathname, navigate, tables]);
+
+  const handleCancelEdit = () => {
+    if (!editingOrder) return;
+    clearTableCart(editingOrder.tableId);
+    useCartStore.getState().setTableCart(editingOrder.tableId, [], true);
+    setEditingOrder(null);
+    setSelectedTable(null);
+    syncedTableRef.current = null;
+    navigate("/order");
+  };
+
+  const updateOrderItemsMutation = useUpdateOrderItems();
+
+  const handleUpdateOrder = async () => {
+    if (!editingOrder) return;
+    try {
+      await updateOrderItemsMutation.mutateAsync({
+        id: editingOrder.id,
+        data: {
+          totalAmount: subtotal,
+          items: cart.map((item) => ({
+            productId: item.id,
+            qty: Number(item.quantity),
+            unitPrice: Number(item.price),
+            subTotal: Number(item.price) * Number(item.quantity),
+            status: item.status,
+            note: item.note || "",
+            unitName: item.unitName || "",
+          })),
+        },
+      });
+      toast.success(t("sale.updateOrderSuccess"));
+      clearTableCart(editingOrder.tableId);
+      useCartStore.getState().setTableCart(editingOrder.tableId, [], true);
+      setEditingOrder(null);
+      setSelectedTable(null);
+      syncedTableRef.current = null;
+      navigate("/order");
+    } catch (error: any) {
+      const errorData = error?.response?.data;
+
+      if (errorData?.errorCode === "POS-9004") {
+        const stockInfo = errorData.errors;
+
+        toast.error(
+          t("customer.stockWarning", {
+            name: stockInfo.productName,
+            qty: stockInfo.availableStock,
+          }),
+          { duration: 5000 },
+        );
+      } else {
+        toast.error(errorData?.message || t("sale.updateOrderFailed"));
+      }
+    }
+  };
 
   // useEffect: รับฟັງຊັນ Socket ເມື່ອມີການສັ່ງອາຫານໃໝ່ຈາກຝັ່ງລູກຄ້າ
   useEffect(() => {
@@ -289,6 +396,9 @@ export default function TablePage() {
 
   // ຟັງຊັນສຳລັບປິດໂຕະ: ອັບເດດສະຖານະໂຕະ ແລະ ລ້າງຂໍ້ມູນຕະກ້າ
   const handleCloseTable = (order?: any) => {
+    if (editingOrder) {
+      setEditingOrder(null);
+    }
     if (selectedTable) {
       const closingTableId = selectedTable.id;
       const closingStoreId = selectedTable.storeId || storeId;
@@ -603,9 +713,12 @@ export default function TablePage() {
       </div>
 
       {/* orders side panel/bottom sheet */}
-      <div
+      <button
+        type="button"
+        aria-label="Close panel"
+        tabIndex={-1}
         className={clsx(
-          "fixed inset-0 z-50 transition-opacity duration-300 sm:hidden",
+          "fixed inset-0 z-50 transition-opacity duration-300 sm:hidden border-none outline-none w-full cursor-default",
           selectedTable && !isSelectingMenu
             ? "bg-black/40 opacity-100"
             : "opacity-0 pointer-events-none",
@@ -626,9 +739,11 @@ export default function TablePage() {
         )}
       >
         <OrderRight
+          editingOrderNumber={editingOrder?.orderNumber}
           expandedNotes={expandedNotes}
           filteredCart={filteredCart}
           isSelectingMenu={isSelectingMenu}
+          isUpdatingOrder={updateOrderItemsMutation.isPending}
           selectedCartItems={selectedCartItems}
           selectedTable={selectedTable || lastSelectedTable}
           setIsSelectingMenu={setIsSelectingMenu}
@@ -640,10 +755,12 @@ export default function TablePage() {
           statusTotals={statusTotals}
           toggleNote={toggleNote}
           updateTablePending={updateTable.isPending}
+          onCancelEdit={handleCancelEdit}
           onCloseTableOpen={onCloseTableOpen}
           onPaymentOpen={onOpen}
           onQrOpen={onQrOpen}
           onRemoveItemOpen={onRemoveItemOpen}
+          onUpdateOrder={handleUpdateOrder}
         />
       </div>
 

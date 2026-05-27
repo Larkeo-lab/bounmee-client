@@ -53,9 +53,10 @@ const StatCard = ({ title, value, icon, color }: StatCardProps) => {
 
 interface SummaryProps {
   summary: any;
+  storeType: string;
 }
 
-export default function SummarySection({ summary }: SummaryProps) {
+export default function SummarySection({ summary, storeType }: SummaryProps) {
   const { t } = useTranslation();
 
   return (

@@ -38,6 +38,7 @@ import KitchenPage from "@/pages/kitchen/KitchenPage";
 import ChatPage from "@/pages/chat/ChatPage";
 import ProductOrderPage from "@/pages/saleGeneral/ProductOrderPage";
 import CafeOrderPage from "@/pages/saleCafe/ProductOrderPage";
+import PrintBarcodePage from "@/pages/settings/printBarcode/PrintBarcodePage";
 
 export interface AppRoute {
   path: string;
@@ -161,6 +162,13 @@ export const appRoutes: AppRoute[] = [
     isPrivate: true,
     requiresLayout: true,
   },
+  {
+    path: "/settings/create-barcode",
+    element: <PrintBarcodePage />,
+    isPrivate: true,
+    requiresLayout: true,
+  },
+
   {
     path: "/permission-manage",
     element: <PermissionSetting />,

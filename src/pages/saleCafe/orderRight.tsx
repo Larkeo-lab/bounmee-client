@@ -20,6 +20,9 @@ import {
   ChefHat,
   Banknote,
   ChevronDown,
+  PenLine,
+  X,
+  Save,
 } from "lucide-react";
 import clsx from "clsx";
 import { toast } from "react-hot-toast";
@@ -46,6 +49,10 @@ interface OrderRightProps {
   statusTotals: Record<string, number>;
   onPaymentOpen: () => void;
   onClearCartOpen: () => void;
+  editingOrderNumber?: string;
+  onCancelEdit?: () => void;
+  onUpdateOrder?: () => void;
+  isUpdatingOrder?: boolean;
 }
 
 const getStatusDisplay = (status: string, t: any) => {
@@ -81,7 +88,12 @@ export const OrderRight: React.FC<OrderRightProps> = ({
   statusTotals,
   onPaymentOpen,
   onClearCartOpen,
+  editingOrderNumber,
+  onCancelEdit,
+  onUpdateOrder,
+  isUpdatingOrder,
 }) => {
+  const isEditing = !!editingOrderNumber;
   const { t } = useTranslation();
   const {
     cart,
@@ -145,6 +157,15 @@ export const OrderRight: React.FC<OrderRightProps> = ({
         <div className="flex justify-center pt-2 lg:hidden">
           <div className="w-10 h-1 bg-default-300 rounded-full mb-2" />
         </div>
+
+        {isEditing && (
+          <div className="px-3 py-1.5 bg-secondary/10 border-b border-secondary/30 flex items-center gap-1.5 text-secondary">
+            <PenLine size={12} />
+            <span className="text-[11px] font-black">
+              {t("sale.editingOrder", { orderNumber: editingOrderNumber })}
+            </span>
+          </div>
+        )}
 
         {/* Bill Switcher (Multi-Cart) */}
         <div className="px-3 py-2 flex items-center gap-2 border-b border-divider bg-default-50/50">
@@ -668,30 +689,55 @@ export const OrderRight: React.FC<OrderRightProps> = ({
           </div>
 
           <div className="grid grid-cols-2 gap-2">
-            <Button
-              className="h-9 md:h-10 font-bold text-xs"
-              color="danger"
-              isDisabled={isEmpty}
-              startContent={<Trash2 size={14} />}
-              variant="flat"
-              onClick={onClearCartOpen}
-            >
-              {t("sale.cancel")}
-            </Button>
-            <Button
-              className="h-9 md:h-10 font-black text-sm shadow-md shadow-primary/20"
-              color="primary"
-              isDisabled={
-                isEmpty ||
-                !cart.every(
-                  (i) => i.status === "SERVED" || i.status === "CANCEL",
-                )
-              }
-              startContent={<Banknote size={16} />}
-              onPress={onPaymentOpen}
-            >
-              {t("sale.next")}
-            </Button>
+            {isEditing ? (
+              <Button
+                className="h-9 md:h-10 font-bold text-xs"
+                color="danger"
+                startContent={<X size={14} />}
+                variant="flat"
+                onClick={onCancelEdit}
+              >
+                {t("sale.cancelEdit")}
+              </Button>
+            ) : (
+              <Button
+                className="h-9 md:h-10 font-bold text-xs"
+                color="danger"
+                isDisabled={isEmpty}
+                startContent={<Trash2 size={14} />}
+                variant="flat"
+                onClick={onClearCartOpen}
+              >
+                {t("sale.cancel")}
+              </Button>
+            )}
+            {isEditing ? (
+              <Button
+                className="h-9 md:h-10 font-black text-sm shadow-md shadow-primary/20"
+                color="primary"
+                isDisabled={isEmpty}
+                isLoading={isUpdatingOrder}
+                startContent={!isUpdatingOrder && <Save size={16} />}
+                onPress={onUpdateOrder}
+              >
+                {t("sale.update")}
+              </Button>
+            ) : (
+              <Button
+                className="h-9 md:h-10 font-black text-sm shadow-md shadow-primary/20"
+                color="primary"
+                isDisabled={
+                  isEmpty ||
+                  !cart.every(
+                    (i) => i.status === "SERVED" || i.status === "CANCEL",
+                  )
+                }
+                startContent={<Banknote size={16} />}
+                onPress={onPaymentOpen}
+              >
+                {t("sale.next")}
+              </Button>
+            )}
           </div>
         </div>
       </div>

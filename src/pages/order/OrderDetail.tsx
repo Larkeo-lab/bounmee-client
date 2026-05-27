@@ -25,12 +25,14 @@ import {
   ShoppingBag,
   Banknote,
   Landmark,
+  PenLine,
 } from "lucide-react";
 import dayjs from "dayjs";
 
 import { Order } from "@/services/order/useOrder";
 import { getDisplayImageUrl } from "@/lib/utils";
 import { formatNumber } from "@/utils/numberFormat";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/routes/AuthContext";
 import BillModal from "@/components/common/bill";
 
@@ -49,6 +51,7 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({
 }) => {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const {
     isOpen: isBillOpen,
     onOpen: onBillOpen,
@@ -109,11 +112,10 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({
                 <div className="p-4 space-y-4">
                   {/* Summary Row */}
                   <div
-                    className={`grid gap-2 ${
-                      IS_GENERAL_STORE
-                        ? "grid-cols-2"
-                        : "grid-cols-2 sm:grid-cols-3"
-                    }`}
+                    className={`grid gap-2 ${IS_GENERAL_STORE
+                      ? "grid-cols-2"
+                      : "grid-cols-2 sm:grid-cols-3"
+                      }`}
                   >
                     <div className="bg-default-100 p-2.5 rounded-2xl flex flex-col items-center">
                       <User className="text-default-400 mb-1" size={14} />
@@ -138,7 +140,7 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({
                           {selectedOrder?.businessType === "CAFE"
                             ? "Cafe"
                             : selectedOrder?.table?.name ||
-                              t("order.shopFloor")}
+                            t("order.shopFloor")}
                         </span>
                       </div>
                     )}
@@ -179,7 +181,7 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({
                             selectedOrder?.paymentStatus === "PAID"
                               ? "success"
                               : selectedOrder?.paymentStatus ===
-                                  "PARTIALLY_PAID"
+                                "PARTIALLY_PAID"
                                 ? "warning"
                                 : "danger"
                           }
@@ -296,10 +298,10 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({
                                 {item.qty}
                                 {(item.product?.unit?.name ||
                                   item.unitName) && (
-                                  <span className="text-[9px] font-medium text-default-400 ml-1">
-                                    {item.product?.unit?.name || item.unitName}
-                                  </span>
-                                )}
+                                    <span className="text-[9px] font-medium text-default-400 ml-1">
+                                      {item.product?.unit?.name || item.unitName}
+                                    </span>
+                                  )}
                               </span>
                             </TableCell>
                             <TableCell>
@@ -328,7 +330,7 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({
                         <span>
                           {formatNumber(
                             Number(selectedOrder?.totalAmount) +
-                              Number(selectedOrder?.discountAmount || 0),
+                            Number(selectedOrder?.discountAmount || 0),
                           )}{" "}
                           {t("order.kip") || "ກີບ"}
                         </span>
@@ -437,6 +439,23 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({
                   onPress={onClose}
                 >
                   {t("order.close")}
+                </Button>
+                <Button
+                  className="font-black flex-grow sm:flex-grow-0 shadow-md shadow-primary/20 rounded-xl"
+                  color="secondary"
+                  startContent={<PenLine size={18} />}
+                  onPress={() => {
+                    onClose();
+                    if (selectedOrder?.businessType === "CAFE") {
+                      navigate("/saleCafe", { state: { editOrder: selectedOrder } });
+                    } else if (selectedOrder?.tableId || selectedOrder?.table) {
+                      navigate("/table", { state: { editOrder: selectedOrder } });
+                    } else {
+                      navigate("/saleGeneral", { state: { editOrder: selectedOrder } });
+                    }
+                  }}
+                >
+                  {t("order.edit")}
                 </Button>
                 <Button
                   className="font-black flex-grow sm:flex-grow-0 shadow-md shadow-primary/20 rounded-xl"

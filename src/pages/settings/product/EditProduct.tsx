@@ -23,6 +23,7 @@ import {
   Camera,
   Image as ImageIcon,
   Plus,
+  RefreshCw,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -35,6 +36,7 @@ import { useUploadImage } from "@/services/storage";
 import { Category, useCreateCategory } from "@/services/category/useCategory";
 import { getDisplayImageUrl } from "@/lib/utils";
 import { formatNumber, parseNumber } from "@/utils/numberFormat";
+import { generateBarcode128 } from "@/utils/generateBarcode128";
 import { useGetUnits, Unit, useCreateUnit } from "@/services/unit/useUnit";
 import { Layers } from "lucide-react";
 
@@ -132,6 +134,11 @@ export default function EditProduct({
 
   const handleTakePhoto = () => {
     setIsCameraOpen(true);
+  };
+
+  const handleGenerateBarcode = () => {
+    const barcode = generateBarcode128();
+    setFormData((prev) => ({ ...prev, barcode }));
   };
 
   const handleBarcodeScan = (data: string) => {
@@ -375,14 +382,24 @@ export default function EditProduct({
                       }
                       endContent={
                         formData.isBarcode && (
-                          <Button
-                            isIconOnly
-                            size="sm"
-                            variant="light"
-                            onClick={() => setIsBarcodeScannerOpen(true)}
-                          >
-                            <Camera size={18} className="text-primary" />
-                          </Button>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              isIconOnly
+                              size="sm"
+                              variant="light"
+                              onClick={() => setIsBarcodeScannerOpen(true)}
+                            >
+                              <Camera size={18} className="text-primary" />
+                            </Button>
+                            <Button
+                              isIconOnly
+                              size="sm"
+                              variant="light"
+                              onClick={handleGenerateBarcode}
+                            >
+                              <RefreshCw size={18} className="text-primary" />
+                            </Button>
+                          </div>
                         )
                       }
                       value={formData.barcode}

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import clsx from "clsx";
 import {
@@ -22,6 +23,8 @@ import { OrderRight } from "./orderRight";
 
 import EmptyState from "@/components/common/empty-state";
 import { useGeneralCart } from "@/hooks/useGeneralCart";
+import { useCartStore, CartItem } from "@/store/useCartStore";
+import { useUpdateOrderItems } from "@/services/order/useOrder";
 import PaymentModal from "@/components/common/payment-modal";
 import CameraModal from "@/components/camera";
 import { useAuth } from "@/routes/AuthContext";
@@ -45,12 +48,114 @@ interface FlyingItem {
 export default function ProductOrderPage() {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [isMinimized, setIsMinimized] = useState(true);
   const [flyingItems, setFlyingItems] = useState<FlyingItem[]>([]);
   const [isBarcodeScannerOpen, setIsBarcodeScannerOpen] = useState(false);
 
   const { cart, addToCart, clearCart, subtotal } = useGeneralCart();
+  const [editingOrder, setEditingOrder] = useState<{
+    id: string;
+    orderNumber: string;
+    billId: string;
+  } | null>(null);
+
+  useEffect(() => {
+    const editOrder = (location.state as any)?.editOrder;
+
+    if (!editOrder?.items?.length) return;
+
+    const billId = `GENERAL:edit-${editOrder.id}`;
+    const items: CartItem[] = editOrder.items.map((item: any) => ({
+      id: item.product?.id || item.productId,
+      name: item.product?.name || "",
+      price: Number(item.unitPrice),
+      image: item.product?.image || null,
+      quantity: Number(item.qty),
+      stockQty: item.product?.stockQty ?? 9999,
+      status: "SERVED",
+      timestamp: Date.now(),
+      note: item.note || undefined,
+      unitName: item.unitName || item.product?.unit?.name || undefined,
+    }));
+
+    const store = useCartStore.getState();
+
+    store.setTableCart(billId, items, true);
+    store.setActiveGeneralBillId(billId);
+
+    setEditingOrder({
+      id: editOrder.id,
+      orderNumber: editOrder.orderNumber,
+      billId,
+    });
+    setIsMinimized(false);
+
+    navigate(location.pathname, { replace: true, state: null });
+  }, [location.state, location.pathname, navigate]);
+
+  const handleCancelEdit = () => {
+    if (!editingOrder) return;
+    useCartStore.getState().removeCart(editingOrder.billId);
+    setEditingOrder(null);
+    navigate("/order");
+  };
+
+  const handlePaymentSuccess = () => {
+    if (editingOrder) {
+      useCartStore.getState().removeCart(editingOrder.billId);
+      setEditingOrder(null);
+    } else {
+      clearCart();
+    }
+    refetchProducts();
+  };
+
+  const updateOrderItemsMutation = useUpdateOrderItems();
+
+  const handleUpdateOrder = async () => {
+    if (!editingOrder) return;
+    try {
+      await updateOrderItemsMutation.mutateAsync({
+        id: editingOrder.id,
+        data: {
+          totalAmount: subtotal,
+          items: cart.map((item) => ({
+            productId: item.id,
+            qty: Number(item.quantity),
+            unitPrice: Number(item.price),
+            subTotal: Number(item.price) * Number(item.quantity),
+            status: item.status,
+            note: item.note || "",
+            unitName: item.unitName || "",
+          })),
+        },
+      });
+      toast.success(t("sale.updateOrderSuccess"));
+      useCartStore.getState().removeCart(editingOrder.billId);
+      setEditingOrder(null);
+      refetchProducts();
+      navigate("/order");
+    } catch (error: any) {
+      const errorData = error?.response?.data;
+
+      if (errorData?.errorCode === "POS-9004") {
+        const stockInfo = errorData.errors;
+
+        toast.error(
+          t("customer.stockWarning", {
+            name: stockInfo.productName,
+            qty: stockInfo.availableStock,
+          }),
+          { duration: 5000 },
+        );
+      } else {
+        toast.error(errorData?.message || t("sale.updateOrderFailed"));
+      }
+    }
+  };
 
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -220,12 +325,14 @@ export default function ProductOrderPage() {
               shape="circle"
               size="md"
             >
-              <div
-                className="p-2 bg-primary/10 rounded-full cursor-pointer"
+              <button
+                type="button"
+                className="p-2 bg-primary/10 rounded-full cursor-pointer border-none outline-none hover:bg-primary/20 transition-colors"
+                aria-label="Open Cart"
                 onClick={() => setIsMinimized(false)}
               >
                 <ShoppingCart className="text-primary" size={22} />
-              </div>
+              </button>
             </Badge>
           </div>
 
@@ -359,9 +466,13 @@ export default function ProductOrderPage() {
 
       {/* Cart Sidebar / Bottom Sheet */}
       <OrderRight
+        editingOrderNumber={editingOrder?.orderNumber}
         isMinimized={isMinimized}
+        isUpdatingOrder={updateOrderItemsMutation.isPending}
         setIsMinimized={setIsMinimized}
+        onCancelEdit={handleCancelEdit}
         onPaymentOpen={onOpen}
+        onUpdateOrder={handleUpdateOrder}
       />
 
       <PaymentModal
@@ -369,10 +480,7 @@ export default function ProductOrderPage() {
         items={cart}
         total={subtotal}
         onOpenChange={onOpenChange}
-        onPaymentSuccess={() => {
-          clearCart();
-          refetchProducts();
-        }}
+        onPaymentSuccess={handlePaymentSuccess}
       />
 
       <CameraModal

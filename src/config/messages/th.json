@@ -531,6 +531,7 @@
     "totalProfit": "กำไรทั้งหมด",
     "totalEmployees": "จำนวนพนักงาน",
     "totalMenus": "จำนวนเมนู",
+    "totalProducts": "จำนวนสินค้า",
     "revenueTrend": "แนวโน้มรายได้",
     "salesStats": "สถิติการขายที่ผ่านมา",
     "revenue": "รายรับ",
@@ -679,6 +680,11 @@
     "totalSummary": "ทั้งหมด:",
     "next": "ต่อไป",
     "cancel": "ยกเลิก",
+    "cancelEdit": "ยกเลิกการแก้ไข",
+    "update": "อัพเดท",
+    "updateOrderSuccess": "อัพเดทออเดอร์สำเร็จ",
+    "updateOrderFailed": "อัพเดทออเดอร์ไม่สำเร็จ",
+    "editingOrder": "กำลังแก้ไขบิล #{{orderNumber}}",
     "offlineKitchen": "⚠️ ตอนนี้ Offline! ออเดอร์จะถูกส่งไปครัวทันทีเมื่อเน็ตกลับมา",
     "offlineSync": "⚠️ ตอนนี้ Offline! ข้อมูลจะอัปเดตไปยังเครื่องอื่นเมื่อเน็ตกลับมา",
     "updateSuccess": "อัปเดตสถานะสำเร็จ",
@@ -807,6 +813,20 @@
   },
   "validation": {
     "phoneNumberRequired": "กรุณากรอกเบอร์โทรศัพท์ให้ครบ 8 ตัวเลข"
+  },
+  "printBarcode": {
+    "title": "พิมพ์บาร์โค้ด",
+    "subtitle": "เลือกสินค้าแล้วพิมพ์บาร์โค้ด",
+    "generate": "สร้างบาร์โค้ด",
+    "selectSize": "เลือกขนาด",
+    "size1": "1 ดวง",
+    "size2": "2 ดวง",
+    "size3": "3 ดวง",
+    "selectedProducts": "รายการสินค้าที่เลือก",
+    "barcodeCode": "รหัสบาร์โค้ด",
+    "quantity": "จำนวน",
+    "preview": "ตัวอย่าง Barcode",
+    "print": "พิมพ์"
   },
   "productUpdateHistory": {
     "title": "ประวัติการแก้ไขสินค้า",

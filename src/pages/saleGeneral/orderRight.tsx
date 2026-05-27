@@ -15,6 +15,9 @@ import {
   Plus,
   ChevronDown,
   Banknote,
+  PenLine,
+  X,
+  Save,
 } from "lucide-react";
 
 import { formatNumber } from "@/utils/numberFormat";
@@ -26,13 +29,22 @@ interface OrderRightProps {
   isMinimized: boolean;
   setIsMinimized: (v: boolean) => void;
   onPaymentOpen: () => void;
+  editingOrderNumber?: string;
+  onCancelEdit?: () => void;
+  onUpdateOrder?: () => void;
+  isUpdatingOrder?: boolean;
 }
 
 export const OrderRight: React.FC<OrderRightProps> = ({
   isMinimized,
   setIsMinimized,
   onPaymentOpen,
+  editingOrderNumber,
+  onCancelEdit,
+  onUpdateOrder,
+  isUpdatingOrder,
 }) => {
+  const isEditing = !!editingOrderNumber;
   const { t } = useTranslation();
   const {
     cart,
@@ -127,6 +139,15 @@ export const OrderRight: React.FC<OrderRightProps> = ({
           <div className="w-10 h-1 bg-default-300 rounded-full mb-2" />
         </div>
 
+        {isEditing && (
+          <div className="px-3 py-1.5 bg-secondary/10 border-b border-secondary/30 flex items-center gap-1.5 text-secondary">
+            <PenLine size={12} />
+            <span className="text-[11px] font-black">
+              {t("sale.editingOrder", { orderNumber: editingOrderNumber })}
+            </span>
+          </div>
+        )}
+
         {/* Bill Switcher (Multi-Cart) */}
         <div className="px-4 py-2 flex items-center gap-2 border-b border-divider bg-default-50/50">
           <ScrollShadow
@@ -142,10 +163,12 @@ export const OrderRight: React.FC<OrderRightProps> = ({
               const billName = `${t("sale.billShort") || "ບິນ"} ${index + 1}`;
 
               return (
-                <div
+                <button
                   key={id}
+                  type="button"
+                  aria-label={`Switch to ${billName}`}
                   className={clsx(
-                    "flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl cursor-pointer transition-all border-2",
+                    "flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl cursor-pointer transition-all border-2 outline-none text-left",
                     isActive
                       ? "bg-primary text-white border-primary shadow-sm"
                       : hasItems
@@ -191,7 +214,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                       <Plus className="rotate-45" size={12} />
                     </button>
                   )}
-                </div>
+                </button>
               );
             })}
           </ScrollShadow>
@@ -328,33 +351,61 @@ export const OrderRight: React.FC<OrderRightProps> = ({
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <Button
-              className="h-12 font-bold text-base"
-              color="danger"
-              isDisabled={isEmpty}
-              startContent={<Trash2 size={18} />}
-              variant="flat"
-              onClick={onClearOpen}
-            >
-              {t("sale.cancel")}
-            </Button>
-            <Button
-              className="h-12 font-black text-lg shadow-lg shadow-primary/20"
-              color="primary"
-              isDisabled={isEmpty}
-              startContent={<Banknote size={20} />}
-              onPress={onPaymentOpen}
-            >
-              {t("sale.next")}
-            </Button>
+            {isEditing ? (
+              <Button
+                className="h-12 font-bold text-base"
+                color="danger"
+                startContent={<X size={18} />}
+                variant="flat"
+                onClick={onCancelEdit}
+              >
+                {t("sale.cancelEdit")}
+              </Button>
+            ) : (
+              <Button
+                className="h-12 font-bold text-base"
+                color="danger"
+                isDisabled={isEmpty}
+                startContent={<Trash2 size={18} />}
+                variant="flat"
+                onClick={onClearOpen}
+              >
+                {t("sale.cancel")}
+              </Button>
+            )}
+            {isEditing ? (
+              <Button
+                className="h-12 font-black text-lg shadow-lg shadow-primary/20"
+                color="primary"
+                isDisabled={isEmpty}
+                isLoading={isUpdatingOrder}
+                startContent={!isUpdatingOrder && <Save size={20} />}
+                onPress={onUpdateOrder}
+              >
+                {t("sale.update")}
+              </Button>
+            ) : (
+              <Button
+                className="h-12 font-black text-lg shadow-lg shadow-primary/20"
+                color="primary"
+                isDisabled={isEmpty}
+                startContent={<Banknote size={20} />}
+                onPress={onPaymentOpen}
+              >
+                {t("sale.next")}
+              </Button>
+            )}
           </div>
         </div>
       </div>
 
       {/* Backdrop for mobile */}
       {!isEmpty && !isMinimized && (
-        <div
-          className="fixed inset-0 bg-black/40 z-30 lg:hidden animate-in fade-in duration-300"
+        <button
+          type="button"
+          aria-label="Close panel"
+          tabIndex={-1}
+          className="fixed inset-0 bg-black/40 z-30 lg:hidden animate-in fade-in duration-300 border-none outline-none w-full cursor-default"
           onClick={() => setIsMinimized(true)}
         />
       )}
