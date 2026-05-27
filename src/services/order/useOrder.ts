@@ -188,6 +188,17 @@ export interface UpdateOrderItemsInput {
   discountAmount?: number;
   isDiscount?: boolean;
   discountPercent?: number;
+  receivedAmount?: number;
+  change?: number;
+  paymentMethod?: "CASH" | "TRANSFER" | "TRANSFER_CASH";
+  cashAmount?: number | null;
+  transferAmount?: number | null;
+  bankId?: string | null;
+  paymentStatus?: "PAID" | "UNPAID" | "PARTIALLY_PAID";
+  isDebt?: boolean;
+  debtAmount?: number;
+  memberId?: string | null;
+  dueDate?: string | null;
 }
 
 export const useUpdateOrderItems = () => {

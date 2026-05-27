@@ -24,7 +24,6 @@ import { OrderRight } from "./orderRight";
 import EmptyState from "@/components/common/empty-state";
 import { useGeneralCart } from "@/hooks/useGeneralCart";
 import { useCartStore, CartItem } from "@/store/useCartStore";
-import { useUpdateOrderItems } from "@/services/order/useOrder";
 import PaymentModal from "@/components/common/payment-modal";
 import CameraModal from "@/components/camera";
 import { useAuth } from "@/routes/AuthContext";
@@ -104,6 +103,8 @@ export default function ProductOrderPage() {
   };
 
   const handlePaymentSuccess = () => {
+    const wasEditing = !!editingOrder;
+
     if (editingOrder) {
       useCartStore.getState().removeCart(editingOrder.billId);
       setEditingOrder(null);
@@ -111,49 +112,8 @@ export default function ProductOrderPage() {
       clearCart();
     }
     refetchProducts();
-  };
-
-  const updateOrderItemsMutation = useUpdateOrderItems();
-
-  const handleUpdateOrder = async () => {
-    if (!editingOrder) return;
-    try {
-      await updateOrderItemsMutation.mutateAsync({
-        id: editingOrder.id,
-        data: {
-          totalAmount: subtotal,
-          items: cart.map((item) => ({
-            productId: item.id,
-            qty: Number(item.quantity),
-            unitPrice: Number(item.price),
-            subTotal: Number(item.price) * Number(item.quantity),
-            status: item.status,
-            note: item.note || "",
-            unitName: item.unitName || "",
-          })),
-        },
-      });
-      toast.success(t("sale.updateOrderSuccess"));
-      useCartStore.getState().removeCart(editingOrder.billId);
-      setEditingOrder(null);
-      refetchProducts();
+    if (wasEditing) {
       navigate("/order");
-    } catch (error: any) {
-      const errorData = error?.response?.data;
-
-      if (errorData?.errorCode === "POS-9004") {
-        const stockInfo = errorData.errors;
-
-        toast.error(
-          t("customer.stockWarning", {
-            name: stockInfo.productName,
-            qty: stockInfo.availableStock,
-          }),
-          { duration: 5000 },
-        );
-      } else {
-        toast.error(errorData?.message || t("sale.updateOrderFailed"));
-      }
     }
   };
 
@@ -436,8 +396,8 @@ export default function ProductOrderPage() {
                     <b className="text-[11px] lg:text-[12px] font-bold text-default-700 w-full truncate group-hover:text-primary transition-colors">
                       {product.name}
                     </b>
-                    <p className="text-primary font-black text-[12px] lg:text-[14px] whitespace-nowrap">
-                      {formatNumber(product.price)}{" "}
+                    <p className="flex items-center justify-center w-full gap-1 text-primary font-black text-[12px] lg:text-[14px] whitespace-nowrap">
+                      {formatNumber(product.price)}
                       <span className="text-[8px] lg:text-[9px] font-medium text-default-400">
                         {t("sale.kip")}
                         {product.unit?.name ? `/${product.unit.name}` : ""}
@@ -468,14 +428,13 @@ export default function ProductOrderPage() {
       <OrderRight
         editingOrderNumber={editingOrder?.orderNumber}
         isMinimized={isMinimized}
-        isUpdatingOrder={updateOrderItemsMutation.isPending}
         setIsMinimized={setIsMinimized}
         onCancelEdit={handleCancelEdit}
         onPaymentOpen={onOpen}
-        onUpdateOrder={handleUpdateOrder}
       />
 
       <PaymentModal
+        editingOrderId={editingOrder?.id}
         isOpen={isOpen}
         items={cart}
         total={subtotal}

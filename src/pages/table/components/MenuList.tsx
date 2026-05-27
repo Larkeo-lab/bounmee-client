@@ -98,9 +98,9 @@ export const MenuList: React.FC<MenuListProps> = ({
               <b className="text-[11px] lg:text-xs font-bold text-default-700 w-full truncate group-hover:text-primary transition-colors">
                 {product.name}
               </b>
-              <div className="flex justify-between items-center w-full">
-                <p className="text-primary font-black text-[11px] lg:text-xs whitespace-nowrap">
-                  {formatNumber(product.price)}{" "}
+              <div className="flex justify-center items-center w-full">
+                <p className="flex items-center gap-1 text-primary font-black text-[11px] lg:text-xs whitespace-nowrap">
+                  {formatNumber(product.price)}
                   <span className="text-[8px] lg:text-[9px] font-medium text-default-400">
                     {t("table.cart.kip")}
                     {product.unit?.name ? `/${product.unit.name}` : ""}

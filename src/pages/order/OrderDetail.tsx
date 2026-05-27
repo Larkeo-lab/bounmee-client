@@ -455,7 +455,7 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({
                     }
                   }}
                 >
-                  {t("order.edit")}
+                  {t("common.edit")}
                 </Button>
                 <Button
                   className="font-black flex-grow sm:flex-grow-0 shadow-md shadow-primary/20 rounded-xl"

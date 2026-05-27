@@ -30,7 +30,6 @@ import {
   Trash2, // Added Trash2
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "react-hot-toast";
 
 import { TableCart } from "./components/TableCart";
 import { OrderRight } from "./components/OrderRight";
@@ -46,7 +45,6 @@ import EmptyState from "@/components/common/empty-state";
 import ConfirmModal from "@/components/common/popup-confirm";
 import { useCart } from "@/provider";
 import { useCartStore } from "@/store/useCartStore";
-import { useUpdateOrderItems } from "@/services/order/useOrder";
 import PaymentModal from "@/components/common/payment-modal";
 
 export default function TablePage() {
@@ -285,52 +283,6 @@ export default function TablePage() {
     navigate("/order");
   };
 
-  const updateOrderItemsMutation = useUpdateOrderItems();
-
-  const handleUpdateOrder = async () => {
-    if (!editingOrder) return;
-    try {
-      await updateOrderItemsMutation.mutateAsync({
-        id: editingOrder.id,
-        data: {
-          totalAmount: subtotal,
-          items: cart.map((item) => ({
-            productId: item.id,
-            qty: Number(item.quantity),
-            unitPrice: Number(item.price),
-            subTotal: Number(item.price) * Number(item.quantity),
-            status: item.status,
-            note: item.note || "",
-            unitName: item.unitName || "",
-          })),
-        },
-      });
-      toast.success(t("sale.updateOrderSuccess"));
-      clearTableCart(editingOrder.tableId);
-      useCartStore.getState().setTableCart(editingOrder.tableId, [], true);
-      setEditingOrder(null);
-      setSelectedTable(null);
-      syncedTableRef.current = null;
-      navigate("/order");
-    } catch (error: any) {
-      const errorData = error?.response?.data;
-
-      if (errorData?.errorCode === "POS-9004") {
-        const stockInfo = errorData.errors;
-
-        toast.error(
-          t("customer.stockWarning", {
-            name: stockInfo.productName,
-            qty: stockInfo.availableStock,
-          }),
-          { duration: 5000 },
-        );
-      } else {
-        toast.error(errorData?.message || t("sale.updateOrderFailed"));
-      }
-    }
-  };
-
   // useEffect: รับฟັງຊັນ Socket ເມື່ອມີການສັ່ງອາຫານໃໝ່ຈາກຝັ່ງລູກຄ້າ
   useEffect(() => {
     const handleNewOrder = (data: { tableId: string }) => {
@@ -388,11 +340,16 @@ export default function TablePage() {
   }, [cart]);
 
   // ກັ່ນຕອງໂຕະອາຫານຕາມໂຊນ ແລະ ຄຳສັບທີ່ຄົ້ນຫາ
-  const filteredTables = tables.filter(
-    (t: any) =>
-      (selectedZone === "all" || t.zoneId === selectedZone) &&
-      t.name.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+  // ໂຫມດແກ້ໄຂ: override status ຂອງໂຕະທີ່ກຳລັງແກ້ໄຂໃຫ້ສະແດງເປັນ OCCUPIED
+  const filteredTables = tables
+    .filter(
+      (t: any) =>
+        (selectedZone === "all" || t.zoneId === selectedZone) &&
+        t.name.toLowerCase().includes(searchQuery.toLowerCase()),
+    )
+    .map((t: any) =>
+      editingOrder?.tableId === t.id ? { ...t, status: "OCCUPIED" } : t,
+    );
 
   // ຟັງຊັນສຳລັບປິດໂຕະ: ອັບເດດສະຖານະໂຕະ ແລະ ລ້າງຂໍ້ມູນຕະກ້າ
   const handleCloseTable = (order?: any) => {
@@ -743,7 +700,6 @@ export default function TablePage() {
           expandedNotes={expandedNotes}
           filteredCart={filteredCart}
           isSelectingMenu={isSelectingMenu}
-          isUpdatingOrder={updateOrderItemsMutation.isPending}
           selectedCartItems={selectedCartItems}
           selectedTable={selectedTable || lastSelectedTable}
           setIsSelectingMenu={setIsSelectingMenu}
@@ -760,7 +716,6 @@ export default function TablePage() {
           onPaymentOpen={onOpen}
           onQrOpen={onQrOpen}
           onRemoveItemOpen={onRemoveItemOpen}
-          onUpdateOrder={handleUpdateOrder}
         />
       </div>
 
@@ -790,12 +745,26 @@ export default function TablePage() {
       </Modal>
 
       <PaymentModal
+        editingOrderId={editingOrder?.id}
         isOpen={isOpen}
         items={cart}
-        tableId={selectedTable?.id}
+        tableId={editingOrder ? undefined : selectedTable?.id}
         total={subtotal}
         onOpenChange={onOpenChange}
-        onPaymentSuccess={handleCloseTable}
+        onPaymentSuccess={(order) => {
+          if (editingOrder) {
+            const editTableId = editingOrder.tableId;
+
+            clearTableCart(editTableId);
+            useCartStore.getState().setTableCart(editTableId, [], true);
+            setEditingOrder(null);
+            setSelectedTable(null);
+            syncedTableRef.current = null;
+            navigate("/order");
+          } else {
+            handleCloseTable(order);
+          }
+        }}
       />
 
       <ConfirmModal

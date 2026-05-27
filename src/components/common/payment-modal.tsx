@@ -24,7 +24,10 @@ import { useTranslation } from "react-i18next";
 
 import { useAuth } from "@/routes/AuthContext";
 import { useGetBanks, Bank } from "@/services/bank/useBank";
-import { useCreateOrder } from "@/services/order/useOrder";
+import {
+  useCreateOrder,
+  useUpdateOrderItems,
+} from "@/services/order/useOrder";
 import { useGetMoneyRates } from "@/services/moneyRate/useMoneyRate";
 import { getDisplayImageUrl } from "@/lib/utils";
 import DebtModal from "./debt-modal";
@@ -45,6 +48,7 @@ interface PaymentModalProps {
   items: CartItem[];
   tableId?: string | null;
   businessType?: "RETAIL" | "CAFE";
+  editingOrderId?: string;
   onPaymentSuccess: (order?: any) => void;
 }
 
@@ -55,6 +59,7 @@ export default function PaymentModal({
   items,
   tableId,
   businessType,
+  editingOrderId,
   onPaymentSuccess,
 }: PaymentModalProps) {
   const { t } = useTranslation();
@@ -80,6 +85,8 @@ export default function PaymentModal({
   const [isDebtModalOpen, setIsDebtModalOpen] = useState(false);
 
   const createOrderMutation = useCreateOrder();
+  const updateOrderItemsMutation = useUpdateOrderItems();
+  const isEditing = !!editingOrderId;
 
   const { data: bankResponse, isLoading: isLoadingBanks } = useGetBanks(
     isOpen ? user?.user?.storeId : "",
@@ -213,49 +220,87 @@ export default function PaymentModal({
       return;
     }
 
-    try {
-      const result = await createOrderMutation.mutateAsync({
-        totalAmount: Number(finalTotal),
-        receivedAmount:
-          paymentMethod === "TRANSFER_CASH"
-            ? Number(parseNumeric(mixedCashAmount)) +
-              Number(parseNumeric(mixedTransferAmount))
-            : Number(receivedAmountInLAK),
-        change: paymentMethod === "TRANSFER_CASH" ? 0 : Number(change),
-        discountAmount: Number(discountAmount),
-        isDiscount: isDiscount,
-        discountPercent: Number(discountPercent),
-        paymentMethod: paymentMethod,
-        paymentStatus: "PAID",
-        cashAmount:
-          paymentMethod === "TRANSFER_CASH"
-            ? Number(parseNumeric(mixedCashAmount))
-            : paymentMethod === "CASH"
-              ? Number(receivedAmountInLAK)
-              : 0,
-        transferAmount:
-          paymentMethod === "TRANSFER_CASH"
-            ? Number(parseNumeric(mixedTransferAmount))
-            : paymentMethod === "TRANSFER"
-              ? Number(receivedAmountInLAK)
-              : 0,
-        storeId: user.user.storeId,
-        employeeId: user.user.employee?.id || null,
-        bankId: selectedBank,
-        tableId: tableId,
-        businessType: businessType,
-        items: items.map((item: any) => ({
-          productId: item.id,
-          qty: Number(item.quantity),
-          unitPrice: Number(item.price),
-          subTotal: Number(item.price) * Number(item.quantity),
-          status: item.status,
-          note: item.note || "",
-          unitName: item.unitName || "",
-        })),
-      });
+    const computedReceivedAmount =
+      paymentMethod === "TRANSFER_CASH"
+        ? Number(parseNumeric(mixedCashAmount)) +
+          Number(parseNumeric(mixedTransferAmount))
+        : Number(receivedAmountInLAK);
+    const computedChange =
+      paymentMethod === "TRANSFER_CASH" ? 0 : Number(change);
+    const computedCash =
+      paymentMethod === "TRANSFER_CASH"
+        ? Number(parseNumeric(mixedCashAmount))
+        : paymentMethod === "CASH"
+          ? Number(receivedAmountInLAK)
+          : 0;
+    const computedTransfer =
+      paymentMethod === "TRANSFER_CASH"
+        ? Number(parseNumeric(mixedTransferAmount))
+        : paymentMethod === "TRANSFER"
+          ? Number(receivedAmountInLAK)
+          : 0;
+    const mappedItems = items.map((item: any) => ({
+      productId: item.id,
+      qty: Number(item.quantity),
+      unitPrice: Number(item.price),
+      subTotal: Number(item.price) * Number(item.quantity),
+      status: item.status,
+      note: item.note || "",
+      unitName: item.unitName || "",
+    }));
 
-      toast.success(t("payment.success") || "ຊຳລະເງິນສຳເລັດແລ້ວ!");
+    try {
+      let result: any;
+
+      if (isEditing && editingOrderId) {
+        result = await updateOrderItemsMutation.mutateAsync({
+          id: editingOrderId,
+          data: {
+            totalAmount: Number(finalTotal),
+            receivedAmount: computedReceivedAmount,
+            change: computedChange,
+            discountAmount: Number(discountAmount),
+            isDiscount: isDiscount,
+            discountPercent: Number(discountPercent),
+            paymentMethod: paymentMethod,
+            paymentStatus: "PAID",
+            cashAmount: computedCash,
+            transferAmount: computedTransfer,
+            bankId: selectedBank,
+            // ตัด debt fields ออกในกรณีที่กดชำระปกติ (จากเดิมที่อาจเคยติดหนี้)
+            isDebt: false,
+            debtAmount: 0,
+            memberId: null,
+            dueDate: null,
+            items: mappedItems,
+          },
+        });
+      } else {
+        result = await createOrderMutation.mutateAsync({
+          totalAmount: Number(finalTotal),
+          receivedAmount: computedReceivedAmount,
+          change: computedChange,
+          discountAmount: Number(discountAmount),
+          isDiscount: isDiscount,
+          discountPercent: Number(discountPercent),
+          paymentMethod: paymentMethod,
+          paymentStatus: "PAID",
+          cashAmount: computedCash,
+          transferAmount: computedTransfer,
+          storeId: user.user.storeId,
+          employeeId: user.user.employee?.id || null,
+          bankId: selectedBank,
+          tableId: tableId,
+          businessType: businessType,
+          items: mappedItems,
+        });
+      }
+
+      toast.success(
+        isEditing
+          ? t("sale.updateOrderSuccess") || "ອັບເດດສຳເລັດ!"
+          : t("payment.success") || "ຊຳລະເງິນສຳເລັດແລ້ວ!",
+      );
       onPaymentSuccess(result?.data);
       clearReceived();
       onClose();
@@ -287,34 +332,62 @@ export default function PaymentModal({
       return;
     }
 
+    const mappedItems = items.map((item: any) => ({
+      productId: item.id,
+      qty: Number(item.quantity),
+      unitPrice: Number(item.price),
+      subTotal: Number(item.price) * Number(item.quantity),
+      status: item.status,
+      note: item.note || "",
+      unitName: item.unitName || "",
+    }));
+
     try {
-      const result = await createOrderMutation.mutateAsync({
-        totalAmount: Number(finalTotal),
-        receivedAmount: 0,
-        change: 0,
-        discountAmount: Number(discountAmount),
-        isDiscount: isDiscount,
-        discountPercent: Number(discountPercent),
-        paymentMethod: "CASH",
-        paymentStatus: "UNPAID",
-        isDebt: true,
-        debtAmount: Number(finalTotal),
-        storeId: user.user.storeId,
-        employeeId: user.user.employee?.id || null,
-        memberId: memberId,
-        dueDate: dueDate ? new Date(dueDate).toISOString() : null,
-        tableId: tableId,
-        businessType: businessType,
-        items: items.map((item: any) => ({
-          productId: item.id,
-          qty: Number(item.quantity),
-          unitPrice: Number(item.price),
-          subTotal: Number(item.price) * Number(item.quantity),
-          status: item.status,
-          note: item.note || "",
-          unitName: item.unitName || "",
-        })),
-      });
+      let result: any;
+
+      if (isEditing && editingOrderId) {
+        result = await updateOrderItemsMutation.mutateAsync({
+          id: editingOrderId,
+          data: {
+            totalAmount: Number(finalTotal),
+            receivedAmount: 0,
+            change: 0,
+            discountAmount: Number(discountAmount),
+            isDiscount: isDiscount,
+            discountPercent: Number(discountPercent),
+            paymentMethod: "CASH",
+            paymentStatus: "UNPAID",
+            cashAmount: 0,
+            transferAmount: 0,
+            bankId: null,
+            isDebt: true,
+            debtAmount: Number(finalTotal),
+            memberId: memberId,
+            dueDate: dueDate ? new Date(dueDate).toISOString() : null,
+            items: mappedItems,
+          },
+        });
+      } else {
+        result = await createOrderMutation.mutateAsync({
+          totalAmount: Number(finalTotal),
+          receivedAmount: 0,
+          change: 0,
+          discountAmount: Number(discountAmount),
+          isDiscount: isDiscount,
+          discountPercent: Number(discountPercent),
+          paymentMethod: "CASH",
+          paymentStatus: "UNPAID",
+          isDebt: true,
+          debtAmount: Number(finalTotal),
+          storeId: user.user.storeId,
+          employeeId: user.user.employee?.id || null,
+          memberId: memberId,
+          dueDate: dueDate ? new Date(dueDate).toISOString() : null,
+          tableId: tableId,
+          businessType: businessType,
+          items: mappedItems,
+        });
+      }
 
       toast.success(t("payment.debtSuccess") || "ບັນທຶກການຕິດໜີ້ສຳເລັດ!");
       onPaymentSuccess(result?.data);
@@ -877,7 +950,10 @@ export default function PaymentModal({
                       ? receivedAmountInLAK < finalTotal
                       : !selectedBank
                 }
-                isLoading={createOrderMutation.isPending}
+                isLoading={
+                  createOrderMutation.isPending ||
+                  updateOrderItemsMutation.isPending
+                }
                 startContent={<CheckCircle2 size={22} />}
                 onPress={() => handleConfirm(onClose)}
               >
@@ -893,7 +969,10 @@ export default function PaymentModal({
         onOpenChange={setIsDebtModalOpen}
         total={finalTotal}
         onConfirm={handleDebtConfirm}
-        isLoading={createOrderMutation.isPending}
+        isLoading={
+                  createOrderMutation.isPending ||
+                  updateOrderItemsMutation.isPending
+                }
       />
     </Modal>
   );

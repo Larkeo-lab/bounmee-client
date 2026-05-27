@@ -14,7 +14,6 @@ import {
   ChevronDown,
   PenLine,
   X,
-  Save,
 } from "lucide-react";
 import clsx from "clsx";
 import { toast } from "react-hot-toast";
@@ -46,8 +45,6 @@ interface OrderRightProps {
   updateTablePending: boolean;
   editingOrderNumber?: string;
   onCancelEdit?: () => void;
-  onUpdateOrder?: () => void;
-  isUpdatingOrder?: boolean;
 }
 
 const getStatusDisplay = (status: string, t: any) => {
@@ -89,8 +86,6 @@ export const OrderRight: React.FC<OrderRightProps> = ({
   updateTablePending,
   editingOrderNumber,
   onCancelEdit,
-  onUpdateOrder,
-  isUpdatingOrder,
 }) => {
   const isEditing = !!editingOrderNumber;
   const { t } = useTranslation();
@@ -585,36 +580,23 @@ export const OrderRight: React.FC<OrderRightProps> = ({
               {t("table.cart.closeTable")}
             </Button>
           )}
-          {isEditing ? (
-            <Button
-              className="h-9 md:h-10 font-black text-sm shadow-md shadow-primary/20"
-              color="primary"
-              isDisabled={!selectedTable || cart.length === 0}
-              isLoading={isUpdatingOrder}
-              startContent={!isUpdatingOrder && <Save size={16} />}
-              onPress={onUpdateOrder}
-            >
-              {t("sale.update")}
-            </Button>
-          ) : (
-            <Button
-              className="h-9 md:h-10 font-black text-sm shadow-md shadow-primary/20"
-              color="primary"
-              isDisabled={
-                !selectedTable ||
-                cart.length === 0 ||
-                !cart.every(
-                  (item) =>
-                    item.status?.toUpperCase() === "SERVED" ||
-                    item.status?.toUpperCase() === "CANCEL",
-                )
-              }
-              startContent={<Banknote size={16} />}
-              onPress={onPaymentOpen}
-            >
-              {t("table.cart.next")}
-            </Button>
-          )}
+          <Button
+            className="h-9 md:h-10 font-black text-sm shadow-md shadow-primary/20"
+            color="primary"
+            isDisabled={
+              !selectedTable ||
+              cart.length === 0 ||
+              !cart.every(
+                (item) =>
+                  item.status?.toUpperCase() === "SERVED" ||
+                  item.status?.toUpperCase() === "CANCEL",
+              )
+            }
+            startContent={<Banknote size={16} />}
+            onPress={onPaymentOpen}
+          >
+            {isEditing ? t("sale.update") : t("table.cart.next")}
+          </Button>
         </div>
       </div>
     </div>

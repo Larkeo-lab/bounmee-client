@@ -17,7 +17,6 @@ import {
   Banknote,
   PenLine,
   X,
-  Save,
 } from "lucide-react";
 
 import { formatNumber } from "@/utils/numberFormat";
@@ -31,8 +30,6 @@ interface OrderRightProps {
   onPaymentOpen: () => void;
   editingOrderNumber?: string;
   onCancelEdit?: () => void;
-  onUpdateOrder?: () => void;
-  isUpdatingOrder?: boolean;
 }
 
 export const OrderRight: React.FC<OrderRightProps> = ({
@@ -41,8 +38,6 @@ export const OrderRight: React.FC<OrderRightProps> = ({
   onPaymentOpen,
   editingOrderNumber,
   onCancelEdit,
-  onUpdateOrder,
-  isUpdatingOrder,
 }) => {
   const isEditing = !!editingOrderNumber;
   const { t } = useTranslation();
@@ -373,28 +368,15 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                 {t("sale.cancel")}
               </Button>
             )}
-            {isEditing ? (
-              <Button
-                className="h-12 font-black text-lg shadow-lg shadow-primary/20"
-                color="primary"
-                isDisabled={isEmpty}
-                isLoading={isUpdatingOrder}
-                startContent={!isUpdatingOrder && <Save size={20} />}
-                onPress={onUpdateOrder}
-              >
-                {t("sale.update")}
-              </Button>
-            ) : (
-              <Button
-                className="h-12 font-black text-lg shadow-lg shadow-primary/20"
-                color="primary"
-                isDisabled={isEmpty}
-                startContent={<Banknote size={20} />}
-                onPress={onPaymentOpen}
-              >
-                {t("sale.next")}
-              </Button>
-            )}
+            <Button
+              className="h-12 font-black text-lg shadow-lg shadow-primary/20"
+              color="primary"
+              isDisabled={isEmpty}
+              startContent={<Banknote size={20} />}
+              onPress={onPaymentOpen}
+            >
+              {isEditing ? t("sale.update") : t("sale.next")}
+            </Button>
           </div>
         </div>
       </div>
