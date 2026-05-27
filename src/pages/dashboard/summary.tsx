@@ -96,7 +96,7 @@ export default function SummarySection({ summary, storeType }: SummaryProps) {
         <StatCard
           color="warning"
           icon={<Package size={24} />}
-          title={t("dashboard.totalMenus")}
+          title={storeType === "RESTAURANT" ? t("dashboard.totalMenus") : t("dashboard.totalProducts")}
           value={summary?.totalMenu || 0}
         />
       </div>
