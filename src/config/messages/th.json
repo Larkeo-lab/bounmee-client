@@ -100,7 +100,9 @@
       "other": "อื่น ๆ",
       "otherDesc": "ธุรกิจประเภทอื่น ๆ",
       "generalStore": "ร้านค้าทั่วไป",
-      "generalStoreDesc": "ร้านค้าปลีกและส่งทั่วไป"
+      "generalStoreDesc": "ร้านค้าปลีกและส่งทั่วไป",
+      "phoneShop": "ร้านโทรศัพท์",
+      "phoneShopDesc": "โทรศัพท์มือถือ อุปกรณ์เสริม และบริการซ่อม"
     },
     "logoutConfirmTitle": "ยืนยันออกจากระบบ",
     "logoutConfirmMsg": "คุณต้องการออกจากระบบใช่หรือไม่?",
@@ -440,7 +442,22 @@
     "foundExisting": "พบข้อมูลสินค้าเดิม",
     "updateSuccess": "อัปเดตสินค้าสำเร็จ",
     "createSuccess": "เพิ่มสินค้าสำเร็จ",
-    "saveError": "เกิดข้อผิดพลาดในการบันทึก"
+    "saveError": "เกิดข้อผิดพลาดในการบันทึก",
+    "priceError": "ราคาขายต้องสูงกว่าหรือเท่ากับต้นทุน",
+    "phone": {
+      "section": "ข้อมูลเครื่อง",
+      "productType": "ประเภท",
+      "model": "รุ่น",
+      "storage": "ความจุ",
+      "color": "สี",
+      "buyDate": "วันที่ซื้อ",
+      "sellDate": "วันที่ขาย",
+      "isFix": "สถานะการซ่อม",
+      "notFix": "ไม่ได้ซ่อม",
+      "fixed": "ซ่อมแล้ว",
+      "fixPrice": "ค่าซ่อม",
+      "fixDescription": "รายละเอียดการซ่อม"
+    }
   },
   "queue": {
     "welcome": "ยินดีต้อนรับสู่ Saysettha ODSC",
@@ -558,6 +575,10 @@
   "order": {
     "title": "ประวัติการขาย",
     "desc": "ดูประวัติการขายและรายละเอียดแต่ละบิล",
+    "freeItems": "ของแถม",
+    "freeItemsCount": "× {{count}}",
+    "freeItemsSection": "ของแถม ({{count}} รายการ)",
+    "freeItemsTotalValue": "มูลค่ารวม",
     "exportExcel": "ส่งออก (Excel)",
     "statTotalOrders": "จำนวน Order",
     "statTotalRevenue": "รายได้ทั้งหมด",
@@ -644,6 +665,8 @@
   "sale": {
     "searchPlaceholder": "ค้นหารายการ หรือ ยิงบาร์โค้ด...",
     "categoryAll": "ทั้งหมด",
+    "productTypeTool1": "เครื่อง 1",
+    "productTypeTool2": "เครื่อง 2",
     "outOfStock": "หมด",
     "itemAdded": "เพิ่ม {{name}}",
     "barcodeAdded": "ยิงบาร์โค้ด: เพิ่ม {{name}} สำเร็จ",
@@ -794,6 +817,12 @@
     "discount": "ส่วนลด",
     "byAmount": "เป็นเงิน",
     "byPercent": "เป็น %",
+    "freeItems": "ของแถม",
+    "addFreeItem": "เพิ่มของแถม",
+    "selectProduct": "เลือกสินค้า",
+    "amount": "จำนวน",
+    "addToList": "เพิ่มเข้ารายการ",
+    "product": "สินค้า",
     "grandTotal": "ยอดรวมที่ต้องจ่าย",
     "cashAmount": "จ่ายเงินสด",
     "transferAmount": "จ่ายเงินโอน",

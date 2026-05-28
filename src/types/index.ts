@@ -30,7 +30,14 @@ export interface AuthData {
 
 export type Role = "SUPER_ADMIN" | "STORE_ADMIN" | "EMPLOYEE";
 export type Language = "LA" | "EN";
-export type StoreType = "GENERAL_STORE" | "RESTAURANT" | "ONLINE" | "CAFE" | "BAR" | "OTHER";
+export type StoreType =
+  | "GENERAL_STORE"
+  | "RESTAURANT"
+  | "ONLINE"
+  | "CAFE"
+  | "BAR"
+  | "OTHER"
+  | "PHONE_SHOP";
 
 // User model matching Prisma schema
 export interface User {

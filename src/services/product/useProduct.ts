@@ -3,6 +3,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosInstance } from "@/lib/axios";
 import { API_ENDPOINTS } from "@/config/api";
 
+export type ProductType = "TOOL_1" | "TOOL_2";
+
 export interface Product {
   id: string;
   barcode: string;
@@ -27,6 +29,16 @@ export interface Product {
     id: string;
     name: string;
   };
+  // Phone-shop fields
+  fixPrice?: number | null;
+  isFix?: boolean;
+  fixDescription?: string | null;
+  model?: string | null;
+  storage?: string | null;
+  buyDate?: string | null;
+  sellDate?: string | null;
+  color?: string | null;
+  productType?: ProductType;
 }
 
 export interface CreateProductInput {
@@ -42,6 +54,16 @@ export interface CreateProductInput {
   unitId?: string | null;
   isActive?: boolean;
   isBarcode?: boolean;
+  // Phone-shop fields
+  fixPrice?: number | null;
+  isFix?: boolean;
+  fixDescription?: string | null;
+  model?: string | null;
+  storage?: string | null;
+  buyDate?: string | null;
+  sellDate?: string | null;
+  color?: string | null;
+  productType?: ProductType;
 }
 
 export interface UpdateProductInput extends Partial<CreateProductInput> {
@@ -53,9 +75,11 @@ export const getProducts = async (
   categoryId?: string,
   isActive?: boolean,
   search?: string,
+  productType?: ProductType,
+  isFix?: boolean,
 ): Promise<{ data: Product[] }> => {
   const response = await axiosInstance.get(API_ENDPOINTS.PRODUCT.LIST, {
-    params: { storeId, categoryId, isActive, search },
+    params: { storeId, categoryId, isActive, search, productType, isFix },
   });
 
   return response.data;
@@ -66,10 +90,21 @@ export const useGetProducts = (
   categoryId?: string,
   isActive?: boolean,
   search?: string,
+  productType?: ProductType,
+  isFix?: boolean,
 ) => {
   return useQuery({
-    queryKey: ["products", storeId, categoryId, isActive, search],
-    queryFn: () => getProducts(storeId, categoryId, isActive, search),
+    queryKey: [
+      "products",
+      storeId,
+      categoryId,
+      isActive,
+      search,
+      productType,
+      isFix,
+    ],
+    queryFn: () =>
+      getProducts(storeId, categoryId, isActive, search, productType, isFix),
     enabled: !!storeId,
   });
 };

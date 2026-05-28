@@ -26,6 +26,7 @@ import {
   Banknote,
   Landmark,
   PenLine,
+  Gift,
 } from "lucide-react";
 import dayjs from "dayjs";
 
@@ -314,6 +315,120 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({
                       </TableBody>
                     </Table>
                   </div>
+
+                  {/* ✨ Free Items Section */}
+                  {selectedOrder?.productFrees &&
+                    selectedOrder.productFrees.length > 0 && (
+                      <div className="space-y-3">
+                        <p className="font-black text-sm flex items-center gap-2 text-pink-600">
+                          <Gift className="text-pink-600" size={16} />
+                          {t("order.freeItemsSection", {
+                            count: selectedOrder.productFrees.length,
+                          }) ||
+                            `ຂອງແຖມ (${selectedOrder.productFrees.length})`}
+                        </p>
+                        <Table
+                          removeWrapper
+                          aria-label="Free items table"
+                          className="border border-pink-200 rounded-2xl overflow-hidden bg-pink-50/30"
+                          classNames={{
+                            th: "bg-pink-100/60 text-pink-700 font-bold text-[10px] uppercase py-2 h-10",
+                            td: "py-3 border-b border-pink-100 last:border-none bg-white/60",
+                          }}
+                          shadow="none"
+                        >
+                          <TableHeader>
+                            <TableColumn align="center" width={40}>
+                              {t("order.tableRank")}
+                            </TableColumn>
+                            <TableColumn>{t("order.imageName")}</TableColumn>
+                            <TableColumn align="end">
+                              {t("order.priceUnit")}
+                            </TableColumn>
+                            <TableColumn align="center">
+                              {t("order.qty")}
+                            </TableColumn>
+                            <TableColumn align="end">
+                              {t("order.subtotal")}
+                            </TableColumn>
+                          </TableHeader>
+                          <TableBody>
+                            {selectedOrder.productFrees.map((free, idx) => (
+                              <TableRow key={free.id}>
+                                <TableCell>
+                                  <span className="text-[10px] font-bold text-pink-400">
+                                    {idx + 1}
+                                  </span>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-2.5 min-w-[120px]">
+                                    <Image
+                                      className="w-10 h-10 min-w-[40px] object-cover"
+                                      radius="lg"
+                                      src={getDisplayImageUrl(
+                                        free.product?.image,
+                                      )}
+                                    />
+                                    <div className="flex flex-col">
+                                      <span className="text-[11px] font-bold text-default-800 leading-tight">
+                                        {free.product?.name ||
+                                          t("payment.product") ||
+                                          "Product"}
+                                      </span>
+                                      <Chip
+                                        className="h-4 text-[8px] font-black mt-0.5 w-fit"
+                                        color="secondary"
+                                        size="sm"
+                                        startContent={<Gift size={8} />}
+                                        variant="flat"
+                                      >
+                                        {t("order.freeItems") || "ຂອງແຖມ"}
+                                      </Chip>
+                                    </div>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <span className="text-[11px] font-medium text-default-600 line-through">
+                                    {formatNumber(Number(free.price))}
+                                  </span>
+                                </TableCell>
+                                <TableCell>
+                                  <span className="text-[11px] font-black text-pink-700 bg-pink-100 px-2.5 py-1 rounded-lg">
+                                    × {free.amount}
+                                    {free.product?.unit?.name && (
+                                      <span className="text-[9px] font-medium text-pink-400 ml-1">
+                                        {free.product.unit.name}
+                                      </span>
+                                    )}
+                                  </span>
+                                </TableCell>
+                                <TableCell>
+                                  <span className="text-[11px] font-black text-pink-600">
+                                    -{formatNumber(Number(free.totalPrice))}
+                                  </span>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+
+                        {/* Total value of free items */}
+                        <div className="flex justify-end items-center gap-2 text-xs font-bold text-pink-600 px-2">
+                          <span className="uppercase tracking-wider">
+                            {t("order.freeItemsTotalValue") || "ມູນຄ່າລວມ"}:
+                          </span>
+                          <span className="text-sm font-black">
+                            {formatNumber(
+                              selectedOrder.productFrees.reduce(
+                                (acc, f) => acc + Number(f.totalPrice),
+                                0,
+                              ),
+                            )}{" "}
+                            {t("order.kip") || "ກີບ"}
+                          </span>
+                        </div>
+                      </div>
+                    )}
 
                   {/* Totals Section */}
                   <div className="bg-gradient-to-br from-primary to-primary-700 p-4 rounded-3xl text-white shadow-lg shadow-primary/30 space-y-2 relative overflow-hidden">

@@ -7,6 +7,10 @@ import {
   ScrollShadow,
   Chip,
   useDisclosure,
+  Autocomplete,
+  AutocompleteItem,
+  Input as HeroInput,
+  Avatar,
 } from "@heroui/react";
 import {
   ShoppingCart,
@@ -17,12 +21,17 @@ import {
   Banknote,
   PenLine,
   X,
+  Gift,
 } from "lucide-react";
 
 import { formatNumber } from "@/utils/numberFormat";
 import { getDisplayImageUrl } from "@/lib/utils";
 import { useGeneralCart } from "@/hooks/useGeneralCart";
 import ConfirmModal from "@/components/common/popup-confirm";
+import {
+  ProductFreeItemInput,
+} from "@/services/order/useOrder";
+import { useGetProducts, Product } from "@/services/product/useProduct";
 
 interface OrderRightProps {
   isMinimized: boolean;
@@ -30,6 +39,9 @@ interface OrderRightProps {
   onPaymentOpen: () => void;
   editingOrderNumber?: string;
   onCancelEdit?: () => void;
+  productFrees: ProductFreeItemInput[];
+  setProductFrees: React.Dispatch<React.SetStateAction<ProductFreeItemInput[]>>;
+  storeId?: string;
 }
 
 export const OrderRight: React.FC<OrderRightProps> = ({
@@ -38,6 +50,9 @@ export const OrderRight: React.FC<OrderRightProps> = ({
   onPaymentOpen,
   editingOrderNumber,
   onCancelEdit,
+  productFrees,
+  setProductFrees,
+  storeId,
 }) => {
   const isEditing = !!editingOrderNumber;
   const { t } = useTranslation();
@@ -45,6 +60,7 @@ export const OrderRight: React.FC<OrderRightProps> = ({
     cart,
     removeFromCart,
     updateQuantity,
+    setQuantity,
     clearCart,
     subtotal,
     allCarts,
@@ -101,6 +117,61 @@ export const OrderRight: React.FC<OrderRightProps> = ({
   } = useDisclosure();
 
   const isEmpty = cart.length === 0;
+
+  // ✨ ของแถม state + handlers
+  const [isFreeOpen, setIsFreeOpen] = useState(false);
+  const [freeSelectedProductId, setFreeSelectedProductId] = useState("");
+  const [freeAmount, setFreeAmount] = useState("1");
+
+  const { data: freeProductsResponse } = useGetProducts(
+    storeId,
+    undefined,
+    true,
+    undefined,
+  );
+  const freeProducts: Product[] = freeProductsResponse?.data || [];
+
+  const handleAddFreeItem = () => {
+    if (!freeSelectedProductId) return;
+    const product = freeProducts.find((p) => p.id === freeSelectedProductId);
+
+    if (!product) return;
+
+    const amount = Math.max(1, Number(freeAmount) || 1);
+    const price = Number(product.price);
+
+    setProductFrees((prev) => {
+      const idx = prev.findIndex((f) => f.productId === product.id);
+
+      if (idx >= 0) {
+        const next = [...prev];
+        const newAmount = next[idx].amount + amount;
+
+        next[idx] = {
+          ...next[idx],
+          amount: newAmount,
+          totalPrice: price * newAmount,
+        };
+        return next;
+      }
+      return [
+        ...prev,
+        {
+          productId: product.id,
+          amount,
+          price,
+          totalPrice: price * amount,
+        },
+      ];
+    });
+    setFreeSelectedProductId("");
+    setFreeAmount("1");
+    setIsFreeOpen(false);
+  };
+
+  const handleRemoveFreeItem = (productId: string) => {
+    setProductFrees((prev) => prev.filter((f) => f.productId !== productId));
+  };
 
   const handleRemoveClick = (id: string, name: string, status: string) => {
     setItemToRemove({ id, name, status });
@@ -297,9 +368,19 @@ export const OrderRight: React.FC<OrderRightProps> = ({
                     >
                       <Minus size={10} />
                     </Button>
-                    <span className="w-5 text-center font-bold text-[11px]">
-                      {item.quantity}
-                    </span>
+                    <input
+                      className="w-8 text-center font-bold text-[11px] bg-transparent outline-none border-none p-0 focus:ring-0"
+                      type="text"
+                      value={item.quantity === 0 ? "" : item.quantity}
+                      onChange={(e) => {
+                        const val = e.target.value;
+
+                        if (val === "" || /^\d+$/.test(val)) {
+                          setQuantity(item.id, item.status, val);
+                        }
+                      }}
+                      onFocus={(e) => e.target.select()}
+                    />
                     <Button
                       isIconOnly
                       className="min-w-6 h-6 w-6"
@@ -333,6 +414,153 @@ export const OrderRight: React.FC<OrderRightProps> = ({
             </div>
           )}
         </ScrollShadow>
+
+        {/* ✨ ของแถม (Free items) */}
+        <div className="px-3 py-2 border-t border-divider bg-pink-50/30 space-y-2 flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5 text-pink-600">
+              <Gift size={14} />
+              <span className="text-xs font-bold uppercase tracking-wider">
+                {t("payment.freeItems") || "ຂອງແຖມ"}
+              </span>
+              {productFrees.length > 0 && (
+                <span className="text-[10px] font-black bg-pink-100 text-pink-700 px-1.5 rounded-full">
+                  {productFrees.length}
+                </span>
+              )}
+            </div>
+            <Button
+              className="font-bold"
+              color="secondary"
+              size="sm"
+              startContent={<Plus size={14} />}
+              variant="flat"
+              onPress={() => setIsFreeOpen((v) => !v)}
+            >
+              {t("payment.addFreeItem") || "ເພີ່ມຂອງແຖມ"}
+            </Button>
+          </div>
+
+          {isFreeOpen && (
+            <div className="p-2.5 rounded-2xl border-2 border-dashed border-pink-200 bg-white/70 space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
+              <Autocomplete
+                label={t("payment.selectProduct") || "ເລືອກສິນຄ້າ"}
+                labelPlacement="outside"
+                placeholder={
+                  t("payment.searchProductPlaceholder") ||
+                  t("sale.searchPlaceholder") ||
+                  "ຄົ້ນຫາສິນຄ້າ..."
+                }
+                selectedKey={freeSelectedProductId || null}
+                size="sm"
+                variant="bordered"
+                onSelectionChange={(key) => {
+                  setFreeSelectedProductId((key as string) || "");
+                }}
+              >
+                {freeProducts.map((p) => (
+                  <AutocompleteItem
+                    key={p.id}
+                    isDisabled={(p.stockQty ?? 0) <= 0}
+                    startContent={
+                      <Avatar
+                        alt={p.name}
+                        className="w-7 h-7 flex-shrink-0"
+                        radius="sm"
+                        src={getDisplayImageUrl(p.image)}
+                      />
+                    }
+                    textValue={p.name}
+                  >
+                    <div className="flex items-center justify-between gap-2 w-full">
+                      <span className="font-bold text-xs truncate">
+                        {p.name}
+                      </span>
+                      <span
+                        className={clsx(
+                          "text-[10px] font-black px-1.5 py-0.5 rounded-md whitespace-nowrap flex-shrink-0",
+                          (p.stockQty ?? 0) > 10
+                            ? "bg-success-100 text-success-700"
+                            : (p.stockQty ?? 0) > 0
+                              ? "bg-warning-100 text-warning-700"
+                              : "bg-danger-100 text-danger-700",
+                        )}
+                      >
+                        {(p.stockQty ?? 0) > 0
+                          ? `${formatNumber(p.stockQty ?? 0)} ${p.unit?.name || ""}`
+                          : t("sale.outOfStock") || "ໝົດ"}
+                      </span>
+                    </div>
+                  </AutocompleteItem>
+                ))}
+              </Autocomplete>
+              <HeroInput
+                label={t("payment.amount") || "ຈຳນວນ"}
+                labelPlacement="outside"
+                min={1}
+                placeholder="1"
+                size="sm"
+                type="number"
+                value={freeAmount}
+                variant="bordered"
+                onValueChange={setFreeAmount}
+              />
+              <Button
+                className="w-full font-bold"
+                color="secondary"
+                isDisabled={!freeSelectedProductId}
+                startContent={<Plus size={14} />}
+                onPress={handleAddFreeItem}
+              >
+                {t("payment.addToList") || "ເພີ່ມເຂົ້າລາຍການ"}
+              </Button>
+            </div>
+          )}
+
+          {productFrees.length > 0 && (
+            <div className="space-y-1.5 max-h-[150px] overflow-y-auto scrollbar-hide">
+              {productFrees.map((free) => {
+                const product = freeProducts.find(
+                  (p) => p.id === free.productId,
+                );
+
+                return (
+                  <div
+                    key={free.productId}
+                    className="flex items-center gap-2 p-2 rounded-xl bg-white/80 border border-pink-100"
+                  >
+                    <img
+                      alt={product?.name || ""}
+                      className="w-10 h-10 rounded-lg object-cover flex-shrink-0 bg-default-100 border border-pink-100"
+                      src={getDisplayImageUrl(product?.image)}
+                    />
+                    <div className="flex-grow min-w-0">
+                      <p className="text-[11px] font-black text-default-700 truncate leading-tight">
+                        {product?.name || t("payment.product") || "Product"}
+                      </p>
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <Gift className="text-pink-600" size={10} />
+                        <span className="text-[10px] font-black text-pink-600">
+                          × {free.amount}
+                        </span>
+                      </div>
+                    </div>
+                    <Button
+                      isIconOnly
+                      className="min-w-7 h-7 w-7 flex-shrink-0"
+                      color="danger"
+                      size="sm"
+                      variant="flat"
+                      onPress={() => handleRemoveFreeItem(free.productId)}
+                    >
+                      <Trash2 size={12} />
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
 
         <div className="p-4 border-t border-divider bg-default-50/80 backdrop-blur-md">
           <div className="space-y-2 mb-4">

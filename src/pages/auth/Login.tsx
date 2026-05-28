@@ -184,7 +184,7 @@ export default function Login() {
 
       let targetPath = "/settings/profile"; // Absolute fallback
 
-      if (storeType === "GENERAL_STORE") {
+      if (storeType === "GENERAL_STORE" || storeType === "PHONE_SHOP") {
         if (canAccess("pos")) targetPath = "/saleGeneral";
         else if (canAccess("order")) targetPath = "/order";
         else if (canAccess("dashboard")) targetPath = "/dashboard";

@@ -185,7 +185,7 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
     const storeType = user?.user?.store?.type;
 
     // StoreType Filtering logic
-    if (storeType === "GENERAL_STORE") {
+    if (storeType === "GENERAL_STORE" || storeType === "PHONE_SHOP") {
       if (
         href === "/table" ||
         href === "/saleCafe" ||

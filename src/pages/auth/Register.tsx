@@ -25,6 +25,7 @@ import {
   Coffee,
   ArrowRight,
   CheckCircle2,
+  Phone,
 } from "lucide-react";
 
 import version from "../../../package.json";
@@ -50,7 +51,7 @@ import {
 
 const bgLineName = "/line-nam-bg.png";
 
-type StoreType = "RESTAURANT" | "CAFE" | "GENERAL_STORE";
+type StoreType = "RESTAURANT" | "CAFE" | "GENERAL_STORE" | "PHONE_SHOP";
 
 interface StoreTypeOption {
   value: StoreType;
@@ -93,6 +94,16 @@ const STORE_TYPE_OPTIONS: StoreTypeOption[] = [
     icon: <Store size={32} />,
     gradient: "from-gray-500 to-slate-600",
     border: "border-gray-400",
+  },
+  {
+    value: "PHONE_SHOP",
+    labelKey: "auth.storeType.phoneShop",
+    defaultLabel: "ຮ້ານຂາຍໂທລະສັບ",
+    descriptionKey: "auth.storeType.phoneShopDesc",
+    defaultDesc: "Phone Shop",
+    icon: <Phone size={32} />,
+    gradient: "from-green-500 to-green-600",
+    border: "border-green-400",
   },
 ];
 
@@ -236,7 +247,7 @@ export default function Register() {
         try {
           const { useCartStore } = await import("@/store/useCartStore");
           useCartStore.getState().resetCart();
-        } catch (e) {}
+        } catch (e) { }
         updateAuthState(authData);
 
         // Check if questionnaire is completed
@@ -271,7 +282,7 @@ export default function Register() {
 
         let targetPath = "/settings/profile";
 
-        if (storeType === "GENERAL_STORE") {
+        if (storeType === "GENERAL_STORE" || storeType === "PHONE_SHOP") {
           if (canAccess("pos")) targetPath = "/saleGeneral";
           else if (canAccess("order")) targetPath = "/order";
           else if (canAccess("dashboard")) targetPath = "/dashboard";
@@ -381,26 +392,23 @@ export default function Register() {
             <div className="flex items-center gap-3">
               {/* Step 1 */}
               <div
-                className={`flex items-center justify-center w-9 h-9 rounded-full font-bold text-sm transition-all ${
-                  step === 1
-                    ? "bg-white text-primary shadow-lg scale-110"
-                    : "bg-white/30 text-white"
-                }`}
+                className={`flex items-center justify-center w-9 h-9 rounded-full font-bold text-sm transition-all ${step === 1
+                  ? "bg-white text-primary shadow-lg scale-110"
+                  : "bg-white/30 text-white"
+                  }`}
               >
                 {step === 2 ? <CheckCircle2 size={18} /> : "1"}
               </div>
               <div
-                className={`h-0.5 w-12 rounded-full transition-all ${
-                  step === 2 ? "bg-white" : "bg-white/30"
-                }`}
+                className={`h-0.5 w-12 rounded-full transition-all ${step === 2 ? "bg-white" : "bg-white/30"
+                  }`}
               />
               {/* Step 2 */}
               <div
-                className={`flex items-center justify-center w-9 h-9 rounded-full font-bold text-sm transition-all ${
-                  step === 2
-                    ? "bg-white text-primary shadow-lg scale-110"
-                    : "bg-white/30 text-white"
-                }`}
+                className={`flex items-center justify-center w-9 h-9 rounded-full font-bold text-sm transition-all ${step === 2
+                  ? "bg-white text-primary shadow-lg scale-110"
+                  : "bg-white/30 text-white"
+                  }`}
               >
                 2
               </div>
@@ -451,10 +459,9 @@ export default function Register() {
                     <button
                       key={option.value}
                       className={`relative w-full text-left rounded-2xl border-2 p-5 transition-all duration-200 cursor-pointer group
-                        ${
-                          isSelected
-                            ? `${option.border} bg-white dark:bg-gray-900 shadow-xl scale-[1.02]`
-                            : "border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-700 hover:shadow-md hover:scale-[1.01]"
+                        ${isSelected
+                          ? `${option.border} bg-white dark:bg-gray-900 shadow-xl scale-[1.02]`
+                          : "border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-700 hover:shadow-md hover:scale-[1.01]"
                         }
                       `}
                       type="button"
@@ -462,9 +469,8 @@ export default function Register() {
                     >
                       {/* Icon circle */}
                       <div
-                        className={`w-14 h-14 rounded-xl flex items-center justify-center text-white mb-4 bg-gradient-to-br ${option.gradient} shadow-lg transition-all ${
-                          isSelected ? "scale-110" : "group-hover:scale-105"
-                        }`}
+                        className={`w-14 h-14 rounded-xl flex items-center justify-center text-white mb-4 bg-gradient-to-br ${option.gradient} shadow-lg transition-all ${isSelected ? "scale-110" : "group-hover:scale-105"
+                          }`}
                       >
                         {option.icon}
                       </div>
@@ -546,7 +552,7 @@ export default function Register() {
                   >
                     {/* Store Info */}
                     <div className="w-full space-y-4">
-                      <div className="flex items-center gap-2 text-primary font-bold border-b border-divider pb-1">
+                      <div className="flex mb-10 items-center gap-2 text-primary font-bold border-b border-divider pb-1">
                         <Store size={18} />
                         <span className="text-sm uppercase tracking-wider">
                           {t("sidebar.groups.management")}
@@ -570,7 +576,7 @@ export default function Register() {
                         variant="bordered"
                       />
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid mb-10 grid-cols-1 md:grid-cols-2 gap-4">
                         <Select
                           isRequired
                           classNames={{
@@ -649,7 +655,7 @@ export default function Register() {
 
                     {/* Account Info */}
                     <div className="space-y-4">
-                      <div className="flex items-center gap-2 text-primary font-bold border-b border-divider pb-1">
+                      <div className="flex mb-10 items-center gap-2 text-primary font-bold border-b border-divider pb-1">
                         <UserIcon size={18} />
                         <span className="text-sm uppercase tracking-wider">
                           {t("navigation.profile")}

@@ -100,7 +100,9 @@
       "other": "ອື່ນໆ",
       "otherDesc": "ທຸລະກິດປະເພດອື່ນໆ",
       "generalStore": "ຮ້ານຄ້າທົ່ວໄປ",
-      "generalStoreDesc": "ຮ້ານຄ້າຂາຍຍ່ອຍ ແລະ ຂາຍຍົກທົ່ວໄປ"
+      "generalStoreDesc": "ຮ້ານຄ້າຂາຍຍ່ອຍ ແລະ ຂາຍຍົກທົ່ວໄປ",
+      "phoneShop": "ຮ້ານໂທລະສັບ",
+      "phoneShopDesc": "ໂທລະສັບມືຖື, ອຸປະກອນເສີມ ແລະ ການຊ້ອມແປງ"
     },
     "logoutConfirmTitle": "ຢືນຢັນອອກຈາກລະບົບ",
     "logoutConfirmMsg": "ທ່ານຕ້ອງການອອກຈາກລະບົບແທ້ບໍ່?",
@@ -459,7 +461,22 @@
     "foundExisting": "ພົບຂໍ້ມູນສິນຄ້າເດີມ",
     "updateSuccess": "ອັບເດດສິນຄ້າສຳເລັດ",
     "createSuccess": "ເພີ່ມສິນຄ້າສຳເລັດ",
-    "saveError": "ເກີດຂໍ້ຜິດພາດໃນການບັນທຶກ"
+    "saveError": "ເກີດຂໍ້ຜິດພາດໃນການບັນທຶກ",
+    "priceError": "ລາຄາຂາຍຕ້ອງສູງກວ່າ ຫຼື ເທົ່າກັບຕົ້ນທຶນ",
+    "phone": {
+      "section": "ຂໍ້ມູນເຄື່ອງ",
+      "productType": "ປະເພດ",
+      "model": "ລຸ້ນ",
+      "storage": "ຄວາມຈຸ",
+      "color": "ສີ",
+      "buyDate": "ວັນທີຊື້",
+      "sellDate": "ວັນທີຂາຍ",
+      "isFix": "ສະຖານະການຊ່ອມ",
+      "notFix": "ບໍ່ໄດ້ຊ່ອມ",
+      "fixed": "ຊ່ອມແລ້ວ",
+      "fixPrice": "ຄ່າຊ່ອມ",
+      "fixDescription": "ລາຍລະອຽດການຊ່ອມ"
+    }
   },
   "queue": {
     "welcome": "ຍິນດີຕ້ອນຮັບສູ່ Saysettha ODSC",
@@ -611,6 +628,10 @@
   "order": {
     "title": "ລາຍການການຂາຍ",
     "desc": "ເບິ່ງປະຫວັດການຂາຍ ແລະ ລາຍລະອຽດແຕ່ລະບິນ",
+    "freeItems": "ຂອງແຖມ",
+    "freeItemsCount": "× {{count}}",
+    "freeItemsSection": "ຂອງແຖມ ({{count}} ລາຍການ)",
+    "freeItemsTotalValue": "ມູນຄ່າລວມ",
     "exportExcel": "ສົ່ງອອກ (Excel)",
     "statTotalOrders": "ຈຳນວນ Order",
     "statTotalRevenue": "ລາຍຮັບທັງໝົດ",
@@ -696,6 +717,8 @@
   "sale": {
     "searchPlaceholder": "ຄົ້ນຫາລາຍການ ຫຼື ຍິງບາໂຄດ...",
     "categoryAll": "ທັງໝົດ",
+    "productTypeTool1": "ມື້ 1",
+    "productTypeTool2": "ມື້ 2",
     "outOfStock": "ໝົດ",
     "itemAdded": "ເພີ່ມ {{name}}",
     "barcodeAdded": "ຍິງບາໂຄດ: ເພີ່ມ {{name}} ສຳເລັດ",
@@ -846,6 +869,12 @@
     "discount": "ສ່ວນຫຼຸດ",
     "byAmount": "ເປັນເງິນ",
     "byPercent": "ເປັນ %",
+    "freeItems": "ຂອງແຖມ",
+    "addFreeItem": "ເພີ່ມຂອງແຖມ",
+    "selectProduct": "ເລືອກສິນຄ້າ",
+    "amount": "ຈຳນວນ",
+    "addToList": "ເພີ່ມເຂົ້າລາຍການ",
+    "product": "ສິນຄ້າ",
     "grandTotal": "ຍອດລວມທີ່ຕ້ອງຈ່າຍ",
     "cashAmount": "ຈ່າຍເງິນສົດ",
     "transferAmount": "ຈ່າຍເງິນໂອນ",

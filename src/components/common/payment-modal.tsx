@@ -27,6 +27,7 @@ import { useGetBanks, Bank } from "@/services/bank/useBank";
 import {
   useCreateOrder,
   useUpdateOrderItems,
+  ProductFreeItemInput,
 } from "@/services/order/useOrder";
 import { useGetMoneyRates } from "@/services/moneyRate/useMoneyRate";
 import { getDisplayImageUrl } from "@/lib/utils";
@@ -49,6 +50,8 @@ interface PaymentModalProps {
   tableId?: string | null;
   businessType?: "RETAIL" | "CAFE";
   editingOrderId?: string;
+  productFrees?: ProductFreeItemInput[];
+  setProductFrees?: React.Dispatch<React.SetStateAction<ProductFreeItemInput[]>>;
   onPaymentSuccess: (order?: any) => void;
 }
 
@@ -60,6 +63,8 @@ export default function PaymentModal({
   tableId,
   businessType,
   editingOrderId,
+  productFrees = [],
+  setProductFrees,
   onPaymentSuccess,
 }: PaymentModalProps) {
   const { t } = useTranslation();
@@ -136,6 +141,8 @@ export default function PaymentModal({
     } else {
       setReceivedAmount("0");
     }
+    // reset ของแถมผ่าน setter จาก parent
+    setProductFrees?.([]);
   };
 
   const deleteLastDigit = () => {
@@ -273,6 +280,7 @@ export default function PaymentModal({
             memberId: null,
             dueDate: null,
             items: mappedItems,
+            productFrees: productFrees,
           },
         });
       } else {
@@ -293,6 +301,7 @@ export default function PaymentModal({
           tableId: tableId,
           businessType: businessType,
           items: mappedItems,
+          productFrees: productFrees,
         });
       }
 
@@ -365,6 +374,7 @@ export default function PaymentModal({
             memberId: memberId,
             dueDate: dueDate ? new Date(dueDate).toISOString() : null,
             items: mappedItems,
+            productFrees: productFrees,
           },
         });
       } else {
@@ -386,11 +396,13 @@ export default function PaymentModal({
           tableId: tableId,
           businessType: businessType,
           items: mappedItems,
+          productFrees: productFrees,
         });
       }
 
       toast.success(t("payment.debtSuccess") || "ບັນທຶກການຕິດໜີ້ສຳເລັດ!");
       onPaymentSuccess(result?.data);
+      clearReceived();
       setIsDebtModalOpen(false);
       onOpenChange(false);
     } catch (error: any) {

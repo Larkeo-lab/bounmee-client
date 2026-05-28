@@ -13,6 +13,13 @@ export interface OrderItemInput {
   unitName?: string;
 }
 
+export interface ProductFreeItemInput {
+  productId: string;
+  amount: number;
+  price: number;
+  totalPrice: number;
+}
+
 export interface CreateOrderInput {
   totalAmount: number;
   receivedAmount: number;
@@ -36,6 +43,7 @@ export interface CreateOrderInput {
   memberId?: string | null;
   dueDate?: string | null;
   paymentStatus?: "PAID" | "UNPAID" | "PARTIALLY_PAID";
+  productFrees?: ProductFreeItemInput[];
 }
 
 export interface OrderItem {
@@ -98,6 +106,20 @@ export interface Order {
   paymentStatus: "PAID" | "UNPAID" | "PARTIALLY_PAID";
   createdAt: string;
   updatedAt: string;
+  productFrees?: {
+    id: string;
+    amount: number;
+    price: number;
+    totalPrice: number;
+    productId: string;
+    product?: {
+      id: string;
+      name: string;
+      image?: string | null;
+      barcode?: string | null;
+      unit?: { id: string; name: string };
+    };
+  }[];
 }
 
 export interface OrdersResponse {
@@ -199,6 +221,7 @@ export interface UpdateOrderItemsInput {
   debtAmount?: number;
   memberId?: string | null;
   dueDate?: string | null;
+  productFrees?: ProductFreeItemInput[];
 }
 
 export const useUpdateOrderItems = () => {

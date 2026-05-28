@@ -39,6 +39,7 @@ import { formatNumber, parseNumber } from "@/utils/numberFormat";
 import { generateBarcode128 } from "@/utils/generateBarcode128";
 import { useGetUnits, Unit, useCreateUnit } from "@/services/unit/useUnit";
 import { Layers } from "lucide-react";
+import { Textarea } from "@heroui/input";
 
 interface EditProductProps {
   isOpen: boolean;
@@ -46,6 +47,7 @@ interface EditProductProps {
   onClose: () => void;
   product: Product | null;
   storeId: string;
+  storeType?: string;
   categories: Category[];
 }
 
@@ -54,8 +56,10 @@ export default function EditProduct({
   onOpenChange,
   product,
   storeId,
+  storeType,
   categories,
 }: EditProductProps) {
+  const isPhoneShop = storeType === "PHONE_SHOP";
   const { t } = useTranslation();
   const updateProductMutation = useUpdateProduct();
   const uploadImageMutation = useUploadImage();
@@ -77,6 +81,16 @@ export default function EditProduct({
     image: "",
     isActive: true,
     isBarcode: false,
+    // Phone-shop fields
+    fixPrice: 0,
+    isFix: false,
+    fixDescription: "",
+    model: "",
+    storage: "",
+    buyDate: "",
+    sellDate: "",
+    color: "",
+    productType: "TOOL_1" as "TOOL_1" | "TOOL_2",
   });
 
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
@@ -101,6 +115,19 @@ export default function EditProduct({
         image: product.image || "",
         isActive: product.isActive,
         isBarcode: product.isBarcode || false,
+        fixPrice: Number(product.fixPrice || 0),
+        isFix: product.isFix || false,
+        fixDescription: product.fixDescription || "",
+        model: product.model || "",
+        storage: product.storage || "",
+        buyDate: product.buyDate
+          ? new Date(product.buyDate).toISOString().slice(0, 10)
+          : "",
+        sellDate: product.sellDate
+          ? new Date(product.sellDate).toISOString().slice(0, 10)
+          : "",
+        color: product.color || "",
+        productType: product.productType || "TOOL_1",
       });
       setPreviewImage(product.image || "");
     }
@@ -189,6 +216,26 @@ export default function EditProduct({
   const isPriceInvalid =
     formData.price > 0 && formData.cost > 0 && formData.price < formData.cost;
 
+  // ✨ Build payload — include phone-only fields only when in PHONE_SHOP mode
+  const buildPhonePayload = () =>
+    isPhoneShop
+      ? {
+        fixPrice: Number(formData.fixPrice) || null,
+        isFix: formData.isFix,
+        fixDescription: formData.fixDescription || null,
+        model: formData.model || null,
+        storage: formData.storage || null,
+        buyDate: formData.buyDate
+          ? new Date(formData.buyDate).toISOString()
+          : null,
+        sellDate: formData.sellDate
+          ? new Date(formData.sellDate).toISOString()
+          : null,
+        color: formData.color || null,
+        productType: formData.productType,
+      }
+      : {};
+
   const handleSubmit = async (onModalClose: () => void) => {
     if (!product) return;
     try {
@@ -200,6 +247,7 @@ export default function EditProduct({
         unitId: formData.unitId || null,
         id: product.id,
         storeId: storeId,
+        ...buildPhonePayload(),
       });
       toast.success(t("product.updateSuccess") || "ອັບເດດສິນຄ້າສຳເລັດ");
       onModalClose();
@@ -534,7 +582,7 @@ export default function EditProduct({
                       errorMessage={
                         isPriceInvalid
                           ? t("product.priceError") ||
-                            "ລາຄາຂາຍຕ້ອງສູງກວ່າ ຫຼື ເທົ່າກັບຕົ້ນທຶນ"
+                          "ລາຄາຂາຍຕ້ອງສູງກວ່າ ຫຼື ເທົ່າກັບຕົ້ນທຶນ"
                           : ""
                       }
                       isInvalid={isPriceInvalid}
@@ -547,6 +595,158 @@ export default function EditProduct({
                     />
                     <div className="hidden md:block" />
                   </div>
+
+                  {/* ✨ Phone-shop only fields */}
+                  {isPhoneShop && (
+                    <div className="flex flex-col gap-4 border-t border-divider pt-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-small font-bold text-primary uppercase tracking-wider">
+                          {t("product.phone.section") || "ຂໍ້ມູນເຄື່ອງ"}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <Select
+                          label={t("product.phone.productType") || "ປະເພດ"}
+                          labelPlacement="outside"
+                          placeholder="TOOL_1"
+                          selectedKeys={[formData.productType]}
+                          variant="bordered"
+                          onSelectionChange={(keys) => {
+                            const val = Array.from(keys)[0] as
+                              | "TOOL_1"
+                              | "TOOL_2";
+
+                            setFormData((prev) => ({
+                              ...prev,
+                              productType: val || "TOOL_1",
+                            }));
+                          }}
+                        >
+                          <SelectItem key="TOOL_1">TOOL_1</SelectItem>
+                          <SelectItem key="TOOL_2">TOOL_2</SelectItem>
+                        </Select>
+
+                        <Input
+                          label={t("product.phone.model") || "ລຸ້ນ (Model)"}
+                          labelPlacement="outside"
+                          placeholder={t("product.phone.model") || "ລຸ້ນ"}
+                          value={formData.model}
+                          variant="bordered"
+                          onValueChange={(val) =>
+                            setFormData((prev) => ({ ...prev, model: val }))
+                          }
+                        />
+
+                        <Input
+                          label={t("product.phone.storage") || "ຄວາມຈຸ"}
+                          labelPlacement="outside"
+                          placeholder="128GB / 256GB"
+                          value={formData.storage}
+                          variant="bordered"
+                          onValueChange={(val) =>
+                            setFormData((prev) => ({ ...prev, storage: val }))
+                          }
+                        />
+
+                        <Input
+                          label={t("product.phone.color") || "ສີ"}
+                          labelPlacement="outside"
+                          placeholder={t("product.phone.color") || "ສີ"}
+                          value={formData.color}
+                          variant="bordered"
+                          onValueChange={(val) =>
+                            setFormData((prev) => ({ ...prev, color: val }))
+                          }
+                        />
+
+                        <Input
+                          label={t("product.phone.buyDate") || "ວັນທີຊື້"}
+                          labelPlacement="outside"
+                          type="date"
+                          value={formData.buyDate}
+                          variant="bordered"
+                          onValueChange={(val) =>
+                            setFormData((prev) => ({ ...prev, buyDate: val }))
+                          }
+                        />
+
+                        <Input
+                          label={t("product.phone.sellDate") || "ວັນທີຂາຍ"}
+                          labelPlacement="outside"
+                          type="date"
+                          value={formData.sellDate}
+                          variant="bordered"
+                          onValueChange={(val) =>
+                            setFormData((prev) => ({ ...prev, sellDate: val }))
+                          }
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                        <Select
+                          label={t("product.phone.isFix") || "ສະຖານະຊ້ອມ"}
+                          labelPlacement="outside"
+                          placeholder={t("product.phone.isFix") || "ສະຖານະຊ້ອມ"}
+                          selectedKeys={[formData.isFix ? "yes" : "no"]}
+                          variant="bordered"
+                          onSelectionChange={(keys) => {
+                            const val = Array.from(keys)[0] === "yes";
+
+                            setFormData((prev) => ({ ...prev, isFix: val }));
+                          }}
+                        >
+                          <SelectItem key="no">
+                            {t("product.phone.notFix") || "ບໍ່ໄດ້ຊ້ອມ"}
+                          </SelectItem>
+                          <SelectItem key="yes">
+                            {t("product.phone.fixed") || "ໄດ້ຊ້ອມ"}
+                          </SelectItem>
+                        </Select>
+
+                        <Input
+                          isDisabled={!formData.isFix}
+                          label={t("product.phone.fixPrice") || "ຄ່າຊ້ອມ"}
+                          labelPlacement="outside"
+                          placeholder="0"
+                          startContent={
+                            <span className="text-default-400 font-bold text-small">
+                              {t("common.currency")}
+                            </span>
+                          }
+                          type="text"
+                          value={formatNumber(formData.fixPrice)}
+                          variant="bordered"
+                          onValueChange={(val) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              fixPrice: parseNumber(val),
+                            }))
+                          }
+                        />
+                        <div className="hidden md:block" />
+                      </div>
+
+                      <Textarea
+                        isDisabled={!formData.isFix}
+                        label={
+                          t("product.phone.fixDescription") || "ລາຍລະອຽດການຊ້ອມ"
+                        }
+                        labelPlacement="outside"
+                        placeholder={
+                          t("product.phone.fixDescription") || "ລາຍລະອຽດການຊ້ອມ"
+                        }
+                        value={formData.fixDescription}
+                        variant="bordered"
+                        onValueChange={(val) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            fixDescription: val,
+                          }))
+                        }
+                      />
+                    </div>
+                  )}
                 </div>
               </ModalBody>
               <ModalFooter>
@@ -586,7 +786,6 @@ export default function EditProduct({
               <ModalHeader>{t("settings.category.addTitle")}</ModalHeader>
               <ModalBody>
                 <Input
-                  autoFocus
                   placeholder={t("settings.category.namePlaceholder")}
                   value={newCategoryName}
                   variant="bordered"
@@ -623,7 +822,6 @@ export default function EditProduct({
               </ModalHeader>
               <ModalBody>
                 <Input
-                  autoFocus
                   placeholder={
                     t("settings.unit.namePlaceholder") || "ระบุชื่อหน่วย"
                   }

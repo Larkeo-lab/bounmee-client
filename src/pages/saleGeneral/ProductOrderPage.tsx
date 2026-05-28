@@ -24,6 +24,7 @@ import { OrderRight } from "./orderRight";
 import EmptyState from "@/components/common/empty-state";
 import { useGeneralCart } from "@/hooks/useGeneralCart";
 import { useCartStore, CartItem } from "@/store/useCartStore";
+import { ProductFreeItemInput } from "@/services/order/useOrder";
 import PaymentModal from "@/components/common/payment-modal";
 import CameraModal from "@/components/camera";
 import { useAuth } from "@/routes/AuthContext";
@@ -120,7 +121,15 @@ export default function ProductOrderPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedProductType, setSelectedProductType] = useState<
+    "ALL" | "TOOL_1" | "TOOL_2"
+  >("ALL");
+  const storeType = user?.user?.store?.type;
+  const isPhoneShop = storeType === "PHONE_SHOP";
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // ✨ ของแถม (Free items) — lifted up so OrderRight + PaymentModal share state
+  const [productFrees, setProductFrees] = useState<ProductFreeItemInput[]>([]);
 
   useEffect(() => {
     const handler = setTimeout(() => setSearchQuery(searchQuery), 500);
@@ -166,9 +175,14 @@ export default function ProductOrderPage() {
     selectedCategory === "all" ? undefined : selectedCategory,
     true,
     debouncedSearch,
+    isPhoneShop && selectedProductType !== "ALL"
+      ? selectedProductType
+      : undefined,
   );
 
   const products = productResponse?.data || [];
+
+  console.log('products', products)
 
   const handleScan = (barcode: string) => {
     if (barcode) {
@@ -334,6 +348,30 @@ export default function ProductOrderPage() {
               <Barcode size={20} />
             </Button>
           </div>
+
+          {/* ✨ Filter by ProductType (PHONE_SHOP only) */}
+          {isPhoneShop && (
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {(["ALL", "TOOL_1", "TOOL_2"] as const).map((type) => (
+                <button
+                  key={type}
+                  className={clsx(
+                    "px-3 py-1 text-[10px] lg:text-xs font-bold rounded-lg transition-all whitespace-nowrap outline-none border",
+                    selectedProductType === type
+                      ? "bg-primary text-white border-primary shadow-sm"
+                      : "bg-default-100 text-default-500 border-default-200 hover:bg-default-200",
+                  )}
+                  onClick={() => setSelectedProductType(type)}
+                >
+                  {type === "ALL"
+                    ? t("sale.categoryAll")
+                    : type === "TOOL_1"
+                      ? t("sale.productTypeTool1")
+                      : t("sale.productTypeTool2")}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Product Grid Area */}
@@ -362,10 +400,18 @@ export default function ProductOrderPage() {
                   onPress={(e) => handleAddToCart(product, e as any)}
                 >
                   <CardBody className="p-0 relative overflow-hidden h-[100px] sm:h-[120px] lg:h-[140px]">
-                    <div className="absolute top-1.5 right-1.5 z-20">
+                    {/* เพิ่ม w-full และ padding ซ้าย-ขวา (เช่น px-1.5) เพื่อไม่ให้ติดขอบกล่องนอกเกินไป */}
+                    <div className="absolute top-1.5 left-0 right-0 px-1.5 z-20 flex justify-between items-center">
+                      {product?.productType === "TOOL_2" && (
+                        <div className="px-2 py-0.5 rounded-full text-[9px] lg:text-[10px] font-bold text-white shadow-lg backdrop-blur-md bg-red-500">
+                          {t("sale.productTypeTool2")}
+                        </div>
+                      )}
+
                       <div
                         className={clsx(
-                          "px-2 py-0.5 rounded-full text-[9px] lg:text-[10px] font-bold text-white shadow-lg backdrop-blur-md",
+                          // เพิ่ม ml-auto เข้าไปในคลาสพื้นฐานตรงนี้ครับ
+                          "ml-auto px-2 py-0.5 rounded-full text-[9px] lg:text-[10px] font-bold text-white shadow-lg backdrop-blur-md",
                           product.stockQty > 10
                             ? "bg-primary/80"
                             : product.stockQty > 0
@@ -428,7 +474,10 @@ export default function ProductOrderPage() {
       <OrderRight
         editingOrderNumber={editingOrder?.orderNumber}
         isMinimized={isMinimized}
+        productFrees={productFrees}
         setIsMinimized={setIsMinimized}
+        setProductFrees={setProductFrees}
+        storeId={user?.user?.storeId}
         onCancelEdit={handleCancelEdit}
         onPaymentOpen={onOpen}
       />
@@ -437,6 +486,8 @@ export default function ProductOrderPage() {
         editingOrderId={editingOrder?.id}
         isOpen={isOpen}
         items={cart}
+        productFrees={productFrees}
+        setProductFrees={setProductFrees}
         total={subtotal}
         onOpenChange={onOpenChange}
         onPaymentSuccess={handlePaymentSuccess}

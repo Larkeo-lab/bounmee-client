@@ -27,6 +27,7 @@ import {
   LayoutGrid,
   Coffee,
   Armchair,
+  Gift,
 } from "lucide-react";
 import dayjs from "dayjs";
 
@@ -579,19 +580,22 @@ export default function OrderPage() {
                 {t("order.tableEmployeeCol")}
               </TableColumn>
               <TableColumn key="payment">{t("order.tablePayment")}</TableColumn>
-              <TableColumn key="total">{t("order.tableTotal")}</TableColumn>
               <TableColumn key="realMoney">
                 {t("order.realMoney") || "ຍອດເງິນຕົວຈິງ"}
+              </TableColumn>
+              <TableColumn key="discount">
+                {t("order.discount") || "ສ່ວນຫຼຸດ"}
               </TableColumn>
               <TableColumn key="receivedAmount">
                 {t("order.receivedAmount") || "ເງິນຮັບມາ"}
               </TableColumn>
 
-              <TableColumn key="discount">
-                {t("order.discount") || "ສ່ວນຫຼຸດ"}
-              </TableColumn>
+
               <TableColumn key="change">
                 {t("order.change") || "ເງິນທອນ"}
+              </TableColumn>
+              <TableColumn key="free">
+                {t("order.freeItems") || "ຂອງແຖມ"}
               </TableColumn>
               <TableColumn key="paymentStatus">
                 {t("order.paymentStatus") || "ສະຖານະຊຳລະ"}
@@ -655,24 +659,12 @@ export default function OrderPage() {
                       </Chip>
                     </TableCell>
                   )}
-                  <TableCell className="font-black text-sm text-primary">
-                    {formatNumber(item.totalAmount)} {t("order.kip") || "ກີບ"}
-                  </TableCell>
+
                   <TableCell className="font-black text-sm text-primary">
                     {formatNumber(
                       Number(item.totalAmount) + Number(item.discountAmount),
                     )}{" "}
                     {t("order.kip") || "ກີບ"}
-                  </TableCell>
-                  <TableCell className="font-bold text-sm text-default-600">
-                    {Number(item.receivedAmount) > 0 ? (
-                      <span>
-                        {formatNumber(item.receivedAmount)}{" "}
-                        {t("order.kip") || "ກີບ"}
-                      </span>
-                    ) : (
-                      <span className="text-default-300">-</span>
-                    )}
                   </TableCell>
                   <TableCell className="font-bold text-xs text-danger">
                     {item.isDiscount ? (
@@ -689,11 +681,46 @@ export default function OrderPage() {
                       <span className="text-default-300">-</span>
                     )}
                   </TableCell>
+                  <TableCell className="font-bold text-sm text-default-600">
+                    {Number(item.receivedAmount) > 0 ? (
+                      <span>
+                        {formatNumber(item.receivedAmount)}{" "}
+                        {t("order.kip") || "ກີບ"}
+                      </span>
+                    ) : (
+                      <span className="text-default-300">-</span>
+                    )}
+                  </TableCell>
+
                   <TableCell className="font-bold text-sm text-success">
                     {Number(item.change) > 0 ? (
                       <span>
                         {formatNumber(item.change)} {t("order.kip") || "ກີບ"}
                       </span>
+                    ) : (
+                      <span className="text-default-300">-</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {item.productFrees && item.productFrees.length > 0 ? (
+                      <Chip
+                        className="h-5 text-[10px] font-black"
+                        color="secondary"
+                        size="sm"
+                        startContent={<Gift size={10} />}
+                        variant="flat"
+                      >
+                        {t("order.freeItemsCount", {
+                          count: item.productFrees.reduce(
+                            (acc: number, f: any) => acc + Number(f.amount),
+                            0,
+                          ),
+                        }) ||
+                          `× ${item.productFrees.reduce(
+                            (acc: number, f: any) => acc + Number(f.amount),
+                            0,
+                          )}`}
+                      </Chip>
                     ) : (
                       <span className="text-default-300">-</span>
                     )}

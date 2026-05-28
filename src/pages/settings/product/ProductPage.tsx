@@ -94,6 +94,7 @@ export default function ProductPage() {
   const [selectedTab, setSelectedTab] = useState("product");
   const [isBarcodeScannerOpen, setIsBarcodeScannerOpen] = useState(false);
   const [scannedBarcode, setScannedBarcode] = useState<string>("");
+  const storeType = user?.user?.store?.type;
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -115,6 +116,8 @@ export default function ProductPage() {
     debouncedSearch,
   );
   const products = productResponse?.data || [];
+
+  console.log("storeType: ", storeType)
 
   const items = useMemo(() => {
     const start = (page - 1) * rowsPerPage;
@@ -483,6 +486,7 @@ export default function ProductPage() {
         initialBarcode={scannedBarcode}
         isOpen={isCreateOpen}
         storeId={user?.user?.storeId || ""}
+        storeType={storeType}
         onClose={onCreateClose}
         onOpenChange={onCreateOpenChange}
       />
@@ -501,6 +505,7 @@ export default function ProductPage() {
         isOpen={isEditOpen}
         product={selectedProduct}
         storeId={user?.user?.storeId || ""}
+        storeType={storeType}
         onClose={onEditClose}
         onOpenChange={onEditOpenChange}
       />

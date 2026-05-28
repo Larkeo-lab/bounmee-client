@@ -125,7 +125,7 @@ const QuestionnairePage: React.FC = () => {
         success: () => {
           const storeType = user?.user?.store?.type;
 
-          if (storeType === "GENERAL_STORE") {
+          if (storeType === "GENERAL_STORE" || storeType === "PHONE_SHOP") {
             navigate("/saleGeneral");
           } else if (storeType === "CAFE") {
             navigate("/saleCafe");

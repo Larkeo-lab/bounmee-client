@@ -99,7 +99,9 @@
       "other": "Other",
       "otherDesc": "Other Business",
       "generalStore": "General Store",
-      "generalStoreDesc": "Retail and wholesale general stores"
+      "generalStoreDesc": "Retail and wholesale general stores",
+      "phoneShop": "Phone Shop",
+      "phoneShopDesc": "Mobile phones, accessories & repair service"
     },
     "logoutConfirmTitle": "Confirm Logout",
     "logoutConfirmMsg": "Are you sure you want to log out?",
@@ -436,7 +438,22 @@
     "foundExisting": "Found existing product data",
     "updateSuccess": "Product updated successfully",
     "createSuccess": "Product created successfully",
-    "saveError": "Error saving product"
+    "saveError": "Error saving product",
+    "priceError": "Selling price must be greater than or equal to cost",
+    "phone": {
+      "section": "Phone Details",
+      "productType": "Type",
+      "model": "Model",
+      "storage": "Storage",
+      "color": "Color",
+      "buyDate": "Buy Date",
+      "sellDate": "Sell Date",
+      "isFix": "Repair Status",
+      "notFix": "Not Repaired",
+      "fixed": "Repaired",
+      "fixPrice": "Repair Cost",
+      "fixDescription": "Repair Description"
+    }
   },
   "queue": {
     "welcome": "Welcome to Saysettha ODSC",
@@ -588,6 +605,10 @@
   "order": {
     "title": "Order History",
     "desc": "View sales history and bill details",
+    "freeItems": "Free Items",
+    "freeItemsCount": "× {{count}}",
+    "freeItemsSection": "Free Items ({{count}})",
+    "freeItemsTotalValue": "Total Value",
     "exportExcel": "Export (Excel)",
     "statTotalOrders": "Total Orders",
     "statTotalRevenue": "Total Revenue",
@@ -674,6 +695,8 @@
   "sale": {
     "searchPlaceholder": "Search items or scan barcode...",
     "categoryAll": "All",
+    "productTypeTool1": "Tool 1",
+    "productTypeTool2": "Tool 2",
     "outOfStock": "Out of stock",
     "itemAdded": "Added {{name}}",
     "barcodeAdded": "Barcode scanned: {{name}} added",
@@ -824,6 +847,12 @@
     "discount": "Discount",
     "byAmount": "Amount",
     "byPercent": "Percent",
+    "freeItems": "Free Items",
+    "addFreeItem": "Add Free Item",
+    "selectProduct": "Select Product",
+    "amount": "Amount",
+    "addToList": "Add to List",
+    "product": "Product",
     "grandTotal": "Grand Total",
     "cashAmount": "Cash Amount",
     "transferAmount": "Transfer Amount",
