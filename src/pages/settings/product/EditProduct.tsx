@@ -39,7 +39,12 @@ import { formatNumber, parseNumber } from "@/utils/numberFormat";
 import { generateBarcode128 } from "@/utils/generateBarcode128";
 import { useGetUnits, Unit, useCreateUnit } from "@/services/unit/useUnit";
 import { Layers } from "lucide-react";
-import { Textarea } from "@heroui/input";
+import {
+  RepairItem,
+  parseRepairItems,
+  serializeRepairItems,
+  sumRepairItems,
+} from "@/utils/repairItems";
 
 interface EditProductProps {
   isOpen: boolean;
@@ -82,9 +87,8 @@ export default function EditProduct({
     isActive: true,
     isBarcode: false,
     // Phone-shop fields
-    fixPrice: 0,
     isFix: false,
-    fixDescription: "",
+    repairItems: [] as RepairItem[],
     model: "",
     storage: "",
     buyDate: "",
@@ -115,9 +119,8 @@ export default function EditProduct({
         image: product.image || "",
         isActive: product.isActive,
         isBarcode: product.isBarcode || false,
-        fixPrice: Number(product.fixPrice || 0),
         isFix: product.isFix || false,
-        fixDescription: product.fixDescription || "",
+        repairItems: parseRepairItems(product.fixDescription, product.fixPrice),
         model: product.model || "",
         storage: product.storage || "",
         buyDate: product.buyDate
@@ -220,9 +223,9 @@ export default function EditProduct({
   const buildPhonePayload = () =>
     isPhoneShop
       ? {
-        fixPrice: Number(formData.fixPrice) || null,
+        fixPrice: sumRepairItems(formData.repairItems) || null,
         isFix: formData.isFix,
-        fixDescription: formData.fixDescription || null,
+        fixDescription: serializeRepairItems(formData.repairItems),
         model: formData.model || null,
         storage: formData.storage || null,
         buyDate: formData.buyDate
@@ -235,6 +238,33 @@ export default function EditProduct({
         productType: formData.productType,
       }
       : {};
+
+  // --- รายการซ่อม (dynamic) ---
+  const fixPriceTotal = sumRepairItems(formData.repairItems);
+
+  const addRepairItem = () =>
+    setFormData((prev) => ({
+      ...prev,
+      repairItems: [...prev.repairItems, { name: "", price: 0 }],
+    }));
+
+  const updateRepairItem = (
+    index: number,
+    field: keyof RepairItem,
+    value: string | number,
+  ) =>
+    setFormData((prev) => ({
+      ...prev,
+      repairItems: prev.repairItems.map((item, i) =>
+        i === index ? { ...item, [field]: value } : item,
+      ),
+    }));
+
+  const removeRepairItem = (index: number) =>
+    setFormData((prev) => ({
+      ...prev,
+      repairItems: prev.repairItems.filter((_, i) => i !== index),
+    }));
 
   const handleSubmit = async (onModalClose: () => void) => {
     if (!product) return;
@@ -711,6 +741,7 @@ export default function EditProduct({
                         </Select>
 
                         <Input
+                          isReadOnly
                           isDisabled={!formData.isFix}
                           label={t("product.phone.fixPrice") || "ຄ່າຊ້ອມ"}
                           labelPlacement="outside"
@@ -721,36 +752,84 @@ export default function EditProduct({
                             </span>
                           }
                           type="text"
-                          value={formatNumber(formData.fixPrice)}
+                          value={formatNumber(fixPriceTotal)}
                           variant="bordered"
-                          onValueChange={(val) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              fixPrice: parseNumber(val),
-                            }))
-                          }
                         />
                         <div className="hidden md:block" />
                       </div>
 
-                      <Textarea
-                        isDisabled={!formData.isFix}
-                        label={
-                          t("product.phone.fixDescription") || "ລາຍລະອຽດການຊ້ອມ"
-                        }
-                        labelPlacement="outside"
-                        placeholder={
-                          t("product.phone.fixDescription") || "ລາຍລະອຽດການຊ້ອມ"
-                        }
-                        value={formData.fixDescription}
-                        variant="bordered"
-                        onValueChange={(val) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            fixDescription: val,
-                          }))
-                        }
-                      />
+                      {/* รายการซ่อม (dynamic) — ชื่อรายการ + ราคา, รวมไปแสดงที่ "ຄ່າຊ້ອມ" */}
+                      <div className="flex flex-col gap-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-small font-medium text-default-700">
+                            {t("product.phone.fixDescription") ||
+                              "ລາຍລະອຽດການຊ້ອມ"}
+                          </span>
+                          <Button
+                            color="primary"
+                            isDisabled={!formData.isFix}
+                            size="sm"
+                            startContent={<Plus size={16} />}
+                            variant="flat"
+                            onPress={addRepairItem}
+                          >
+                            {t("common.add") || "ເພີ່ມ"}
+                          </Button>
+                        </div>
+
+                        {formData.repairItems.map((item, index) => (
+                          <div key={index} className="flex gap-2 items-start">
+                            <Input
+                              className="flex-1"
+                              isDisabled={!formData.isFix}
+                              placeholder={
+                                t("product.phone.fixItemName") || "ຊື່ລາຍການ"
+                              }
+                              value={item.name}
+                              variant="bordered"
+                              onValueChange={(val) =>
+                                updateRepairItem(index, "name", val)
+                              }
+                            />
+                            <Input
+                              className="w-36"
+                              isDisabled={!formData.isFix}
+                              placeholder="0"
+                              startContent={
+                                <span className="text-default-400 font-bold text-small">
+                                  {t("common.currency")}
+                                </span>
+                              }
+                              type="text"
+                              value={formatNumber(item.price)}
+                              variant="bordered"
+                              onValueChange={(val) =>
+                                updateRepairItem(
+                                  index,
+                                  "price",
+                                  parseNumber(val),
+                                )
+                              }
+                            />
+                            <Button
+                              isIconOnly
+                              color="danger"
+                              isDisabled={!formData.isFix}
+                              variant="light"
+                              onPress={() => removeRepairItem(index)}
+                            >
+                              <X size={18} />
+                            </Button>
+                          </div>
+                        ))}
+
+                        {formData.repairItems.length === 0 && (
+                          <p className="text-tiny text-default-400">
+                            {t("product.phone.noFixItems") ||
+                              "ຍັງບໍ່ມີລາຍການຊ້ອມ"}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>

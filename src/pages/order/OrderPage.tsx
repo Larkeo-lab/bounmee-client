@@ -28,13 +28,17 @@ import {
   Coffee,
   Armchair,
   Gift,
+  Pencil,
+  Trash,
 } from "lucide-react";
 import dayjs from "dayjs";
+import { useNavigate } from "react-router-dom";
 
 import { OrderDetail } from "./OrderDetail";
 
 import { useAuth } from "@/routes/AuthContext";
-import { useGetOrders, Order } from "@/services/order/useOrder";
+import { useGetOrders, useDeleteOrder, Order } from "@/services/order/useOrder";
+import ConfirmModal from "@/components/common/popup-confirm";
 import { getDisplayImageUrl } from "@/lib/utils";
 import { formatNumber } from "@/utils/numberFormat";
 import GlobalPagination from "@/components/common/globle-pagination";
@@ -45,8 +49,17 @@ import FilterDate from "@/components/common/fillterDate";
 export default function OrderPage() {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const {
+    isOpen: isDeleteOpen,
+    onOpen: onDeleteOpen,
+    onClose: onDeleteClose,
+    onOpenChange: onDeleteOpenChange,
+  } = useDisclosure();
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
+  const deleteOrderMutation = useDeleteOrder();
 
   // Filters
   const [page, setPage] = useState(1);
@@ -139,6 +152,33 @@ export default function OrderPage() {
   const handleViewDetail = (order: Order) => {
     setSelectedOrder(order);
     onOpen();
+  };
+
+  // แก้ไขออเดอร์ — ไปยังหน้าขายตามประเภทร้าน (ย้ายมาจาก OrderDetail)
+  const handleEdit = (order: Order) => {
+    if (order.businessType === "CAFE") {
+      navigate("/saleCafe", { state: { editOrder: order } });
+    } else if (order.tableId || order.table) {
+      navigate("/table", { state: { editOrder: order } });
+    } else {
+      navigate("/saleGeneral", { state: { editOrder: order } });
+    }
+  };
+
+  const handleDeleteOpen = (order: Order) => {
+    setOrderToDelete(order);
+    onDeleteOpen();
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!orderToDelete) return;
+    try {
+      await deleteOrderMutation.mutateAsync(orderToDelete.id);
+      onDeleteClose();
+      setOrderToDelete(null);
+    } catch (error) {
+      console.error("Failed to delete order:", error);
+    }
   };
 
   const getPaymentMethodColor = (method: string) => {
@@ -747,15 +787,35 @@ export default function OrderPage() {
                   </TableCell>
 
                   <TableCell>
-                    <Button
-                      isIconOnly
-                      color="primary"
-                      size="sm"
-                      variant="light"
-                      onPress={() => handleViewDetail(item)}
-                    >
-                      <Eye size={18} />
-                    </Button>
+                    <>
+                      <Button
+                        isIconOnly
+                        color="primary"
+                        size="sm"
+                        variant="light"
+                        onPress={() => handleViewDetail(item)}
+                      >
+                        <Eye size={18} />
+                      </Button>
+                      <Button
+                        isIconOnly
+                        color="primary"
+                        size="sm"
+                        variant="light"
+                        onPress={() => handleEdit(item)}
+                      >
+                        <Pencil size={18} />
+                      </Button>
+                      <Button
+                        isIconOnly
+                        color="danger"
+                        size="sm"
+                        variant="light"
+                        onPress={() => handleDeleteOpen(item)}
+                      >
+                        <Trash size={18} />
+                      </Button>
+                    </>
                   </TableCell>
                 </TableRow>
               )}
@@ -769,6 +829,20 @@ export default function OrderPage() {
         isOpen={isOpen}
         onOpenChange={onOpenChange}
         selectedOrder={selectedOrder}
+      />
+
+      <ConfirmModal
+        color="danger"
+        confirmText={t("common.delete") || "ລົບ"}
+        icon={<Trash size={24} />}
+        isOpen={isDeleteOpen}
+        message={
+          t("order.deleteConfirmMsg", { name: orderToDelete?.orderNumber }) ||
+          `ຕ້ອງການລົບອໍເດີ້ ${orderToDelete?.orderNumber} ບໍ່?`
+        }
+        title={t("order.confirmDelete") || "ຢືນຢັນການລົບ"}
+        onConfirm={handleDeleteConfirm}
+        onOpenChange={onDeleteOpenChange}
       />
     </div>
   );

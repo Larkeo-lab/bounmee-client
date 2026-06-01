@@ -101,7 +101,7 @@
       "otherDesc": "ທຸລະກິດປະເພດອື່ນໆ",
       "generalStore": "ຮ້ານຄ້າທົ່ວໄປ",
       "generalStoreDesc": "ຮ້ານຄ້າຂາຍຍ່ອຍ ແລະ ຂາຍຍົກທົ່ວໄປ",
-      "phoneShop": "ຮ້ານໂທລະສັບ",
+      "phoneShop": "ຮ້ານຂາຍໂທລະສັບ",
       "phoneShopDesc": "ໂທລະສັບມືຖື, ອຸປະກອນເສີມ ແລະ ການຊ້ອມແປງ"
     },
     "logoutConfirmTitle": "ຢືນຢັນອອກຈາກລະບົບ",
@@ -475,7 +475,9 @@
       "notFix": "ບໍ່ໄດ້ຊ່ອມ",
       "fixed": "ຊ່ອມແລ້ວ",
       "fixPrice": "ຄ່າຊ່ອມ",
-      "fixDescription": "ລາຍລະອຽດການຊ່ອມ"
+      "fixDescription": "ລາຍລະອຽດການຊ່ອມ",
+      "fixItemName": "ຊື່ລາຍການ",
+      "noFixItems": "ຍັງບໍ່ມີລາຍການຊ້ອມ"
     }
   },
   "queue": {
@@ -598,6 +600,7 @@
     "lastYear": "1 ປີຜ່ານມາ",
     "totalSales": "ຍອດຂາຍທັງໝົດ",
     "totalExpenses": "ລາຍຈ່າຍທັງໝົດ",
+    "totalRepairCost": "ຄ່າຊ້ອມທັງໝົດ",
     "totalProfit": "ກຳໄລ່ທັງຫມົດ",
     "totalEmployees": "ຈຳນວນພະນັກງານ",
     "totalMenus": "ຈຳນວນເມນູ",

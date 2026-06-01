@@ -101,7 +101,7 @@
       "otherDesc": "ธุรกิจประเภทอื่น ๆ",
       "generalStore": "ร้านค้าทั่วไป",
       "generalStoreDesc": "ร้านค้าปลีกและส่งทั่วไป",
-      "phoneShop": "ร้านโทรศัพท์",
+      "phoneShop": "ร้านขายโทรศัพท์",
       "phoneShopDesc": "โทรศัพท์มือถือ อุปกรณ์เสริม และบริการซ่อม"
     },
     "logoutConfirmTitle": "ยืนยันออกจากระบบ",
@@ -456,7 +456,9 @@
       "notFix": "ไม่ได้ซ่อม",
       "fixed": "ซ่อมแล้ว",
       "fixPrice": "ค่าซ่อม",
-      "fixDescription": "รายละเอียดการซ่อม"
+      "fixDescription": "รายละเอียดการซ่อม",
+      "fixItemName": "ชื่อรายการ",
+      "noFixItems": "ยังไม่มีรายการซ่อม"
     }
   },
   "queue": {
@@ -545,6 +547,7 @@
     "lastYear": "1 ปีที่ผ่านมา",
     "totalSales": "ยอดขายทั้งหมด",
     "totalExpenses": "รายจ่ายทั้งหมด",
+    "totalRepairCost": "ค่าซ่อมทั้งหมด",
     "totalProfit": "กำไรทั้งหมด",
     "totalEmployees": "จำนวนพนักงาน",
     "totalMenus": "จำนวนเมนู",

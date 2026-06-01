@@ -100,7 +100,7 @@
       "otherDesc": "Other Business",
       "generalStore": "General Store",
       "generalStoreDesc": "Retail and wholesale general stores",
-      "phoneShop": "Phone Shop",
+      "phoneShop": "Mobile Shop",
       "phoneShopDesc": "Mobile phones, accessories & repair service"
     },
     "logoutConfirmTitle": "Confirm Logout",
@@ -452,7 +452,9 @@
       "notFix": "Not Repaired",
       "fixed": "Repaired",
       "fixPrice": "Repair Cost",
-      "fixDescription": "Repair Description"
+      "fixDescription": "Repair Description",
+      "fixItemName": "Item Name",
+      "noFixItems": "No repair items yet"
     }
   },
   "queue": {
@@ -575,6 +577,7 @@
     "lastYear": "Last Year",
     "totalSales": "Total Sales",
     "totalExpenses": "Total Expenses",
+    "totalRepairCost": "Total Repair Cost",
     "totalProfit": "Total Profit",
     "totalEmployees": "Total Employees",
     "totalMenus": "Total Menus",

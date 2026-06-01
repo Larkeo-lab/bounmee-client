@@ -431,7 +431,23 @@
     "foundExisting": "发现现有产品数据",
     "updateSuccess": "产品更新成功",
     "createSuccess": "产品创建成功",
-    "saveError": "保存产品时出错"
+    "saveError": "保存产品时出错",
+    "phone": {
+      "section": "手机详情",
+      "productType": "类型",
+      "model": "型号",
+      "storage": "存储容量",
+      "color": "颜色",
+      "buyDate": "购入日期",
+      "sellDate": "售出日期",
+      "isFix": "维修状态",
+      "notFix": "未维修",
+      "fixed": "已维修",
+      "fixPrice": "维修费用",
+      "fixDescription": "维修详情",
+      "fixItemName": "项目名称",
+      "noFixItems": "暂无维修项目"
+    }
   },
   "queue": {
     "welcome": "欢迎来到 Saysettha ODSC",
@@ -553,6 +569,7 @@
     "lastYear": "去年",
     "totalSales": "总销售额",
     "totalExpenses": "总支出",
+    "totalRepairCost": "总维修费用",
     "totalProfit": "总利润",
     "totalEmployees": "总员工数",
     "totalMenus": "菜单总数",

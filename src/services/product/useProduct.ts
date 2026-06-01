@@ -174,7 +174,13 @@ export const useDeleteProduct = () => {
   return useMutation({
     mutationFn: (id: string) => deleteProduct(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["products"] });
+      // refetchType: "all" บังคับ refetch ทุก query ["products", ...] ทันที
+      // (ทั้ง active/inactive) เพราะ global ตั้ง refetchOnMount: false ไว้
+      // → หน้า table / saleCafe / saleGeneral จะได้ข้อมูลใหม่ตอนเปิดหน้านั้น
+      queryClient.invalidateQueries({
+        queryKey: ["products"],
+        refetchType: "all",
+      });
     },
   });
 };

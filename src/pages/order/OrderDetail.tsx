@@ -25,7 +25,6 @@ import {
   ShoppingBag,
   Banknote,
   Landmark,
-  PenLine,
   Gift,
 } from "lucide-react";
 import dayjs from "dayjs";
@@ -33,7 +32,6 @@ import dayjs from "dayjs";
 import { Order } from "@/services/order/useOrder";
 import { getDisplayImageUrl } from "@/lib/utils";
 import { formatNumber } from "@/utils/numberFormat";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/routes/AuthContext";
 import BillModal from "@/components/common/bill";
 
@@ -52,7 +50,6 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({
 }) => {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const navigate = useNavigate();
   const {
     isOpen: isBillOpen,
     onOpen: onBillOpen,
@@ -554,23 +551,6 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({
                   onPress={onClose}
                 >
                   {t("order.close")}
-                </Button>
-                <Button
-                  className="font-black flex-grow sm:flex-grow-0 shadow-md shadow-primary/20 rounded-xl"
-                  color="secondary"
-                  startContent={<PenLine size={18} />}
-                  onPress={() => {
-                    onClose();
-                    if (selectedOrder?.businessType === "CAFE") {
-                      navigate("/saleCafe", { state: { editOrder: selectedOrder } });
-                    } else if (selectedOrder?.tableId || selectedOrder?.table) {
-                      navigate("/table", { state: { editOrder: selectedOrder } });
-                    } else {
-                      navigate("/saleGeneral", { state: { editOrder: selectedOrder } });
-                    }
-                  }}
-                >
-                  {t("common.edit")}
                 </Button>
                 <Button
                   className="font-black flex-grow sm:flex-grow-0 shadow-md shadow-primary/20 rounded-xl"

@@ -14,7 +14,7 @@ export default function BestSellingSection({ topSellingProducts }: BestSellingSe
     <Card className="p-0 border-none shadow-sm overflow-hidden">
       <div className="p-6 flex justify-between items-center bg-white dark:bg-default-50 border-b border-divider">
         <div>
-          <h3 className="text-lg font-bold">ເມນູຂາຍດີ</h3>
+          <h3 className="text-lg font-bold">ສິນຄ້າຂາຍດີ</h3>
           <p className="text-sm text-default-400 font-medium tracking-tight">
             ລາຍການສິນຄ້າທີ່ໄດ້ຮັບຄວາມນິຍົມສູງສຸດ
           </p>

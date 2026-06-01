@@ -79,6 +79,16 @@ export default function SummarySection({ summary, storeType }: SummaryProps) {
           title={t("dashboard.totalExpenses")}
           value={summary?.totalExpenses || 0}
         />
+        {storeType === "PHONE_SHOP" && (
+          <StatCard
+            color="danger"
+            icon={
+              <span className="font-black text-lg">{t("dashboard.kip")}</span>
+            }
+            title={t("dashboard.totalRepairCost") || "ຄ່າຊ້ອມທັງໝົດ"}
+            value={summary?.totalFixPrice || 0}
+          />
+        )}
         <StatCard
           color="primary"
           icon={

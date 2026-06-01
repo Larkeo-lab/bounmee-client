@@ -280,3 +280,16 @@ export const useUpdateOrderStatus = () => {
     },
   });
 };
+
+export const useDeleteOrder = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) =>
+      axiosInstance.delete(API_ENDPOINTS.ORDER.DETAIL(id)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["orders"], exact: false });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"], exact: false });
+    },
+  });
+};
