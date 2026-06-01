@@ -292,6 +292,12 @@ export default function CreateProduct({
           price: Number(formData.price),
           stockQty: Number(formData.stockQty),
           unitId: formData.unitId || null,
+          buyDate: formData.buyDate
+            ? new Date(formData.buyDate).toISOString()
+            : null,
+          sellDate: formData.sellDate
+            ? new Date(formData.sellDate).toISOString()
+            : null,
           storeId: storeId,
           ...buildPhonePayload(),
         });
@@ -333,6 +339,12 @@ export default function CreateProduct({
           price: Number(formData.price),
           stockQty: Number(formData.stockQty),
           unitId: formData.unitId || null,
+          buyDate: formData.buyDate
+            ? new Date(formData.buyDate).toISOString()
+            : null,
+          sellDate: formData.sellDate
+            ? new Date(formData.sellDate).toISOString()
+            : null,
           storeId: storeId,
           ...buildPhonePayload(),
         });
