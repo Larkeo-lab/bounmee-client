@@ -63,6 +63,8 @@ export default function ProductOrderPage() {
     id: string;
     orderNumber: string;
     billId: string;
+    transferSlip?: string | null;
+    documents?: any[];
   } | null>(null);
 
   useEffect(() => {
@@ -92,6 +94,8 @@ export default function ProductOrderPage() {
       id: editOrder.id,
       orderNumber: editOrder.orderNumber,
       billId,
+      transferSlip: editOrder.transferSlip,
+      documents: editOrder.documents,
     });
     setIsMinimized(false);
 
@@ -517,6 +521,8 @@ export default function ProductOrderPage() {
       <PaymentModal
         businessType="CAFE"
         editingOrderId={editingOrder?.id}
+        initialDocuments={editingOrder?.documents}
+        initialTransferSlip={editingOrder?.transferSlip}
         isOpen={isPaymentOpen}
         items={cart}
         total={subtotal}

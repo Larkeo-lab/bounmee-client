@@ -57,6 +57,8 @@ export default function TablePage() {
     id: string;
     orderNumber: string;
     tableId: string;
+    transferSlip?: string | null;
+    documents?: any[];
   } | null>(null);
   const { t } = useTranslation();
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -267,6 +269,8 @@ export default function TablePage() {
       id: editOrder.id,
       orderNumber: editOrder.orderNumber,
       tableId: editOrder.tableId,
+      transferSlip: editOrder.transferSlip,
+      documents: editOrder.documents,
     });
     setSelectedTable({ ...table, status: "OCCUPIED", activeCart: items });
 
@@ -746,6 +750,8 @@ export default function TablePage() {
 
       <PaymentModal
         editingOrderId={editingOrder?.id}
+        initialDocuments={editingOrder?.documents}
+        initialTransferSlip={editingOrder?.transferSlip}
         isOpen={isOpen}
         items={cart}
         tableId={editingOrder ? undefined : selectedTable?.id}

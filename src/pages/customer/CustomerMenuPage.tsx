@@ -508,6 +508,7 @@ export default function CustomerMenuPage() {
                   <CardBody className="p-0 flex flex-col h-full">
                     <div className="relative aspect-[4/3]">
                       <img
+                        alt={product.name}
                         className="w-full h-full object-cover"
                         src={getDisplayImageUrl(product.image)}
                       />

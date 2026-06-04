@@ -26,6 +26,7 @@ import {
   Banknote,
   Landmark,
   Gift,
+  FileText,
 } from "lucide-react";
 import dayjs from "dayjs";
 
@@ -423,6 +424,61 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({
                             )}{" "}
                             {t("order.kip") || "ກີບ"}
                           </span>
+                        </div>
+                      </div>
+                    )}
+
+                  {/* ✨ สลิปการโอน */}
+                  {selectedOrder?.transferSlip && (
+                    <div className="space-y-2">
+                      <p className="font-black text-sm flex items-center gap-2 text-default-700">
+                        <Receipt className="text-primary" size={16} />
+                        {t("payment.transferSlip") || "ຮູບສະລິບການໂອນ"}
+                      </p>
+                      <div className="flex justify-center">
+                        <img
+                          alt="transfer slip"
+                          className="max-h-60 w-auto max-w-[220px] object-contain rounded-2xl border border-divider"
+                          src={getDisplayImageUrl(selectedOrder.transferSlip)}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ✨ เอกสารแนบ */}
+                  {selectedOrder?.documents &&
+                    selectedOrder.documents.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="font-black text-sm flex items-center gap-2 text-default-700">
+                          <FileText className="text-primary" size={16} />
+                          {t("payment.documents") || "ເອກະສານແນບ"} (
+                          {selectedOrder.documents.length})
+                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {selectedOrder.documents.map((doc) => (
+                            <div
+                              key={doc.id}
+                              className="flex gap-3 items-start border border-divider rounded-2xl p-2 bg-default-50/50"
+                            >
+                              {doc.imageUrl && (
+                                <Image
+                                  className="w-16 h-16 min-w-[64px] object-cover"
+                                  radius="lg"
+                                  src={getDisplayImageUrl(doc.imageUrl)}
+                                />
+                              )}
+                              <div className="flex flex-col min-w-0 py-1">
+                                <span className="text-[11px] font-black text-default-800 leading-tight">
+                                  {doc.name}
+                                </span>
+                                {doc.description && (
+                                  <span className="text-[10px] text-default-500 leading-tight mt-0.5">
+                                    {doc.description}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     )}

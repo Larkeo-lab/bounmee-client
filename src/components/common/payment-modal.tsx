@@ -18,6 +18,9 @@ import {
   CreditCard,
   Banknote,
   Landmark,
+  Upload,
+  X,
+  Plus,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
@@ -28,8 +31,10 @@ import {
   useCreateOrder,
   useUpdateOrderItems,
   ProductFreeItemInput,
+  DocumentItemInput,
 } from "@/services/order/useOrder";
 import { useGetMoneyRates } from "@/services/moneyRate/useMoneyRate";
+import { useUploadImage } from "@/services/storage";
 import { getDisplayImageUrl } from "@/lib/utils";
 import DebtModal from "./debt-modal";
 
@@ -50,6 +55,8 @@ interface PaymentModalProps {
   tableId?: string | null;
   businessType?: "RETAIL" | "CAFE";
   editingOrderId?: string;
+  initialTransferSlip?: string | null;
+  initialDocuments?: DocumentItemInput[];
   productFrees?: ProductFreeItemInput[];
   setProductFrees?: React.Dispatch<React.SetStateAction<ProductFreeItemInput[]>>;
   onPaymentSuccess: (order?: any) => void;
@@ -63,6 +70,8 @@ export default function PaymentModal({
   tableId,
   businessType,
   editingOrderId,
+  initialTransferSlip,
+  initialDocuments,
   productFrees = [],
   setProductFrees,
   onPaymentSuccess,
@@ -80,6 +89,14 @@ export default function PaymentModal({
   const [selectedBank, setSelectedBank] = useState<string | null>(null);
   const [receivedAmount, setReceivedAmount] = useState("0");
   const [currency, setCurrency] = useState("LAK");
+
+  // สลิปโอนเงิน (transfer slip)
+  const [transferSlip, setTransferSlip] = useState("");
+  const [slipPreview, setSlipPreview] = useState("");
+  const uploadImageMutation = useUploadImage();
+
+  // เอกสารแนบ (dynamic) — เพิ่มได้ไม่จำกัด แต่ละอันมี name / imageUrl / description
+  const [documents, setDocuments] = useState<DocumentItemInput[]>([]);
 
   // Discount State
   const [discountType, setDiscountType] = useState<"AMOUNT" | "PERCENT">(
@@ -123,14 +140,15 @@ export default function PaymentModal({
 
   const updateMixedAmounts = (field: "CASH" | "TRANSFER", value: string) => {
     const rawValue = parseNumeric(value);
-    const numValue = Number(rawValue || "0");
+    // cap ไม่ให้ป้อนเกินยอดที่ต้องจ่าย
+    const numValue = Math.min(Number(rawValue || "0"), finalTotal);
     const remaining = Math.max(0, finalTotal - numValue);
 
     if (field === "CASH") {
-      setMixedCashAmount(rawValue || "0");
+      setMixedCashAmount(numValue.toString());
       setMixedTransferAmount(remaining.toString());
     } else {
-      setMixedTransferAmount(rawValue || "0");
+      setMixedTransferAmount(numValue.toString());
       setMixedCashAmount(remaining.toString());
     }
   };
@@ -143,6 +161,66 @@ export default function PaymentModal({
     }
     // reset ของแถมผ่าน setter จาก parent
     setProductFrees?.([]);
+    setTransferSlip("");
+    setSlipPreview("");
+    setDocuments([]);
+  };
+
+  // อัปโหลดรูปสลิปโอนเงิน
+  const handleSlipChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+    try {
+      setSlipPreview(URL.createObjectURL(file));
+      const imageName = await uploadImageMutation.mutateAsync(file);
+
+      setTransferSlip(imageName);
+    } catch (error) {
+      console.error("Failed to upload slip:", error);
+      toast.error(t("payment.uploadSlipFailed") || "ອັບໂຫຼດສະລິບບໍ່ສຳເລັດ");
+    }
+  };
+
+  const removeSlip = () => {
+    setTransferSlip("");
+    setSlipPreview("");
+  };
+
+  // --- เอกสารแนบ (dynamic) ---
+  const addDocument = () =>
+    setDocuments((prev) => [
+      ...prev,
+      { name: "", imageUrl: "", description: "" },
+    ]);
+
+  const updateDocument = (
+    index: number,
+    field: keyof DocumentItemInput,
+    value: string,
+  ) =>
+    setDocuments((prev) =>
+      prev.map((doc, i) => (i === index ? { ...doc, [field]: value } : doc)),
+    );
+
+  const removeDocument = (index: number) =>
+    setDocuments((prev) => prev.filter((_, i) => i !== index));
+
+  const handleDocImageChange = async (
+    index: number,
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+    try {
+      const imageName = await uploadImageMutation.mutateAsync(file);
+
+      updateDocument(index, "imageUrl", imageName);
+    } catch (error) {
+      console.error("Failed to upload document image:", error);
+      toast.error(t("payment.uploadSlipFailed") || "ອັບໂຫຼດຮູບບໍ່ສຳເລັດ");
+    }
   };
 
   const deleteLastDigit = () => {
@@ -218,6 +296,15 @@ export default function PaymentModal({
     }
   }, [paymentMethod, finalTotal]);
 
+  // โหลดสลิป + เอกสารเดิม เมื่อเปิด modal ในโหมดแก้ไข
+  useEffect(() => {
+    if (isOpen && isEditing) {
+      setTransferSlip(initialTransferSlip || "");
+      setSlipPreview("");
+      setDocuments(initialDocuments || []);
+    }
+  }, [isOpen, editingOrderId]);
+
   const change = Math.max(0, receivedAmountInLAK - finalTotal);
 
   const handleConfirm = async (onClose: () => void) => {
@@ -230,7 +317,7 @@ export default function PaymentModal({
     const computedReceivedAmount =
       paymentMethod === "TRANSFER_CASH"
         ? Number(parseNumeric(mixedCashAmount)) +
-          Number(parseNumeric(mixedTransferAmount))
+        Number(parseNumeric(mixedTransferAmount))
         : Number(receivedAmountInLAK);
     const computedChange =
       paymentMethod === "TRANSFER_CASH" ? 0 : Number(change);
@@ -278,6 +365,8 @@ export default function PaymentModal({
             isDebt: false,
             debtAmount: 0,
             memberId: null,
+            transferSlip: transferSlip || null,
+            documents: documents,
             dueDate: null,
             items: mappedItems,
             productFrees: productFrees,
@@ -300,6 +389,8 @@ export default function PaymentModal({
           bankId: selectedBank,
           tableId: tableId,
           businessType: businessType,
+          transferSlip: transferSlip || null,
+          documents: documents,
           items: mappedItems,
           productFrees: productFrees,
         });
@@ -411,6 +502,135 @@ export default function PaymentModal({
     }
   };
 
+  // สลิปโอน + เอกสารแนบ (ใช้ซ้ำทั้งโหมด TRANSFER และ TRANSFER_CASH)
+  // เป็นฟังก์ชันเพื่อให้คืน element ใหม่ทุกครั้ง (กัน React bail-out ตอนสลับโหมด)
+  const renderSlipAndDocs = () => (
+    <>
+      {/* อัปโหลดรูปสลิปโอนเงิน */}
+      <div className="space-y-2">
+        <p className="text-default-500 text-sm font-medium">
+          {t("payment.transferSlip") || "ຮູບສະລິບການໂອນ"}
+        </p>
+        {slipPreview || transferSlip ? (
+          <div className="relative w-fit mx-auto rounded-2xl overflow-hidden border border-divider bg-default-50">
+            <img
+              alt="transfer slip"
+              className="max-h-48 w-auto max-w-[200px] object-contain"
+              src={slipPreview || getDisplayImageUrl(transferSlip)}
+            />
+            <button
+              className="absolute top-2 right-2 bg-danger text-white rounded-full p-1 shadow-md"
+              type="button"
+              onClick={removeSlip}
+            >
+              <X size={16} />
+            </button>
+          </div>
+        ) : (
+          <label className="flex flex-col items-center justify-center gap-2 w-full h-28 rounded-2xl border-2 border-dashed border-divider hover:border-primary hover:bg-primary/5 cursor-pointer transition-all">
+            {uploadImageMutation.isPending ? (
+              <Spinner size="sm" />
+            ) : (
+              <>
+                <Upload className="text-default-400" size={24} />
+                <span className="text-default-400 text-xs font-medium">
+                  {t("payment.uploadSlip") || "ກົດເພື່ອອັບໂຫຼດສະລິບ"}
+                </span>
+              </>
+            )}
+            <input
+              accept="image/*"
+              className="hidden"
+              type="file"
+              onChange={handleSlipChange}
+            />
+          </label>
+        )}
+      </div>
+
+      {/* เอกสารแนบ (dynamic) */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <p className="text-default-500 text-sm font-medium">
+            {t("payment.documents") || "ເອກະສານແນບ"}
+          </p>
+          <Button
+            color="primary"
+            size="sm"
+            startContent={<Plus size={16} />}
+            variant="flat"
+            onPress={addDocument}
+          >
+            {t("common.add") || "ເພີ່ມ"}
+          </Button>
+        </div>
+
+        {documents.map((doc, index) => (
+          <div
+            key={index}
+            className="flex gap-2 items-start rounded-2xl border border-divider p-2 bg-default-50"
+          >
+            {doc.imageUrl ? (
+              <div className="relative shrink-0">
+                <img
+                  alt={doc.name}
+                  className="w-14 h-14 rounded-xl object-cover border border-divider"
+                  src={getDisplayImageUrl(doc.imageUrl)}
+                />
+                <button
+                  className="absolute -top-1 -right-1 bg-danger text-white rounded-full p-0.5 shadow"
+                  type="button"
+                  onClick={() => updateDocument(index, "imageUrl", "")}
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            ) : (
+              <label className="shrink-0 w-14 h-14 flex items-center justify-center rounded-xl border-2 border-dashed border-divider hover:border-primary cursor-pointer">
+                <Upload className="text-default-400" size={18} />
+                <input
+                  accept="image/*"
+                  className="hidden"
+                  type="file"
+                  onChange={(e) => handleDocImageChange(index, e)}
+                />
+              </label>
+            )}
+
+            <div className="flex-1 space-y-2 min-w-0">
+              <Input
+                placeholder={t("payment.documentName") || "ຊື່ເອກະສານ"}
+                size="sm"
+                value={doc.name}
+                variant="bordered"
+                onValueChange={(val) => updateDocument(index, "name", val)}
+              />
+              <Input
+                placeholder={t("payment.documentDesc") || "ລາຍລະອຽດ"}
+                size="sm"
+                value={doc.description || ""}
+                variant="bordered"
+                onValueChange={(val) =>
+                  updateDocument(index, "description", val)
+                }
+              />
+            </div>
+
+            <Button
+              isIconOnly
+              color="danger"
+              size="sm"
+              variant="light"
+              onPress={() => removeDocument(index)}
+            >
+              <X size={18} />
+            </Button>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+
   return (
     <Modal
       backdrop="blur"
@@ -431,8 +651,8 @@ export default function PaymentModal({
             <ModalHeader className="flex flex-col gap-1 text-2xl font-bold text-primary">
               {t("payment.title") || "ຊຳລະເງິນ"}
             </ModalHeader>
-            <ModalBody className="pb-8">
-              <div className="flex flex-col gap-6">
+            <ModalBody className="pb-4 md:pb-8">
+              <div className="flex flex-col gap-4 md:gap-6">
                 {/* Payment Method Selection */}
                 <div className="flex justify-center -mt-2">
                   <ButtonGroup className="w-full max-w-full sm:max-w-2xl shadow-sm">
@@ -488,16 +708,16 @@ export default function PaymentModal({
                   </ButtonGroup>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
                   {/* Left Side: Summary */}
-                  <div className="space-y-6">
-                    <div className="p-3 bg-default-50 rounded-2xl border border-divider">
-                      <p className="text-default-500 text-xs mb-1 uppercase tracking-wider font-semibold">
+                  <div className="space-y-4 md:space-y-6">
+                    <div className="p-2 md:p-3 bg-default-50 rounded-xl md:rounded-2xl border border-divider">
+                      <p className="text-default-500 text-[10px] md:text-xs mb-0.5 uppercase tracking-wider font-semibold">
                         {t("payment.total") || "ຍອດລວມ"}
                       </p>
-                      <p className="text-xl font-bold text-default-700">
+                      <p className="text-base md:text-xl font-bold text-default-700">
                         {total.toLocaleString()}{" "}
-                        <span className="text-sm font-normal">{t("payment.kip") || "ກີບ"}</span>
+                        <span className="text-xs md:text-sm font-normal">{t("payment.kip") || "ກີບ"}</span>
                       </p>
                     </div>
 
@@ -570,8 +790,8 @@ export default function PaymentModal({
                             value={
                               discountType === "AMOUNT"
                                 ? Number(
-                                    parseNumeric(discountValue),
-                                  ).toLocaleString()
+                                  parseNumeric(discountValue),
+                                ).toLocaleString()
                                 : discountValue
                             }
                             variant="bordered"
@@ -588,34 +808,41 @@ export default function PaymentModal({
                       )}
                     </div>
 
-                    <div className="p-3 bg-primary/5 rounded-2xl border-2 border-primary/20">
-                      <p className="text-primary text-xs mb-1 uppercase tracking-wider font-bold">
+                    <div className="p-2 md:p-3 bg-primary/5 rounded-xl md:rounded-2xl border-2 border-primary/20">
+                      <p className="text-primary text-[10px] md:text-xs mb-0.5 uppercase tracking-wider font-bold">
                         {t("payment.grandTotal") || "ຍອດລວມທີ່ຕ້ອງຈ່າຍ"}
                       </p>
-                      <p className="text-2xl font-black text-primary">
+                      <p className="text-xl md:text-2xl font-black text-primary">
                         {finalTotal.toLocaleString()}{" "}
-                        <span className="text-lg font-normal">{t("payment.kip") || "ກີບ"}</span>
+                        <span className="text-base md:text-lg font-normal">{t("payment.kip") || "ກີບ"}</span>
                       </p>
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="space-y-3 md:space-y-4">
                       {paymentMethod === "TRANSFER_CASH" ? (
-                        <div className="space-y-4">
+                        <div className="space-y-3 md:space-y-4">
                           <div
-                            className={`p-3 rounded-2xl border-2 transition-all cursor-pointer ${
-                              activeMixedField === "CASH"
-                                ? "bg-primary/10 border-primary"
-                                : "bg-default-50 border-divider"
-                            }`}
+                            role="button"
+                            tabIndex={0}
+                            className={`p-2 md:p-3 rounded-xl md:rounded-2xl border-2 transition-all cursor-pointer ${activeMixedField === "CASH"
+                              ? "bg-primary/10 border-primary"
+                              : "bg-default-50 border-divider"
+                              }`}
                             onClick={() => setActiveMixedField("CASH")}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                setActiveMixedField("CASH");
+                              }
+                            }}
                           >
-                            <p className="text-primary text-xs mb-1 font-bold uppercase">
+                            <p className="text-primary text-[10px] md:text-xs mb-0.5 font-bold uppercase">
                               {t("payment.cashAmount") || "ຈ່າຍເງິນສົດ"}
                             </p>
                             <Input
                               classNames={{
                                 input:
-                                  "text-xl font-black text-primary-600 text-right",
+                                  "text-lg md:text-xl font-black text-primary-600 text-right",
                                 inputWrapper:
                                   "bg-transparent border-none shadow-none h-auto p-0",
                               }}
@@ -636,20 +863,27 @@ export default function PaymentModal({
                           </div>
 
                           <div
-                            className={`p-3 rounded-2xl border-2 transition-all cursor-pointer ${
-                              activeMixedField === "TRANSFER"
-                                ? "bg-primary/10 border-primary"
-                                : "bg-default-50 border-divider"
-                            }`}
+                            role="button"
+                            tabIndex={0}
+                            className={`p-2 md:p-3 rounded-xl md:rounded-2xl border-2 transition-all cursor-pointer ${activeMixedField === "TRANSFER"
+                              ? "bg-primary/10 border-primary"
+                              : "bg-default-50 border-divider"
+                              }`}
                             onClick={() => setActiveMixedField("TRANSFER")}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                setActiveMixedField("TRANSFER");
+                              }
+                            }}
                           >
-                            <p className="text-primary text-xs mb-1 font-bold uppercase">
+                            <p className="text-primary text-[10px] md:text-xs mb-0.5 font-bold uppercase">
                               {t("payment.transferAmount") || "ຈ່າຍເງິນໂອນ"}
                             </p>
                             <Input
                               classNames={{
                                 input:
-                                  "text-xl font-black text-primary-600 text-right",
+                                  "text-lg md:text-xl font-black text-primary-600 text-right",
                                 inputWrapper:
                                   "bg-transparent border-none shadow-none h-auto p-0",
                               }}
@@ -680,11 +914,10 @@ export default function PaymentModal({
                                 {banks.map((bank: Bank) => (
                                   <Button
                                     key={bank.id}
-                                    className={`h-12 py-1 flex items-center gap-2 border-2 transition-all ${
-                                      selectedBank === bank.id
-                                        ? "border-primary bg-primary/10"
-                                        : "border-transparent bg-default-100"
-                                    }`}
+                                    className={`h-12 py-1 flex items-center gap-2 border-2 transition-all ${selectedBank === bank.id
+                                      ? "border-primary bg-primary/10"
+                                      : "border-transparent bg-default-100"
+                                      }`}
                                     onClick={() => setSelectedBank(bank.id)}
                                   >
                                     {bank.logoUrl && (
@@ -716,7 +949,7 @@ export default function PaymentModal({
                               ].map((curr) => (
                                 <Button
                                   key={curr}
-                                  className="font-bold h-10"
+                                  className="font-bold h-9 md:h-10"
                                   color={
                                     currency === curr ? "primary" : "default"
                                   }
@@ -729,19 +962,19 @@ export default function PaymentModal({
                             </div>
                           </div>
 
-                          <div className="p-3 bg-primary/10 rounded-2xl border border-primary/20">
-                            <p className="text-primary text-xs mb-1 font-semibold uppercase">
+                          <div className="p-2 md:p-3 bg-primary/10 rounded-xl md:rounded-2xl border border-primary/20">
+                            <p className="text-primary text-[10px] md:text-xs mb-0.5 font-semibold uppercase">
                               {t("payment.receivedAmount") || "ຈຳນວນເງິນທີ່ຮັບມາ"}
                             </p>
                             <Input
                               classNames={{
                                 input:
-                                  "text-2xl font-black text-primary-600 text-right",
+                                  "text-xl md:text-2xl font-black text-primary-600 text-right",
                                 inputWrapper:
-                                  "bg-transparent border-none shadow-none min-h-unit-10 h-auto p-0 group-data-[focus=true]:bg-transparent",
+                                  "bg-transparent border-none shadow-none min-h-unit-8 md:min-h-unit-10 h-auto p-0 group-data-[focus=true]:bg-transparent",
                               }}
                               endContent={
-                                <span className="text-lg font-normal text-primary-600 ml-1">
+                                <span className="text-base md:text-lg font-normal text-primary-600 ml-1">
                                   {currency}
                                 </span>
                               }
@@ -761,13 +994,13 @@ export default function PaymentModal({
                             )}
                           </div>
 
-                          <div className="p-3 bg-success/10 rounded-2xl border border-success/20">
-                            <p className="text-success-600 text-xs mb-1 font-semibold uppercase">
+                          <div className="p-2 md:p-3 bg-success/10 rounded-xl md:rounded-2xl border border-success/20">
+                            <p className="text-success-600 text-[10px] md:text-xs mb-0.5 font-semibold uppercase">
                               {t("payment.change") || "ເງິນທອນ"}
                             </p>
-                            <p className="text-2xl font-black text-success">
+                            <p className="text-xl md:text-2xl font-black text-success">
                               {change.toLocaleString()}{" "}
-                              <span className="text-lg font-normal">{t("payment.kip") || "ກີບ"}</span>
+                              <span className="text-base md:text-lg font-normal">{t("payment.kip") || "ກີບ"}</span>
                             </p>
                           </div>
                         </>
@@ -785,11 +1018,10 @@ export default function PaymentModal({
                               {banks.map((bank: Bank) => (
                                 <Button
                                   key={bank.id}
-                                  className={`h-22 min-h-18 py-2 flex flex-col gap-1 border-2 transition-all ${
-                                    selectedBank === bank.id
-                                      ? "border-primary bg-primary/10"
-                                      : "border-transparent bg-default-100"
-                                  }`}
+                                  className={`h-22 min-h-18 py-2 flex flex-col gap-1 border-2 transition-all ${selectedBank === bank.id
+                                    ? "border-primary bg-primary/10"
+                                    : "border-transparent bg-default-100"
+                                    }`}
                                   onClick={() => setSelectedBank(bank.id)}
                                 >
                                   {bank.logoUrl ? (
@@ -826,13 +1058,18 @@ export default function PaymentModal({
                           )}
                         </div>
                       )}
+
+                      {/* สลิป + เอกสารแนบ — แสดงเมื่อมีการโอน (TRANSFER / TRANSFER_CASH) */}
+                      {(paymentMethod === "TRANSFER" ||
+                        paymentMethod === "TRANSFER_CASH") &&
+                        renderSlipAndDocs()}
                     </div>
                   </div>
 
                   {/* Right Side: Keypad (Only for Cash or Split) */}
                   <div className="flex flex-col gap-3">
                     {paymentMethod === "CASH" ||
-                    paymentMethod === "TRANSFER_CASH" ? (
+                      paymentMethod === "TRANSFER_CASH" ? (
                       <>
                         <Button
                           className="h-12 text-xl font-black rounded-xl mb-1 shadow-md shadow-primary/20"
@@ -855,12 +1092,12 @@ export default function PaymentModal({
                         >
                           ເຕັ້ມຈຳນວນ
                         </Button>
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-3 gap-2 md:gap-3">
                           {[1, 2, 3, 4, 5, 6, 7, 8, 9, "0", "00", "000"].map(
                             (num) => (
                               <Button
                                 key={num}
-                                className="h-14 text-xl font-bold bg-default-100/50 hover:bg-primary hover:text-white transition-all rounded-xl shadow-sm"
+                                className="h-12 md:h-14 text-lg md:text-xl font-bold bg-default-100/50 hover:bg-primary hover:text-white transition-all rounded-xl shadow-sm"
                                 variant="flat"
                                 onPress={() =>
                                   handleKeypadPress(num.toString())
@@ -871,7 +1108,7 @@ export default function PaymentModal({
                             ),
                           )}
                         </div>
-                        <div className="grid grid-cols-2 gap-3 mt-3">
+                        <div className="grid grid-cols-2 gap-2 md:gap-3 mt-2 md:mt-3">
                           <Button
                             className="h-12 text-lg font-bold rounded-xl"
                             color="warning"
@@ -896,7 +1133,7 @@ export default function PaymentModal({
                       <div className="h-full flex flex-col items-center justify-center p-4 bg-primary/5 rounded-3xl border-2 border-dashed border-primary/20 transition-all">
                         {selectedBankData?.qrCodeImage ? (
                           <>
-                            <div className="bg-white p-3 rounded-2xl shadow-sm mb-4 border border-divider">
+                            <div className="bg-white p-3 rounded-2xl shadow-sm mb-4 border  border-divider">
                               <img
                                 alt="QR Code"
                                 className="w-48 h-48 sm:w-64 sm:h-64 object-contain"
@@ -933,9 +1170,9 @@ export default function PaymentModal({
                 </div>
               </div>
             </ModalBody>
-            <ModalFooter className="border-t border-divider p-6">
+            <ModalFooter className="border-t border-divider p-3 md:p-6">
               <Button
-                className="h-12 px-6 font-bold text-base"
+                className="h-11 md:h-12 px-3 md:px-6 font-bold text-sm md:text-base"
                 color="default"
                 variant="flat"
                 onPress={onClose}
@@ -943,7 +1180,7 @@ export default function PaymentModal({
                 {t("common.cancel") || "ຍົກເລີກ"}
               </Button>
               <Button
-                className="h-12 px-6 font-bold text-base"
+                className="h-11 md:h-12 px-3 md:px-6 font-bold text-sm md:text-base"
                 color="danger"
                 variant="flat"
                 onPress={() => setIsDebtModalOpen(true)}
@@ -951,13 +1188,13 @@ export default function PaymentModal({
                 {t("common.debt") || "ຕິດໜີ້"}
               </Button>
               <Button
-                className="flex-grow h-12 font-black text-lg shadow-md shadow-primary/30"
+                className="flex-grow h-11 md:h-12 font-black text-base md:text-lg shadow-md shadow-primary/30"
                 color="primary"
                 isDisabled={
                   paymentMethod === "TRANSFER_CASH"
                     ? Number(parseNumeric(mixedCashAmount)) +
-                        Number(parseNumeric(mixedTransferAmount)) <
-                        finalTotal || !selectedBank
+                    Number(parseNumeric(mixedTransferAmount)) <
+                    finalTotal || !selectedBank
                     : paymentMethod === "CASH"
                       ? receivedAmountInLAK < finalTotal
                       : !selectedBank
@@ -982,9 +1219,9 @@ export default function PaymentModal({
         total={finalTotal}
         onConfirm={handleDebtConfirm}
         isLoading={
-                  createOrderMutation.isPending ||
-                  updateOrderItemsMutation.isPending
-                }
+          createOrderMutation.isPending ||
+          updateOrderItemsMutation.isPending
+        }
       />
     </Modal>
   );

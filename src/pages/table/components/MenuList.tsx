@@ -86,12 +86,12 @@ export const MenuList: React.FC<MenuListProps> = ({
                 </div>
               </div>
               <Image
+                removeWrapper
                 alt={product.name}
-                className="w-full object-cover h-full group-hover:scale-110 transition-transform duration-500"
+                className="w-full h-24 md:h-28 lg:h-32 object-cover group-hover:scale-110 transition-transform duration-500"
                 radius="none"
                 shadow="none"
                 src={getDisplayImageUrl(product.image)}
-                width="100%"
               />
             </CardBody>
             <CardFooter className="flex flex-col items-start gap-0 p-1.5 bg-white/40 dark:bg-gray-900/40 backdrop-blur-sm">

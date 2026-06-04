@@ -29,104 +29,113 @@ export const useTableCartSync = () => {
 
   // 1. Initialize Socket and Listeners
   useEffect(() => {
-    const setupSocket = () => {
+    const authData = localStorage.getItem("authPOS");
+    if (!authData) return;
+
+    let currentStoreId: string | undefined;
+
+    try {
+      const authDataJson = JSON.parse(authData);
+
+      currentStoreId =
+        authDataJson?.user?.store?.id || authDataJson?.user?.storeId;
+    } catch (err) {
+      console.error("Socket Init Error:", err);
+
+      return;
+    }
+
+    if (!currentStoreId) return;
+
+    if (!socket.connected) {
+      socket.connect();
+    }
+
+    const joinRoom = () => {
+      socket.emit("JOIN:STORE", currentStoreId);
+      console.log(`📡 POS Socket JOINED: store-${currentStoreId}`);
+      queryClient.invalidateQueries({ queryKey: ["tables"] });
+    };
+
+    // Handle Customer Orders
+    const handleCustomerOrder = ({ tableId, items }: any) => {
       try {
-        const authData = localStorage.getItem("authPOS");
-        if (!authData) return;
-        const authDataJson = JSON.parse(authData);
-        const currentStoreId =
-          authDataJson?.user?.store?.id || authDataJson?.user?.storeId;
+        const audio = new Audio("/assets/void/notification.mp3");
 
-        if (currentStoreId) {
-          if (!socket.connected) {
-            socket.connect();
-          }
+        audio.play().catch((e) => console.log("Audio play blocked:", e));
+      } catch (e) {}
 
-          const joinRoom = () => {
-            socket.emit("JOIN:STORE", currentStoreId);
-            console.log(`📡 POS Socket JOINED: store-${currentStoreId}`);
-            queryClient.invalidateQueries({ queryKey: ["tables"] });
-          };
+      const currentCarts = useCartStore.getState().carts;
+      const tableCart = currentCarts[tableId] || [];
+      const mergedCart = mergeCarts(tableCart, items);
 
-          socket.on("connect", joinRoom);
-          socket.on("reconnect", joinRoom);
-          if (socket.connected) joinRoom();
+      useCartStore.setState((state) => ({
+        carts: { ...state.carts, [tableId]: mergedCart },
+      }));
+      queryClient.invalidateQueries({ queryKey: ["tables"] });
+    };
 
-          // Handle Customer Orders
-          socket.on("CUSTOMER_ORDER", ({ tableId, items }) => {
-            try {
-              const audio = new Audio("/assets/void/notification.mp3");
-              audio.play().catch((e) => console.log("Audio play blocked:", e));
-            } catch (e) {}
+    // Handle Table Updates (Synced across POS)
+    const handleTableCartUpdated = (data: {
+      tableId: string;
+      cart: any[];
+      tableStatus?: string;
+    }) => {
+      const currentCarts = useCartStore.getState().carts;
+      const localCart = currentCarts[data.tableId] || [];
 
-            const currentCarts = useCartStore.getState().carts;
-            const tableCart = currentCarts[tableId] || [];
-            const mergedCart = mergeCarts(tableCart, items);
+      // If table is AVAILABLE, force clear instead of merging
+      const isAvailable = data.tableStatus === "AVAILABLE";
+      const mergedCart = isAvailable ? [] : mergeCarts(localCart, data.cart);
 
-            useCartStore.setState((state) => ({
-              carts: { ...state.carts, [tableId]: mergedCart },
-            }));
-            queryClient.invalidateQueries({ queryKey: ["tables"] });
-          });
+      const nextJson = JSON.stringify(mergedCart);
 
-          // Handle Table Updates (Synced across POS)
-          socket.on(
-            "TABLE_CART_UPDATED",
-            (data: { tableId: string; cart: any[]; tableStatus?: string }) => {
-              const currentCarts = useCartStore.getState().carts;
-              const localCart = currentCarts[data.tableId] || [];
+      if (JSON.stringify(localCart) === nextJson) return;
 
-              // If table is AVAILABLE, force clear instead of merging
-              const isAvailable = data.tableStatus === "AVAILABLE";
-              const mergedCart = isAvailable
-                ? []
-                : mergeCarts(localCart, data.cart);
+      lastSyncRef.current[data.tableId] = nextJson;
 
-              const nextJson = JSON.stringify(mergedCart);
-              if (JSON.stringify(localCart) === nextJson) return;
+      useCartStore.setState((state) => ({
+        carts: { ...state.carts, [data.tableId]: mergedCart },
+      }));
 
-              lastSyncRef.current[data.tableId] = nextJson;
+      queryClient.invalidateQueries({ queryKey: ["tables"] });
+    };
 
-              useCartStore.setState((state) => ({
-                carts: { ...state.carts, [data.tableId]: mergedCart },
-              }));
+    // Handle Customer Update Quantity
+    const handleCustomerUpdateQty = ({ tableId, index, delta }: any) => {
+      const currentCarts = useCartStore.getState().carts;
+      const tableCart = currentCarts[tableId] || [];
+      const newCart = [...tableCart];
 
-              queryClient.invalidateQueries({ queryKey: ["tables"] });
-            },
-          );
+      if (newCart[index]) {
+        newCart[index] = {
+          ...newCart[index],
+          quantity: Math.max(1, newCart[index].quantity + delta),
+        };
 
-          // Handle Customer Update Quantity
-          socket.on("CUSTOMER_UPDATE_QTY", ({ tableId, index, delta }) => {
-            const currentCarts = useCartStore.getState().carts;
-            const tableCart = currentCarts[tableId] || [];
-            const newCart = [...tableCart];
-
-            if (newCart[index]) {
-              newCart[index] = {
-                ...newCart[index],
-                quantity: Math.max(1, newCart[index].quantity + delta),
-              };
-
-              useCartStore.setState((state) => ({
-                carts: { ...state.carts, [tableId]: newCart },
-              }));
-              queryClient.invalidateQueries({ queryKey: ["tables"] });
-            }
-          });
-        }
-      } catch (err) {
-        console.error("Socket Init Error:", err);
+        useCartStore.setState((state) => ({
+          carts: { ...state.carts, [tableId]: newCart },
+        }));
+        queryClient.invalidateQueries({ queryKey: ["tables"] });
       }
     };
 
-    setupSocket();
+    socket.on("connect", joinRoom);
+    socket.on("reconnect", joinRoom);
+    if (socket.connected) joinRoom();
+
+    socket.on("CUSTOMER_ORDER", handleCustomerOrder);
+    socket.on("TABLE_CART_UPDATED", handleTableCartUpdated);
+    socket.on("CUSTOMER_UPDATE_QTY", handleCustomerUpdateQty);
 
     return () => {
-      socket.off("connect");
-      socket.off("reconnect");
-      socket.off("CUSTOMER_ORDER");
-      socket.off("TABLE_CART_UPDATED");
-      socket.off("CUSTOMER_UPDATE_QTY");
+      // ✅ off เฉพาะ handler ของ hook นี้ (อย่าใช้ socket.off("connect") เปล่าๆ
+      //    เพราะจะลบ listener ของ component อื่นที่ใช้ socket ตัวเดียวกัน)
+      socket.off("connect", joinRoom);
+      socket.off("reconnect", joinRoom);
+      socket.off("CUSTOMER_ORDER", handleCustomerOrder);
+      socket.off("TABLE_CART_UPDATED", handleTableCartUpdated);
+      socket.off("CUSTOMER_UPDATE_QTY", handleCustomerUpdateQty);
     };
   }, [mergeCarts]);
 

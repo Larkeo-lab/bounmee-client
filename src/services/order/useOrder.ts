@@ -20,6 +20,12 @@ export interface ProductFreeItemInput {
   totalPrice: number;
 }
 
+export interface DocumentItemInput {
+  name: string;
+  imageUrl?: string | null;
+  description?: string | null;
+}
+
 export interface CreateOrderInput {
   totalAmount: number;
   receivedAmount: number;
@@ -41,6 +47,8 @@ export interface CreateOrderInput {
   cashAmount?: number;
   creditCardAmount?: number;
   memberId?: string | null;
+  documents?: DocumentItemInput[];
+  transferSlip?: string | null;
   dueDate?: string | null;
   paymentStatus?: "PAID" | "UNPAID" | "PARTIALLY_PAID";
   productFrees?: ProductFreeItemInput[];
@@ -119,6 +127,13 @@ export interface Order {
       barcode?: string | null;
       unit?: { id: string; name: string };
     };
+  }[];
+  transferSlip?: string | null;
+  documents?: {
+    id: string;
+    name: string;
+    imageUrl?: string | null;
+    description?: string | null;
   }[];
 }
 
@@ -220,6 +235,8 @@ export interface UpdateOrderItemsInput {
   isDebt?: boolean;
   debtAmount?: number;
   memberId?: string | null;
+  documents?: DocumentItemInput[];
+  transferSlip?: string | null;
   dueDate?: string | null;
   productFrees?: ProductFreeItemInput[];
 }

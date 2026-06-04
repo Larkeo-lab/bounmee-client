@@ -200,7 +200,6 @@ export default function ListmenuSelect({
                           {(item.note || activeNoteIds.has(item.id)) && (
                             <div className="flex flex-col gap-1.5 mt-1">
                               <Input
-                                autoFocus
                                 classNames={{
                                   input: "text-[11px] font-medium",
                                   inputWrapper:

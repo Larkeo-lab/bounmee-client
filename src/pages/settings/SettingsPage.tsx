@@ -157,7 +157,7 @@ const SettingsPage = () => {
         <p className="text-default-500">{t("settings.description.main")}</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
         {filteredItems.map((item) => (
           <Card
             key={item.href}
@@ -165,21 +165,21 @@ const SettingsPage = () => {
             className="group border-none bg-white/70 dark:bg-gray-800/70 backdrop-blur-md hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
             onPress={() => navigate(item.href)}
           >
-            <CardBody className="p-6 flex flex-row items-center gap-6">
+            <CardBody className="p-3 md:p-6 flex flex-col md:flex-row items-center gap-2 md:gap-6 text-center md:text-left">
               <div
-                className={`w-16 h-16 rounded-2xl flex items-center justify-center ${item.color} group-hover:scale-110 transition-transform duration-300`}
+                className={`w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl flex items-center justify-center ${item.color} group-hover:scale-110 transition-transform duration-300`}
               >
-                <item.icon size={32} strokeWidth={2} />
+                <item.icon className="w-6 h-6 md:w-8 md:h-8" strokeWidth={2} />
               </div>
-              <div className="flex-grow">
-                <h3 className="text-lg font-bold text-default-800 mb-1">
+              <div className="flex-grow min-w-0">
+                <h3 className="text-sm md:text-lg font-bold text-default-800 mb-0 md:mb-1 line-clamp-2 md:line-clamp-1">
                   {t(item.titleKey)}
                 </h3>
-                <p className="text-sm text-default-500 line-clamp-1">
+                <p className="text-xs md:text-sm text-default-500 line-clamp-1 hidden md:block">
                   {t(item.descriptionKey)}
                 </p>
               </div>
-              <div className="text-default-300 group-hover:text-primary transition-colors">
+              <div className="text-default-300 group-hover:text-primary transition-colors hidden md:block">
                 <ChevronRight size={24} />
               </div>
             </CardBody>

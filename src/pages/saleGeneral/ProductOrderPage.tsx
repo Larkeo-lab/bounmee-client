@@ -60,6 +60,8 @@ export default function ProductOrderPage() {
     id: string;
     orderNumber: string;
     billId: string;
+    transferSlip?: string | null;
+    documents?: any[];
   } | null>(null);
 
   useEffect(() => {
@@ -90,6 +92,8 @@ export default function ProductOrderPage() {
       id: editOrder.id,
       orderNumber: editOrder.orderNumber,
       billId,
+      transferSlip: editOrder.transferSlip,
+      documents: editOrder.documents,
     });
     setIsMinimized(false);
 
@@ -181,8 +185,6 @@ export default function ProductOrderPage() {
   );
 
   const products = productResponse?.data || [];
-
-  console.log('products', products)
 
   const handleScan = (barcode: string) => {
     if (barcode) {
@@ -484,6 +486,8 @@ export default function ProductOrderPage() {
 
       <PaymentModal
         editingOrderId={editingOrder?.id}
+        initialDocuments={editingOrder?.documents}
+        initialTransferSlip={editingOrder?.transferSlip}
         isOpen={isOpen}
         items={cart}
         productFrees={productFrees}

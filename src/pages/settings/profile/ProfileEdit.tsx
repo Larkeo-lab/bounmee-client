@@ -157,6 +157,10 @@ export default function ProfileEdit() {
                 {t("settings.common.image")}
               </label>
               <div
+                role="button"
+                tabIndex={isNotAdmin ? -1 : 0}
+                aria-label="Upload store logo"
+                aria-disabled={isNotAdmin}
                 className={`
                   relative group
                   ${isNotAdmin ? "cursor-not-allowed opacity-80" : "cursor-pointer"}
@@ -166,6 +170,12 @@ export default function ProfileEdit() {
                   ${previewImage || formData.logoUrl ? "border-primary bg-primary/5" : "border-default-200 hover:border-primary hover:bg-default-50"}
                 `}
                 onClick={() => !isNotAdmin && fileInputRef.current?.click()}
+                onKeyDown={(e) => {
+                  if (!isNotAdmin && (e.key === "Enter" || e.key === " ")) {
+                    e.preventDefault();
+                    fileInputRef.current?.click();
+                  }
+                }}
               >
                 {uploadImageMutation.isPending ? (
                   <Spinner color="primary" />
