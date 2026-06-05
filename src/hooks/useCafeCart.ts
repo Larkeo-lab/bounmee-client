@@ -56,7 +56,7 @@ export const useCafeCart = () => {
   // ຜູກມັດທຸກ Action ເຂົ້າກັບ activeCartId ຂອງ Cafe
   const actions = useMemo(
     () => ({
-      addToCart: (product: any) => store.addToCart(product, activeCartId),
+      addToCart: (product: any, skipToast?: boolean) => store.addToCart(product, activeCartId, skipToast),
       removeFromCart: (id: string, status: string, note?: string) =>
         store.removeFromCart(id, status, note, activeCartId),
       updateQuantity: (

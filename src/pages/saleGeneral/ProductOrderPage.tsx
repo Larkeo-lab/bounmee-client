@@ -135,8 +135,18 @@ export default function ProductOrderPage() {
   // ✨ ของแถม (Free items) — lifted up so OrderRight + PaymentModal share state
   const [productFrees, setProductFrees] = useState<ProductFreeItemInput[]>([]);
 
+  // Stable reference for addToCart to avoid re-registering socket event listener on every render
+  const addToCartRef = useRef(addToCart);
   useEffect(() => {
-    const handler = setTimeout(() => setSearchQuery(searchQuery), 500);
+    addToCartRef.current = addToCart;
+  }, [addToCart]);
+
+  // Keep track of scans to avoid duplicate additions
+  const localScansRef = useRef<Record<string, number>>({});
+  const lastScanRef = useRef<{ barcode: string; time: number }>({ barcode: "", time: 0 });
+
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedSearch(searchQuery), 500);
 
     return () => clearTimeout(handler);
   }, [searchQuery]);
@@ -151,9 +161,16 @@ export default function ProductOrderPage() {
       }
     };
     const onScanned = (product: Product) => {
-      addToCart(product);
+      // If this scan was initiated locally on this screen, ignore it to prevent duplicate cart additions
+      const lastLocalScan = localScansRef.current[product.barcode];
+      if (lastLocalScan && Date.now() - lastLocalScan < 1500) {
+        return;
+      }
+
+      addToCartRef.current(product, true);
       toast.success(t("sale.barcodeAdded", { name: product.name }), {
         duration: 1000,
+        position: "top-center",
       });
     };
 
@@ -165,7 +182,7 @@ export default function ProductOrderPage() {
       socket.off("SETUP", onConnect);
       socket.off("PRODUCT:SCANNED", onScanned);
     };
-  }, [user?.user?.storeId, addToCart]);
+  }, [user?.user?.storeId, t]);
 
   const { data: categoryResponse } = useGetCategories(
     user?.user?.storeId || "",
@@ -194,28 +211,57 @@ export default function ProductOrderPage() {
   };
 
   const handleBarcodeSearch = async (barcode: string) => {
-    if (!barcode.trim() || !user?.user?.storeId) return;
+    const cleanBarcode = barcode.trim();
+    if (!cleanBarcode || !user?.user?.storeId) return;
+
+    // Prevent duplicate barcode triggers from scanner within 800ms
+    const now = Date.now();
+    if (lastScanRef.current.barcode === cleanBarcode && (now - lastScanRef.current.time) < 800) {
+      return;
+    }
+    lastScanRef.current = { barcode: cleanBarcode, time: now };
+
+    // Record local scan timestamp immediately before the network call
+    // to prevent race conditions with the incoming socket event.
+    localScansRef.current[cleanBarcode] = now;
+
+    // Clear input field and state immediately/synchronously
+    if (searchInputRef.current) {
+      searchInputRef.current.value = "";
+    }
+    setSearchQuery("");
+
     try {
       const product = await getProductByBarcode(
-        barcode.trim(),
+        cleanBarcode,
         user.user.storeId,
         user.user.id,
       );
 
       if (product) {
-        setSearchQuery("");
+        // Add to cart directly so it works offline/disconnected from socket
+        addToCart(product, true);
+
         setIsMinimized(false); // เปิด order panel ให้เห็นรายการที่เพิ่ม
+        toast.success(t("sale.barcodeAdded", { name: product.name }), {
+          duration: 1000,
+          position: "top-center",
+        });
         // Auto focus กลับที่ input เพื่อยิง barcode ต่อได้เลย
         setTimeout(() => searchInputRef.current?.focus(), 100);
       } else {
-        toast.error(t("sale.barcodeNotFound") || "ไม่พົບສິນຄ້າ", {
+        // Clear local scan record since barcode was invalid
+        delete localScansRef.current[cleanBarcode];
+        toast.error(t("sale.barcodeNotFound") || "ไม่พบสินค้า", {
           duration: 2000,
         });
-        setDebouncedSearch(barcode.trim());
+        setDebouncedSearch(cleanBarcode);
       }
     } catch (error) {
+      // Clear local scan record since barcode search failed
+      delete localScansRef.current[cleanBarcode];
       // ถ้า barcode ไม่เจอ → ใช้เป็นคำค้นหาแทน
-      setDebouncedSearch(barcode.trim());
+      setDebouncedSearch(cleanBarcode);
     }
   };
 
@@ -226,11 +272,6 @@ export default function ProductOrderPage() {
     const target = event?.target as HTMLElement;
 
     if (!target) {
-      toast.success(t("sale.itemAdded", { name: product.name }), {
-        duration: 800,
-        position: "top-center",
-      });
-
       return;
     }
 
@@ -246,11 +287,6 @@ export default function ProductOrderPage() {
     setTimeout(() => {
       setFlyingItems((prev) => prev.filter((item) => item.id !== newItem.id));
     }, 1000);
-
-    toast.success(t("sale.itemAdded", { name: product.name }), {
-      duration: 800,
-      position: "top-center",
-    });
   };
 
   const categories = [
@@ -284,7 +320,8 @@ export default function ProductOrderPage() {
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
-                    handleBarcodeSearch(searchQuery);
+                    const val = searchInputRef.current?.value || searchQuery;
+                    handleBarcodeSearch(val);
                   }
                 }}
                 onValueChange={setSearchQuery}

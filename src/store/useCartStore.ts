@@ -34,7 +34,7 @@ interface CartState {
 }
 
 interface CartActions {
-  addToCart: (product: any, tableId?: string) => void;
+  addToCart: (product: any, tableId?: string, skipToast?: boolean) => void;
   removeFromCart: (id: string, status: string, note?: string, tableId?: string) => void;
   updateQuantity: (
     id: string,
@@ -140,7 +140,7 @@ export const useCartStore = create<CartState & CartActions>()(
       },
 
       // ເພີ່ມສິນຄ້າເຂົ້າກະຕ່າ
-      addToCart: (product: any, tableId?: string) => {
+      addToCart: (product: any, tableId?: string, skipToast?: boolean) => {
         const { activeTableId, carts } = get();
         const currentTableId = tableId || activeTableId || "default";
 
@@ -185,10 +185,12 @@ export const useCartStore = create<CartState & CartActions>()(
             quantity: nextCart[existingIndex].quantity + 1,
           };
 
-          toast.success(i18n.t("sale.itemAdded", { name: product.name }), {
-            duration: 800,
-            position: "top-center",
-          });
+          if (!skipToast) {
+            toast.success(i18n.t("sale.itemAdded", { name: product.name }), {
+              duration: 800,
+              position: "top-center",
+            });
+          }
         } else {
           if (product.stockQty <= 0) {
             toast.error(
@@ -213,10 +215,12 @@ export const useCartStore = create<CartState & CartActions>()(
             unitName: product.unit?.name || undefined,
           });
 
-          toast.success(i18n.t("sale.itemAdded", { name: product.name }), {
-            duration: 800,
-            position: "top-center",
-          });
+          if (!skipToast) {
+            toast.success(i18n.t("sale.itemAdded", { name: product.name }), {
+              duration: 800,
+              position: "top-center",
+            });
+          }
         }
 
         set({ carts: { ...carts, [currentTableId]: nextCart } });
