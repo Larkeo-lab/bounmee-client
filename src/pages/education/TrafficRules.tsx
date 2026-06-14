@@ -7,6 +7,8 @@ import {
   AlertTriangle,
   Ban,
   Info,
+  BookOpen,
+  FileText,
 } from "lucide-react";
 import { Card, CardBody } from "@heroui/react";
 
@@ -111,6 +113,34 @@ export default function TrafficRules() {
                   ຮຽນຮູ້ກົດລະບຽບ ເພື່ອຄວາມປອດໄພໃນການສັນຈອນ
                 </p>
               </div>
+            </CardBody>
+          </Card>
+
+          {/* PDF Document Viewer Card */}
+          <Card className="shadow-sm border border-gray-100 rounded-3xl hover:shadow-md transition-shadow">
+            <CardBody className="p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center shrink-0">
+                  <FileText size={24} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm md:text-base text-gray-800">
+                    ປຶ້ມກົດໝາຍວ່າດ້ວຍການຈະລາຈອນທາງບົກ (PDF)
+                  </h3>
+                  <p className="text-xs md:text-sm text-gray-500 font-medium mt-0.5">
+                    ເປີດອ່ານ ຫຼື ດາວໂຫຼດເອກະສານກົດລະບຽບການຈະລາຈອນສະບັບສົມບູນ
+                  </p>
+                </div>
+              </div>
+              <a
+                href="/assets/ຈາລະຈອນ.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-5 py-2.5 bg-[#075e3d] hover:bg-[#064e32] active:scale-95 text-white font-bold text-xs md:text-sm rounded-2xl transition-all shadow-sm flex items-center gap-2 cursor-pointer shrink-0"
+              >
+                <BookOpen size={16} />
+                ເປີດອ່ານກົດລະບຽບ
+              </a>
             </CardBody>
           </Card>
 
