@@ -19,6 +19,23 @@ export default function ProfileDropdown() {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const { logout, user: userProfile } = useAuth();
 
+  const user = userProfile?.user as any;
+  const userRole = user?.role || user?.userType;
+
+  const getAvatarSrc = () => {
+    if (userRole === "CITIZEN") {
+      return getDisplayImageUrl(user?.citizen?.profileImage);
+    }
+    if (userRole === "EMPLOYEE") {
+      return getDisplayImageUrl(user?.employee?.logoUrl);
+    }
+    return getDisplayImageUrl(user?.store?.logoUrl);
+  };
+
+  const displayName = user?.citizen
+    ? `${user.citizen.firstName} ${user.citizen.lastName}`
+    : (user?.userName || user?.email || "");
+
   // Handle logout actions
   const handleLogout = () => {
     logout();
@@ -32,21 +49,18 @@ export default function ProfileDropdown() {
             as="button"
             avatarProps={{
               isBordered: true,
-              src:
-                userProfile?.user?.role === "EMPLOYEE"
-                  ? getDisplayImageUrl(userProfile?.user?.employee?.logoUrl)
-                  : getDisplayImageUrl(userProfile?.user?.store?.logoUrl),
+              src: getAvatarSrc(),
               size: "sm",
             }}
             className="transition-transform cursor-pointer"
             classNames={{
-              name: "hidden sm:block",
-              description: "hidden sm:block",
+              name: "hidden sm:block text-white font-sans",
+              description: "hidden sm:block text-white/70 font-sans",
             }}
-            description={userProfile?.user?.email}
+            description={user?.email}
             name={
-              <p className="font-bold">
-                {userProfile?.user?.userName || userProfile?.user?.email}
+              <p className="font-bold text-white font-sans">
+                {displayName}
               </p>
             }
           />
@@ -62,9 +76,9 @@ export default function ProfileDropdown() {
             href="/settings/profile"
           >
             <p className="font-bold">
-              {userProfile?.user?.userName || userProfile?.user?.email}
+              {displayName}
             </p>
-            <p className="text-xs">{userProfile?.user?.email}</p>
+            <p className="text-xs">{user?.email}</p>
           </DropdownItem>
           <DropdownItem
             key="logout"

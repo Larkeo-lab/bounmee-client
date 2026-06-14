@@ -1,9 +1,10 @@
 import { Routes, Route } from "react-router-dom";
 
-import { generateRoutes, useAuth } from "@/routes";
+import { appRoutes, useAuth } from "@/routes";
+import { RouteGuard } from "@/routes/RouteGuard";
 
 function App() {
-  const { isAuthenticated, loading } = useAuth();
+  const { loading } = useAuth();
 
   // Show loading spinner while checking authentication
   if (loading) {
@@ -14,12 +15,14 @@ function App() {
     );
   }
 
-  const routes = generateRoutes(isAuthenticated);
-
   return (
     <Routes>
-      {routes.map((route, index) => (
-        <Route key={index} element={route.element} path={route.path} />
+      {appRoutes.map((route, index) => (
+        <Route
+          key={index}
+          element={<RouteGuard route={route} />}
+          path={route.path}
+        />
       ))}
     </Routes>
   );

@@ -2,9 +2,10 @@ const API_VERSION = "/api/v1";
 
 export const API_ENDPOINTS = {
   AUTH: {
-    LOGIN: `${API_VERSION}/auth/login-store`,
+    LOGIN: `${API_VERSION}/auth/login`,
     LOGIN_USER: `${API_VERSION}/auth/login`,
     REGISTER: `${API_VERSION}/auth/register-store`,
+    REGISTER_CITIZEN: `${API_VERSION}/auth/register-citizen`,
     FIREBASE_SYNC: `${API_VERSION}/auth/firebase-sync`,
     REFRESH_TOKEN: `${API_VERSION}/auth/refresh-token`,
   },
@@ -84,6 +85,12 @@ export const API_ENDPOINTS = {
     BY_PROVINCE: (provinceCode: string) =>
       `${API_VERSION}/district?provinceCode=${provinceCode}`,
   },
+  VILLAGE: {
+    LIST: `${API_VERSION}/village`,
+    DETAIL: (id: string) => `${API_VERSION}/village/${id}`,
+    BY_DISTRICT: (districtCode: string) =>
+      `${API_VERSION}/village?districtCode=${districtCode}`,
+  },
   CHAT: {
     HISTORY: (tableId: string) => `${API_VERSION}/chat/history/${tableId}`,
     UNREAD: (storeId: string) => `${API_VERSION}/chat/unread/${storeId}`,
@@ -105,5 +112,36 @@ export const API_ENDPOINTS = {
   PRODUCT_UPDATE_HISTORY: {
     LIST: `${API_VERSION}/product-update-history`,
     DETAIL: (id: string) => `${API_VERSION}/product-update-history/${id}`,
+  },
+  REPORT: {
+    CREATE: `${API_VERSION}/report`,
+    LIST: `${API_VERSION}/report`,
+    DETAIL: (id: string) => `${API_VERSION}/report/${id}`,
+    UPDATE: (id: string) => `${API_VERSION}/report/${id}`,
+    FORWARD: (id: string) => `${API_VERSION}/report/${id}/forward`,
+  },
+  CITIZEN: {
+    LIST: `${API_VERSION}/citizen`,
+    DETAIL: (id: string) => `${API_VERSION}/citizen/${id}`,
+    UPDATE: (id: string) => `${API_VERSION}/citizen/${id}`,
+  },
+  NEWS: {
+    CREATE: `${API_VERSION}/news`,
+    LIST: `${API_VERSION}/news`,
+    DETAIL: (id: string) => `${API_VERSION}/news/${id}`,
+  },
+  POLICE_DISTRICT: {
+    CREATE: `${API_VERSION}/police-district`,
+    LIST: `${API_VERSION}/police-district`,
+    DETAIL: (id: string) => `${API_VERSION}/police-district/${id}`,
+    UPDATE: (id: string) => `${API_VERSION}/police-district/${id}`,
+    DELETE: (id: string) => `${API_VERSION}/police-district/${id}`,
+  },
+  VILLAGE_CHIEF: {
+    CREATE: `${API_VERSION}/village-chief`,
+    LIST: `${API_VERSION}/village-chief`,
+    DETAIL: (id: string) => `${API_VERSION}/village-chief/${id}`,
+    UPDATE: (id: string) => `${API_VERSION}/village-chief/${id}`,
+    DELETE: (id: string) => `${API_VERSION}/village-chief/${id}`,
   },
 };

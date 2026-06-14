@@ -1,859 +1,702 @@
 import React from "react";
-import { useTranslation } from "react-i18next";
-import {
-  Button,
-  Form,
-  Image,
-  Input,
-  Card,
-  CardBody,
-  Select,
-  SelectItem,
-  Divider,
-  Chip,
-} from "@heroui/react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import {
-  Store,
-  User as UserIcon,
-  MapPin,
-  Mail,
+  User,
   Lock,
-  ArrowLeft,
-  Utensils,
-  Coffee,
-  ArrowRight,
-  CheckCircle2,
+  Mail,
   Phone,
+  MapPin,
+  Calendar,
+  CreditCard,
+  Camera,
+  Upload,
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle,
+  Loader2,
+  Users,
+  Eye,
+  EyeOff
 } from "lucide-react";
 
-import version from "../../../package.json";
-import { checkQuestionnaireCompletion } from "@/services/questionnaire/useQuestionnaire";
-
-import { EyeFilledIcon, EyeSlashFilledIcon } from "@/components/icons";
-import { useAuth } from "@/routes";
-//import { auth, /*,googleProvider  facebookProvider */ } from "@/config/firebase";
-//import { signInWithPopup } from "firebase/auth";
-//import { FcGoogle } from "react-icons/fc";
+import { useAuth } from "@/routes/AuthContext";
 import { useGetAllProvinces } from "@/services/province/useProvince";
 import { useGetDistrictsByProvince } from "@/services/district/useDistrict";
-import LanguageSwitch from "@/components/common/language-switch";
+import { useGetVillagesByDistrict } from "@/services/village/useVillage";
+import { uploadImage } from "@/services/storage";
+import { API_BASE_URL } from "@/lib/axios";
+import { API_ENDPOINTS } from "@/config/api";
 import { showErrorToast } from "@/config/error-messages";
 
-import oneDoorLogo from "/assets/eezypos_logo.jpg";
-
-import {
-  trackButtonClick,
-  trackFormSubmit,
-  trackPageView,
-} from "@/lib/analytics";
-
-const bgLineName = "/line-nam-bg.png";
-
-type StoreType = "RESTAURANT" | "CAFE" | "GENERAL_STORE" | "PHONE_SHOP";
-
-interface StoreTypeOption {
-  value: StoreType;
-  labelKey: string;
-  defaultLabel: string;
-  descriptionKey: string;
-  defaultDesc: string;
-  icon: React.ReactNode;
-  gradient: string;
-  border: string;
-}
-
-const STORE_TYPE_OPTIONS: StoreTypeOption[] = [
-  {
-    value: "RESTAURANT",
-    labelKey: "auth.storeType.restaurant",
-    defaultLabel: "ຮ້ານອາຫານ",
-    descriptionKey: "auth.storeType.restaurantDesc",
-    defaultDesc: "Restaurant & Food",
-    icon: <Utensils size={32} />,
-    gradient: "from-orange-500 to-red-500",
-    border: "border-orange-400",
-  },
-  {
-    value: "CAFE",
-    labelKey: "auth.storeType.cafe",
-    defaultLabel: "ຄາເຟ",
-    descriptionKey: "auth.storeType.cafeDesc",
-    defaultDesc: "Café & Beverage",
-    icon: <Coffee size={32} />,
-    gradient: "from-amber-500 to-yellow-600",
-    border: "border-amber-400",
-  },
-  {
-    value: "GENERAL_STORE",
-    labelKey: "auth.storeType.generalStore",
-    defaultLabel: "ຮ້ານຄ້າທົ່ວໄປ",
-    descriptionKey: "auth.storeType.generalStoreDesc",
-    defaultDesc: "General Store",
-    icon: <Store size={32} />,
-    gradient: "from-gray-500 to-slate-600",
-    border: "border-gray-400",
-  },
-  {
-    value: "PHONE_SHOP",
-    labelKey: "auth.storeType.phoneShop",
-    defaultLabel: "ຮ້ານຂາຍໂທລະສັບ",
-    descriptionKey: "auth.storeType.phoneShopDesc",
-    defaultDesc: "Phone Shop",
-    icon: <Phone size={32} />,
-    gradient: "from-green-500 to-green-600",
-    border: "border-green-400",
-  },
-];
-
 export default function Register() {
-  const { t } = useTranslation();
   const navigate = useNavigate();
-  const { register: registerStore, updateAuthState } = useAuth();
+  const { registerCitizen } = useAuth();
 
-  // Step state: 1 = pick store type, 2 = fill form
+  // Multi-step state: 1 = Personal & Address, 2 = Identity & Account
   const [step, setStep] = React.useState<1 | 2>(1);
-  const [selectedType, setSelectedType] = React.useState<StoreType | null>(
-    null,
-  );
-
-  const [isVisible, setIsVisible] = React.useState(false);
-  const [isConfirmVisible, setIsConfirmVisible] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
-  const [selectedProvince, setSelectedProvince] = React.useState<string>("");
-  const [email, setEmail] = React.useState<string>("");
-  const [fieldErrors, setFieldErrors] = React.useState<Record<string, string>>(
-    {},
-  );
-  const [firebaseData /* setFirebaseData */] = React.useState<{
-    uid: string;
-    email: string;
-    photoURL?: string;
-  } | null>(null);
 
-  const { data: provinces = [], isLoading: isLoadingProvinces } =
-    useGetAllProvinces();
-  const { data: districts = [], isLoading: isLoadingDistricts } =
-    useGetDistrictsByProvince(selectedProvince);
+  // Form Field States
+  const [userName, setUserName] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  const [confirmPassword, setConfirmPassword] = React.useState("");
+  const [email, setEmail] = React.useState("");
+  const [phone, setPhone] = React.useState("");
+  const [profileImage, setProfileImage] = React.useState("");
 
-  React.useEffect(() => {
-    trackPageView("/register", "POS Register Page");
-  }, []);
+  const [firstName, setFirstName] = React.useState("");
+  const [lastName, setLastName] = React.useState("");
+  const [dateOfBirth, setDateOfBirth] = React.useState("");
+  const [gender, setGender] = React.useState("MALE");
+  const [provinceId, setProvinceId] = React.useState("");
+  const [selectedProvinceCode, setSelectedProvinceCode] = React.useState("");
+  const [districtId, setDistrictId] = React.useState("");
+  const [selectedDistrictCode, setSelectedDistrictCode] = React.useState("");
+  const [villageId, setVillageId] = React.useState("");
+  const [address, setAddress] = React.useState("");
 
-  // Sync email from firebaseData to ensure it doesn't disappear
-  React.useEffect(() => {
-    if (firebaseData?.email) {
-      setEmail(firebaseData.email);
+  const [cartNumber, setCartNumber] = React.useState("");
+  const [cartImage, setCartImage] = React.useState("");
+  const [cartImageBack, setCartImageBack] = React.useState("");
+
+  // Upload States
+  const [uploadingProfile, setUploadingProfile] = React.useState(false);
+  const [uploadingFront, setUploadingFront] = React.useState(false);
+  const [uploadingBack, setUploadingBack] = React.useState(false);
+
+  // Locations Queries
+  const { data: provinces = [], isLoading: isLoadingProvinces } = useGetAllProvinces();
+  const { data: districts = [], isLoading: isLoadingDistricts } = useGetDistrictsByProvince(selectedProvinceCode);
+  const { data: villages = [], isLoading: isLoadingVillages } = useGetVillagesByDistrict(selectedDistrictCode);
+
+  // Password visibility states
+  const [isPassVisible, setIsPassVisible] = React.useState(false);
+  const [isConfirmPassVisible, setIsConfirmPassVisible] = React.useState(false);
+
+  // Upload handlers
+  const handleFileUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    type: "profile" | "front" | "back"
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (type === "profile") setUploadingProfile(true);
+    else if (type === "front") setUploadingFront(true);
+    else if (type === "back") setUploadingBack(true);
+
+    try {
+      const imageName = await uploadImage(file);
+      if (type === "profile") setProfileImage(imageName);
+      else if (type === "front") setCartImage(imageName);
+      else if (type === "back") setCartImageBack(imageName);
+      toast.success("ອັບໂຫຼດຮູບສຳເລັດ");
+    } catch (err) {
+      console.error("Failed to upload image:", err);
+      toast.error("ອັບໂຫຼດຮູບບໍ່ສຳເລັດ");
+    } finally {
+      if (type === "profile") setUploadingProfile(false);
+      else if (type === "front") setUploadingFront(false);
+      else if (type === "back") setUploadingBack(false);
     }
-  }, [firebaseData]);
-
-  const toggleVisibility = () => setIsVisible(!isVisible);
-  const toggleConfirmVisibility = () => setIsConfirmVisible(!isConfirmVisible);
-
-  const handleSelectType = (type: StoreType) => {
-    setSelectedType(type);
   };
 
-  const handleNextStep = () => {
-    if (!selectedType) return;
-    trackButtonClick(
-      "register-select-type",
-      `Selected store type: ${selectedType}`,
-    );
+  // Step 1 Validation
+  const validateStep1 = () => {
+    // Personal Info
+    if (!firstName.trim()) return "ກະລຸນາປ້ອນຊື່ແທ້";
+    if (!lastName.trim()) return "ກະລຸນາປ້ອນນາມສະກຸນ";
+    if (!dateOfBirth) return "ກະລຸນາເລືອກວັນເດືອນປີເກີດ";
+    if (!gender) return "ກະລຸນາເລືອກເພດ";
+
+    // Address Info
+    if (!provinceId) return "ກະລຸນາເລືອກແຂວງ";
+    if (!districtId) return "ກະລຸນາເລືອກເມືອງ";
+    if (!villageId) return "ກະລຸນາເລືອກບ້าน";
+
+    return null;
+  };
+
+  // Step 2 Validation
+  const validateStep2 = () => {
+    // Identity Verification
+    if (!cartNumber.trim()) return "ກະລຸນາປ້ອນເລກບັດປະຈຳຕົວ";
+    if (!cartImage) return "ກະລຸນາອັບໂຫຼດຮູບໜ້າບັດປະຈຳຕົວ";
+
+    // Account Info
+    if (!userName.trim()) return "ກະລຸນາປ້ອນຊື່ຜູ້ໃຊ້";
+    if (password.length < 6) return "ລະຫັດຜ່ານຕ້ອງມີຢ່າງໜ້ອຍ 6 ຕົວອັກສອນ";
+    if (password !== confirmPassword) return "ລະຫັດຜ່ານບໍ່ກົງກັນ";
+
+    return null;
+  };
+
+  const handleNext = () => {
+    const err = validateStep1();
+    if (err) return toast.error(err);
     setStep(2);
   };
 
   const handleBack = () => {
-    if (step === 2) {
-      setStep(1);
-    } else {
-      navigate("/");
-    }
+    if (step === 2) setStep(1);
+    else navigate("/");
   };
 
-  // Social Login Logic (Pre-fill version for Registration)
-  // const handleSocialLogin = async (provider: any) => {
-  //   setIsLoading(true);
-  //   try {
-  //     const result = await signInWithPopup(auth, provider);
-  //     const user = result.user;
-
-  //     // Pre-fill data from Firebase
-  //     // Try to get email from user object or providerData
-  //     const fbEmail = user.email || user.providerData?.[0]?.email || "";
-
-  //     setFirebaseData({
-  //       uid: user.uid,
-  //       email: fbEmail,
-  //       photoURL: user.photoURL || undefined
-  //     });
-  //     setEmail(fbEmail);
-
-  //     toast.success(t("auth.socialLinkSuccess") || "Linked with social account");
-
-  //     // If we are at step 1 and haven't selected a type, we stay at step 1 but email is ready
-  //     // Usually users pick type first, but if they click social first, we can jump to step 2
-  //     // if they have selected a type.
-  //     if (selectedType) {
-  //       setStep(2);
-  //     }
-  //   } catch (error: any) {
-  //     console.error("Social Login Error:", error);
-  //     toast.error(error.message || "Social Login Failed");
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
-
+  // Submit Handler
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const err = validateStep2();
+    if (err) return toast.error(err);
+
     setIsLoading(true);
 
-    trackButtonClick("register-button", "POS Register Button");
-
     try {
-      const formData = new FormData(e.currentTarget as HTMLFormElement);
-      const data = Object.fromEntries(formData);
-
-      if (data.password !== data.confirmPassword) {
-        throw new Error(t("auth.passwordMismatch") || "Passwords do not match");
-      }
-
       const payload = {
-        name: data.storeName as string,
-        address: data.address as string,
-        provinceId: data.provinceId as string,
-        districtId: data.districtId as string,
-        userName: data.username as string,
-        email: data.email as string,
-        phone: data.phone as string,
-        password: data.password as string,
-        role: "STORE_ADMIN",
-        type: selectedType!,
-        // Include firebase details if available
-        firebaseUid: firebaseData?.uid,
-        photoURL: firebaseData?.photoURL,
+        userName,
+        password,
+        email: email || null,
+        phone: phone || null,
+        profileImage: profileImage || null,
+        provinceId,
+        districtId,
+        villageId,
+        address: address || null,
+        firstName,
+        lastName,
+        dateOfBirth: new Date(dateOfBirth).toISOString(),
+        gender: gender.toUpperCase(),
+        cartNumber,
+        cartImage,
+        cartImageBack,
       };
 
-      const authData = await registerStore(payload);
-
-      trackFormSubmit("pos-register", true);
-      toast.success(t("auth.registrationSuccess"));
-
-      // Auto Login
-      if (authData) {
-        // เคลียร์ cart เก่าก่อน auto login (ป้องกัน order จากร้านเก่าค้าง)
-        try {
-          const { useCartStore } = await import("@/store/useCartStore");
-          useCartStore.getState().resetCart();
-        } catch (e) { }
-        updateAuthState(authData);
-
-        // Check if questionnaire is completed
-        try {
-          if (authData?.user?.storeId) {
-            const completionStatus = await checkQuestionnaireCompletion({
-              storeId: authData.user.storeId,
-            });
-
-            if (!completionStatus.isCompleted) {
-              navigate("/questionnaire");
-              return;
-            }
-          }
-        } catch (error) {
-          console.error("Error checking questionnaire status:", error);
-        }
-
-        // Navigate ตาม storeType และ Permission
-        const storeType = authData?.user?.store?.type;
-        const userRole = authData?.user?.role;
-        const permissions = authData?.user?.employee?.permission?.permissions;
-        const isAdmin =
-          userRole === "SUPER_ADMIN" || userRole === "STORE_ADMIN";
-
-        const canAccess = (key: string) => {
-          if (permissions) {
-            return permissions[key]?.includes("read");
-          }
-          return isAdmin; // Fallback for admins
-        };
-
-        let targetPath = "/settings/profile";
-
-        if (storeType === "GENERAL_STORE" || storeType === "PHONE_SHOP") {
-          if (canAccess("pos")) targetPath = "/saleGeneral";
-          else if (canAccess("order")) targetPath = "/order";
-          else if (canAccess("dashboard")) targetPath = "/dashboard";
-        } else if (storeType === "CAFE") {
-          if (canAccess("cafe")) targetPath = "/saleCafe";
-          else if (canAccess("order")) targetPath = "/order";
-          else if (canAccess("dashboard")) targetPath = "/dashboard";
-        } else {
-          // RESTAURANT or others
-          if (canAccess("table")) targetPath = "/table";
-          else if (canAccess("cafe")) targetPath = "/saleCafe";
-          else if (canAccess("order")) targetPath = "/order";
-          else if (canAccess("dashboard")) targetPath = "/dashboard";
-        }
-
-        // Check if questionnaire is completed (Only for Admins/Store Owners)
-        if (isAdmin) {
-          try {
-            if (authData?.user?.storeId) {
-              const completionStatus = await checkQuestionnaireCompletion({
-                storeId: authData.user.storeId,
-              });
-
-              if (!completionStatus.isCompleted) {
-                navigate("/questionnaire");
-                return;
-              }
-            }
-          } catch (error) {
-            console.error("Error checking questionnaire status:", error);
-          }
-        }
-
-        navigate(targetPath);
-      } else {
-        navigate("/");
-      }
+      await registerCitizen(payload);
+      toast.success("ລົງທະບຽນສຳເລັດແລ້ວ!");
+      navigate("/login");
     } catch (err: any) {
-      trackFormSubmit("pos-register", false);
-
-      // Handle field-specific duplicate errors
-      const apiMessage = err?.response?.data?.message;
-      const duplicatedField = err?.response?.data?.errors?.duplicatedField;
-
-      if (apiMessage === "USER_ALREADY_EXISTS" && duplicatedField) {
-        const fieldMap: Record<string, string> = {
-          Email: "email",
-          Username: "username",
-          Phone: "phone",
-        };
-        const fieldKey =
-          fieldMap[duplicatedField] || duplicatedField.toLowerCase();
-        setFieldErrors({
-          [fieldKey]:
-            t("auth.duplicateField", { field: duplicatedField }) ||
-            `${duplicatedField} ນີ້ຖືກລົງທະບຽນແລ້ວ`,
-        });
-      }
-
       showErrorToast(err, "", "danger");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const selectedTypeOption = STORE_TYPE_OPTIONS.find(
-    (o) => o.value === selectedType,
-  );
+  // Image View Helpers
+  const getImageUrl = (imageName: string) => {
+    return `${API_BASE_URL}${API_ENDPOINTS.STORAGE.VIEW_IMAGE("medium", imageName)}`;
+  };
 
   return (
-    <div className="flex flex-col lg:flex-row w-full lg:h-screen bg-background text-foreground lg:overflow-hidden">
-      {/* Brand Section (LHS) */}
+    <div className="flex flex-col min-h-screen bg-white text-gray-800 font-sans">
+      {/* Header */}
+      <header className="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-100 shadow-sm h-20 z-10">
+        <div className="flex items-center space-x-3">
+          <img
+            src="/assets/logo.png"
+            alt="Ministry Logo"
+            className="h-12 w-auto object-contain"
+            onError={(e) => {
+              e.currentTarget.src = "/logo.png";
+            }}
+          />
+          <div className="flex flex-col">
+            <span className="text-lg md:text-xl font-bold text-[#075e3d] leading-tight">
+              ກະຊວງປ້ອງກັນຄວາມສະຫງົບ
+            </span>
+            <span className="text-xs md:text-sm font-semibold text-gray-500 tracking-wide">
+              Ministry of Public Security
+            </span>
+          </div>
+        </div>
+        <button
+          onClick={handleBack}
+          className="flex items-center space-x-1 px-4 py-2 text-[#075e3d] font-bold hover:bg-[#075e3d]/5 rounded-full transition-colors cursor-pointer"
+        >
+          <ArrowLeft size={18} />
+          <span>ຍ້ອນກັບ</span>
+        </button>
+      </header>
+
+      {/* Main Container with Background */}
       <div
-        className="w-full lg:w-1/2 relative flex flex-col items-center justify-center p-8 overflow-hidden bg-primary shrink-0 lg:h-full"
+        className="flex-1 w-full flex items-center justify-center p-4 md:p-8 relative bg-cover bg-center overflow-y-auto"
         style={{
-          backgroundImage: `url(${bgLineName})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
+          backgroundImage: "url('/assets/images/02.png')",
         }}
       >
-        <div className="absolute inset-0 bg-primary/80 backdrop-blur-[2px] z-0" />
-        <div className="absolute inset-0 bg-gradient-to-br from-primary via-transparent to-black/30 z-0" />
+        <div className="absolute inset-0 bg-black/10 backdrop-blur-[2px] z-0" />
 
-        <div className="relative z-10 flex flex-col items-center text-center text-white space-y-6">
-          <div className="p-4 bg-white rounded-[2.5rem] shadow-2xl animate-float">
-            <Image
-              alt="Eezy POS Logo"
-              className="w-32 lg:w-48"
-              src={oneDoorLogo}
-            />
-          </div>
-          <div className="space-y-4">
-            <h1 className="text-4xl lg:text-7xl font-black tracking-tight drop-shadow-lg uppercase">
-              Eezy POS
-            </h1>
+        {/* Register Card */}
+        <div className="relative z-10 w-full max-w-2xl bg-white rounded-[2rem] shadow-2xl overflow-hidden flex flex-col my-4">
 
-            <p className="text-xl lg:text-2xl font-light opacity-90 max-w-lg mx-auto">
-              {t("auth.welcomeMessage")}
-              <span className="block text-sm mt-2 opacity-70">
-                {t("auth.subtitle")}
-              </span>
-            </p>
-          </div>
+          {/* Stepper Header */}
+          <div className="bg-[#075e3d] text-white px-8 py-6 flex flex-col space-y-4 text-center">
+            <h2 className="text-2xl font-bold">ລົງທະບຽນພົນລະເມືອງ</h2>
 
-          {/* Step Indicator */}
-          <div className="pt-4 flex flex-col items-center gap-3">
-            <div className="flex items-center gap-3">
-              {/* Step 1 */}
-              <div
-                className={`flex items-center justify-center w-9 h-9 rounded-full font-bold text-sm transition-all ${step === 1
-                  ? "bg-white text-primary shadow-lg scale-110"
-                  : "bg-white/30 text-white"
-                  }`}
-              >
-                {step === 2 ? <CheckCircle2 size={18} /> : "1"}
+            {/* Step Indicators */}
+            <div className="flex items-center justify-center space-x-4 max-w-md mx-auto w-full pt-2">
+              <div className="flex items-center space-x-2">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm border-2 ${step >= 1 ? "bg-white text-[#075e3d] border-white" : "border-white/50 text-white/50"
+                  }`}>
+                  1
+                </div>
+                <span className={`text-xs font-semibold hidden sm:inline ${step >= 1 ? "opacity-100" : "opacity-50"}`}>
+                  ຂໍ້ມູນສ່ວນຕົວ & ທີ່ຢູ່
+                </span>
               </div>
-              <div
-                className={`h-0.5 w-12 rounded-full transition-all ${step === 2 ? "bg-white" : "bg-white/30"
-                  }`}
-              />
-              {/* Step 2 */}
-              <div
-                className={`flex items-center justify-center w-9 h-9 rounded-full font-bold text-sm transition-all ${step === 2
-                  ? "bg-white text-primary shadow-lg scale-110"
-                  : "bg-white/30 text-white"
-                  }`}
-              >
-                2
+              <div className={`h-[2px] w-16 ${step >= 2 ? "bg-white" : "bg-white/30"}`} />
+              <div className="flex items-center space-x-2">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm border-2 ${step >= 2 ? "bg-white text-[#075e3d] border-white" : "border-white/50 text-white/50"
+                  }`}>
+                  2
+                </div>
+                <span className={`text-xs font-semibold hidden sm:inline ${step >= 2 ? "opacity-100" : "opacity-50"}`}>
+                  ຢືນຢັນ & ບັນຊີ
+                </span>
               </div>
             </div>
-            <p className="text-white/70 text-xs">
-              {step === 1 ? t("auth.step1") : t("auth.step2")}
-            </p>
           </div>
-        </div>
 
-        <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-white/10 rounded-full blur-3xl text-white/5" />
-        <div className="absolute -top-20 -right-20 w-80 h-80 bg-primary-400/20 rounded-full blur-3xl text-white/5" />
-      </div>
+          {/* Form Content */}
+          <form onSubmit={onSubmit} className="p-8 md:p-10 flex-1 flex flex-col space-y-8">
 
-      {/* RHS */}
-      <div className="relative w-full lg:w-1/2 lg:h-full flex flex-col items-center bg-gray-50 dark:bg-gray-950 lg:overflow-y-auto scroll-smooth">
-        {/* Top Header Bar */}
-        <div className="sticky top-0 w-full z-30 flex items-center justify-between p-4 bg-gray-50/80 dark:bg-gray-950/80 backdrop-blur-xl">
-          <Button
-            className="font-semibold text-primary hover:bg-primary/5 p-0 h-auto"
-            startContent={<ArrowLeft size={18} />}
-            variant="light"
-            onPress={handleBack}
-          >
-            {step === 2 ? t("common.back") : t("auth.backToLogin")}
-          </Button>
-          <LanguageSwitch />
-        </div>
+            {/* STEP 1: PERSONAL INFO & CURRENT ADDRESS */}
+            {step === 1 && (
+              <div className="space-y-8">
+                {/* SECTION 1: PERSONAL INFO */}
+                <div className="space-y-6">
 
-        <div className="w-full px-4 md:px-12 py-4 space-y-6">
-          {/* ========== STEP 1: Choose Store Type ========== */}
-          {step === 1 && (
-            <>
-              <div className="text-center lg:text-left space-y-2">
-                <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-                  {t("auth.chooseStoreType")}
-                </h2>
-                <p className="text-gray-500 dark:text-gray-400">
-                  {t("auth.chooseStoreTypeDesc")}
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {STORE_TYPE_OPTIONS.map((option) => {
-                  const isSelected = selectedType === option.value;
-
-                  return (
-                    <button
-                      key={option.value}
-                      className={`relative w-full text-left rounded-2xl border-2 p-5 transition-all duration-200 cursor-pointer group
-                        ${isSelected
-                          ? `${option.border} bg-white dark:bg-gray-900 shadow-xl scale-[1.02]`
-                          : "border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-700 hover:shadow-md hover:scale-[1.01]"
-                        }
-                      `}
-                      type="button"
-                      onClick={() => handleSelectType(option.value)}
-                    >
-                      {/* Icon circle */}
-                      <div
-                        className={`w-14 h-14 rounded-xl flex items-center justify-center text-white mb-4 bg-gradient-to-br ${option.gradient} shadow-lg transition-all ${isSelected ? "scale-110" : "group-hover:scale-105"
-                          }`}
-                      >
-                        {option.icon}
-                      </div>
-
-                      <p className="text-lg font-bold text-gray-900 dark:text-white">
-                        {t(option.labelKey)}
-                      </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                        {t(option.descriptionKey)}
-                      </p>
-
-                      {isSelected && (
-                        <div className="absolute top-3 right-3">
-                          <CheckCircle2
-                            className="text-primary fill-primary/10"
-                            size={22}
-                          />
-                        </div>
+                  {/* Profile Photo Upload */}
+                  <div className="flex flex-col items-center space-y-3">
+                    <div className="relative w-28 h-28 rounded-full bg-slate-50 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden shadow-inner group">
+                      {profileImage ? (
+                        <img src={getImageUrl(profileImage)} alt="Profile" className="w-full h-full object-cover" />
+                      ) : uploadingProfile ? (
+                        <Loader2 className="w-8 h-8 text-[#075e3d] animate-spin" />
+                      ) : (
+                        <User className="w-12 h-12 text-gray-400" />
                       )}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <Button
-                className="w-full h-14 font-bold text-lg shadow-lg shadow-primary/30"
-                color="primary"
-                endContent={<ArrowRight size={20} />}
-                isDisabled={!selectedType}
-                size="lg"
-                onPress={handleNextStep}
-              >
-                {t("common.next")}
-                {selectedTypeOption && (
-                  <Chip
-                    className="ml-2 bg-white/20 text-white text-xs font-semibold"
-                    size="sm"
-                  >
-                    {t(selectedTypeOption.labelKey)}
-                  </Chip>
-                )}
-              </Button>
-            </>
-          )}
-
-          {/* ========== STEP 2: Fill Registration Form ========== */}
-          {step === 2 && (
-            <>
-              <div className="text-center lg:text-left space-y-2">
-                <div className="flex items-center gap-3 mb-1">
-                  <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-                    {t("auth.register")}
-                  </h2>
-                  {selectedTypeOption && (
-                    <div
-                      className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-white text-xs font-bold bg-gradient-to-r ${selectedTypeOption.gradient}`}
-                    >
-                      {React.cloneElement(
-                        selectedTypeOption.icon as React.ReactElement,
-                        {
-                          size: 14,
-                        },
-                      )}
-                      {t(selectedTypeOption.labelKey) ||
-                        selectedTypeOption.defaultLabel}
+                      <label className="absolute inset-0 bg-black/40 text-white flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-xs font-semibold">
+                        <Camera size={20} className="mb-1" />
+                        ອັບໂຫຼດຮູບ
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleFileUpload(e, "profile")}
+                          className="hidden"
+                        />
+                      </label>
                     </div>
-                  )}
-                </div>
-                <p className="text-gray-500 dark:text-gray-400">
-                  {t("auth.registerSubtitle")}
-                </p>
-              </div>
-
-              <Card className="w-full border-none bg-white/70 dark:bg-white/5 backdrop-blur-xl shadow-2xl">
-                <CardBody className="p-6 md:p-8">
-                  <Form
-                    className="w-full flex flex-col gap-6"
-                    onSubmit={onSubmit}
-                  >
-                    {/* Store Info */}
-                    <div className="w-full space-y-4">
-                      <div className="flex mb-10 items-center gap-2 text-primary font-bold border-b border-divider pb-1">
-                        <Store size={18} />
-                        <span className="text-sm uppercase tracking-wider">
-                          {t("sidebar.groups.management")}
-                        </span>
-                      </div>
-
-                      <Input
-                        isRequired
-                        className="w-full"
-                        classNames={{
-                          label:
-                            "font-semibold text-gray-700 dark:text-gray-300",
-                          inputWrapper:
-                            "w-full h-14 border-2 border-default-200 hover:border-primary transition-colors",
-                        }}
-                        label={t("auth.storeName")}
-                        labelPlacement="outside"
-                        name="storeName"
-                        placeholder={t("auth.storeNamePlaceholder")}
-                        size="lg"
-                        variant="bordered"
-                      />
-
-                      <div className="grid mb-10 grid-cols-1 md:grid-cols-2 gap-4">
-                        <Select
-                          isRequired
-                          classNames={{
-                            label:
-                              "font-semibold text-gray-700 dark:text-gray-300",
-                            trigger:
-                              "h-14 border-2 border-default-200 hover:border-primary transition-colors",
-                          }}
-                          isLoading={isLoadingProvinces}
-                          label={t("auth.province")}
-                          labelPlacement="outside"
-                          name="provinceId"
-                          placeholder={t("auth.province")}
-                          size="lg"
-                          variant="bordered"
-                          onSelectionChange={(keys) => {
-                            const provinceId = Array.from(keys)[0] as string;
-                            const province = provinces.find(
-                              (p: any) => p.id === provinceId,
-                            );
-
-                            if (province) setSelectedProvince(province.code);
-                          }}
-                        >
-                          {provinces.map((prov: any) => (
-                            <SelectItem key={prov.id} textValue={prov.nameLo}>
-                              {prov.nameLo}
-                            </SelectItem>
-                          ))}
-                        </Select>
-
-                        <Select
-                          isRequired
-                          classNames={{
-                            label:
-                              "font-semibold text-gray-700 dark:text-gray-300",
-                            trigger:
-                              "h-14 border-2 border-default-200 hover:border-primary transition-colors",
-                          }}
-                          isDisabled={!selectedProvince}
-                          isLoading={isLoadingDistricts}
-                          label={t("auth.district")}
-                          labelPlacement="outside"
-                          name="districtId"
-                          placeholder={t("auth.district")}
-                          size="lg"
-                          variant="bordered"
-                        >
-                          {districts.map((dist: any) => (
-                            <SelectItem key={dist.id} textValue={dist.nameLo}>
-                              {dist.nameLo}
-                            </SelectItem>
-                          ))}
-                        </Select>
-                      </div>
-
-                      <Input
-                        className="w-full"
-                        classNames={{
-                          label:
-                            "font-semibold text-gray-700 dark:text-gray-300",
-                          inputWrapper:
-                            "w-full h-14 border-2 border-default-200 hover:border-primary transition-colors",
-                        }}
-                        label={t("auth.address")}
-                        labelPlacement="outside"
-                        name="address"
-                        placeholder={t("auth.addressPlaceholder")}
-                        size="lg"
-                        startContent={
-                          <MapPin className="text-default-400" size={20} />
-                        }
-                        variant="bordered"
-                      />
-                    </div>
-
-                    {/* Account Info */}
-                    <div className="space-y-4">
-                      <div className="flex mb-10 items-center gap-2 text-primary font-bold border-b border-divider pb-1">
-                        <UserIcon size={18} />
-                        <span className="text-sm uppercase tracking-wider">
-                          {t("navigation.profile")}
-                        </span>
-                      </div>
-
-                      {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Input
-                          name="username"
-                          label={t("auth.username")}
-                          labelPlacement="outside"
-                          placeholder={t("auth.usernameePlaceholder")}
-                          variant="bordered"
-                          size="lg"
-                          isRequired
-                          startContent={<UserIcon className="text-default-400" size={20} />}
-                          classNames={{
-                            label: "font-semibold text-gray-700 dark:text-gray-300",
-                            inputWrapper:
-                              "h-14 border-2 border-default-200 hover:border-primary transition-colors",
-                          }}
-                        />
-                        <Input
-                          name="phone"
-                          label={t("auth.phone")}
-                          labelPlacement="outside"
-                          placeholder={t("auth.phonePlaceholder")}
-                          variant="bordered"
-                          size="lg"
-                          isRequired
-                          startContent={<Phone className="text-default-400" size={20} />}
-                          classNames={{
-                            label: "font-semibold text-gray-700 dark:text-gray-300",
-                            inputWrapper:
-                              "h-14 border-2 border-default-200 hover:border-primary transition-colors",
-                          }}
-                        />
-                      </div> */}
-
-                      <Input
-                        isRequired
-                        className="w-full"
-                        classNames={{
-                          label:
-                            "font-semibold text-gray-700 dark:text-gray-300",
-                          inputWrapper:
-                            "w-full h-14 border-2 border-default-200 hover:border-primary transition-colors",
-                        }}
-                        label={t("auth.email")}
-                        labelPlacement="outside"
-                        name="email"
-                        placeholder="example@gmail.com"
-                        size="lg"
-                        startContent={
-                          <Mail className="text-default-400" size={20} />
-                        }
-                        type="email"
-                        variant="bordered"
-                        value={email}
-                        onValueChange={(val) => {
-                          setEmail(val);
-                          // Clear field error when user starts typing
-                          if (fieldErrors.email) {
-                            setFieldErrors((prev) => ({ ...prev, email: "" }));
-                          }
-                        }}
-                        isReadOnly={!!firebaseData}
-                        isInvalid={!!fieldErrors.email}
-                        errorMessage={fieldErrors.email}
-                      />
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Input
-                          isRequired
-                          classNames={{
-                            label:
-                              "font-semibold text-gray-700 dark:text-gray-300",
-                            inputWrapper:
-                              "h-14 border-2 border-default-200 hover:border-primary transition-colors",
-                          }}
-                          endContent={
-                            <button type="button" onClick={toggleVisibility}>
-                              {isVisible ? (
-                                <EyeSlashFilledIcon className="text-2xl text-default-400" />
-                              ) : (
-                                <EyeFilledIcon className="text-2xl text-default-400" />
-                              )}
-                            </button>
-                          }
-                          label={t("auth.password")}
-                          labelPlacement="outside"
-                          name="password"
-                          placeholder={t("auth.passwordPlaceholder")}
-                          size="lg"
-                          startContent={
-                            <Lock className="text-default-400" size={20} />
-                          }
-                          type={isVisible ? "text" : "password"}
-                          variant="bordered"
-                        />
-                        <Input
-                          isRequired
-                          classNames={{
-                            label:
-                              "font-semibold text-gray-700 dark:text-gray-300",
-                            inputWrapper:
-                              "h-14 border-2 border-default-200 hover:border-primary transition-colors",
-                          }}
-                          endContent={
-                            <button
-                              type="button"
-                              onClick={toggleConfirmVisibility}
-                            >
-                              {isConfirmVisible ? (
-                                <EyeSlashFilledIcon className="text-2xl text-default-400" />
-                              ) : (
-                                <EyeFilledIcon className="text-2xl text-default-400" />
-                              )}
-                            </button>
-                          }
-                          label={t("auth.confirmPassword")}
-                          labelPlacement="outside"
-                          name="confirmPassword"
-                          placeholder={t("auth.passwordPlaceholder")}
-                          size="lg"
-                          startContent={
-                            <Lock className="text-default-400" size={20} />
-                          }
-                          type={isConfirmVisible ? "text" : "password"}
-                          variant="bordered"
-                        />
-                      </div>
-                    </div>
-
-                    <Button
-                      className="w-full h-14 font-bold text-lg shadow-lg shadow-primary/30 mt-2"
-                      color="primary"
-                      isLoading={isLoading}
-                      size="lg"
-                      type="submit"
-                    >
-                      {isLoading
-                        ? t("auth.registering")
-                        : t("auth.registerButton")}
-                    </Button>
-                  </Form>
-
-                  <div className="flex items-center gap-4 my-6">
-                    <Divider className="flex-1" />
-                    <span className="text-xs text-gray-400 uppercase tracking-widest">
-                      {t("auth.orContinueWith")}
-                    </span>
-                    <Divider className="flex-1" />
+                    <span className="text-xs text-gray-500 font-medium">ຮູບໂປຣໄຟລ໌ (ບໍ່ບັງຄັບ)</span>
                   </div>
 
-                  {/* <div className="grid grid-cols-1 gap-4">
-                    <Button
-                      className="h-12 border-2 border-default-200 hover:border-primary transition-colors bg-white dark:bg-white/5"
-                      startContent={<FcGoogle size={20} />}
-                      variant="bordered"
-                      type="button"
-                      onPress={() => handleSocialLogin(googleProvider)}
-                    >
-                      Google
-                    </Button>
-                    <Button
-                      className="h-12 border-2 border-default-200 hover:border-primary transition-colors bg-[#1877F2] text-white"
-                      startContent={<FaFacebook size={20} />}
-                      type="button"
-                      onPress={() => handleSocialLogin(facebookProvider)}
-                    >
-                      Facebook
-                    </Button>
-                  </div> */}
-                </CardBody>
-              </Card>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* First Name */}
+                    <div className="flex flex-col space-y-1.5">
+                      <label htmlFor="firstName" className="text-sm font-bold text-gray-700">ຊື່ແທ້ / First Name <span className="text-red-500">*</span></label>
+                      <div className="relative flex items-center bg-slate-50 rounded-xl px-4 py-2 border border-gray-200 focus-within:border-[#075e3d] transition-colors h-12">
+                        <User className="text-gray-400 mr-2.5" size={18} />
+                        <input
+                          id="firstName"
+                          type="text"
+                          placeholder="ປ້ອນຊື່ແທ້..."
+                          value={firstName}
+                          onChange={(e) => setFirstName(e.target.value)}
+                          className="w-full bg-transparent focus:outline-none text-gray-800 placeholder-gray-400 text-sm font-medium"
+                          required
+                        />
+                      </div>
+                    </div>
 
-              <footer className="text-center space-y-4 pt-2">
-                <Divider className="my-4" />
-                <p className="text-[10px] text-gray-400 font-mono uppercase tracking-[0.2em]">
-                  Eezy POS System &bull; Version {version.version}
-                </p>
-              </footer>
-            </>
-          )}
+                    {/* Last Name */}
+                    <div className="flex flex-col space-y-1.5">
+                      <label htmlFor="lastName" className="text-sm font-bold text-gray-700">ນາມສະກຸນ / Last Name <span className="text-red-500">*</span></label>
+                      <div className="relative flex items-center bg-slate-50 rounded-xl px-4 py-2 border border-gray-200 focus-within:border-[#075e3d] transition-colors h-12">
+                        <User className="text-gray-400 mr-2.5" size={18} />
+                        <input
+                          id="lastName"
+                          type="text"
+                          placeholder="ປ້ອນນາມສະກຸນ..."
+                          value={lastName}
+                          onChange={(e) => setLastName(e.target.value)}
+                          className="w-full bg-transparent focus:outline-none text-gray-800 placeholder-gray-400 text-sm font-medium"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Date of Birth */}
+                    <div className="flex flex-col space-y-1.5">
+                      <label htmlFor="dateOfBirth" className="text-sm font-bold text-gray-700">ວັນເດືອນປີເກີດ / Date of Birth <span className="text-red-500">*</span></label>
+                      <div className="relative flex items-center bg-slate-50 rounded-xl px-4 py-2 border border-gray-200 focus-within:border-[#075e3d] transition-colors h-12">
+                        <Calendar className="text-gray-400 mr-2.5" size={18} />
+                        <input
+                          id="dateOfBirth"
+                          type="date"
+                          value={dateOfBirth}
+                          onChange={(e) => setDateOfBirth(e.target.value)}
+                          className="w-full bg-transparent focus:outline-none text-gray-800 text-sm font-medium"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    {/* Gender */}
+                    <div className="flex flex-col space-y-1.5">
+                      <label htmlFor="gender" className="text-sm font-bold text-gray-700">ເພດ / Gender <span className="text-red-500">*</span></label>
+                      <div className="relative flex items-center bg-slate-50 rounded-xl px-4 py-2 border border-gray-200 focus-within:border-[#075e3d] transition-colors h-12">
+                        <Users className="text-gray-400 mr-2.5" size={18} />
+                        <select
+                          id="gender"
+                          value={gender}
+                          onChange={(e) => setGender(e.target.value)}
+                          className="w-full bg-transparent focus:outline-none text-gray-800 text-sm font-medium cursor-pointer"
+                          required
+                        >
+                          <option value="MALE">ຊາຍ / Male</option>
+                          <option value="FEMALE">ຍິງ / Female</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Phone */}
+                    <div className="flex flex-col space-y-1.5">
+                      <label htmlFor="phone" className="text-sm font-bold text-gray-700">ເບີໂທລະສັບ / Phone</label>
+                      <div className="relative flex items-center bg-slate-50 rounded-xl px-4 py-2 border border-gray-200 focus-within:border-[#075e3d] transition-colors h-12">
+                        <Phone className="text-gray-400 mr-2.5" size={18} />
+                        <input
+                          id="phone"
+                          type="tel"
+                          placeholder="...ປ້ອນເເບີໂທ"
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                          className="w-full bg-transparent focus:outline-none text-gray-800 placeholder-gray-400 text-sm font-medium"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Email */}
+                    <div className="flex flex-col space-y-1.5">
+                      <label htmlFor="email" className="text-sm font-bold text-gray-700">ອີເມວ / Email</label>
+                      <div className="relative flex items-center bg-slate-50 rounded-xl px-4 py-2 border border-gray-200 focus-within:border-[#075e3d] transition-colors h-12">
+                        <Mail className="text-gray-400 mr-2.5" size={18} />
+                        <input
+                          id="email"
+                          type="email"
+                          placeholder="example@gmail.com"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="w-full bg-transparent focus:outline-none text-gray-800 placeholder-gray-400 text-sm font-medium"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* SECTION 2: CURRENT ADDRESS */}
+                <div className="space-y-6">
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Province */}
+                    <div className="flex flex-col space-y-1.5">
+                      <label htmlFor="provinceId" className="text-sm font-bold text-gray-700">ແຂວງ / Province <span className="text-red-500">*</span></label>
+                      <div className="relative flex items-center bg-slate-50 rounded-xl px-4 py-2 border border-gray-200 focus-within:border-[#075e3d] transition-colors h-12">
+                        <select
+                          id="provinceId"
+                          value={provinceId}
+                          onChange={(e) => {
+                            const pId = e.target.value;
+                            setProvinceId(pId);
+                            const prov = provinces.find((p: any) => p.id === pId);
+                            setSelectedProvinceCode(prov ? prov.code : "");
+
+                            // Reset dependents
+                            setDistrictId("");
+                            setSelectedDistrictCode("");
+                            setVillageId("");
+                          }}
+                          className="w-full bg-transparent focus:outline-none text-gray-800 text-sm font-medium cursor-pointer"
+                          required
+                          disabled={isLoadingProvinces}
+                        >
+                          <option value="">{isLoadingProvinces ? "ກຳລັງໂຫຼດ..." : "ເລືອກແຂວງ..."}</option>
+                          {provinces.map((prov: any) => (
+                            <option key={prov.id} value={prov.id}>
+                              {prov.nameLo}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* District */}
+                    <div className="flex flex-col space-y-1.5">
+                      <label htmlFor="districtId" className="text-sm font-bold text-gray-700">ເມືອງ / District <span className="text-red-500">*</span></label>
+                      <div className="relative flex items-center bg-slate-50 rounded-xl px-4 py-2 border border-gray-200 focus-within:border-[#075e3d] transition-colors h-12">
+                        <select
+                          id="districtId"
+                          value={districtId}
+                          onChange={(e) => {
+                            const dId = e.target.value;
+                            setDistrictId(dId);
+                            const dist = districts.find((d: any) => d.id === dId);
+                            setSelectedDistrictCode(dist ? dist.code : "");
+
+                            // Reset dependents
+                            setVillageId("");
+                          }}
+                          className="w-full bg-transparent focus:outline-none text-gray-800 text-sm font-medium cursor-pointer"
+                          required
+                          disabled={!selectedProvinceCode || isLoadingDistricts}
+                        >
+                          <option value="">
+                            {!selectedProvinceCode
+                              ? "ເລືອກແຂວງກ່ອນ..."
+                              : isLoadingDistricts
+                                ? "ກຳລັງໂຫຼດ..."
+                                : "ເລືອກເມືອງ..."}
+                          </option>
+                          {districts.map((dist: any) => (
+                            <option key={dist.id} value={dist.id}>
+                              {dist.nameLo}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Village */}
+                    <div className="flex flex-col space-y-1.5">
+                      <label htmlFor="villageId" className="text-sm font-bold text-gray-700">ບ້ານ / Village <span className="text-red-500">*</span></label>
+                      <div className="relative flex items-center bg-slate-50 rounded-xl px-4 py-2 border border-gray-200 focus-within:border-[#075e3d] transition-colors h-12">
+                        <select
+                          id="villageId"
+                          value={villageId}
+                          onChange={(e) => setVillageId(e.target.value)}
+                          className="w-full bg-transparent focus:outline-none text-gray-800 text-sm font-medium cursor-pointer"
+                          required
+                          disabled={!selectedDistrictCode || isLoadingVillages}
+                        >
+                          <option value="">
+                            {!selectedDistrictCode
+                              ? "ເລືອກເມືອງກ່ອນ..."
+                              : isLoadingVillages
+                                ? "ກຳລັງໂຫຼດ..."
+                                : "ເລືອກບ້ານ..."}
+                          </option>
+                          {villages.map((vil: any) => (
+                            <option key={vil.id} value={vil.id}>
+                              {vil.nameLo}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Address details */}
+                  <div className="flex flex-col space-y-1.5">
+                    <label htmlFor="address" className="text-sm font-bold text-gray-700">ທີ່ຢູ່ປະຈຸບັນ / Address Detail</label>
+                    <div className="relative flex items-center bg-slate-50 rounded-xl px-4 py-2 border border-gray-200 focus-within:border-[#075e3d] transition-colors h-12">
+                      <MapPin className="text-gray-400 mr-2.5" size={18} />
+                      <input
+                        id="address"
+                        type="text"
+                        placeholder="ປ້ອນທີ່ຢູ່ລະອຽດ, ເຮືອນເລກທີ, ໜ່ວຍ..."
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                        className="w-full bg-transparent focus:outline-none text-gray-800 placeholder-gray-400 text-sm font-medium"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 2: IDENTITY DOCUMENTS & ACCOUNT CREDENTIALS */}
+            {step === 2 && (
+              <div className="space-y-8">
+                {/* SECTION 3: IDENTITY DOCUMENTS */}
+                <div className="space-y-6">
+
+                  {/* ID Card Number */}
+                  <div className="flex flex-col space-y-1.5">
+                    <label htmlFor="cartNumber" className="text-sm font-bold text-gray-700">ເລກບັດປະຈຳຕົວ / ID Card Number <span className="text-red-500">*</span></label>
+                    <div className="relative flex items-center bg-slate-50 rounded-xl px-4 py-2 border border-gray-200 focus-within:border-[#075e3d] transition-colors h-12">
+                      <CreditCard className="text-gray-400 mr-2.5" size={18} />
+                      <input
+                        id="cartNumber"
+                        type="text"
+                        placeholder="ປ້ອນເລກບັດປະຈຳຕົວ..."
+                        value={cartNumber}
+                        onChange={(e) => setCartNumber(e.target.value)}
+                        className="w-full bg-transparent focus:outline-none text-gray-800 placeholder-gray-400 text-sm font-medium"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* ID Card Document Uploads */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Front of ID Card */}
+                    <div className="flex flex-col space-y-2">
+                      <span className="text-sm font-bold text-gray-700">ຮູບໜ້າບັດ / ID Card Front <span className="text-red-500">*</span></span>
+                      <div className="relative h-44 rounded-xl border-2 border-dashed border-gray-300 bg-slate-50 flex flex-col items-center justify-center overflow-hidden shadow-inner group">
+                        {cartImage ? (
+                          <>
+                            <img src={getImageUrl(cartImage)} alt="ID Front" className="w-full h-full object-cover" />
+                            <label className="absolute inset-0 bg-black/40 text-white flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-xs font-semibold">
+                              <Upload size={20} className="mb-1" />
+                              ປ່ຽນຮູບໜ້າບັດ
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handleFileUpload(e, "front")}
+                                className="hidden"
+                              />
+                            </label>
+                          </>
+                        ) : uploadingFront ? (
+                          <Loader2 className="w-8 h-8 text-[#075e3d] animate-spin" />
+                        ) : (
+                          <label className="flex flex-col items-center text-center p-4 cursor-pointer w-full h-full justify-center">
+                            <Upload className="w-10 h-10 text-gray-400 mb-2" />
+                            <span className="text-xs font-bold text-[#075e3d]">ກົດເພື່ອອັບໂຫຼດຮູບໜ້າບັດ</span>
+                            <span className="text-[10px] text-gray-400 mt-1">ຮອງຮັບໄຟລ໌ຮູບ JPG, PNG</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleFileUpload(e, "front")}
+                              className="hidden"
+                              required
+                            />
+                          </label>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* SECTION 4: ACCOUNT CREDENTIALS */}
+                <div className="space-y-6">
+                  {/* Username */}
+                  <div className="flex flex-col space-y-1.5">
+                    <label htmlFor="userName" className="text-sm font-bold text-gray-700">ຊື່ຜູ້ໃຊ້ / Username <span className="text-red-500">*</span></label>
+                    <div className="relative flex items-center bg-slate-50 rounded-xl px-4 py-2 border border-gray-200 focus-within:border-[#075e3d] transition-colors h-12">
+                      <User className="text-gray-400 mr-2.5" size={18} />
+                      <input
+                        id="userName"
+                        type="text"
+                        placeholder="ປ້ອນຊື່ຜູ້ໃຊ້..."
+                        value={userName}
+                        onChange={(e) => setUserName(e.target.value)}
+                        className="w-full bg-transparent focus:outline-none text-gray-800 placeholder-gray-400 text-sm font-medium"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Password */}
+                    <div className="flex flex-col space-y-1.5">
+                      <label htmlFor="password" className="text-sm font-bold text-gray-700">ລະຫັດຜ່ານ / Password <span className="text-red-500">*</span></label>
+                      <div className="relative flex items-center bg-slate-50 rounded-xl px-4 py-2 border border-gray-200 focus-within:border-[#075e3d] transition-colors h-12">
+                        <Lock className="text-gray-400 mr-2.5" size={18} />
+                        <input
+                          id="password"
+                          type={isPassVisible ? "text" : "password"}
+                          placeholder="ລະຫັດຜ່ານຢ່າງໜ້ອຍ 6 ຕົວ..."
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          className="w-full bg-transparent focus:outline-none text-gray-800 placeholder-gray-400 text-sm font-medium"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setIsPassVisible(!isPassVisible)}
+                          className="focus:outline-none ml-2 text-gray-400 hover:text-gray-600"
+                        >
+                          {isPassVisible ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Confirm Password */}
+                    <div className="flex flex-col space-y-1.5">
+                      <label htmlFor="confirmPassword" className="text-sm font-bold text-gray-700">ຢືນຢັນລະຫັດຜ່ານ / Confirm Password <span className="text-red-500">*</span></label>
+                      <div className="relative flex items-center bg-slate-50 rounded-xl px-4 py-2 border border-gray-200 focus-within:border-[#075e3d] transition-colors h-12">
+                        <Lock className="text-gray-400 mr-2.5" size={18} />
+                        <input
+                          id="confirmPassword"
+                          type={isConfirmPassVisible ? "text" : "password"}
+                          placeholder="ປ້ອນລະຫັດຜ່ານຄືນ..."
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          className="w-full bg-transparent focus:outline-none text-gray-800 placeholder-gray-400 text-sm font-medium"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setIsConfirmPassVisible(!isConfirmPassVisible)}
+                          className="focus:outline-none ml-2 text-gray-400 hover:text-gray-600"
+                        >
+                          {isConfirmPassVisible ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Form Actions footer */}
+            <div className="flex items-center justify-between pt-6 border-t border-gray-100 mt-4">
+              <button
+                type="button"
+                onClick={handleBack}
+                className="px-6 py-2.5 border border-gray-300 rounded-full font-bold text-sm text-gray-600 hover:bg-gray-50 active:scale-95 transition-all cursor-pointer"
+              >
+                {step === 1 ? "ຍົກເລີກ" : "ກັບຄືນ"}
+              </button>
+
+              {step === 1 ? (
+                <button
+                  type="button"
+                  onClick={handleNext}
+                  className="flex items-center space-x-1.5 px-6 py-2.5 bg-[#075e3d] hover:bg-[#064e32] active:scale-95 text-white font-bold rounded-full text-sm transition-all cursor-pointer"
+                >
+                  <span>ຕໍ່ໄປ</span>
+                  <ArrowRight size={16} />
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={isLoading || uploadingFront || uploadingBack || uploadingProfile}
+                  className="flex items-center space-x-1.5 px-8 py-2.5 bg-[#4ADE80] hover:bg-[#22C55E] active:scale-95 text-gray-900 font-bold rounded-full text-sm transition-all cursor-pointer shadow-md"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>ກຳລັງລົງທະບຽນ...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle size={16} />
+                      <span>ລົງທະບຽນ</span>
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+
+          </form>
         </div>
       </div>
-
-      <style>{`
-        @keyframes float {
-          0% { transform: translateY(0px); }
-          50% { transform: translateY(-10px); }
-          100% { transform: translateY(0px); }
-        }
-        .animate-float {
-          animation: float 6s ease-in-out infinite;
-        }
-      `}</style>
     </div>
   );
 }

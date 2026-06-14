@@ -1,51 +1,40 @@
 import React from "react";
 import { RouteObject } from "react-router-dom";
 
-import PublicRoute from "./PublicRoute";
-import PrivateRoute from "./PrivateRoute";
-
 import { Role } from "@/types";
 
 // Import page components
 import LoginPage from "@/pages/auth/Login";
 import RegisterPage from "@/pages/auth/Register";
-import QuestionnairePage from "@/pages/questionnaire/QuestionnairePage";
 import PageNotFound from "@/pages/PageNotFound";
-import CustomerMenuPage from "@/pages/customer/CustomerMenuPage";
-import ProductPage from "@/pages/settings/product/ProductPage";
-import CategoryPage from "@/pages/settings/category/CategoryPage";
-import BankPage from "@/pages/settings/bank/BankPage";
-import EmployeePage from "@/pages/settings/employee/EmployeePage";
-import ProfileDetail from "@/pages/settings/profile/ProfileDetail";
-import ProfileEdit from "@/pages/settings/profile/ProfileEdit";
-import SettingsPage from "@/pages/settings/SettingsPage";
-import MoneyRatePage from "@/pages/settings/moneyRate/MoneyRatePage";
-import OrderPage from "@/pages/order/OrderPage";
-import PermissionSetting from "@/pages/settings/permission-management/PermissionSetting";
-import AddRoleUser from "@/pages/settings/permission-management/AddRoleUser";
-import MemberPage from "@/pages/settings/member/MemberPage";
-import DebtHistoryPage from "@/pages/debtHistory/debtHistory";
-import DebtHistoryDetailPage from "@/pages/debtHistory/debtHistoryDetail";
-import ProductUpdateHistoryPage from "@/pages/productUpdateHistory/ProductUpdateHistoryPage";
+import FirshPage from "@/pages/FirshPage";
+import HomePage from "@/pages/home/Home";
+import ReportPage from "@/pages/report/Report";
+import ReportHistoryPage from "@/pages/report/ReportHistory";
+import ReportProgressPage from "@/pages/report/ReportProgress";
+import TrafficRulesPage from "@/pages/education/TrafficRules";
+import LawEducationPage from "@/pages/education/LawEducation";
+import ReportDetailPage from "@/pages/report/ReportDetail";
+import NewsDetailPage from "@/pages/news/NewsDetail";
+import ProfileEditPage from "@/pages/settings/ProfileEdit";
+import ComingSoonPage from "@/pages/ComingSoon";
+import PoliceHomePage from "@/pages/police/PoliceHome";
 
-// Import route components
-
-import Dashboard from "@/pages/dashboard/Dashboard";
-import TablePage from "@/pages/table/TablePage";
-import TableSettingsPage from "@/pages/settings/table/TableSettingsPage";
-import OrderingPage from "@/pages/ordering/OrderingPage";
-import KitchenPage from "@/pages/kitchen/KitchenPage";
-import ChatPage from "@/pages/chat/ChatPage";
-import ProductOrderPage from "@/pages/saleGeneral/ProductOrderPage";
-import CafeOrderPage from "@/pages/saleCafe/ProductOrderPage";
-import PrintBarcodePage from "@/pages/settings/printBarcode/PrintBarcodePage";
+// Prisma User.userType — the portal a logged-in user belongs to
+export type UserType =
+  | "POLICE_DEPARTMENT"
+  | "DISTRICT_POLICE"
+  | "VILLAGE_CHIEF"
+  | "CITIZEN";
 
 export interface AppRoute {
   path: string;
   element: React.ReactNode;
-  isPrivate: boolean;
+  isPrivate?: boolean;
   requiresLayout?: boolean;
   allowedRoles?: Role[];
+  // Restrict a route to specific user types (empty/undefined = any logged-in user)
+  allowedUserTypes?: UserType[];
   permissionKey?: string;
 }
 
@@ -53,6 +42,81 @@ export interface AppRoute {
 export const appRoutes: AppRoute[] = [
   {
     path: "/",
+    element: <FirshPage />,
+    isPrivate: false,
+  },
+  {
+    path: "/home",
+    element: <HomePage />,
+    isPrivate: true,
+    allowedUserTypes: ["CITIZEN"],
+  },
+  {
+    path: "/report/create",
+    element: <ReportPage />,
+    isPrivate: true,
+    allowedUserTypes: ["CITIZEN"],
+  },
+  {
+    path: "/report/history",
+    element: <ReportHistoryPage />,
+    isPrivate: true,
+    allowedUserTypes: ["CITIZEN"],
+  },
+  {
+    path: "/report/progress",
+    element: <ReportProgressPage />,
+    isPrivate: true,
+    allowedUserTypes: ["CITIZEN"],
+  },
+  {
+    path: "/traffic-rules",
+    element: <TrafficRulesPage />,
+    isPrivate: true,
+    allowedUserTypes: ["CITIZEN"],
+  },
+  {
+    path: "/law-education",
+    element: <LawEducationPage />,
+    isPrivate: true,
+    allowedUserTypes: ["CITIZEN"],
+  },
+  {
+    path: "/report/:id",
+    element: <ReportDetailPage />,
+    isPrivate: true,
+    allowedUserTypes: ["CITIZEN"],
+  },
+  {
+    path: "/news/:id",
+    element: <NewsDetailPage />,
+    isPrivate: true,
+    allowedUserTypes: ["CITIZEN"],
+  },
+  {
+    path: "/settings/profile",
+    element: <ProfileEditPage />,
+    isPrivate: true,
+    allowedUserTypes: ["CITIZEN"],
+  },
+
+  // Police portal — shared by all police roles (data differs per role)
+  {
+    path: "/police/home",
+    element: <PoliceHomePage />,
+    isPrivate: true,
+    allowedUserTypes: ["POLICE_DEPARTMENT", "DISTRICT_POLICE", "VILLAGE_CHIEF"],
+  },
+
+  // Placeholder portal for roles not built yet
+  {
+    path: "/coming-soon",
+    element: <ComingSoonPage />,
+    isPrivate: true,
+  },
+
+  {
+    path: "/login",
     element: <LoginPage />,
     isPrivate: false,
   },
@@ -62,217 +126,20 @@ export const appRoutes: AppRoute[] = [
     isPrivate: false,
   },
   {
-    path: "/questionnaire",
-    element: <QuestionnairePage />,
-    isPrivate: true,
-    requiresLayout: false,
-  },
-  {
-    path: "/menu/:qrCode",
-    element: <CustomerMenuPage />,
-    isPrivate: false,
-  },
-  {
-    path: "/saleGeneral",
-    element: <ProductOrderPage />,
-    isPrivate: true,
-    requiresLayout: true,
-  },
-  {
-    path: "/saleCafe",
-    element: <CafeOrderPage />,
-    isPrivate: true,
-    requiresLayout: true,
-    permissionKey: "cafe",
-  },
-  {
-    path: "/dashboard",
-    element: <Dashboard />,
-    isPrivate: true,
-    requiresLayout: true,
-    allowedRoles: ["SUPER_ADMIN", "STORE_ADMIN"],
-    permissionKey: "dashboard",
-  },
-  {
-    path: "/settings",
-    element: <SettingsPage />,
-    isPrivate: true,
-    requiresLayout: true,
-  },
-  {
-    path: "/settings/product",
-    element: <ProductPage />,
-    isPrivate: true,
-    requiresLayout: true,
-  },
-  {
-    path: "/settings/category",
-    element: <CategoryPage />,
-    isPrivate: true,
-    requiresLayout: true,
-  },
-  {
-    path: "/settings/table",
-    element: <TableSettingsPage />,
-    isPrivate: true,
-    requiresLayout: true,
-    allowedRoles: ["SUPER_ADMIN", "STORE_ADMIN"],
-    permissionKey: "table_settings",
-  },
-  {
-    path: "/settings/bank",
-    element: <BankPage />,
-    isPrivate: true,
-    requiresLayout: true,
-    allowedRoles: ["SUPER_ADMIN", "STORE_ADMIN"],
-    permissionKey: "bank",
-  },
-  {
-    path: "/settings/employee",
-    element: <EmployeePage />,
-    isPrivate: true,
-    requiresLayout: true,
-    allowedRoles: ["SUPER_ADMIN", "STORE_ADMIN"],
-    permissionKey: "employee",
-  },
-  {
-    path: "/settings/money-rate",
-    element: <MoneyRatePage />,
-    isPrivate: true,
-    requiresLayout: true,
-    allowedRoles: ["SUPER_ADMIN", "STORE_ADMIN"],
-    permissionKey: "moneyRate",
-  },
-  {
-    path: "/settings/member",
-    element: <MemberPage />,
-    isPrivate: true,
-    requiresLayout: true,
-    permissionKey: "member_settings",
-  },
-  {
-    path: "/settings/profile",
-    element: <ProfileDetail />,
-    isPrivate: true,
-    requiresLayout: true,
-  },
-  {
-    path: "/settings/profile/edit",
-    element: <ProfileEdit />,
-    isPrivate: true,
-    requiresLayout: true,
-  },
-  {
-    path: "/settings/create-barcode",
-    element: <PrintBarcodePage />,
-    isPrivate: true,
-    requiresLayout: true,
-  },
-
-  {
-    path: "/permission-manage",
-    element: <PermissionSetting />,
-    isPrivate: true,
-    requiresLayout: true,
-    allowedRoles: ["SUPER_ADMIN", "STORE_ADMIN"],
-    permissionKey: "employee",
-  },
-  {
-    path: "/permission/add",
-    element: <AddRoleUser />,
-    isPrivate: true,
-    requiresLayout: true,
-    allowedRoles: ["SUPER_ADMIN", "STORE_ADMIN"],
-    permissionKey: "employee",
-  },
-  {
-    path: "/permission/add/:id",
-    element: <AddRoleUser />,
-    isPrivate: true,
-    requiresLayout: true,
-    allowedRoles: ["SUPER_ADMIN", "STORE_ADMIN"],
-    permissionKey: "employee",
-  },
-  {
-    path: "/order",
-    element: <OrderPage />,
-    isPrivate: true,
-    requiresLayout: true,
-  },
-  {
-    path: "/debt",
-    element: <DebtHistoryPage />,
-    isPrivate: true,
-    requiresLayout: true,
-    permissionKey: "debt",
-  },
-  {
-    path: "/debt/:id",
-    element: <DebtHistoryDetailPage />,
-    isPrivate: true,
-    requiresLayout: true,
-    permissionKey: "debt",
-  },
-  {
-    path: "/product-update-history",
-    element: <ProductUpdateHistoryPage />,
-    isPrivate: true,
-    requiresLayout: true,
-    permissionKey: "product",
-  },
-  {
-    path: "/table",
-    element: <TablePage />,
-    isPrivate: true,
-    requiresLayout: true,
-  },
-  {
-    path: "/ordering",
-    element: <OrderingPage />,
-    isPrivate: true,
-    requiresLayout: true,
-    permissionKey: "ordering",
-  },
-  {
-    path: "/kitchen",
-    element: <KitchenPage />,
-    isPrivate: true,
-    requiresLayout: true,
-    permissionKey: "kitchen",
-  },
-  {
-    path: "/chat",
-    element: <ChatPage />,
-    isPrivate: true,
-    requiresLayout: true,
-    permissionKey: "chat",
-  },
-  {
     path: "/*",
     element: <PageNotFound />,
-    isPrivate: true,
+    isPrivate: false,
     requiresLayout: false,
   },
 ];
 
-// Generate React Router routes based on authentication status
+// Generate React Router routes
 export const generateRoutes = (
-  isAuthenticated: boolean = false,
+  _isAuthenticated: boolean = false,
 ): RouteObject[] => {
   return appRoutes.map((route) => ({
     path: route.path,
-    element: route.isPrivate ? (
-      <PrivateRoute
-        allowedRoles={route.allowedRoles}
-        permissionKey={route.permissionKey}
-        requiresLayout={route.requiresLayout}
-      >
-        {route.element}
-      </PrivateRoute>
-    ) : (
-      <PublicRoute isAuthenticated={isAuthenticated}>
-        {route.element}
-      </PublicRoute>
-    ),
+    element: route.element,
   }));
 };
+

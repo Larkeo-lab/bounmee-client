@@ -1,5 +1,29 @@
 import axios from "axios";
 
+import { triggerSessionExpired } from "./sessionExpired";
+
+// Token/auth error codes returned by the server (server/src/shared/exceptions/root.ts)
+const AUTH_ERROR_CODES = ["POS-1006", "POS-6043", "POS-1000"];
+const AUTH_ERROR_MESSAGES = ["MISSING_TOKEN", "TOKEN_EXPIRED", "UNAUTHORIZED"];
+
+// Detect an expired/missing token so we can prompt re-login — but ignore the
+// auth endpoints themselves (a wrong password on /login is not a dead session).
+const isSessionExpiredError = (error: any): boolean => {
+  if (error?.response?.status !== 401) return false;
+
+  const url: string = error?.config?.url || "";
+  if (url.includes("/auth/login") || url.includes("/auth/register") || url.includes("/auth/refresh")) {
+    return false;
+  }
+
+  const data = error?.response?.data;
+
+  return (
+    AUTH_ERROR_CODES.includes(data?.errorCode) ||
+    AUTH_ERROR_MESSAGES.includes(data?.message)
+  );
+};
+
 // Define API base URLs with Auto-Host Detection (For Mobile/Local Network access)
 const getBaseUrl = (envUrl: string, defaultPort: string) => {
   let url = envUrl || `http://localhost:${defaultPort}`;
@@ -30,6 +54,11 @@ const addAuthToken = (config: any) => {
 };
 
 const handleResponseError = (error: any) => {
+  // Expired/missing token on any page → raise the global re-login popup.
+  if (isSessionExpiredError(error)) {
+    triggerSessionExpired();
+  }
+
   if (error.response) {
     switch (error.response.status) {
       case 401:

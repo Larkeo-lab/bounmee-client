@@ -1,126 +1,120 @@
-// Components
-import { Kbd } from "@heroui/kbd";
-import { Link } from "@heroui/link";
-import { Input } from "@heroui/input";
 import {
-  Navbar as HeroUINavbar,
-  NavbarContent,
-  NavbarItem,
-  NavbarMenu,
-  NavbarMenuItem,
-} from "@heroui/navbar";
-import { Wifi, WifiHigh, WifiLow, WifiOff } from "lucide-react";
-import clsx from "clsx";
+  Settings,
+  UserCog,
+  History,
+  Activity,
+  CheckCircle2,
+} from "lucide-react";
+import {
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+} from "@heroui/react";
+import { useNavigate } from "react-router-dom";
 
 import ProfileDropdown from "./profile-dropdown";
-import LanguageSwitch from "./common/language-switch";
 
-import { siteConfig } from "@/config/site";
-import { SearchIcon } from "@/components/icons";
-import { useCart } from "@/provider";
+interface NavbarProps {
+    activeTab: "home" | "news" | "menu";
+    setActiveTab: (tab: "home" | "news" | "menu") => void;
+    onBack: () => void;
+    onSettings: () => void;
+}
 
-export const Navbar = () => {
-  const { isConnected, rtt } = useCart();
-
-  const WifiSignal = () => {
-    if (!isConnected)
-      return <WifiOff className="text-danger animate-pulse" size={16} />;
-
-    // Determine icon based on strength
-    let Icon = Wifi;
-    let textColor = "text-success";
-    let shadowColor = "rgba(23,201,100,0.6)";
-
-    if (rtt !== null) {
-      if (rtt >= 400) {
-        Icon = WifiLow;
-        textColor = "text-danger";
-        shadowColor = "rgba(243,18,96,0.6)";
-      } else if (rtt >= 150) {
-        Icon = WifiHigh;
-        textColor = "text-success";
-        shadowColor = "rgba(23,201,100,0.6)";
-      }
-    }
+export default function Navbar({ activeTab, setActiveTab, onSettings }: NavbarProps) {
+    const navigate = useNavigate();
 
     return (
-      <Icon
-        className={clsx(
-          textColor,
-          `drop-shadow-[0_0_3px_${shadowColor}] transition-all duration-500`,
-        )}
-        size={16}
-      />
+        <nav className="bg-[#075e3d] text-white h-14 flex items-center justify-between px-6 shadow-md relative z-10">
+            {/* Left: Spacer */}
+            <div />
+
+            {/* Center: Tabs */}
+            <div className="flex items-center space-x-8 md:space-x-12 h-full">
+                <button
+                    onClick={() => setActiveTab("home")}
+                    className={`text-base font-bold relative h-full flex items-center px-1 transition-all cursor-pointer ${activeTab === "home" ? "text-white" : "text-white/70 hover:text-white"
+                        }`}
+                >
+                    ໜ້າຫຼັກ
+                    {activeTab === "home" && (
+                        <span className="absolute bottom-0 left-0 right-0 h-1 bg-red-500 rounded-t-full" />
+                    )}
+                </button>
+
+                <button
+                    onClick={() => setActiveTab("news")}
+                    className={`text-base font-bold relative h-full flex items-center px-1 transition-all cursor-pointer ${activeTab === "news" ? "text-white" : "text-white/70 hover:text-white"
+                        }`}
+                >
+                    ຂ່າວສານ
+                    {activeTab === "news" && (
+                        <span className="absolute bottom-0 left-0 right-0 h-1 bg-red-500 rounded-t-full" />
+                    )}
+                </button>
+
+                <button
+                    onClick={() => setActiveTab("menu")}
+                    className={`text-base font-bold relative h-full flex items-center px-1 transition-all cursor-pointer ${activeTab === "menu" ? "text-white" : "text-white/70 hover:text-white"
+                        }`}
+                >
+                    ເມນູ
+                    {activeTab === "menu" && (
+                        <span className="absolute bottom-0 left-0 right-0 h-1 bg-red-500 rounded-t-full" />
+                    )}
+                </button>
+            </div>
+
+            {/* Right: Profile Dropdown & Settings */}
+            <div className="flex items-center space-x-3">
+                <ProfileDropdown />
+
+                <Dropdown placement="bottom-end">
+                    <DropdownTrigger>
+                        <button
+                            className="p-1.5 hover:bg-white/10 rounded-full transition-colors active:scale-95 cursor-pointer"
+                            title="ການຕັ້ງຄ່າ"
+                        >
+                            <Settings size={20} className="text-white" />
+                        </button>
+                    </DropdownTrigger>
+                    <DropdownMenu aria-label="Settings Menu" variant="flat" className="p-2">
+                        <DropdownItem
+                            key="profile"
+                            startContent={<UserCog size={18} />}
+                            className="font-bold py-2.5"
+                            onPress={onSettings}
+                        >
+                            ແກ້ໄຂໂປຣໄຟລ
+                        </DropdownItem>
+                        <DropdownItem
+                            key="history"
+                            startContent={<History size={18} />}
+                            className="font-bold py-2.5 data-[hover=true]:bg-[#075e3d] data-[hover=true]:text-white"
+                            onPress={() => navigate("/report/history")}
+                        >
+                            ປະຫວັດແຈ້ງຄວາມ
+                        </DropdownItem>
+                        <DropdownItem
+                            key="progress"
+                            startContent={<Activity size={18} />}
+                            className="font-bold py-2.5 data-[hover=true]:bg-[#075e3d] data-[hover=true]:text-white"
+                            onPress={() => navigate("/report/progress")}
+                        >
+                            ຄວາມຄືບໜ້າແຈ້ງຄວາມ
+                        </DropdownItem>
+                        <DropdownItem
+                            key="resolved"
+                            startContent={<CheckCircle2 size={18} />}
+                            className="font-bold py-2.5 data-[hover=true]:bg-[#075e3d] data-[hover=true]:text-white"
+                            onPress={() => navigate("/report/resolved")}
+                        >
+                            ແຈ້ງຄວາມແກ້ໄຂແລ້ວ
+                        </DropdownItem>
+                    </DropdownMenu>
+                </Dropdown>
+            </div>
+        </nav>
     );
-  };
-
-  const searchInput = (
-    <Input
-      aria-label="Search"
-      classNames={{
-        inputWrapper: "bg-default-100",
-        input: "text-sm",
-      }}
-      endContent={
-        <Kbd className="hidden lg:inline-block" keys={["command"]}>
-          K
-        </Kbd>
-      }
-      labelPlacement="outside"
-      placeholder="Search..."
-      startContent={
-        <SearchIcon className="text-base text-default-400 pointer-events-none flex-shrink-0" />
-      }
-      type="search"
-    />
-  );
-
-  return (
-    <HeroUINavbar
-      className="py-0 border-b border-b-default-200"
-      maxWidth="full"
-      position="sticky"
-    >
-      <NavbarContent className="flex basis-1/5 sm:basis-full" justify="end">
-        <NavbarItem className="flex items-center gap-4">
-          {/* status online and offline */}
-          <div
-            className={clsx(
-              "flex items-center justify-center px-2.5 py-1.5 rounded-full border shadow-sm transition-all duration-300",
-              isConnected
-                ? "bg-success/5 border-success/10"
-                : "bg-danger/5 border-danger/10",
-            )}
-          >
-            <WifiSignal />
-          </div>
-          <LanguageSwitch />
-          <ProfileDropdown />
-        </NavbarItem>
-      </NavbarContent>
-
-      <NavbarMenu>
-        {searchInput}
-        <div className="mx-4 mt-2 flex flex-col gap-2">
-          {siteConfig.navMenuItems.map((item, index) => (
-            <NavbarMenuItem key={`${item}-${index}`}>
-              <Link
-                color={
-                  index === 2
-                    ? "primary"
-                    : index === siteConfig.navMenuItems.length - 1
-                      ? "danger"
-                      : "foreground"
-                }
-                href="#"
-                size="lg"
-              >
-                {item.label}
-              </Link>
-            </NavbarMenuItem>
-          ))}
-        </div>
-      </NavbarMenu>
-    </HeroUINavbar>
-  );
-};
+}

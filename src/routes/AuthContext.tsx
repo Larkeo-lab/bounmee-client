@@ -9,18 +9,17 @@ import { useNavigate } from "react-router-dom";
 
 import {
   useAuthService,
-  useRegisterService,
+  useRegisterCitizenService,
   useRefreshTokenService,
 } from "@/services/auth/useAuth";
 import { AuthData } from "@/types";
-import { useCartStore } from "@/store/useCartStore";
 import i18n from "@/config/i18n";
 
 interface AuthContextType {
   isAuthenticated: boolean;
   user: any | null;
   login: (userData: any) => Promise<AuthData>;
-  register: (userData: any) => Promise<any>;
+  registerCitizen: (userData: any) => Promise<any>;
   updateAuthState: (data: AuthData) => void;
   logout: () => void;
   loading: boolean;
@@ -222,8 +221,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
 
-  const register = async (userData: any) => {
-    const response: any = await useRegisterService(userData);
+  const registerCitizen = async (userData: any) => {
+    const response: any = await useRegisterCitizenService(userData);
 
     if (response?.status === false) {
       throw new Error(response.message || "Registration failed");
@@ -233,10 +232,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const logout = () => {
-    // เคลียร์ cart state ใน Zustand memory ก่อน clear localStorage
-    try {
-      useCartStore.getState().resetCart();
-    } catch (e) {}
     setUser(null);
     setIsAuthenticated(false);
     localStorage.clear();
@@ -248,7 +243,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     isAuthenticated,
     user,
     login,
-    register,
+    registerCitizen,
     updateAuthState,
     logout,
     loading,

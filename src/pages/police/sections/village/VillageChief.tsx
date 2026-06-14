@@ -1,0 +1,393 @@
+import React from "react";
+import toast from "react-hot-toast";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  Plus,
+  Loader2,
+  ArrowLeft,
+  Home,
+  Pencil,
+  Trash2,
+} from "lucide-react";
+import {
+  Card,
+  CardBody,
+  Button,
+  Modal,
+  ModalContent,
+  ModalBody,
+  ModalFooter,
+  useDisclosure,
+} from "@heroui/react";
+
+import {
+  useGetVillageChiefs,
+  useCreateVillageChief,
+  useUpdateVillageChief,
+  useDeleteVillageChief,
+  VillageChiefItem,
+} from "@/services/village-chief/useVillageChief";
+import { useGetAllProvinces } from "@/services/province/useProvince";
+import { useGetDistrictsByProvince } from "@/services/district/useDistrict";
+import { useGetVillagesByDistrict } from "@/services/village/useVillage";
+import { useAuth } from "@/routes/AuthContext";
+
+type Mode = "list" | "create" | "edit";
+
+const inputClass =
+  "border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-700 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#075e3d]/40 focus:border-[#075e3d] transition";
+
+export default function VillageChief() {
+  const queryClient = useQueryClient();
+  const [mode, setMode] = React.useState<Mode>("list");
+  const [editing, setEditing] = React.useState<VillageChiefItem | null>(null);
+  const [deleteTarget, setDeleteTarget] = React.useState<VillageChiefItem | null>(null);
+
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const { data: chiefs = [], isLoading } = useGetVillageChiefs();
+  const { mutateAsync: deleteChief, isPending: isDeleting } = useDeleteVillageChief();
+
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ["village-chiefs"] });
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    try {
+      await deleteChief(deleteTarget.id);
+      toast.success("ລຶບສຳເລັດ");
+      refresh();
+    } catch (err) {
+      console.error("Delete failed:", err);
+      toast.error("ລຶບບໍ່ສຳເລັດ");
+    } finally {
+      onOpenChange();
+      setDeleteTarget(null);
+    }
+  };
+
+  if (mode === "create" || mode === "edit") {
+    return (
+      <VillageChiefForm
+        editing={mode === "edit" ? editing : null}
+        onBack={() => { setMode("list"); setEditing(null); }}
+        onSaved={() => { setMode("list"); setEditing(null); refresh(); }}
+      />
+    );
+  }
+
+  return (
+    <div className="space-y-4 max-w-5xl">
+      {/* Header */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <h2 className="text-base font-bold text-gray-800">ນາຍບ້ານທັງໝົດ</h2>
+        <Button
+          startContent={<Plus size={18} />}
+          onPress={() => { setEditing(null); setMode("create"); }}
+          className="bg-[#075e3d] hover:bg-[#064e32] text-white font-bold rounded-2xl cursor-pointer"
+        >
+          ສ້າງ ນາຍບ້ານ
+        </Button>
+      </div>
+
+      {isLoading ? (
+        <div className="min-h-[calc(100vh-12rem)] flex items-center justify-center">
+          <Loader2 className="w-8 h-8 text-[#075e3d] animate-spin" />
+        </div>
+      ) : chiefs.length === 0 ? (
+        <div className="min-h-[calc(100vh-12rem)] flex items-center justify-center">
+          <Card className="shadow-sm border border-gray-100 rounded-3xl w-full max-w-md">
+            <CardBody className="p-10 flex flex-col items-center text-center gap-3">
+              <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
+                <Home size={28} className="text-gray-400" />
+              </div>
+              <p className="text-sm font-bold text-gray-500">ຍັງບໍ່ມີ ນາຍບ້ານ</p>
+            </CardBody>
+          </Card>
+        </div>
+      ) : (
+        <Card className="shadow-sm border border-gray-100 rounded-2xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-slate-50 text-gray-500 text-xs uppercase tracking-wide">
+                  <th className="text-left font-bold px-4 py-3">ນາຍບ້ານ</th>
+                  <th className="text-left font-bold px-4 py-3">ຮອງນາຍບ້ານ</th>
+                  <th className="text-left font-bold px-4 py-3">ຊື່ຜູ້ໃຊ້</th>
+                  <th className="text-left font-bold px-4 py-3">ອີເມວ</th>
+                  <th className="text-left font-bold px-4 py-3">ເບີໂທ</th>
+                  <th className="text-right font-bold px-4 py-3">ຈັດການ</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {chiefs.map((c) => {
+                  const acc = c.users?.[0];
+
+                  return (
+                    <tr key={c.id} className="hover:bg-slate-50/60">
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-9 h-9 rounded-lg bg-[#075e3d]/10 flex items-center justify-center shrink-0">
+                            <Home size={16} className="text-[#075e3d]" />
+                          </div>
+                          <span className="font-bold text-gray-800">{c.chiefName}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-gray-600">{c.deputyChiefName}</td>
+                      <td className="px-4 py-3 text-gray-600">{acc?.userName || "-"}</td>
+                      <td className="px-4 py-3 text-gray-600">{acc?.email || "-"}</td>
+                      <td className="px-4 py-3 text-gray-600">{acc?.phone || "-"}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex justify-end gap-1">
+                          <button
+                            onClick={() => { setEditing(c); setMode("edit"); }}
+                            className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 cursor-pointer"
+                            title="ແກ້ໄຂ"
+                          >
+                            <Pencil size={16} />
+                          </button>
+                          <button
+                            onClick={() => { setDeleteTarget(c); onOpen(); }}
+                            className="p-2 rounded-lg text-red-500 hover:bg-red-50 cursor-pointer"
+                            title="ລຶບ"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
+
+      {/* Delete confirm */}
+      <Modal isOpen={isOpen} onOpenChange={onOpenChange} placement="center" backdrop="blur">
+        <ModalContent>
+          <ModalBody className="flex flex-col items-center gap-3 py-8 text-center">
+            <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
+              <Trash2 size={28} className="text-red-500" />
+            </div>
+            <h3 className="font-bold text-lg">ຢືນຢັນການລຶບ</h3>
+            <p className="text-sm text-gray-500">
+              ລຶບ ນາຍບ້ານ “{deleteTarget?.chiefName}” ?<br />
+              ບັນຊີຜູ້ໃຊ້ທີ່ກ່ຽວຂ້ອງຈະຍັງຄົງຢູ່.
+            </p>
+          </ModalBody>
+          <ModalFooter className="justify-center">
+            <Button variant="bordered" className="font-bold rounded-xl px-6" onPress={onOpenChange}>
+              ຍົກເລີກ
+            </Button>
+            <Button
+              isDisabled={isDeleting}
+              onPress={handleDelete}
+              className="bg-red-500 text-white font-bold rounded-xl px-6"
+            >
+              {isDeleting ? "ກຳລັງລຶບ..." : "ລຶບ"}
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    </div>
+  );
+}
+
+function VillageChiefForm({
+  editing,
+  onBack,
+  onSaved,
+}: {
+  editing: VillageChiefItem | null;
+  onBack: () => void;
+  onSaved: () => void;
+}) {
+  const isEdit = !!editing;
+  const { mutateAsync: createChief } = useCreateVillageChief();
+  const { mutateAsync: updateChief } = useUpdateVillageChief();
+
+  // Pre-fill from the linked user account when editing
+  const acc0 = editing?.users?.[0];
+
+  const [chiefName, setChiefName] = React.useState(editing?.chiefName || "");
+  const [deputyChiefName, setDeputyChiefName] = React.useState(editing?.deputyChiefName || "");
+  const [userName, setUserName] = React.useState(acc0?.userName || "");
+  const [password, setPassword] = React.useState("");
+  const [email, setEmail] = React.useState(acc0?.email || "");
+  const [phone, setPhone] = React.useState(acc0?.phone || "");
+  const [villageId, setVillageId] = React.useState(acc0?.villageId || "");
+  const [address, setAddress] = React.useState(acc0?.address || "");
+
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+  // Province & district are inherited from the logged-in District Police
+  const { user: authData } = useAuth();
+  const account = (authData as any)?.user;
+  const dpProvinceId: string = account?.provinceId || "";
+  const dpDistrictId: string = account?.districtId || "";
+
+  const { data: provinces = [] } = useGetAllProvinces();
+  const dpProvince = provinces.find((p: any) => p.id === dpProvinceId);
+  const dpProvinceCode = dpProvince?.code || "";
+
+  const { data: districts = [] } = useGetDistrictsByProvince(dpProvinceCode);
+  const dpDistrict = districts.find((d: any) => d.id === dpDistrictId);
+  const dpDistrictCode = dpDistrict?.code || "";
+
+  const { data: villages = [] } = useGetVillagesByDistrict(dpDistrictCode);
+
+  const handleSubmit = async () => {
+    if (!chiefName.trim()) return toast.error("ກະລຸນາປ້ອນຊື່ນາຍບ້ານ");
+    if (!deputyChiefName.trim()) return toast.error("ກະລຸນາປ້ອນຊື່ຮອງນາຍບ້ານ");
+    if (!userName.trim()) return toast.error("ກະລຸນາປ້ອນຊື່ຜູ້ໃຊ້");
+    // Password: required on create; on edit only validate when changing it
+    if (!isEdit && password.length < 6) return toast.error("ລະຫັດຜ່ານຕ້ອງມີຢ່າງໜ້ອຍ 6 ຕົວ");
+    if (isEdit && password && password.length < 6) return toast.error("ລະຫັດຜ່ານຕ້ອງມີຢ່າງໜ້ອຍ 6 ຕົວ");
+
+    setIsSubmitting(true);
+    try {
+      if (isEdit && editing) {
+        await updateChief({
+          id: editing.id,
+          payload: {
+            chiefName: chiefName.trim(),
+            deputyChiefName: deputyChiefName.trim(),
+            userName: userName.trim(),
+            email: email.trim() || null,
+            phone: phone.trim() || null,
+            provinceId: dpProvinceId || null,
+            districtId: dpDistrictId || null,
+            villageId: villageId || null,
+            address: address.trim() || null,
+            ...(password ? { password } : {}),
+          },
+        });
+        toast.success("ບັນທຶກສຳເລັດ");
+      } else {
+        await createChief({
+          chiefName: chiefName.trim(),
+          deputyChiefName: deputyChiefName.trim(),
+          userName: userName.trim(),
+          password,
+          email: email.trim() || null,
+          phone: phone.trim() || null,
+          provinceId: dpProvinceId || null,
+          districtId: dpDistrictId || null,
+          villageId: villageId || null,
+          address: address.trim() || null,
+        });
+        toast.success("ສ້າງ ນາຍບ້ານສຳເລັດ");
+      }
+      onSaved();
+    } catch (err: any) {
+      console.error("Save village chief failed:", err);
+      toast.error(
+        err?.response?.data?.message === "USER_ALREADY_EXISTS"
+          ? "ຊື່ຜູ້ໃຊ້/ອີເມວ/ເບີໂທ ຖືກໃຊ້ແລ້ວ"
+          : "ບັນທຶກບໍ່ສຳເລັດ",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4 w-full">
+      <button
+        onClick={onBack}
+        className="flex items-center gap-1.5 text-sm font-bold text-gray-500 hover:text-gray-700 cursor-pointer"
+      >
+        <ArrowLeft size={16} /> ກັບຄືນ
+      </button>
+
+      <Card className="shadow-sm border border-gray-100 rounded-3xl">
+        <CardBody className="p-6 space-y-4">
+          <h2 className="text-lg font-bold text-gray-800">
+            {isEdit ? "ແກ້ໄຂ ນາຍບ້ານ" : "ສ້າງ ນາຍບ້ານໃໝ່"}
+          </h2>
+
+          {/* Office info */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="flex flex-col space-y-1">
+              <label htmlFor="chief-name" className="text-xs font-bold text-gray-500 uppercase tracking-wide">ນາຍບ້ານ / Chief *</label>
+              <input id="chief-name" type="text" value={chiefName} onChange={(e) => setChiefName(e.target.value)} className={inputClass} />
+            </div>
+            <div className="flex flex-col space-y-1">
+              <label htmlFor="deputy-chief-name" className="text-xs font-bold text-gray-500 uppercase tracking-wide">ຮອງນາຍບ້ານ / Deputy *</label>
+              <input id="deputy-chief-name" type="text" value={deputyChiefName} onChange={(e) => setDeputyChiefName(e.target.value)} className={inputClass} />
+            </div>
+          </div>
+
+          {/* Account */}
+          <div className="border-t border-gray-100 pt-4">
+              <p className="text-xs font-bold text-[#075e3d] uppercase tracking-wide mb-3">ບັນຊີຜູ້ໃຊ້ / Account</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="flex flex-col space-y-1">
+                  <label htmlFor="vc-email" className="text-xs font-bold text-gray-500 uppercase tracking-wide">ອີເມວ / Email</label>
+                  <input id="vc-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} />
+                </div>
+                <div className="flex flex-col space-y-1">
+                  <label htmlFor="vc-phone" className="text-xs font-bold text-gray-500 uppercase tracking-wide">ເບີໂທ / Phone</label>
+                  <input id="vc-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className={inputClass} />
+                </div>
+                <div className="flex flex-col space-y-1">
+                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">ແຂວງ / Province</span>
+                  <div className={`${inputClass} bg-slate-100 text-gray-600 flex items-center`}>
+                    {dpProvince?.nameLo || "—"}
+                  </div>
+                </div>
+                <div className="flex flex-col space-y-1">
+                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">ເມືອງ / District</span>
+                  <div className={`${inputClass} bg-slate-100 text-gray-600 flex items-center`}>
+                    {dpDistrict?.nameLo || "—"}
+                  </div>
+                </div>
+                <div className="flex flex-col space-y-1">
+                  <label htmlFor="vc-village" className="text-xs font-bold text-gray-500 uppercase tracking-wide">ບ້ານ / Village</label>
+                  <select
+                    id="vc-village"
+                    value={villageId}
+                    onChange={(e) => setVillageId(e.target.value)}
+                    disabled={!dpDistrictCode}
+                    className={`${inputClass} cursor-pointer disabled:opacity-60`}
+                  >
+                    <option value="">{dpDistrictCode ? "ເລືອກບ້ານ..." : "ບໍ່ມີຂໍ້ມູນເມືອງ"}</option>
+                    {villages.map((v: any) => (
+                      <option key={v.id} value={v.id}>{v.nameLo}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex flex-col space-y-1">
+                  <label htmlFor="vc-address" className="text-xs font-bold text-gray-500 uppercase tracking-wide">ທີ່ຢູ່ / Address</label>
+                  <input id="vc-address" type="text" value={address} onChange={(e) => setAddress(e.target.value)} className={inputClass} />
+                </div>
+                <div className="flex flex-col space-y-1">
+                  <label htmlFor="vc-username" className="text-xs font-bold text-gray-500 uppercase tracking-wide">ຊື່ຜູ້ໃຊ້ / Username *</label>
+                  <input id="vc-username" type="text" value={userName} onChange={(e) => setUserName(e.target.value)} className={inputClass} />
+                </div>
+                <div className="flex flex-col space-y-1">
+                  <label htmlFor="vc-password" className="text-xs font-bold text-gray-500 uppercase tracking-wide">
+                    ລະຫັດຜ່ານ / Password {isEdit ? "(ປ່ອຍວ່າງ = ບໍ່ປ່ຽນ)" : "*"}
+                  </label>
+                  <input id="vc-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={isEdit ? "••••••" : ""} className={inputClass} />
+                </div>
+              </div>
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <Button onPress={onBack} variant="bordered" className="flex-1 font-bold rounded-2xl py-3 border-gray-300 text-gray-600 cursor-pointer">
+              ຍົກເລີກ
+            </Button>
+            <Button
+              onPress={handleSubmit}
+              isDisabled={isSubmitting}
+              className="flex-1 bg-[#075e3d] hover:bg-[#064e32] text-white font-bold rounded-2xl py-3 cursor-pointer disabled:opacity-50"
+            >
+              {isSubmitting ? "ກຳລັງບັນທຶກ..." : isEdit ? "ບັນທຶກ ✓" : "ສ້າງ ✓"}
+            </Button>
+          </div>
+        </CardBody>
+      </Card>
+    </div>
+  );
+}

@@ -1,139 +1,19 @@
 import React from "react";
-import { useTranslation } from "react-i18next";
-
-// Components
-import {
-  Button,
-  Form,
-  Image,
-  Input,
-  Card,
-  CardBody,
-  Divider,
-} from "@heroui/react";
 import { useNavigate } from "react-router-dom";
-import { Lock, Mail } from "lucide-react";
-import { checkQuestionnaireCompletion } from "@/services/questionnaire/useQuestionnaire";
-
-import version from "../../../package.json";
-
-import { EyeFilledIcon, EyeSlashFilledIcon } from "@/components/icons";
+import { Phone, Eye, EyeOff, RotateCw, User, Lock } from "lucide-react";
+import { Input } from "@heroui/react";
 import { useAuth } from "@/routes/AuthContext";
-//import { auth,/* googleProvider , facebookProvider */ } from "@/config/firebase";
-//import { signInWithPopup } from "firebase/auth";
-//import { FcGoogle } from "react-icons/fc";
-// import { FaFacebook } from "react-icons/fa";
-
-// Version number
-
-import oneDoorLogo from "/assets/eezypos_logo.jpg";
-
-import LanguageSwitch from "@/components/common/language-switch";
 import { showErrorToast } from "@/config/error-messages";
-// import { toast } from "react-hot-toast";
-// import { API_ENDPOINTS } from "@/config/api";
-
-const bgLineName = "/line-nam-bg.png";
-
-import {
-  trackButtonClick,
-  trackFormSubmit,
-  trackLogin,
-  trackPageView,
-} from "@/lib/analytics";
+import { trackButtonClick, trackFormSubmit, trackLogin, trackPageView } from "@/lib/analytics";
 
 export default function Login() {
   const [isVisible, setIsVisible] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
   const [identifier, setIdentifier] = React.useState<string>("");
+  const [password, setPassword] = React.useState<string>("");
 
-  const { login /*  updateAuthState */ } = useAuth();
-  const { t } = useTranslation();
+  const { login } = useAuth();
   const navigate = useNavigate();
-
-  // Social Login Logic
-  // const handleSocialLogin = async (provider: any) => {
-  //   setIsLoading(true);
-  //   try {
-  //     const result = await signInWithPopup(auth, provider);
-  //     const user = result.user;
-  //     const idToken = await user.getIdToken();
-
-  //     // Update visual state (optional but nice)
-  //     setIdentifier(user.email || user.providerData?.[0]?.email || "");
-
-  //     // Call our Social Login API (the new path)
-  //     const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}${API_ENDPOINTS.AUTH.FIREBASE_SYNC}`, {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //         "Authorization": `Bearer ${idToken}`
-  //       },
-  //       body: JSON.stringify({
-  //         uid: user.uid,
-  //         email: user.email,
-  //         displayName: user.displayName,
-  //         photoURL: user.photoURL,
-  //         provider: result.providerId
-  //       })
-  //     });
-
-  //     if (!response.ok) {
-  //       const errorData = await response.json();
-  //       throw new Error(errorData.message || "Failed to login with Social Account");
-  //     }
-
-  //     const authData = await response.json();
-
-  //     // Successfully logged in!
-  //     // Update global auth state
-  //     updateAuthState(authData.data);
-
-  //     toast.success(t("common.success") || "Login Successful");
-
-  //     const userRole = authData.data.user?.role;
-  //     const permissions = authData.data.user?.employee?.permission?.permissions;
-
-  //     // Handle conditional navigation (same as manual login)
-  //     if (userRole === "EMPLOYEE" && permissions) {
-  //       if (permissions["table"]?.includes("view")) {
-  //         navigate("/table");
-  //       } else if (permissions["order"]?.includes("view")) {
-  //         navigate("/order");
-  //       } else if (permissions["product"]?.includes("view")) {
-  //         navigate("/saleGeneral");
-  //       } else if (permissions["dashboard"]?.includes("view")) {
-  //         navigate("/dashboard");
-  //       } else {
-  //         navigate("/settings/profile");
-  //       }
-  //     } else {
-  //       // Check if questionnaire is completed
-  //       try {
-  //         if (authData.data.user?.storeId) {
-  //           const completionStatus = await checkQuestionnaireCompletion({
-  //             storeId: authData.data.user.storeId
-  //           });
-
-  //           if (!completionStatus.isCompleted) {
-  //             navigate("/questionnaire");
-  //             return;
-  //           }
-  //         }
-  //       } catch (error) {
-  //         console.error("Error checking questionnaire status:", error);
-  //       }
-
-  //       // Default navigation for STORE_ADMIN or others
-  //       navigate("/table");
-  //     }
-  //   } catch (error: any) {
-  //     console.error("Social Login Error:", error);
-  //     toast.error(error.message || "Social Login Failed");
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
 
   // Track page view with Google Analytics
   React.useEffect(() => {
@@ -150,14 +30,6 @@ export default function Login() {
     trackButtonClick("login-button", "POS Login Button");
 
     try {
-      const data = Object.fromEntries(
-        new FormData(e.currentTarget as HTMLFormElement),
-      );
-      const { identifier = "", password = "" } = data as {
-        identifier: string;
-        password: string;
-      };
-
       const userData = {
         identifier: identifier,
         password: password,
@@ -168,55 +40,18 @@ export default function Login() {
 
       const authData = await login(userData);
 
-      const userRole = authData?.user?.role;
-      const permissions = authData?.user?.employee?.permission?.permissions;
+      const user = authData?.user as any;
+      const userRole = user?.role || user?.userType;
 
-      // Conditional Navigation based on ROLE & STORE TYPE & PERMISSION
-      const storeType = authData?.user?.store?.type;
-      const isAdmin = userRole === "SUPER_ADMIN" || userRole === "STORE_ADMIN";
-
-      const canAccess = (key: string) => {
-        if (permissions) {
-          return permissions[key]?.includes("read");
-        }
-        return isAdmin; // Fallback for admins if no explicit permission record
+      // Route by user type. Portals not built yet fall back to the placeholder.
+      // All police roles share the same portal (data differs by role).
+      const PORTAL_BY_TYPE: Record<string, string> = {
+        CITIZEN: "/home",
+        POLICE_DEPARTMENT: "/police/home",
+        DISTRICT_POLICE: "/police/home",
+        VILLAGE_CHIEF: "/police/home",
       };
-
-      let targetPath = "/settings/profile"; // Absolute fallback
-
-      if (storeType === "GENERAL_STORE" || storeType === "PHONE_SHOP") {
-        if (canAccess("pos")) targetPath = "/saleGeneral";
-        else if (canAccess("order")) targetPath = "/order";
-        else if (canAccess("dashboard")) targetPath = "/dashboard";
-      } else if (storeType === "CAFE") {
-        if (canAccess("cafe")) targetPath = "/saleCafe";
-        else if (canAccess("order")) targetPath = "/order";
-        else if (canAccess("dashboard")) targetPath = "/dashboard";
-      } else {
-        // RESTAURANT or others
-        if (canAccess("table")) targetPath = "/table";
-        else if (canAccess("cafe")) targetPath = "/saleCafe";
-        else if (canAccess("order")) targetPath = "/order";
-        else if (canAccess("dashboard")) targetPath = "/dashboard";
-      }
-
-      // Check if questionnaire is completed (Only for Admins/Store Owners)
-      if (isAdmin) {
-        try {
-          if (authData?.user?.storeId) {
-            const completionStatus = await checkQuestionnaireCompletion({
-              storeId: authData.user.storeId,
-            });
-
-            if (!completionStatus.completed) {
-              navigate("/questionnaire");
-              return;
-            }
-          }
-        } catch (error) {
-          console.error("Failed to check questionnaire status:", error);
-        }
-      }
+      const targetPath = PORTAL_BY_TYPE[userRole] || "/coming-soon";
 
       navigate(targetPath);
     } catch (err: any) {
@@ -227,224 +62,136 @@ export default function Login() {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row w-full min-h-screen bg-background text-foreground">
-      {/* Brand Section (LHS/Top) */}
+    <div className="flex flex-col min-h-screen bg-white text-gray-800 font-sans">
+      {/* Header */}
+      <header className="flex items-center px-6 py-4 bg-white border-b border-gray-100 shadow-sm h-20 z-10">
+        <div className="flex items-center space-x-3">
+          <img
+            src="/assets/logo.png"
+            alt="Ministry Logo"
+            className="h-12 w-auto object-contain"
+            onError={(e) => {
+              e.currentTarget.src = "/logo.png";
+            }}
+          />
+          <div className="flex flex-col">
+            <span className="text-lg md:text-xl font-bold text-[#075e3d] leading-tight font-sans">
+              ກະຊວງປ້ອງກັນຄວາມສະຫງົບ
+            </span>
+            <span className="text-xs md:text-sm font-semibold text-gray-500 tracking-wide font-sans">
+              Ministry of Public Security
+            </span>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Area with Background Image */}
       <div
-        className="w-full lg:w-[60%] relative flex flex-col items-center justify-center p-8 overflow-hidden bg-primary"
+        className="flex-1 w-full flex items-center justify-center p-6 relative bg-cover bg-center overflow-hidden"
         style={{
-          backgroundImage: `url(${bgLineName})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
+          backgroundImage: "url('/assets/images/02.png')",
         }}
       >
-        {/* Overlay for better text readability */}
-        <div className="absolute inset-0 bg-primary/80 backdrop-blur-[2px] z-0" />
-        <div className="absolute inset-0 bg-gradient-to-br from-primary via-transparent to-black/30 z-0" />
+        {/* Background overlay with subtle blur to obscure baked-in UI components while keeping the park visible */}
+        <div className="absolute inset-0 bg-black/10 backdrop-blur-[2px] z-0" />
 
-        <div className="relative z-10 flex flex-col items-center text-center text-white space-y-6">
-          <div className="p-4 bg-white rounded-[2.5rem] shadow-2xl animate-float">
-            <Image
-              alt="Eezy POS Logo"
-              className="w-40 sm:w-56"
-              src={oneDoorLogo}
+        {/* Login Card */}
+        <div className="relative z-10 w-full max-w-lg bg-[#075e3d]/95 backdrop-blur-md text-white rounded-[2rem] p-8 md:p-12 shadow-2xl flex flex-col space-y-6 transition-transform duration-500 hover:scale-[1.01]">
+
+          {/* Avatar Area */}
+          <div className="flex flex-col items-center space-y-2">
+            <div className="w-24 h-24 rounded-full bg-white shadow-lg flex items-center justify-center border-2 border-white/20">
+              <User className="text-[#075e3d] w-14 h-14" />
+            </div>
+            <span className="text-xl font-bold tracking-wide">ລັອກອິນ</span>
+          </div>
+
+          {/* Form */}
+          <form className="flex flex-col space-y-4" onSubmit={onSubmit}>
+            {/* Phone/Email Input */}
+            <Input
+              isRequired
+              classNames={{
+                inputWrapper:
+                  "bg-white shadow-inner h-12 px-5 border border-white/10 data-[hover=true]:bg-white group-data-[focus=true]:bg-white",
+                input:
+                  "text-gray-800 placeholder:text-gray-400 text-sm font-sans font-medium",
+              }}
+              name="identifier"
+              placeholder="ເບີໂທ/Email....."
+              radius="lg"
+              size="lg"
+              startContent={
+                <Phone className="text-gray-400 shrink-0" size={18} />
+              }
+              type="text"
+              value={identifier}
+              onValueChange={setIdentifier}
             />
-          </div>
-          <div className="space-y-4">
-            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-black tracking-tight drop-shadow-lg uppercase">
-              Eezy POS
-            </h1>
-            <p className="text-xl sm:text-2xl font-light opacity-90 max-w-lg mx-auto">
-              {t("auth.welcomeMessage")}
-              <span className="block text-sm mt-2 opacity-70">
-                {t("auth.subtitle")}
-              </span>
-            </p>
-          </div>
 
-          <div className="pt-8 grid grid-cols-2 gap-4 w-full max-w-md">
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20">
-              <p className="text-2xl font-bold">100%</p>
-              <p className="text-xs opacity-70">{t("auth.security")}</p>
-            </div>
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20">
-              <p className="text-2xl font-bold">Fast</p>
-              <p className="text-xs opacity-70">{t("auth.fastTransactions")}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Decorative elements */}
-        <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-white/10 rounded-full blur-3xl" />
-        <div className="absolute -top-20 -right-20 w-80 h-80 bg-primary-400/20 rounded-full blur-3xl" />
-      </div>
-
-      {/* Login Section (RHS/Bottom) */}
-      <div className="relative w-full lg:w-[40%] flex items-center justify-center p-6 md:p-12 bg-gray-50 dark:bg-gray-950">
-        <div className="absolute top-6 right-6">
-          <LanguageSwitch />
-        </div>
-
-        <div className="w-full max-w-md space-y-8">
-          <div className="text-center lg:text-left space-y-2">
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-              {t("auth.login")}
-            </h2>
-            <p className="text-gray-500 dark:text-gray-400">
-              {t("auth.loginSubtitle")}
-            </p>
-          </div>
-
-          <Card className="border-none bg-white/70 dark:bg-white/5 backdrop-blur-xl shadow-2xl">
-            <CardBody className="p-8">
-              <Form className="flex flex-col gap-6" onSubmit={onSubmit}>
-                <Input
-                  className="w-full"
-                  classNames={{
-                    label: "font-semibold text-gray-700 dark:text-gray-300",
-                    inputWrapper:
-                      "h-14 border-2 border-default-200 hover:border-primary transition-colors",
-                  }}
-                  label={t("auth.emailOrUsername")}
-                  labelPlacement="outside"
-                  name="identifier"
-                  placeholder={t("auth.emailOrUsernamePlaceholder")}
-                  size="lg"
-                  startContent={<Mail className="text-default-400" size={20} />}
-                  type="text"
-                  value={identifier}
-                  onValueChange={setIdentifier}
-                  validate={(value) => {
-                    if (!value) return t("auth.missingCredentials");
-
-                    return true;
-                  }}
-                  variant="bordered"
-                />
-
-                <Input
-                  className="w-full"
-                  classNames={{
-                    label: "font-semibold text-gray-700 dark:text-gray-300",
-                    inputWrapper:
-                      "h-14 border-2 border-default-200 hover:border-primary transition-colors",
-                  }}
-                  endContent={
-                    <button
-                      className="focus:outline-none cursor-pointer"
-                      type="button"
-                      onClick={toggleVisibility}
-                    >
-                      {isVisible ? (
-                        <EyeSlashFilledIcon className="text-2xl text-default-400" />
-                      ) : (
-                        <EyeFilledIcon className="text-2xl text-default-400" />
-                      )}
-                    </button>
-                  }
-                  label={t("auth.password")}
-                  labelPlacement="outside"
-                  name="password"
-                  placeholder={t("auth.passwordPlaceholder")}
-                  size="lg"
-                  startContent={<Lock className="text-default-400" size={20} />}
-                  type={isVisible ? "text" : "password"}
-                  validate={(value) => {
-                    if (!value) return t("auth.missingCredentials");
-
-                    return true;
-                  }}
-                  variant="bordered"
-                />
-
-                {/* <div className="flex items-center justify-between px-1">
-                  <label className="flex items-center gap-2 text-sm text-gray-500 cursor-pointer">
-                    <input
-                      className="rounded border-gray-300 text-primary focus:ring-primary"
-                      type="checkbox"
-                    />
-                    <span>{t("auth.rememberMe")}</span>
-                  </label>
-                  <Button
-                    className="font-semibold p-0 h-auto"
-                    color="primary"
-                    size="sm"
-                    variant="light"
-                  >
-                    {t("auth.forgotPassword")}?
-                  </Button>
-                </div> */}
-
-                <Button
-                  className="w-full h-14 font-bold text-lg shadow-lg shadow-primary/30"
-                  color="primary"
-                  isLoading={isLoading}
-                  size="lg"
-                  type="submit"
-                >
-                  {isLoading ? t("auth.loggingIn") : t("auth.loginButton")}
-                </Button>
-              </Form>
-
-              <div className="flex items-center gap-4 my-6">
-                <Divider className="flex-1" />
-                <span className="text-xs text-gray-400 uppercase tracking-widest">
-                  {t("auth.orContinueWith")}
-                </span>
-                <Divider className="flex-1" />
-              </div>
-
-              {/* <div className="grid grid-cols-1 gap-4">
-                <Button
-                  className="h-12 border-2 border-default-200 hover:border-primary transition-colors bg-white dark:bg-white/5"
-                  startContent={<FcGoogle size={20} />}
-                  variant="bordered"
+            {/* Password Input */}
+            <Input
+              isRequired
+              classNames={{
+                inputWrapper:
+                  "bg-white shadow-inner h-12 px-5 border border-white/10 data-[hover=true]:bg-white group-data-[focus=true]:bg-white",
+                input:
+                  "text-gray-800 placeholder:text-gray-400 text-sm font-sans font-medium",
+              }}
+              endContent={
+                <button
+                  className="focus:outline-none text-gray-400 hover:text-gray-600 transition-colors"
                   type="button"
-                  onPress={() => handleSocialLogin(googleProvider)}
+                  onClick={toggleVisibility}
                 >
-                  Google
-                </Button>
-                <Button
-                  className="h-12 border-2 border-default-200 hover:border-primary transition-colors bg-[#1877F2] text-white"
-                  startContent={<FaFacebook size={20} />}
-                  type="button"
-                  onPress={() => handleSocialLogin(facebookProvider)}
-                >
-                  Facebook
-                </Button>
-              </div> */}
-            </CardBody>
-          </Card>
+                  {isVisible ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              }
+              name="password"
+              placeholder="ລະຫັດຜ່ານ....."
+              radius="lg"
+              size="lg"
+              startContent={
+                <Lock className="text-gray-400 shrink-0" size={18} />
+              }
+              type={isVisible ? "text" : "password"}
+              value={password}
+              onValueChange={setPassword}
+            />
 
-          <div className="text-center space-y-4">
-            <p className="text-sm text-gray-500">
-              {t("auth.noAccount")}{" "}
-              <Button
-                className="p-0 h-auto font-bold"
-                color="primary"
-                variant="light"
-                onClick={() => navigate("/register")}
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full h-12 flex items-center justify-center space-x-2 bg-[#4ADE80] hover:bg-[#22C55E] active:scale-95 text-gray-900 font-bold rounded-full text-base transition-all duration-300 cursor-pointer shadow-md"
+            >
+              <RotateCw className={`w-5 h-5 shrink-0 ${isLoading ? 'animate-spin' : ''}`} />
+              <span>ລັອກອິນ</span>
+            </button>
+          </form>
+
+          {/* Action links */}
+          <div className="flex flex-col items-center space-y-4 pt-2">
+            <button
+              onClick={() => navigate("/register")}
+              className="text-base font-bold text-sky-300 hover:text-sky-200 transition-colors cursor-pointer"
+            >
+              ລົງທະບຽນເຂົ້າໃຊ້ງານ
+            </button>
+
+            {/* Hotline Link */}
+            <div className="w-full flex justify-start pt-4">
+              <a
+                href="tel:1191"
+                className="flex items-center justify-center px-5 py-2.5 bg-[#C8102E] text-white font-bold rounded-full text-sm shadow-md hover:bg-red-700 hover:shadow-lg active:scale-95 transition-all duration-300"
               >
-                {t("auth.register")}
-              </Button>
-            </p>
-            <Divider className="my-8" />
-            <p className="text-[10px] text-gray-400 font-mono uppercase tracking-[0.2em]">
-              Eezy POS System &bull; Version {version.version}
-            </p>
+                ສາຍດ່ວນ 1191
+              </a>
+            </div>
           </div>
+
         </div>
       </div>
-
-      <style>{`
-        @keyframes float {
-          0% { transform: translateY(0px); }
-          50% { transform: translateY(-10px); }
-          100% { transform: translateY(0px); }
-        }
-        .animate-float {
-          animation: float 6s ease-in-out infinite;
-        }
-      `}</style>
     </div>
   );
 }

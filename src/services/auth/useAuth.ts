@@ -18,10 +18,12 @@ export const useAuthService = async (data: {
   }
 };
 
-export const useRegisterService = async (data: any) => {
+
+
+export const useRegisterCitizenService = async (data: any) => {
   try {
     const response: any = await axiosInstance.post(
-      API_ENDPOINTS.AUTH.REGISTER,
+      API_ENDPOINTS.AUTH.REGISTER_CITIZEN,
       data,
     );
 
