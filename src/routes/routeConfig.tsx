@@ -19,6 +19,8 @@ import NewsDetailPage from "@/pages/news/NewsDetail";
 import ProfileEditPage from "@/pages/settings/ProfileEdit";
 import ComingSoonPage from "@/pages/ComingSoon";
 import PoliceHomePage from "@/pages/police/PoliceHome";
+import PoliceDistrictVillagesPage from "@/pages/police/PoliceDistrictVillages";
+import VillageReportPage from "@/pages/police/sections/policeDistrict/report";
 
 // Prisma User.userType — the portal a logged-in user belongs to
 export type UserType =
@@ -106,6 +108,20 @@ export const appRoutes: AppRoute[] = [
     element: <PoliceHomePage />,
     isPrivate: true,
     allowedUserTypes: ["POLICE_DEPARTMENT", "DISTRICT_POLICE", "VILLAGE_CHIEF"],
+  },
+  // Villages of a district's police office (opened from the police-district cards)
+  {
+    path: "/police/police-district/:districtId",
+    element: <PoliceDistrictVillagesPage />,
+    isPrivate: true,
+    allowedUserTypes: ["POLICE_DEPARTMENT", "DISTRICT_POLICE"],
+  },
+  // All reports of a single village (opened from a village badge)
+  {
+    path: "/police/village/:villageId/reports",
+    element: <VillageReportPage />,
+    isPrivate: true,
+    allowedUserTypes: ["POLICE_DEPARTMENT", "DISTRICT_POLICE"],
   },
 
   // Placeholder portal for roles not built yet

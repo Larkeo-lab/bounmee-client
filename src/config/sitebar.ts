@@ -5,6 +5,7 @@ export type PoliceSection =
   | "dashboard"
   | "reports"
   | "police-district"
+  | "my-village"
   | "village-chief"
   | "citizens"
   | "news"
@@ -29,12 +30,10 @@ export const policeSidebarItems: PoliceSidebarItem[] = [
     allowedUserTypes: ["POLICE_DEPARTMENT"],
   },
   {
-    key: "village-chief",
-    label: "ນາຍບ້ານ",
+    key: "my-village",
+    label: "ບ້ານ",
     icon: "village-chief",
-    allowedUserTypes: ["POLICE_DEPARTMENT", "DISTRICT_POLICE"],
+    allowedUserTypes: ["DISTRICT_POLICE"],
   },
-  { key: "citizens", label: "ປະຊາຊົນ", icon: "citizens" },
   { key: "news", label: "ຂ່າວສານ", icon: "news" },
-  { key: "settings", label: "ຕັ້ງຄ່າ", icon: "settings" },
 ];

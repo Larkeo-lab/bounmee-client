@@ -116,6 +116,8 @@ export const API_ENDPOINTS = {
   REPORT: {
     CREATE: `${API_VERSION}/report`,
     LIST: `${API_VERSION}/report`,
+    BY_VILLAGE: (villageId: string) =>
+      `${API_VERSION}/report/village/${villageId}`,
     DETAIL: (id: string) => `${API_VERSION}/report/${id}`,
     UPDATE: (id: string) => `${API_VERSION}/report/${id}`,
     FORWARD: (id: string) => `${API_VERSION}/report/${id}/forward`,
@@ -133,6 +135,10 @@ export const API_ENDPOINTS = {
   POLICE_DISTRICT: {
     CREATE: `${API_VERSION}/police-district`,
     LIST: `${API_VERSION}/police-district`,
+    REPORTS_LIST: `${API_VERSION}/police-district/reports/list`,
+    DEPARTMENT_REPORTS_LIST: `${API_VERSION}/police-district/reports/department/list`,
+    VILLAGES_REPORTS: (id: string) =>
+      `${API_VERSION}/police-district/${id}/villages`,
     DETAIL: (id: string) => `${API_VERSION}/police-district/${id}`,
     UPDATE: (id: string) => `${API_VERSION}/police-district/${id}`,
     DELETE: (id: string) => `${API_VERSION}/police-district/${id}`,

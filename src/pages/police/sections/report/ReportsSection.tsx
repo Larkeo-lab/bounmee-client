@@ -2,36 +2,22 @@ import React from "react";
 import toast from "react-hot-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  Loader2,
   FileText,
   MapPin,
   Calendar,
-  ArrowLeft,
-  User,
-  Phone,
-  ImageOff,
   Send,
-  CheckCircle2,
 } from "lucide-react";
-import { Card, CardBody, Button } from "@heroui/react";
+import { Card, CardBody, Skeleton } from "@heroui/react";
 
 import {
   useGetReports,
   useForwardReport,
   ReportItem,
   ReportStatus,
-  ReportFilters,
 } from "@/services/report/useReport";
 import { useAuth } from "@/routes/AuthContext";
-import { getDisplayImageUrl } from "@/lib/utils";
-
-// Display labels for each assignee level
-const ASSIGNEE_LABEL: Record<string, string> = {
-  CITIZEN: "ປະຊາຊົນ",
-  VILLAGE_CHIEF: "ນາຍບ້ານ",
-  DISTRICT_POLICE: "ປກສ ເມືອง",
-  POLICE_DEPARTMENT: "ກົມໃຫຍ່ຕຳຫຼວດ",
-};
+import { getDisplayImageUrl, formatDate } from "@/lib/utils";
+import ReportDetailView, { STATUS_CONFIG } from "./reportDetail";
 
 // Who each role forwards to (null = top, can't forward)
 const FORWARD_LABEL: Record<string, string | null> = {
@@ -40,13 +26,7 @@ const FORWARD_LABEL: Record<string, string | null> = {
   POLICE_DEPARTMENT: null,
 };
 
-const STATUS_CONFIG: Record<ReportStatus, { label: string; className: string }> = {
-  PENDING: { label: "ລໍຖ້າດຳເນີນການ", className: "bg-amber-100 text-amber-700" },
-  IN_PROGRESS: { label: "ກຳລັງດຳເນີນການ", className: "bg-blue-100 text-blue-700" },
-  APPROVED: { label: "ອະນຸມັດ", className: "bg-emerald-100 text-emerald-700" },
-  REJECTED: { label: "ປະຕິເສດ", className: "bg-red-100 text-red-700" },
-  CANCELLED: { label: "ຍົກເລີກ", className: "bg-gray-200 text-gray-600" },
-};
+
 
 const FILTERS: { key: ReportStatus | ""; label: string }[] = [
   { key: "", label: "ທັງໝົດ" },
@@ -57,49 +37,31 @@ const FILTERS: { key: ReportStatus | ""; label: string }[] = [
   { key: "CANCELLED", label: "ຍົກເລີກ" },
 ];
 
-const formatDate = (iso: string) => {
-  try {
-    return new Date(iso).toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-  } catch {
-    return iso?.slice(0, 10) || "";
-  }
-};
-
 export default function ReportsSection() {
-  const [tab, setTab] = React.useState<"current" | "history">("current");
   const [status, setStatus] = React.useState<ReportStatus | "">("");
   const [selected, setSelected] = React.useState<ReportItem | null>(null);
 
-  // Scope reports by the logged-in user's area + level.
+  // Scope reports by the logged-in user's level (same as the policeDistrict section):
+  //  POLICE_DEPARTMENT → whole province, DISTRICT_POLICE → own district, VILLAGE_CHIEF → own village
   const { user: authData } = useAuth();
   const account = (authData as any)?.user;
   const userType = account?.userType as string | undefined;
 
-  const scope: ReportFilters = {};
-  let myLevel: "VILLAGE_CHIEF" | "DISTRICT_POLICE" | "POLICE_DEPARTMENT" | undefined;
-  if (userType === "VILLAGE_CHIEF") {
-    scope.villageId = account?.villageId;
-    myLevel = "VILLAGE_CHIEF";
-  } else if (userType === "DISTRICT_POLICE") {
-    scope.districtId = account?.districtId;
-    myLevel = "DISTRICT_POLICE";
-  } else if (userType === "POLICE_DEPARTMENT") {
-    scope.provinceId = account?.provinceId;
-    myLevel = "POLICE_DEPARTMENT";
-  }
-
-  if (myLevel) {
-    // "current" = still in my queue; "history" = ever reached my level
-    if (tab === "current") scope.currentAssignee = myLevel;
-    else scope.reachedAssignee = myLevel;
+  const reportScope: {
+    provinceId?: string;
+    districtId?: string;
+    villageId?: string;
+  } = {};
+  if (userType === "DISTRICT_POLICE") {
+    reportScope.districtId = account?.districtId;
+  } else if (userType === "VILLAGE_CHIEF") {
+    reportScope.villageId = account?.villageId;
+  } else {
+    reportScope.provinceId = account?.provinceId;
   }
 
   const { data: reports = [], isLoading } = useGetReports({
-    ...scope,
+    ...reportScope,
     ...(status ? { status } : {}),
     limit: 100,
   });
@@ -107,8 +69,8 @@ export default function ReportsSection() {
   const queryClient = useQueryClient();
   const { mutateAsync: forwardReport, isPending: isForwarding } = useForwardReport();
 
-  // Forwarding only makes sense in the "current" queue (department = top, no next)
-  const forwardTo = tab === "current" && userType ? FORWARD_LABEL[userType] : null;
+  // POLICE_DEPARTMENT is the top level, so there is no one to forward to.
+  const forwardTo = userType ? FORWARD_LABEL[userType] : null;
 
   const doForward = async (id: string) => {
     try {
@@ -140,26 +102,6 @@ export default function ReportsSection() {
 
   return (
     <div className="space-y-4 max-w-7xl">
-      {/* Tabs: current queue vs history (reports that reached my level) */}
-      <div className="inline-flex bg-white rounded-2xl p-1 shadow-sm border border-gray-100">
-        <button
-          onClick={() => setTab("current")}
-          className={`px-4 py-2 rounded-xl text-sm font-bold transition-colors cursor-pointer ${
-            tab === "current" ? "bg-[#075e3d] text-white" : "text-gray-500 hover:text-gray-700"
-          }`}
-        >
-          ກ່ອງຮັບ
-        </button>
-        <button
-          onClick={() => setTab("history")}
-          className={`px-4 py-2 rounded-xl text-sm font-bold transition-colors cursor-pointer ${
-            tab === "history" ? "bg-[#075e3d] text-white" : "text-gray-500 hover:text-gray-700"
-          }`}
-        >
-          ປະຫວັດ
-        </button>
-      </div>
-
       {/* Status filter chips */}
       <div className="flex flex-wrap gap-2">
         {FILTERS.map((f) => (
@@ -178,8 +120,20 @@ export default function ReportsSection() {
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center py-16">
-          <Loader2 className="w-8 h-8 text-[#075e3d] animate-spin" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="bg-white rounded-2xl border border-gray-100 overflow-hidden flex flex-col h-[280px]">
+              <Skeleton className="h-44 w-full shrink-0" />
+              <div className="p-4 flex flex-col justify-between flex-grow space-y-2">
+                <div className="flex justify-between items-center gap-2">
+                  <Skeleton className="h-4 w-2/3 rounded-md" />
+                  <Skeleton className="h-4 w-12 rounded-full" />
+                </div>
+                <Skeleton className="h-3.5 w-1/2 rounded-md" />
+                <Skeleton className="h-3 w-1/3 rounded-md" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : reports.length === 0 ? (
         <Card className="shadow-sm border border-gray-100 rounded-3xl">
@@ -191,7 +145,7 @@ export default function ReportsSection() {
           </CardBody>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {reports.map((r) => {
             const st = STATUS_CONFIG[r.status] || STATUS_CONFIG.PENDING;
 
@@ -251,158 +205,3 @@ export default function ReportsSection() {
   );
 }
 
-function ReportDetailView({
-  report,
-  onBack,
-  forwardTo,
-  onForward,
-  isForwarding,
-}: {
-  report: ReportItem;
-  onBack: () => void;
-  forwardTo: string | null;
-  onForward: () => void;
-  isForwarding: boolean;
-}) {
-  const st = STATUS_CONFIG[report.status] || STATUS_CONFIG.PENDING;
-  const place = [report.village?.nameLo, report.district?.nameLo, report.province?.nameLo]
-    .filter(Boolean)
-    .join(", ");
-  const gallery = [report.image, ...(report.attachments || [])].filter(
-    (v, i, a) => v && a.indexOf(v) === i,
-  );
-
-  return (
-    <div className="space-y-4 max-w-2xl">
-      <button
-        onClick={onBack}
-        className="flex items-center gap-1.5 text-sm font-bold text-gray-500 hover:text-gray-700 cursor-pointer"
-      >
-        <ArrowLeft size={16} /> ກັບຄືນ
-      </button>
-
-      <Card className="shadow-sm border border-gray-100 rounded-3xl overflow-hidden">
-        {gallery.length > 0 ? (
-          <div className="w-full aspect-video bg-slate-100">
-            <img src={getDisplayImageUrl(gallery[0] as string)} alt={report.title} className="w-full h-full object-cover" />
-          </div>
-        ) : (
-          <div className="w-full aspect-video bg-slate-100 flex items-center justify-center text-gray-300">
-            <ImageOff size={36} />
-          </div>
-        )}
-
-        {gallery.length > 1 && (
-          <div className="flex gap-2 p-3 overflow-x-auto border-b border-gray-100">
-            {gallery.slice(1).map((img, i) => (
-              <div key={i} className="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 shrink-0 border border-gray-200">
-                <img src={getDisplayImageUrl(img as string)} alt={`att-${i}`} className="w-full h-full object-cover" />
-              </div>
-            ))}
-          </div>
-        )}
-
-        <CardBody className="p-6 space-y-4">
-          <div className="flex items-start justify-between gap-3">
-            <h1 className="text-lg font-bold text-gray-800">{report.title}</h1>
-            <span className={`text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap ${st.className}`}>
-              {st.label}
-            </span>
-          </div>
-
-          {report.description && (
-            <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{report.description}</p>
-          )}
-
-          <div className="border-t border-gray-100" />
-
-          <div className="space-y-3 text-sm">
-            <div className="flex items-start gap-2 text-gray-600">
-              <MapPin size={16} className="text-[#075e3d] shrink-0 mt-0.5" />
-              <div>
-                <p className="font-semibold">{report.location}</p>
-                {place && <p className="text-xs text-gray-400">{place}</p>}
-              </div>
-            </div>
-
-            {report.user && (
-              <>
-                <div className="flex items-center gap-2 text-gray-600">
-                  <User size={16} className="text-[#075e3d] shrink-0" />
-                  <span className="font-semibold">{report.user.userName || "-"}</span>
-                </div>
-                {report.user.phone && (
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <Phone size={16} className="text-[#075e3d] shrink-0" />
-                    <span className="font-semibold">{report.user.phone}</span>
-                  </div>
-                )}
-              </>
-            )}
-
-            <div className="flex items-center gap-2 text-gray-600">
-              <Calendar size={16} className="text-[#075e3d] shrink-0" />
-              <span className="font-semibold">{formatDate(report.createdAt)}</span>
-            </div>
-          </div>
-
-          {/* Escalation timeline (history) */}
-          {report.history && report.history.length > 0 && (
-            <>
-              <div className="border-t border-gray-100" />
-              <div>
-                <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">ປະຫວັດການສົ່ງຕໍ່ / History</p>
-                <div className="space-y-3">
-                  {report.history.map((h, i) => {
-                    const isLast = i === report.history!.length - 1;
-
-                    return (
-                      <div key={h.id} className="flex gap-3">
-                        <div className="flex flex-col items-center">
-                          <div className={`w-3 h-3 rounded-full ${isLast ? "bg-[#075e3d]" : "bg-gray-300"}`} />
-                          {!isLast && <div className="w-0.5 flex-1 bg-gray-200" />}
-                        </div>
-                        <div className="pb-1 -mt-0.5">
-                          <p className="text-sm font-bold text-gray-700">
-                            {h.fromAssignee
-                              ? `${ASSIGNEE_LABEL[h.fromAssignee] || h.fromAssignee} → ${ASSIGNEE_LABEL[h.toAssignee] || h.toAssignee}`
-                              : `${ASSIGNEE_LABEL[h.toAssignee] || h.toAssignee}`}
-                          </p>
-                          <p className="text-[11px] text-gray-400">{formatDate(h.createdAt)}</p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </>
-          )}
-
-          {/* Forward / status — show current level + forward button */}
-          <div className="border-t border-gray-100 pt-2 space-y-3">
-            <div className="flex items-center gap-2 text-sm">
-              <CheckCircle2 size={16} className="text-[#075e3d] shrink-0" />
-              <span className="text-gray-500">ປະຈຸບັນຢູ່ທີ່:</span>
-              <span className="font-bold text-[#075e3d]">
-                {report.currentAssignee ? ASSIGNEE_LABEL[report.currentAssignee] || report.currentAssignee : "-"}
-              </span>
-            </div>
-
-            {forwardTo ? (
-              <Button
-                startContent={<Send size={18} />}
-                isDisabled={isForwarding}
-                onPress={onForward}
-                className="w-full bg-[#075e3d] hover:bg-[#064e32] text-white font-bold rounded-2xl py-3 cursor-pointer disabled:opacity-50"
-              >
-                {isForwarding ? "ກຳລັງສົ່ງ..." : `ສົ່ງຕໍ່ໃຫ້ ${forwardTo}`}
-              </Button>
-            ) : (
-              <p className="text-xs text-gray-400 font-bold text-center">ຮອດຊັ້ນສູງສຸດແລ້ວ</p>
-            )}
-          </div>
-        </CardBody>
-      </Card>
-    </div>
-  );
-}

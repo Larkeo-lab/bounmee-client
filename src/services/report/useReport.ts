@@ -136,6 +136,37 @@ export const useGetReport = (id?: string) => {
   });
 };
 
+export interface VillageReportsResult {
+  village: {
+    id: string;
+    code: string;
+    nameLo: string;
+    nameEn?: string;
+    districtCode?: string | null;
+  };
+  reports: ReportItem[];
+  total: number;
+}
+
+// All reports for one village (+ village info), via the dedicated endpoint
+export const getVillageReports = async (
+  villageId: string,
+): Promise<VillageReportsResult | null> => {
+  const response = await axiosInstance.get(
+    API_ENDPOINTS.REPORT.BY_VILLAGE(villageId),
+  );
+
+  return response.data?.data || null;
+};
+
+export const useGetVillageReports = (villageId?: string) => {
+  return useQuery({
+    queryKey: ["village-reports", villageId],
+    queryFn: () => getVillageReports(villageId!),
+    enabled: !!villageId,
+  });
+};
+
 export const useGetReports = (filters: ReportFilters = {}) => {
   // If a userId key was supplied (user-scoped list), wait until it's truthy so
   // we never fall back to fetching everyone's reports while auth is loading.

@@ -112,3 +112,77 @@ export const deletePoliceDistrict = async (id: string) => {
 export const useDeletePoliceDistrict = () => {
   return useMutation({ mutationFn: deletePoliceDistrict });
 };
+
+export const getPoliceDistrictsAndReports = async (): Promise<any[]> => {
+  const response = await axiosInstance.get(
+    API_ENDPOINTS.POLICE_DISTRICT.REPORTS_LIST,
+  );
+  return response.data?.data || [];
+};
+
+export const useGetPoliceDistrictsAndReports = (options?: any) => {
+  return useQuery<any[]>({
+    queryKey: ["police-districts-and-reports"],
+    queryFn: getPoliceDistrictsAndReports,
+    ...options,
+  });
+};
+
+// POLICE_DEPARTMENT (province level): every district in the dept's province + reports
+export const getPoliceDepartmentsAndReports = async (): Promise<any[]> => {
+  const response = await axiosInstance.get(
+    API_ENDPOINTS.POLICE_DISTRICT.DEPARTMENT_REPORTS_LIST,
+  );
+  return response.data?.data || [];
+};
+
+export const useGetPoliceDepartmentsAndReports = (options?: any) => {
+  return useQuery<any[]>({
+    queryKey: ["police-departments-and-reports"],
+    queryFn: getPoliceDepartmentsAndReports,
+    ...options,
+  });
+};
+
+
+
+export interface DistrictVillageReport {
+  id: string;
+  code: string;
+  nameLo: string;
+  nameEn?: string;
+  reportCount: number;
+  pendingCount: number;
+}
+
+export interface PoliceDistrictDetail {
+  id: string;
+  districtName: string;
+  districtNameEn?: string;
+  chiefName: string;
+  deputyChiefName: string;
+  phone: string;
+  address: string;
+  imageUrl: string;
+  villageCount: number;
+  totalReports: number;
+  villages: DistrictVillageReport[];
+}
+
+// District detail by District id: villages + per-village report counts
+export const getPoliceDistrictByIdAndReports = async (
+  id: string,
+): Promise<PoliceDistrictDetail | null> => {
+  const response = await axiosInstance.get(
+    API_ENDPOINTS.POLICE_DISTRICT.VILLAGES_REPORTS(id),
+  );
+  return response.data?.data || null;
+};
+
+export const useGetPoliceDistrictByIdAndReports = (id?: string) => {
+  return useQuery({
+    queryKey: ["police-district-villages", id],
+    queryFn: () => getPoliceDistrictByIdAndReports(id!),
+    enabled: !!id,
+  });
+};
