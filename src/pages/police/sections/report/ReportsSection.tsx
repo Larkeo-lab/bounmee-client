@@ -1,12 +1,7 @@
 import React from "react";
 import toast from "react-hot-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  FileText,
-  MapPin,
-  Calendar,
-  Send,
-} from "lucide-react";
+import { FileText, MapPin, Calendar, Send } from "lucide-react";
 import { Card, CardBody, Skeleton } from "@heroui/react";
 
 import {
@@ -26,20 +21,24 @@ const FORWARD_LABEL: Record<string, string | null> = {
   POLICE_DEPARTMENT: null,
 };
 
-
-
 const FILTERS: { key: ReportStatus | ""; label: string }[] = [
-  { key: "", label: "ທັງໝົດ" },
-  { key: "PENDING", label: "ລໍຖ້າ" },
+  { key: "PENDING", label: "ເຂົ້າໃໝ່" },
   { key: "IN_PROGRESS", label: "ກຳລັງດຳເນີນການ" },
   { key: "APPROVED", label: "ອະນຸມັດ" },
-  { key: "REJECTED", label: "ປະຕິເສດ" },
-  { key: "CANCELLED", label: "ຍົກເລີກ" },
+  { key: "", label: "ທັງໝົດ" },
 ];
 
-export default function ReportsSection() {
+interface ReportsSectionProps {
+  selected?: ReportItem | null;
+  onSelect?: (report: ReportItem | null) => void;
+}
+
+export default function ReportsSection({ selected: propSelected, onSelect }: ReportsSectionProps = {}) {
   const [status, setStatus] = React.useState<ReportStatus | "">("");
-  const [selected, setSelected] = React.useState<ReportItem | null>(null);
+  const [localSelected, setLocalSelected] = React.useState<ReportItem | null>(null);
+
+  const selected = onSelect ? (propSelected ?? null) : localSelected;
+  const setSelected = onSelect ? onSelect : setLocalSelected;
 
   // Scope reports by the logged-in user's level (same as the policeDistrict section):
   //  POLICE_DEPARTMENT → whole province, DISTRICT_POLICE → own district, VILLAGE_CHIEF → own village
@@ -67,7 +66,8 @@ export default function ReportsSection() {
   });
 
   const queryClient = useQueryClient();
-  const { mutateAsync: forwardReport, isPending: isForwarding } = useForwardReport();
+  const { mutateAsync: forwardReport, isPending: isForwarding } =
+    useForwardReport();
 
   // POLICE_DEPARTMENT is the top level, so there is no one to forward to.
   const forwardTo = userType ? FORWARD_LABEL[userType] : null;
@@ -122,7 +122,10 @@ export default function ReportsSection() {
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="bg-white rounded-2xl border border-gray-100 overflow-hidden flex flex-col h-[280px]">
+            <div
+              key={i}
+              className="bg-white rounded-2xl border border-gray-100 overflow-hidden flex flex-col h-[280px]"
+            >
               <Skeleton className="h-44 w-full shrink-0" />
               <div className="p-4 flex flex-col justify-between flex-grow space-y-2">
                 <div className="flex justify-between items-center gap-2">
@@ -163,7 +166,9 @@ export default function ReportsSection() {
                         src={getDisplayImageUrl(r.image)}
                         alt={r.title}
                         className="w-full h-full object-cover"
-                        onError={(e) => { e.currentTarget.src = "/assets/logo.png"; }}
+                        onError={(e) => {
+                          e.currentTarget.src = "/assets/logo.png";
+                        }}
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-gray-300">
@@ -173,8 +178,12 @@ export default function ReportsSection() {
                   </div>
                   <div className="p-4 space-y-1.5">
                     <div className="flex items-start justify-between gap-2">
-                      <h3 className="font-bold text-sm text-gray-800 line-clamp-2">{r.title}</h3>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap ${st.className}`}>
+                      <h3 className="font-bold text-sm text-gray-800 line-clamp-2">
+                        {r.title}
+                      </h3>
+                      <span
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap ${st.className}`}
+                      >
                         {st.label}
                       </span>
                     </div>
@@ -187,7 +196,10 @@ export default function ReportsSection() {
 
                     {forwardTo && (
                       <button
-                        onClick={(e) => { e.stopPropagation(); doForward(r.id); }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          doForward(r.id);
+                        }}
                         disabled={isForwarding}
                         className="w-full mt-2 flex items-center justify-center gap-1.5 bg-[#075e3d] hover:bg-[#064e32] text-white text-xs font-bold rounded-xl py-2 cursor-pointer disabled:opacity-50 transition-colors"
                       >
@@ -204,4 +216,3 @@ export default function ReportsSection() {
     </div>
   );
 }
-

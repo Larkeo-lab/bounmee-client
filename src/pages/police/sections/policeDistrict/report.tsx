@@ -65,6 +65,33 @@ export default function VillageReportPage() {
           </span>
         </div>
 
+        {/* Village info block */}
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-5 bg-white/50 backdrop-blur-sm rounded-3xl border border-gray-200 shadow-sm">
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-3/4 rounded-md" />
+              <Skeleton className="h-4 w-2/3 rounded-md" />
+            </div>
+            <div className="space-y-2 md:flex md:flex-col md:items-end">
+              <Skeleton className="h-3 w-16 rounded-md mb-1" />
+              <Skeleton className="h-4 w-40 rounded-md" />
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-5 bg-white/50 backdrop-blur-sm rounded-3xl border border-gray-200 shadow-sm text-sm font-bold text-gray-800">
+            <div className="space-y-1.5">
+              <p>ນາຍບ້ານ: {village?.chiefName || "ທ່ານ ....."} ເບີໂທ {village?.phone || "-"}</p>
+              <p>ຮອງນາຍບ້ານ: {village?.deputyChiefName || "ທ່ານ ....."}</p>
+              <p>ການແຈ້ງຄວາມທັງໝົດ: {data?.total ?? 0} ລາຍການ</p>
+            </div>
+            <div className="space-y-1.5 md:text-right">
+              <p className="text-gray-400 uppercase tracking-wide text-xs">ສະຖານທີ່</p>
+              <p>{village?.address || "-"}</p>
+              <p className="text-gray-400 font-medium">{village?.email || ""}</p>
+            </div>
+          </div>
+        )}
+
         {/* List */}
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">

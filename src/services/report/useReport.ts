@@ -122,6 +122,31 @@ export const useForwardReport = () => {
   return useMutation({ mutationFn: forwardReport });
 };
 
+export interface UpdateReportPayload {
+  title?: string;
+  description?: string | null;
+  location?: string;
+  image?: string | null;
+  video?: string | null;
+  attachments?: string[] | null;
+}
+
+export const updateReport = async (id: string, payload: UpdateReportPayload) => {
+  const response = await axiosInstance.put(
+    API_ENDPOINTS.REPORT.UPDATE(id),
+    payload,
+  );
+
+  return response.data?.data;
+};
+
+export const useUpdateReport = () => {
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: UpdateReportPayload }) =>
+      updateReport(id, payload),
+  });
+};
+
 export const getReportById = async (id: string): Promise<ReportItem> => {
   const response = await axiosInstance.get(API_ENDPOINTS.REPORT.DETAIL(id));
 
@@ -143,6 +168,12 @@ export interface VillageReportsResult {
     nameLo: string;
     nameEn?: string;
     districtCode?: string | null;
+    image?: string | null;
+    chiefName?: string;
+    deputyChiefName?: string;
+    phone?: string;
+    email?: string;
+    address?: string;
   };
   reports: ReportItem[];
   total: number;
