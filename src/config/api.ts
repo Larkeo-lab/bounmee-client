@@ -121,6 +121,8 @@ export const API_ENDPOINTS = {
     DETAIL: (id: string) => `${API_VERSION}/report/${id}`,
     UPDATE: (id: string) => `${API_VERSION}/report/${id}`,
     FORWARD: (id: string) => `${API_VERSION}/report/${id}/forward`,
+    RECEIVE: (id: string) => `${API_VERSION}/report/${id}/receive`,
+    RESOLVE: (id: string) => `${API_VERSION}/report/${id}/resolve`,
   },
   CITIZEN: {
     LIST: `${API_VERSION}/citizen`,
@@ -141,6 +143,7 @@ export const API_ENDPOINTS = {
       `${API_VERSION}/police-district/${id}/villages`,
     DETAIL: (id: string) => `${API_VERSION}/police-district/${id}`,
     UPDATE: (id: string) => `${API_VERSION}/police-district/${id}`,
+    UPDATE_ME: `${API_VERSION}/police-district/me`,
     DELETE: (id: string) => `${API_VERSION}/police-district/${id}`,
   },
   VILLAGE_CHIEF: {
@@ -148,6 +151,7 @@ export const API_ENDPOINTS = {
     LIST: `${API_VERSION}/village-chief`,
     DETAIL: (id: string) => `${API_VERSION}/village-chief/${id}`,
     UPDATE: (id: string) => `${API_VERSION}/village-chief/${id}`,
+    UPDATE_ME: `${API_VERSION}/village-chief/me`,
     DELETE: (id: string) => `${API_VERSION}/village-chief/${id}`,
   },
 };

@@ -1,17 +1,3 @@
-import {
-  Settings,
-  UserCog,
-  History,
-  CheckCircle2,
-} from "lucide-react";
-import {
-  Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
-  DropdownItem,
-} from "@heroui/react";
-import { useNavigate } from "react-router-dom";
-
 import ProfileDropdown from "./profile-dropdown";
 
 interface NavbarProps {
@@ -21,13 +7,7 @@ interface NavbarProps {
   onSettings: () => void;
 }
 
-export default function Navbar({
-  activeTab,
-  setActiveTab,
-  onSettings,
-}: NavbarProps) {
-  const navigate = useNavigate();
-
+export default function Navbar({ activeTab, setActiveTab }: NavbarProps) {
   return (
     <nav className="bg-[#075e3d] text-white h-14 flex items-center justify-between px-6 shadow-md relative z-10">
       {/* Left: Spacer */}
@@ -81,47 +61,6 @@ export default function Navbar({
       {/* Right: Profile Dropdown & Settings */}
       <div className="flex items-center space-x-3">
         <ProfileDropdown />
-
-        <Dropdown placement="bottom-end">
-          <DropdownTrigger>
-            <button
-              className="p-1.5 hover:bg-white/10 rounded-full transition-colors active:scale-95 cursor-pointer"
-              title="ການຕັ້ງຄ່າ"
-            >
-              <Settings size={20} className="text-white" />
-            </button>
-          </DropdownTrigger>
-          <DropdownMenu
-            aria-label="Settings Menu"
-            variant="flat"
-            className="p-2"
-          >
-            <DropdownItem
-              key="profile"
-              startContent={<UserCog size={18} />}
-              className="font-bold py-2.5"
-              onPress={onSettings}
-            >
-              ແກ້ໄຂໂປຣໄຟລ
-            </DropdownItem>
-            <DropdownItem
-              key="history"
-              startContent={<History size={18} />}
-              className="font-bold py-2.5 data-[hover=true]:bg-[#075e3d] data-[hover=true]:text-white"
-              onPress={() => navigate("/report/history")}
-            >
-              ປະຫວັດແຈ້ງຄວາມ
-            </DropdownItem>
-            <DropdownItem
-              key="resolved"
-              startContent={<CheckCircle2 size={18} />}
-              className="font-bold py-2.5 data-[hover=true]:bg-[#075e3d] data-[hover=true]:text-white"
-              onPress={() => navigate("/report/resolved")}
-            >
-              ແຈ້ງຄວາມແກ້ໄຂແລ້ວ
-            </DropdownItem>
-          </DropdownMenu>
-        </Dropdown>
       </div>
     </nav>
   );

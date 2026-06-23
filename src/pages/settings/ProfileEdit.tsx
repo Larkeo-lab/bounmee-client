@@ -34,7 +34,7 @@ export default function ProfileEdit() {
   );
   const [gender, setGender] = React.useState(citizen?.gender || "MALE");
   const [cartNumber, setCartNumber] = React.useState(citizen?.cartNumber || "");
-  const [profileImage, setProfileImage] = React.useState(citizen?.profileImage || "");
+  const [profileImage, setProfileImage] = React.useState(account?.profileImage || "");
   const [cartImage, setCartImage] = React.useState(citizen?.cartImage || "");
   const [cartImageBack, setCartImageBack] = React.useState(citizen?.cartImageBack || "");
 
@@ -101,7 +101,7 @@ export default function ProfileEdit() {
     }
     if (gender !== (citizen.gender || "MALE")) payload.gender = gender;
     if (cartNumber.trim() !== (citizen.cartNumber || "")) payload.cartNumber = cartNumber.trim();
-    if (profileImage !== (citizen.profileImage || "")) payload.profileImage = profileImage || null;
+    if (profileImage !== (account.profileImage || "")) payload.profileImage = profileImage || null;
     if (cartImage !== (citizen.cartImage || "")) payload.cartImage = cartImage || undefined;
     if ((cartImageBack || "") !== (citizen.cartImageBack || "")) payload.cartImageBack = cartImageBack || null;
 
@@ -122,7 +122,8 @@ export default function ProfileEdit() {
           ...(authData as any),
           user: {
             ...account,
-            citizen: { ...citizen, ...(updated || payload) },
+            profileImage: updated.profileImage ?? account.profileImage,
+            citizen: { ...citizen, ...updated },
           },
         });
       }

@@ -122,6 +122,26 @@ export const useForwardReport = () => {
   return useMutation({ mutationFn: forwardReport });
 };
 
+export const receiveReport = async (id: string) => {
+  const response = await axiosInstance.put(API_ENDPOINTS.REPORT.RECEIVE(id));
+
+  return response.data?.data;
+};
+
+export const useReceiveReport = () => {
+  return useMutation({ mutationFn: receiveReport });
+};
+
+export const resolveReport = async (id: string) => {
+  const response = await axiosInstance.put(API_ENDPOINTS.REPORT.RESOLVE(id));
+
+  return response.data?.data;
+};
+
+export const useResolveReport = () => {
+  return useMutation({ mutationFn: resolveReport });
+};
+
 export interface UpdateReportPayload {
   title?: string;
   description?: string | null;

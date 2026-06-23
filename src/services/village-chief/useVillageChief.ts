@@ -20,6 +20,8 @@ export interface VillageChiefItem {
   id: string;
   chiefName: string;
   deputyChiefName: string;
+  image?: string | null;
+  bgImage?: string | null;
   createdAt: string;
   updatedAt: string;
   users?: VillageChiefUser[];
@@ -42,6 +44,8 @@ export interface CreateVillageChiefPayload {
 export interface UpdateVillageChiefPayload {
   chiefName?: string;
   deputyChiefName?: string;
+  image?: string | null;
+  bgImage?: string | null;
   userName?: string;
   password?: string;
   email?: string | null;
@@ -99,6 +103,39 @@ export const useUpdateVillageChief = () => {
     mutationFn: ({ id, payload }: { id: string; payload: UpdateVillageChiefPayload }) =>
       updateVillageChief(id, payload),
   });
+};
+
+// Detail (for prefilling the profile form)
+export const getVillageChief = async (
+  id: string,
+): Promise<VillageChiefItem | null> => {
+  const response = await axiosInstance.get(
+    API_ENDPOINTS.VILLAGE_CHIEF.DETAIL(id),
+  );
+  return response.data?.data || null;
+};
+
+export const useGetVillageChief = (id?: string) => {
+  return useQuery({
+    queryKey: ["village-chief", id],
+    queryFn: () => getVillageChief(id!),
+    enabled: !!id,
+  });
+};
+
+// Self-profile update (VILLAGE_CHIEF updates their own record)
+export const updateMyVillageChief = async (
+  payload: UpdateVillageChiefPayload,
+) => {
+  const response = await axiosInstance.put(
+    API_ENDPOINTS.VILLAGE_CHIEF.UPDATE_ME,
+    payload,
+  );
+  return response.data?.data;
+};
+
+export const useUpdateMyVillageChief = () => {
+  return useMutation({ mutationFn: updateMyVillageChief });
 };
 
 export const deleteVillageChief = async (id: string) => {

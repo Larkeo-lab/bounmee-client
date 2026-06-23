@@ -29,6 +29,7 @@ import {
 import { useAuth } from "@/routes/AuthContext";
 import { getDisplayImageUrl, formatDate } from "@/lib/utils";
 import { uploadImage } from "@/services/storage";
+import ReportDetailView from "@/pages/police/sections/report/reportDetail";
 
 const STATUS_CONFIG: Record<ReportStatus, { label: string; className: string }> = {
   PENDING: { label: "ບໍ່ທັນແກ້ໄຂ", className: "bg-amber-100 text-amber-700" },
@@ -45,10 +46,15 @@ const ASSIGNEE_LABEL: Record<string, string> = {
   POLICE_DEPARTMENT: "ກົມໃຫຍ່ຕຳຫຼວດ",
 };
 
-const TABS = [
-  { label: "ຄວາມຄືບໜ້າແຈ້ງຄວາມ", path: "/report/progress", active: true },
-  { label: "ແຈ້ງຄວາມແກ້ໄຂແລ້ວ", path: "/report/resolved", active: false },
-  { label: "ປະຫວັດແຈ້ງຄວາມ", path: "/report/history", active: false },
+// Tabs are status filters on the same page (empty statuses = show all)
+const TABS: { key: string; label: string; statuses: ReportStatus[] }[] = [
+  {
+    key: "progress",
+    label: "ຄວາມຄືບໜ້າແຈ້ງຄວາມ",
+    statuses: ["PENDING", "IN_PROGRESS"],
+  },
+  { key: "resolved", label: "ແຈ້ງຄວາມແກ້ໄຂແລ້ວ", statuses: ["APPROVED"] },
+  { key: "history", label: "ປະຫວັດແຈ້ງຄວາມ", statuses: [] },
 ];
 
 export default function ReportProgress() {
@@ -57,10 +63,18 @@ export default function ReportProgress() {
   const userId = (authData as any)?.user?.id;
 
   const { data: reports = [], isLoading } = useGetReports({ userId });
+  const [tab, setTab] = React.useState("progress");
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
 
-  const selected =
-    reports.find((r) => r.id === selectedId) || reports[0] || null;
+  const activeTab = TABS.find((t) => t.key === tab) || TABS[0];
+  const filteredReports = activeTab.statuses.length
+    ? reports.filter((r) => activeTab.statuses.includes(r.status))
+    : reports;
+
+  // Detail only appears after a box is clicked
+  const selected = selectedId
+    ? filteredReports.find((r) => r.id === selectedId) || null
+    : null;
 
   return (
     <div className="flex flex-col min-h-screen bg-white text-gray-800 font-sans">
@@ -104,14 +118,17 @@ export default function ReportProgress() {
       {/* Content */}
       <main className="flex-1 bg-[#d9d9d9] p-6 md:p-10">
         <div className="max-w-5xl mx-auto w-full space-y-6">
-          {/* Tabs */}
+          {/* Tabs — filter by status (same page) */}
           <div className="flex flex-wrap gap-3">
             {TABS.map((t) => (
               <button
-                key={t.path}
-                onClick={() => navigate(t.path)}
+                key={t.key}
+                onClick={() => {
+                  setTab(t.key);
+                  setSelectedId(null);
+                }}
                 className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-colors cursor-pointer ${
-                  t.active
+                  t.key === tab
                     ? "bg-[#075e3d] text-white shadow"
                     : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
                 }`}
@@ -143,53 +160,65 @@ export default function ReportProgress() {
                 </Button>
               </CardBody>
             </Card>
+          ) : filteredReports.length === 0 ? (
+            <Card className="shadow-sm border border-gray-100 rounded-3xl">
+              <CardBody className="p-10 flex flex-col items-center text-center gap-3">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+                  <Inbox size={28} className="text-gray-400" />
+                </div>
+                <p className="text-sm font-bold text-gray-500">ບໍ່ມີຂໍ້ມູນໃນໝວດນີ້</p>
+              </CardBody>
+            </Card>
+          ) : tab === "history" && selected ? (
+            // History tab: show the full read-only detail view
+            <ReportDetailView report={selected} onBack={() => setSelectedId(null)} />
           ) : (
-            selected && (
-              <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-5 md:p-6 space-y-6">
-                {/* If more than one report, let them switch */}
-                {reports.length > 1 && (
-                  <div className="flex gap-2 overflow-x-auto pb-1">
-                    {reports.map((r) => (
-                      <button
-                        key={r.id}
-                        onClick={() => setSelectedId(r.id)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-colors cursor-pointer ${
-                          r.id === selected.id
-                            ? "bg-[#075e3d] text-white"
-                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                        }`}
-                      >
-                        {r.title}
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {/* Three summary cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <ReportMiniCard report={selected} />
-                  <InfoMiniCard
-                    icon={<HomeIcon size={20} className="text-[#075e3d]" />}
-                    title={selected.village?.nameLo ? `ບ້ານ${selected.village.nameLo}` : "ບ້ານ —"}
-                    lines={[selected.location || "-", formatDate(selected.createdAt)]}
-                  />
-                  <InfoMiniCard
-                    icon={<Building2 size={20} className="text-[#075e3d]" />}
-                    title={selected.district?.nameLo ? `ເມືອງ${selected.district.nameLo}` : "ເມືອງ —"}
-                    lines={[selected.province?.nameLo || "ນະຄອນຫຼວງວຽງຈັນ", formatDate(selected.createdAt)]}
-                  />
-                </div>
-
-                {/* Progress stepper */}
-                <ReportProgressBar report={selected} />
-
-                {/* Detail + add-info */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                  <ReportDetailCard report={selected} />
-                  <AddInfoForm report={selected} />
-                </div>
+            <>
+              {/* Reports (filtered by status) as a 4-column grid of boxes */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {filteredReports.map((r) => (
+                  <button
+                    key={r.id}
+                    onClick={() => setSelectedId(r.id)}
+                    className={`text-left rounded-2xl transition-all cursor-pointer ${
+                      r.id === selectedId
+                        ? "ring-2 ring-[#075e3d] ring-offset-2"
+                        : "hover:shadow-md"
+                    }`}
+                  >
+                    <ReportMiniCard report={r} />
+                  </button>
+                ))}
               </div>
-            )
+
+              {/* Detail of the selected report */}
+              {selected && (
+                <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-5 md:p-6 space-y-6">
+                  {/* Village + district info */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <InfoMiniCard
+                      icon={<HomeIcon size={20} className="text-[#075e3d]" />}
+                      title={selected.village?.nameLo ? `ບ້ານ${selected.village.nameLo}` : "ບ້ານ —"}
+                      lines={[selected.location || "-", formatDate(selected.createdAt)]}
+                    />
+                    <InfoMiniCard
+                      icon={<Building2 size={20} className="text-[#075e3d]" />}
+                      title={selected.district?.nameLo ? `ເມືອງ${selected.district.nameLo}` : "ເມືອງ —"}
+                      lines={[selected.province?.nameLo || "ນະຄອນຫຼວງວຽງຈັນ", formatDate(selected.createdAt)]}
+                    />
+                  </div>
+
+                  {/* Progress stepper */}
+                  <ReportProgressBar report={selected} />
+
+                  {/* Detail + add-info */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                    <ReportDetailCard report={selected} />
+                    <AddInfoForm report={selected} />
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </main>

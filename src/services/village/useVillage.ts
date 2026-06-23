@@ -16,6 +16,9 @@ export const getVillagesByDistrict = async (
 ): Promise<Village[]> => {
   const response = await axiosInstance.get(
     API_ENDPOINTS.VILLAGE.BY_DISTRICT(districtCode),
+    // Default page size is 10 — request enough to cover every village in a
+    // district (largest has ~54). 100 is the server-side max.
+    { params: { limit: 100 } },
   );
 
   return response.data?.data || [];

@@ -21,6 +21,7 @@ import ComingSoonPage from "@/pages/ComingSoon";
 import PoliceHomePage from "@/pages/police/PoliceHome";
 import PoliceDistrictVillagesPage from "@/pages/police/PoliceDistrictVillages";
 import VillageReportPage from "@/pages/police/sections/policeDistrict/report";
+import PoliceProfileEditPage from "@/pages/police/ProfileEdit";
 
 // Prisma User.userType — the portal a logged-in user belongs to
 export type UserType =
@@ -122,6 +123,13 @@ export const appRoutes: AppRoute[] = [
     element: <VillageReportPage />,
     isPrivate: true,
     allowedUserTypes: ["POLICE_DEPARTMENT", "DISTRICT_POLICE"],
+  },
+  // Self-profile edit (police roles)
+  {
+    path: "/police/profile",
+    element: <PoliceProfileEditPage />,
+    isPrivate: true,
+    allowedUserTypes: ["POLICE_DEPARTMENT", "DISTRICT_POLICE", "VILLAGE_CHIEF"],
   },
 
   // Placeholder portal for roles not built yet

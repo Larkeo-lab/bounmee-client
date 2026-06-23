@@ -36,6 +36,10 @@ interface ReportDetailViewProps {
   onForward?: () => void;
   isForwarding?: boolean;
   isLoading?: boolean;
+  // Optional actions (shown when handler is provided)
+  onReceive?: () => void;
+  onResolve?: () => void;
+  isBusy?: boolean;
 }
 
 export default function ReportDetailView({
@@ -45,6 +49,9 @@ export default function ReportDetailView({
   onForward = () => {},
   isForwarding = false,
   isLoading = false,
+  onReceive,
+  onResolve,
+  isBusy = false,
 }: ReportDetailViewProps) {
   if (isLoading || !report) {
     return (
@@ -108,11 +115,17 @@ export default function ReportDetailView({
     (v, i, a) => v && a.indexOf(v) === i,
   );
 
-  // Bottom progress bar status logic
-  const isVillageChecked = report.currentAssignee !== "CITIZEN";
+  // Bottom progress bar status logic — based on the levels the report has
+  // actually reached (escalation history + current level)
+  const reached = new Set(
+    [
+      ...(report.history || []).map((h) => h.toAssignee),
+      report.currentAssignee,
+    ].filter(Boolean) as string[],
+  );
   const isDistrictChecked =
-    report.currentAssignee === "DISTRICT_POLICE" ||
-    report.currentAssignee === "POLICE_DEPARTMENT";
+    reached.has("DISTRICT_POLICE") || reached.has("POLICE_DEPARTMENT");
+  const isVillageChecked = reached.has("VILLAGE_CHIEF") || isDistrictChecked;
 
   return (
     <div className="space-y-4 max-w-7xl w-full">
@@ -240,18 +253,40 @@ export default function ReportDetailView({
               </span>
             </div>
 
-            {forwardTo ? (
-              <Button
-                startContent={<Send size={18} />}
-                isDisabled={isForwarding}
-                onPress={onForward}
-                className="w-full bg-[#075e3d] hover:bg-[#064e32] text-white font-bold rounded-2xl py-3 cursor-pointer disabled:opacity-50"
-              >
-                {isForwarding ? "ກຳລັງສົ່ງ..." : `ສົ່ງຕໍ່ໃຫ້ ${forwardTo}`}
-              </Button>
-            ) : (
-              <p className="text-xs text-gray-400 font-bold text-center">ຮອດຊັ້ນສູງສຸດແລ້ວ</p>
-            )}
+            {onReceive || onResolve || forwardTo ? (
+              <div className="flex flex-col sm:flex-row gap-2">
+                {onReceive && (
+                  <Button
+                    startContent={<CheckCircle2 size={18} />}
+                    isDisabled={isBusy}
+                    onPress={onReceive}
+                    className="flex-1 bg-[#075e3d] hover:bg-[#064e32] text-white font-bold rounded-2xl py-3 cursor-pointer disabled:opacity-50"
+                  >
+                    {isBusy ? "ກຳລັງດຳເນີນ..." : "ຮັບເລື່ອງ"}
+                  </Button>
+                )}
+                {forwardTo && (
+                  <Button
+                    startContent={<Send size={18} />}
+                    isDisabled={isForwarding || isBusy}
+                    onPress={onForward}
+                    className="flex-1 bg-[#064e8a] hover:bg-[#053b6b] text-white font-bold rounded-2xl py-3 cursor-pointer disabled:opacity-50"
+                  >
+                    {isForwarding ? "ກຳລັງສົ່ງ..." : `ສົ່ງໃຫ້ ${forwardTo}`}
+                  </Button>
+                )}
+                {onResolve && (
+                  <Button
+                    startContent={<CheckCircle2 size={18} />}
+                    isDisabled={isBusy}
+                    onPress={onResolve}
+                    className="flex-1 bg-[#22a06b] hover:bg-[#1c8a5b] text-white font-bold rounded-2xl py-3 cursor-pointer disabled:opacity-50"
+                  >
+                    {isBusy ? "ກຳລັງດຳເນີນ..." : "ແກ້ໄຂສຳເລັດ"}
+                  </Button>
+                )}
+              </div>
+            ) : null}
           </div>
         </CardBody>
       </Card>

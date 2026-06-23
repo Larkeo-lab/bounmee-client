@@ -24,7 +24,7 @@ export default function ProfileDropdown() {
 
   const getAvatarSrc = () => {
     if (userRole === "CITIZEN") {
-      return getDisplayImageUrl(user?.citizen?.profileImage);
+      return getDisplayImageUrl(user?.profileImage);
     }
     if (userRole === "EMPLOYEE") {
       return getDisplayImageUrl(user?.employee?.logoUrl);

@@ -20,6 +20,8 @@ export interface PoliceDistrictItem {
   id: string;
   chiefName: string;
   deputyChiefName: string;
+  image?: string | null;
+  bgImage?: string | null;
   createdAt: string;
   updatedAt: string;
   users?: PoliceDistrictUser[];
@@ -42,13 +44,15 @@ export interface CreatePoliceDistrictPayload {
 export interface UpdatePoliceDistrictPayload {
   chiefName?: string;
   deputyChiefName?: string;
+  image?: string | null;
+  bgImage?: string | null;
   userName?: string;
   password?: string;
   email?: string | null;
   phone?: string | null;
-  provinceId?: string | null;
-  districtId?: string | null;
-  villageId?: string | null;
+  provinceCode?: string | null;
+  districtCode?: string | null;
+  villageCode?: string | null;
   address?: string | null;
 }
 
@@ -99,6 +103,39 @@ export const useUpdatePoliceDistrict = () => {
     mutationFn: ({ id, payload }: { id: string; payload: UpdatePoliceDistrictPayload }) =>
       updatePoliceDistrict(id, payload),
   });
+};
+
+// Detail (for prefilling the profile form)
+export const getPoliceDistrict = async (
+  id: string,
+): Promise<PoliceDistrictItem | null> => {
+  const response = await axiosInstance.get(
+    API_ENDPOINTS.POLICE_DISTRICT.DETAIL(id),
+  );
+  return response.data?.data || null;
+};
+
+export const useGetPoliceDistrict = (id?: string) => {
+  return useQuery({
+    queryKey: ["police-district", id],
+    queryFn: () => getPoliceDistrict(id!),
+    enabled: !!id,
+  });
+};
+
+// Self-profile update (DISTRICT_POLICE updates their own office)
+export const updateMyPoliceDistrict = async (
+  payload: UpdatePoliceDistrictPayload,
+) => {
+  const response = await axiosInstance.put(
+    API_ENDPOINTS.POLICE_DISTRICT.UPDATE_ME,
+    payload,
+  );
+  return response.data?.data;
+};
+
+export const useUpdateMyPoliceDistrict = () => {
+  return useMutation({ mutationFn: updateMyPoliceDistrict });
 };
 
 export const deletePoliceDistrict = async (id: string) => {

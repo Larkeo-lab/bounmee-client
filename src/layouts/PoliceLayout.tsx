@@ -16,6 +16,7 @@ import { useGetReports } from "@/services/report/useReport";
 import { useGetPoliceDepartmentsAndReports } from "@/services/police-district/usePoliceDistrict";
 import { policeSidebarItems, PoliceSection } from "@/config/sitebar";
 import ModalConfirm from "@/components/common/modal-confirm";
+import { getDisplayImageUrl } from "@/lib/utils";
 
 type SectionKey = PoliceSection;
 
@@ -84,6 +85,33 @@ export default function PoliceLayout({
     }
   };
 
+  const getBrandDetails = () => {
+    switch (userType) {
+      case "DISTRICT_POLICE":
+        return {
+          title: "ປກສ ເມືອງ",
+          subtitle: "District Police",
+        };
+      case "VILLAGE_CHIEF":
+        return {
+          title: "ນາຍບ້ານ",
+          subtitle: "Village Chief",
+        };
+      case "POLICE_DEPARTMENT":
+      default:
+        return {
+          title: "ກົມໃຫຍ່ຕຳຫຼວດ",
+          subtitle: "Police Department",
+        };
+    }
+  };
+
+  const brand = getBrandDetails();
+  
+  const avatarUrl = account?.profileImage
+    ? getDisplayImageUrl(account.profileImage)
+    : "/assets/logo.png";
+
   return (
     <div className="flex h-screen overflow-hidden bg-[#eef0f2] text-gray-800 font-sans">
       {/* Sidebar — icon-only rail on small screens, full on lg+ */}
@@ -91,16 +119,16 @@ export default function PoliceLayout({
         {/* Brand */}
         <div className="flex items-center justify-center lg:justify-start gap-3 px-2 lg:px-5 h-16 lg:h-20 border-b border-white/10">
           <img
-            src="/assets/logo.png"
+            src={avatarUrl}
             alt="Logo"
-            className="h-9 w-9 lg:h-10 lg:w-10 object-contain bg-white rounded-full p-1 shrink-0"
+            className="h-9 w-9 lg:h-10 lg:w-10 object-cover bg-white rounded-full p-0.5 shrink-0"
             onError={(e) => {
               e.currentTarget.src = "/logo.png";
             }}
           />
           <div className="hidden lg:flex flex-col leading-tight">
-            <span className="font-bold text-sm">ກົມໃຫຍ່ຕຳຫຼວດ</span>
-            <span className="text-[10px] text-white/70">Police Department</span>
+            <span className="font-bold text-sm">{brand.title}</span>
+            <span className="text-[10px] text-white/70">{brand.subtitle}</span>
           </div>
         </div>
 
@@ -147,17 +175,21 @@ export default function PoliceLayout({
 
         {/* User + logout */}
         <div className="border-t border-white/10 p-2 lg:p-4 space-y-3">
-          <div className="flex items-center justify-center lg:justify-start gap-3">
-            <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center font-bold uppercase shrink-0">
+          <button
+            onClick={() => navigate("/police/profile")}
+            title="ແກ້ໄຂໂປຣໄຟລ໌"
+            className="w-full flex items-center justify-center lg:justify-start gap-3 rounded-xl hover:bg-white/10 transition-colors p-1.5 cursor-pointer"
+          >
+            <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center font-bold uppercase shrink-0 overflow-hidden">
               {(account?.userName || "P").slice(0, 1)}
             </div>
-            <div className="hidden lg:block min-w-0">
+            <div className="hidden lg:block min-w-0 text-left">
               <p className="text-sm font-bold truncate">{account?.userName || "Police"}</p>
               <p className="text-[10px] text-white/60 truncate">
                 {account?.email || userType || "POLICE"}
               </p>
             </div>
-          </div>
+          </button>
           <button
             onClick={logoutModal.onOpen}
             title="ອອກຈາກລະບົບ"

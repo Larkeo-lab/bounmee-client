@@ -1,12 +1,14 @@
 import React from "react";
 import toast from "react-hot-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { FileText, MapPin, Calendar, Send } from "lucide-react";
+import { FileText, MapPin, Calendar, CheckCircle2 } from "lucide-react";
 import { Card, CardBody, Skeleton } from "@heroui/react";
 
 import {
   useGetReports,
   useForwardReport,
+  useReceiveReport,
+  useResolveReport,
   ReportItem,
   ReportStatus,
 } from "@/services/report/useReport";
@@ -33,9 +35,14 @@ interface ReportsSectionProps {
   onSelect?: (report: ReportItem | null) => void;
 }
 
-export default function ReportsSection({ selected: propSelected, onSelect }: ReportsSectionProps = {}) {
-  const [status, setStatus] = React.useState<ReportStatus | "">("");
-  const [localSelected, setLocalSelected] = React.useState<ReportItem | null>(null);
+export default function ReportsSection({
+  selected: propSelected,
+  onSelect,
+}: ReportsSectionProps = {}) {
+  const [status, setStatus] = React.useState<ReportStatus | "">("PENDING");
+  const [localSelected, setLocalSelected] = React.useState<ReportItem | null>(
+    null,
+  );
 
   const selected = onSelect ? (propSelected ?? null) : localSelected;
   const setSelected = onSelect ? onSelect : setLocalSelected;
@@ -68,34 +75,87 @@ export default function ReportsSection({ selected: propSelected, onSelect }: Rep
   const queryClient = useQueryClient();
   const { mutateAsync: forwardReport, isPending: isForwarding } =
     useForwardReport();
+  const { mutateAsync: receiveReport, isPending: isReceiving } =
+    useReceiveReport();
+  const { mutateAsync: resolveReport, isPending: isResolving } =
+    useResolveReport();
+  const isBusy = isForwarding || isReceiving || isResolving;
 
-  // POLICE_DEPARTMENT is the top level, so there is no one to forward to.
-  const forwardTo = userType ? FORWARD_LABEL[userType] : null;
+  // Keep the open detail in sync with freshly-fetched data after a mutation
+  const liveSelected = selected
+    ? reports.find((r) => r.id === selected.id) || selected
+    : null;
 
-  const doForward = async (id: string) => {
+  // Available actions for a report, based on the viewer's role + report state.
+  // POLICE_DEPARTMENT = view only.
+  const getActions = (r: ReportItem) => {
+    if (r.status === "APPROVED") return {};
+    if (userType === "VILLAGE_CHIEF") {
+      if (r.currentAssignee === "CITIZEN") return { receive: true };
+      if (r.currentAssignee === "VILLAGE_CHIEF")
+        return { forward: FORWARD_LABEL.VILLAGE_CHIEF, resolve: true };
+      return {};
+    }
+    if (userType === "DISTRICT_POLICE") {
+      if (r.currentAssignee === "DISTRICT_POLICE")
+        return r.status === "PENDING"
+          ? { receive: true }
+          : { resolve: true };
+      return {};
+    }
+    return {};
+  };
+
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ["reports"] });
+
+  const doReceive = async (r: ReportItem) => {
     try {
-      await forwardReport(id);
-      toast.success("ສົ່ງຕໍ່ສຳເລັດ");
-      queryClient.invalidateQueries({ queryKey: ["reports"] });
-      setSelected(null);
-    } catch (err) {
-      console.error("Forward failed:", err);
-      toast.error("ສົ່ງຕໍ່ບໍ່ສຳເລັດ");
+      await receiveReport(r.id);
+      toast.success("ຮັບເລື່ອງສຳເລັດ");
+      refresh();
+      setSelected(r); // open detail after receiving
+    } catch (err: any) {
+      console.error("Receive failed:", err);
+      toast.error(err?.response?.data?.message || "ຮັບເລື່ອງບໍ່ສຳເລັດ");
     }
   };
 
-  const handleForward = () => {
-    if (selected) doForward(selected.id);
+  const doForward = async (r: ReportItem) => {
+    try {
+      await forwardReport(r.id);
+      toast.success("ສົ່ງຕໍ່ສຳເລັດ");
+      refresh();
+    } catch (err: any) {
+      console.error("Forward failed:", err);
+      toast.error(err?.response?.data?.message || "ສົ່ງຕໍ່ບໍ່ສຳເລັດ");
+    }
   };
 
-  if (selected) {
+  const doResolve = async (r: ReportItem) => {
+    try {
+      await resolveReport(r.id);
+      toast.success("ບັນທຶກການແກ້ໄຂສຳເລັດ");
+      refresh();
+      setSelected(null);
+    } catch (err: any) {
+      console.error("Resolve failed:", err);
+      toast.error(err?.response?.data?.message || "ບໍ່ສຳເລັດ");
+    }
+  };
+
+  if (liveSelected) {
+    const a = getActions(liveSelected);
+
     return (
       <ReportDetailView
-        report={selected}
+        report={liveSelected}
         onBack={() => setSelected(null)}
-        forwardTo={forwardTo}
-        onForward={handleForward}
+        forwardTo={a.forward || null}
+        onForward={() => doForward(liveSelected)}
+        onReceive={a.receive ? () => doReceive(liveSelected) : undefined}
+        onResolve={a.resolve ? () => doResolve(liveSelected) : undefined}
         isForwarding={isForwarding}
+        isBusy={isBusy}
       />
     );
   }
@@ -194,16 +254,16 @@ export default function ReportsSection({ selected: propSelected, onSelect }: Rep
                       <Calendar size={11} /> {formatDate(r.createdAt)}
                     </p>
 
-                    {forwardTo && (
+                    {getActions(r).receive && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          doForward(r.id);
+                          doReceive(r);
                         }}
-                        disabled={isForwarding}
+                        disabled={isBusy}
                         className="w-full mt-2 flex items-center justify-center gap-1.5 bg-[#075e3d] hover:bg-[#064e32] text-white text-xs font-bold rounded-xl py-2 cursor-pointer disabled:opacity-50 transition-colors"
                       >
-                        <Send size={14} /> ສົ່ງຕໍ່ໃຫ້ {forwardTo}
+                        <CheckCircle2 size={14} /> ຮັບເລື່ອງ
                       </button>
                     )}
                   </div>
