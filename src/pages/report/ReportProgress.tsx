@@ -169,8 +169,8 @@ export default function ReportProgress() {
                 <p className="text-sm font-bold text-gray-500">ບໍ່ມີຂໍ້ມູນໃນໝວດນີ້</p>
               </CardBody>
             </Card>
-          ) : tab === "history" && selected ? (
-            // History tab: show the full read-only detail view
+          ) : (tab === "history" || tab === "resolved") && selected ? (
+            // History and Resolved tabs: show the full read-only detail view
             <ReportDetailView report={selected} onBack={() => setSelectedId(null)} />
           ) : (
             <>
