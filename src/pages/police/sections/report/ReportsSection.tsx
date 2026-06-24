@@ -14,7 +14,8 @@ import {
 } from "@/services/report/useReport";
 import { useAuth } from "@/routes/AuthContext";
 import { getDisplayImageUrl, formatDate } from "@/lib/utils";
-import ReportDetailView, { STATUS_CONFIG } from "./reportDetail";
+import { STATUS_CONFIG } from "./reportDetail";
+import ReportAndMoreDetail from "./reportAndMoreDetail";
 
 // Who each role forwards to (null = top, can't forward)
 const FORWARD_LABEL: Record<string, string | null> = {
@@ -147,14 +148,13 @@ export default function ReportsSection({
     const a = getActions(liveSelected);
 
     return (
-      <ReportDetailView
+      <ReportAndMoreDetail
         report={liveSelected}
         onBack={() => setSelected(null)}
         forwardTo={a.forward || null}
         onForward={() => doForward(liveSelected)}
         onReceive={a.receive ? () => doReceive(liveSelected) : undefined}
         onResolve={a.resolve ? () => doResolve(liveSelected) : undefined}
-        isForwarding={isForwarding}
         isBusy={isBusy}
       />
     );

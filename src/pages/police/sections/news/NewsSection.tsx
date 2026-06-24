@@ -64,6 +64,9 @@ export default function NewsSection() {
   const queryClient = useQueryClient();
   const { user: authData } = useAuth();
   const userId = (authData as any)?.user?.id;
+  const userType = (authData as any)?.user?.userType as string | undefined;
+  // Only the Police Department can create/manage news; others view only.
+  const canManage = userType === "POLICE_DEPARTMENT";
 
   const [tab, setTab] = React.useState<Tab>("all");
   const [formOpen, setFormOpen] = React.useState(false);
@@ -123,22 +126,26 @@ export default function NewsSection() {
           >
             ຂ່າວທັງໝົດ
           </button>
-          <button
-            onClick={() => setTab("mine")}
-            className={`px-4 py-2 rounded-xl text-sm font-bold transition-colors cursor-pointer ${tab === "mine" ? "bg-[#075e3d] text-white" : "text-gray-500 hover:text-gray-700"
-              }`}
-          >
-            ຂ່າວຂອງຂ້ອຍ
-          </button>
+          {canManage && (
+            <button
+              onClick={() => setTab("mine")}
+              className={`px-4 py-2 rounded-xl text-sm font-bold transition-colors cursor-pointer ${tab === "mine" ? "bg-[#075e3d] text-white" : "text-gray-500 hover:text-gray-700"
+                }`}
+            >
+              ຂ່າວຂອງຂ້ອຍ
+            </button>
+          )}
         </div>
 
-        <Button
-          startContent={<Plus size={18} />}
-          onPress={() => { setEditing(null); setFormOpen(true); }}
-          className="bg-[#075e3d] hover:bg-[#064e32] text-white font-bold rounded-2xl cursor-pointer"
-        >
-          ສ້າງຂ່າວ
-        </Button>
+        {canManage && (
+          <Button
+            startContent={<Plus size={18} />}
+            onPress={() => { setEditing(null); setFormOpen(true); }}
+            className="bg-[#075e3d] hover:bg-[#064e32] text-white font-bold rounded-2xl cursor-pointer"
+          >
+            ສ້າງຂ່າວ
+          </Button>
+        )}
       </div>
 
       {/* List */}
@@ -178,8 +185,8 @@ export default function NewsSection() {
                         <Newspaper size={32} />
                       </div>
                     )}
-                    {/* Edit / delete actions — only on "my news" tab */}
-                    {tab === "mine" && (
+                    {/* Edit / delete actions — only on "my news" tab (manage role) */}
+                    {canManage && tab === "mine" && (
                       <div className="absolute top-2 right-2 flex gap-1.5">
                         <button
                           onClick={() => { setEditing(item); setFormOpen(true); }}

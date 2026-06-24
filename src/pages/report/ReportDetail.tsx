@@ -12,6 +12,7 @@ import { Card, CardBody, Button } from "@heroui/react";
 
 import { useGetReport, ReportStatus } from "@/services/report/useReport";
 import { getDisplayImageUrl } from "@/lib/utils";
+import { ShowImage } from "@/utils/showImage";
 
 const STATUS_CONFIG: Record<
   ReportStatus,
@@ -119,13 +120,13 @@ export default function ReportDetail() {
                   {gallery.length > 0 ? (
                     <>
                       <div className="w-full aspect-video bg-slate-100">
-                        <img src={getDisplayImageUrl(gallery[0] as string)} alt={report.title} className="w-full h-full object-cover" />
+                        <ShowImage src={getDisplayImageUrl(gallery[0] as string)} alt={report.title} className="w-full h-full object-cover" />
                       </div>
                       {gallery.length > 1 && (
                         <div className="flex gap-2 p-3 overflow-x-auto">
                           {gallery.slice(1).map((img, i) => (
                             <div key={i} className="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 shrink-0 border border-gray-200">
-                              <img src={getDisplayImageUrl(img as string)} alt={`attachment-${i}`} className="w-full h-full object-cover" />
+                              <ShowImage src={getDisplayImageUrl(img as string)} alt={`attachment-${i}`} className="w-full h-full object-cover" />
                             </div>
                           ))}
                         </div>

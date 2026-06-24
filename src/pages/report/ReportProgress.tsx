@@ -22,7 +22,7 @@ import { Card, CardBody, Button } from "@heroui/react";
 
 import {
   useGetReports,
-  useUpdateReport,
+  useAddReportMoreDetail,
   ReportItem,
   ReportStatus,
 } from "@/services/report/useReport";
@@ -30,6 +30,7 @@ import { useAuth } from "@/routes/AuthContext";
 import { getDisplayImageUrl, formatDate } from "@/lib/utils";
 import { uploadImage } from "@/services/storage";
 import ReportDetailView from "@/pages/police/sections/report/reportDetail";
+import { ShowImage } from "@/utils/showImage";
 
 const STATUS_CONFIG: Record<ReportStatus, { label: string; className: string }> = {
   PENDING: { label: "ບໍ່ທັນແກ້ໄຂ", className: "bg-amber-100 text-amber-700" },
@@ -423,7 +424,7 @@ function ReportDetailCard({ report }: { report: ReportItem }) {
 // "ແຈ້ງຂໍ້ມູນເພີ່ມເຕີມ" — append a note + extra image(s) to the report (non-destructive)
 function AddInfoForm({ report }: { report: ReportItem }) {
   const queryClient = useQueryClient();
-  const { mutateAsync: updateReport, isPending } = useUpdateReport();
+  const { mutateAsync: addMoreDetail, isPending } = useAddReportMoreDetail();
 
   const [note, setNote] = React.useState("");
   const [images, setImages] = React.useState<string[]>([]);
@@ -454,21 +455,13 @@ function AddInfoForm({ report }: { report: ReportItem }) {
   };
 
   const handleSubmit = async () => {
-    if (!note.trim() && images.length === 0) {
-      return toast.error("ກະລຸນາໃສ່ຂໍ້ມູນ ຫຼື ຮູບພາບ");
+    if (!note.trim()) {
+      return toast.error("ກະລຸນາໃສ່ຂໍ້ມູນ");
     }
     try {
-      const stamp = formatDate(new Date().toISOString());
-      const appended = report.description
-        ? `${report.description}\n— [ເພີ່ມເຕີມ ${stamp}] ${note.trim()}`
-        : note.trim();
-
-      await updateReport({
+      await addMoreDetail({
         id: report.id,
-        payload: {
-          ...(note.trim() ? { description: appended } : {}),
-          attachments: [...(report.attachments || []), ...images],
-        },
+        payload: { detail: note.trim(), images },
       });
       toast.success("ສົ່ງຂໍ້ມູນເພີ່ມເຕີມສຳເລັດ");
       queryClient.invalidateQueries({ queryKey: ["reports"] });
@@ -483,6 +476,27 @@ function AddInfoForm({ report }: { report: ReportItem }) {
     <div className="rounded-2xl border border-gray-200 p-4 space-y-3">
       <h4 className="font-bold text-sm text-gray-800 text-center">ແຈ້ງຂໍ້ມູນເພີ່ມເຕີມ</h4>
 
+      {/* Previously submitted extra-info entries */}
+      {report.reportMoreDetail && report.reportMoreDetail.length > 0 && (
+        <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+          {report.reportMoreDetail.map((m) => (
+            <div key={m.id} className="bg-gray-50 border border-gray-100 rounded-xl p-3 space-y-2">
+              <p className="text-xs text-gray-700 whitespace-pre-wrap">{m.detail}</p>
+              {m.images && m.images.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {m.images.map((img) => (
+                    <div key={img} className="w-14 h-14 rounded-lg overflow-hidden border border-gray-200">
+                      <ShowImage src={getDisplayImageUrl(img)} alt="" className="w-full h-full object-cover" />
+                    </div>
+                  ))}
+                </div>
+              )}
+              <p className="text-[10px] text-gray-400">{formatDate(m.createdAt)}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
       <textarea
         value={note}
         onChange={(e) => setNote(e.target.value)}
@@ -496,10 +510,10 @@ function AddInfoForm({ report }: { report: ReportItem }) {
         <div className="flex flex-wrap gap-2">
           {images.map((name) => (
             <div key={name} className="relative w-16 h-16 rounded-lg overflow-hidden border border-gray-200">
-              <img src={getDisplayImageUrl(name)} alt="" className="w-full h-full object-cover" />
+              <ShowImage src={getDisplayImageUrl(name)} alt="" className="w-full h-full object-cover" />
               <button
                 onClick={() => setImages((prev) => prev.filter((n) => n !== name))}
-                className="absolute top-0.5 right-0.5 bg-black/60 text-white rounded-full p-0.5 cursor-pointer"
+                className="absolute top-0.5 right-0.5 bg-black/60 text-white rounded-full p-0.5 cursor-pointer z-10"
               >
                 <X size={12} />
               </button>

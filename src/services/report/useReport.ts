@@ -25,6 +25,14 @@ export interface ReportHistoryItem {
   createdAt: string;
 }
 
+export interface ReportMoreDetailItem {
+  id: string;
+  detail: string;
+  images?: string[];
+  attachments?: string | null;
+  createdAt: string;
+}
+
 export interface ReportItem {
   id: string;
   title: string;
@@ -48,6 +56,7 @@ export interface ReportItem {
     userType?: string;
   } | null;
   history?: ReportHistoryItem[];
+  reportMoreDetail?: ReportMoreDetailItem[];
 }
 
 export interface ReportFilters {
@@ -120,6 +129,31 @@ export const forwardReport = async (id: string) => {
 
 export const useForwardReport = () => {
   return useMutation({ mutationFn: forwardReport });
+};
+
+export interface AddReportMoreDetailPayload {
+  detail: string;
+  images?: string[];
+  attachments?: string | null;
+}
+
+export const addReportMoreDetail = async (
+  id: string,
+  payload: AddReportMoreDetailPayload,
+) => {
+  const response = await axiosInstance.post(
+    API_ENDPOINTS.REPORT.MORE_DETAIL(id),
+    payload,
+  );
+
+  return response.data?.data;
+};
+
+export const useAddReportMoreDetail = () => {
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: AddReportMoreDetailPayload }) =>
+      addReportMoreDetail(id, payload),
+  });
 };
 
 export const receiveReport = async (id: string) => {

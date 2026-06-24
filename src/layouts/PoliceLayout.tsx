@@ -65,7 +65,8 @@ export default function PoliceLayout({
   }
 
   const { data: reports = [] } = useGetReports({ ...reportScope, limit: 100 });
-  const reportsCount = reports.length;
+  // Badge shows only NEW (PENDING / "ເຂົ້າໃໝ່") reports
+  const reportsCount = reports.filter((r) => r.status === "PENDING").length;
 
   const { data: districts = [] } = useGetPoliceDepartmentsAndReports({
     enabled: userType === "POLICE_DEPARTMENT",

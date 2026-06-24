@@ -12,6 +12,7 @@ import { Card, CardBody, Button, Skeleton } from "@heroui/react";
 
 import { ReportItem, ReportStatus } from "@/services/report/useReport";
 import { getDisplayImageUrl, formatDate } from "@/lib/utils";
+import { ShowImage } from "@/utils/showImage";
 
 export const STATUS_CONFIG: Record<ReportStatus, { label: string; className: string }> = {
   PENDING: { label: "ລໍຖ້າດຳເນີນການ", className: "bg-amber-100 text-amber-700" },
@@ -145,7 +146,7 @@ export default function ReportDetailView({
         {/* Centered Image (from mockup) */}
         {gallery.length > 0 ? (
           <div className="w-full bg-slate-50 flex items-center justify-center p-6 border-b border-gray-100">
-            <img
+            <ShowImage
               src={getDisplayImageUrl(gallery[0] as string)}
               alt={report.title}
               className="max-h-64 object-contain rounded-lg shadow-sm"
@@ -161,7 +162,7 @@ export default function ReportDetailView({
           <div className="flex gap-2 p-3 overflow-x-auto border-b border-gray-100">
             {gallery.slice(1).map((img, i) => (
               <div key={i} className="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 shrink-0 border border-gray-200">
-                <img src={getDisplayImageUrl(img as string)} alt={`att-${i}`} className="w-full h-full object-cover" />
+                <ShowImage src={getDisplayImageUrl(img as string)} alt={`att-${i}`} className="w-full h-full object-cover" />
               </div>
             ))}
           </div>
