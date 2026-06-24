@@ -24,7 +24,9 @@ import { getDisplayImageUrl, formatDate } from "@/lib/utils";
 
 export default function Home() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = React.useState<"home" | "news" | "menu">("home");
+  const [activeTab, setActiveTab] = React.useState<"home" | "news" | "menu">(
+    "home",
+  );
 
   const handleBack = () => {
     navigate(-1);
@@ -68,12 +70,10 @@ export default function Home() {
 
       {/* 3. Main Content Area */}
       <main className="flex-1 bg-[#d9d9d9] flex flex-col p-6 md:p-10 justify-between">
-        
         {/* Tab 1: MENU (Mockup Match) */}
         {activeTab === "menu" && (
           <div className="flex-1 flex flex-col justify-center max-w-4xl mx-auto w-full">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 justify-items-center mb-8">
-              
               {/* Button 1: ຕ້ອງການແຈ້ງຄວາມ */}
               <Button
                 onClick={() => navigate("/report/create")}
@@ -93,7 +93,10 @@ export default function Home() {
                 <span className="ml-5 text-xl font-bold tracking-wide text-left flex-1 font-sans">
                   ຕ້ອງການແຈ້ງຄວາມ
                 </span>
-                <ChevronRight size={24} className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300" />
+                <ChevronRight
+                  size={24}
+                  className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300"
+                />
               </Button>
 
               {/* Button 2: ສຶກສາກົດໝາຍ */}
@@ -109,13 +112,30 @@ export default function Home() {
                 <span className="ml-5 text-xl font-bold tracking-wide text-left flex-1 font-sans">
                   ສຶກສາກົດໝາຍ
                 </span>
-                <ChevronRight size={24} className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300" />
+                <ChevronRight
+                  size={24}
+                  className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300"
+                />
               </Button>
-
             </div>
 
             {/* Row 2: ສຶກສາກົດຈະລາຈອນ + ຄວາມຄືບໜ້າແຈ້ງຄວາມ */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 justify-items-center mb-10">
+              <Button
+                onClick={() => navigate("/report/progress")}
+                className="w-full max-w-md bg-[#075e3d] hover:bg-[#064e32] active:scale-[0.98] text-white flex items-center p-5 rounded-2xl shadow-lg transition-all cursor-pointer group h-auto justify-start"
+              >
+                <div className="bg-white rounded-xl w-16 h-16 flex items-center justify-center shrink-0 shadow-md group-hover:scale-105 transition-transform duration-300">
+                  <Activity size={32} className="text-[#075e3d]" />
+                </div>
+                <span className="ml-5 text-xl font-bold tracking-wide text-left flex-1 font-sans">
+                  ຄວາມຄືບໜ້າແຈ້ງຄວາມ
+                </span>
+                <ChevronRight
+                  size={24}
+                  className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300"
+                />
+              </Button>
               <Button
                 onClick={() => navigate("/traffic-rules")}
                 className="w-full max-w-md bg-[#075e3d] hover:bg-[#064e32] active:scale-[0.98] text-white flex items-center p-5 rounded-2xl shadow-lg transition-all cursor-pointer group h-auto justify-start"
@@ -133,22 +153,13 @@ export default function Home() {
                 <span className="ml-5 text-xl font-bold tracking-wide text-left flex-1 font-sans">
                   ສຶກສາກົດຈະລາຈອນ
                 </span>
-                <ChevronRight size={24} className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300" />
+                <ChevronRight
+                  size={24}
+                  className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300"
+                />
               </Button>
 
               {/* Button: ຄວາມຄືບໜ້າແຈ້ງຄວາມ (moved from navbar dropdown) */}
-              <Button
-                onClick={() => navigate("/report/progress")}
-                className="w-full max-w-md bg-[#075e3d] hover:bg-[#064e32] active:scale-[0.98] text-white flex items-center p-5 rounded-2xl shadow-lg transition-all cursor-pointer group h-auto justify-start"
-              >
-                <div className="bg-white rounded-xl w-16 h-16 flex items-center justify-center shrink-0 shadow-md group-hover:scale-105 transition-transform duration-300">
-                  <Activity size={32} className="text-[#075e3d]" />
-                </div>
-                <span className="ml-5 text-xl font-bold tracking-wide text-left flex-1 font-sans">
-                  ຄວາມຄືບໜ້າແຈ້ງຄວາມ
-                </span>
-                <ChevronRight size={24} className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300" />
-              </Button>
             </div>
           </div>
         )}
@@ -166,7 +177,6 @@ export default function Home() {
                 ການບໍລິການຫຼັກຂອງພວກເຮົາ (Our Core Services)
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                
                 {/* Card 1: Online Reporting */}
                 <Card className="shadow-sm border border-gray-100 rounded-2xl hover:shadow-md transition-shadow">
                   <CardBody className="p-6 flex flex-col space-y-4">
@@ -174,9 +184,13 @@ export default function Home() {
                       <Smartphone size={24} />
                     </div>
                     <div className="space-y-1.5 flex-1">
-                      <h5 className="font-bold text-base text-gray-800">ແຈ້ງຄວາມອອນລາຍ</h5>
+                      <h5 className="font-bold text-base text-gray-800">
+                        ແຈ້ງຄວາມອອນລາຍ
+                      </h5>
                       <p className="text-xs text-gray-500 font-bold leading-relaxed">
-                        ທ່ານສາມາດແຈ້ງເຫດດ່ວນເຫດຮ້າຍ ຫຼື ຄະດີຄວາມຕ່າງໆ ພ້ອມອັບໂຫຼດຫຼັກຖານໄດ້ທັນທີຜ່ານລະບົບ ໂດຍບໍ່ຕ້ອງເດີນທາງໄປສະຖານີຕຳຫຼວດ.
+                        ທ່ານສາມາດແຈ້ງເຫດດ່ວນເຫດຮ້າຍ ຫຼື ຄະດີຄວາມຕ່າງໆ
+                        ພ້ອມອັບໂຫຼດຫຼັກຖານໄດ້ທັນທີຜ່ານລະບົບ
+                        ໂດຍບໍ່ຕ້ອງເດີນທາງໄປສະຖານີຕຳຫຼວດ.
                       </p>
                     </div>
                   </CardBody>
@@ -189,9 +203,13 @@ export default function Home() {
                       <Scale size={24} />
                     </div>
                     <div className="space-y-1.5 flex-1">
-                      <h5 className="font-bold text-base text-gray-800">ສຶກສາກົດໝາຍ</h5>
+                      <h5 className="font-bold text-base text-gray-800">
+                        ສຶກສາກົດໝາຍ
+                      </h5>
                       <p className="text-xs text-gray-500 font-bold leading-relaxed">
-                        ສຶກສາຂໍ້ມູນກົດໝາຍທີ່ສຳຄັນຂອງ ສປປ ລາວ ເພື່ອສ້າງຄວາມເຂົ້າໃຈໃນສິດ ແລະ ພັນທະຂອງພົນລະເມືອງ ເຮັດໃຫ້ສັງຄົມມີຄວາມສະຫງົບ.
+                        ສຶກສາຂໍ້ມູນກົດໝາຍທີ່ສຳຄັນຂອງ ສປປ ລາວ
+                        ເພື່ອສ້າງຄວາມເຂົ້າໃຈໃນສິດ ແລະ ພັນທະຂອງພົນລະເມືອງ
+                        ເຮັດໃຫ້ສັງຄົມມີຄວາມສະຫງົບ.
                       </p>
                     </div>
                   </CardBody>
@@ -209,14 +227,17 @@ export default function Home() {
                       </div>
                     </div>
                     <div className="space-y-1.5 flex-1">
-                      <h5 className="font-bold text-base text-gray-800">ກົດຈະລາຈອນ</h5>
+                      <h5 className="font-bold text-base text-gray-800">
+                        ກົດຈະລາຈອນ
+                      </h5>
                       <p className="text-xs text-gray-500 font-bold leading-relaxed">
-                        ຄູ່ມືຮຽນຮູ້ກົດລະບຽບຈະລາຈອນ, ປ້າຍເຕືອນ, ເຄື່ອງໝາຍຕ່າງໆ ເພື່ອຄວາມປອດໄພໃນການສັນຈອນ ແລະ ຫຼຸດຜ່ອນອຸປະຕິເຫດບົນທ້ອງຖະໜົນ.
+                        ຄູ່ມືຮຽນຮູ້ກົດລະບຽບຈະລາຈອນ, ປ້າຍເຕືອນ, ເຄື່ອງໝາຍຕ່າງໆ
+                        ເພື່ອຄວາມປອດໄພໃນການສັນຈອນ ແລະ
+                        ຫຼຸດຜ່ອນອຸປະຕິເຫດບົນທ້ອງຖະໜົນ.
                       </p>
                     </div>
                   </CardBody>
                 </Card>
-
               </div>
             </div>
 
@@ -227,15 +248,17 @@ export default function Home() {
                   ຂັ້ນຕອນການນຳໃຊ້ລະບົບ (How to use the system)
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 relative">
-                  
                   {/* Step 1 */}
                   <div className="flex flex-col items-center text-center space-y-2.5 relative">
                     <div className="w-10 h-10 rounded-full bg-[#075e3d]/10 text-[#075e3d] font-black text-sm flex items-center justify-center border-2 border-[#075e3d]">
                       1
                     </div>
-                    <h5 className="font-bold text-sm text-gray-800">ເຂົ້າສູ່ລະບົບ</h5>
+                    <h5 className="font-bold text-sm text-gray-800">
+                      ເຂົ້າສູ່ລະບົບ
+                    </h5>
                     <p className="text-[11px] text-gray-500 font-bold max-w-[200px]">
-                      ລົງທະບຽນ ແລະ ເຂົ້າສູ່ລະບົບດ້ວຍຊື່ຜູ້ໃຊ້ ແລະ ລະຫັດຜ່ານທີ່ປອດໄພ.
+                      ລົງທະບຽນ ແລະ ເຂົ້າສູ່ລະບົບດ້ວຍຊື່ຜູ້ໃຊ້ ແລະ
+                      ລະຫັດຜ່ານທີ່ປອດໄພ.
                     </p>
                   </div>
 
@@ -244,7 +267,9 @@ export default function Home() {
                     <div className="w-10 h-10 rounded-full bg-[#075e3d]/10 text-[#075e3d] font-black text-sm flex items-center justify-center border-2 border-[#075e3d]">
                       2
                     </div>
-                    <h5 className="font-bold text-sm text-gray-800">ເລືອກບໍລິການ</h5>
+                    <h5 className="font-bold text-sm text-gray-800">
+                      ເລືອກບໍລິການ
+                    </h5>
                     <p className="text-[11px] text-gray-500 font-bold max-w-[200px]">
                       ເລືອກເມນູແຈ້ງຄວາມ ຫຼື ເເລືອກສຶກສາບົດຮຽນກົດໝາຍ/ກົດຈະລາຈອນ.
                     </p>
@@ -255,12 +280,14 @@ export default function Home() {
                     <div className="w-10 h-10 rounded-full bg-[#075e3d]/10 text-[#075e3d] font-black text-sm flex items-center justify-center border-2 border-[#075e3d]">
                       3
                     </div>
-                    <h5 className="font-bold text-sm text-gray-800">ຕິດຕາມຜົນ</h5>
+                    <h5 className="font-bold text-sm text-gray-800">
+                      ຕິດຕາມຜົນ
+                    </h5>
                     <p className="text-[11px] text-gray-500 font-bold max-w-[200px]">
-                      ຕິດຕາມສະຖານະຂອງການແຈ້ງເຫດ ຫຼື ປະຫວັດຂອງທ່ານໄດ້ຕະຫຼອດ 24 ຊົ່ວໂມງ.
+                      ຕິດຕາມສະຖານະຂອງການແຈ້ງເຫດ ຫຼື ປະຫວັດຂອງທ່ານໄດ້ຕະຫຼອດ 24
+                      ຊົ່ວໂມງ.
                     </p>
                   </div>
-
                 </div>
               </CardBody>
             </Card>
@@ -272,19 +299,18 @@ export default function Home() {
 
         {/* 4. Bottom Lao Patriotic Quote (Mockup Match) — hidden on News tab */}
         {activeTab !== "news" && (
-        <div className="text-center max-w-xl mx-auto py-6 space-y-1 mt-6">
-          <p className="text-sm md:text-base font-bold text-gray-700 leading-relaxed">
-            ຄວາມຄິດເຫັນຂອງທຸກທ່ານມີຄ່າທານພັດທະນາປັບປຸງການເຮັດ
-          </p>
-          <p className="text-sm md:text-base font-bold text-gray-700 leading-relaxed">
-            ວຽກໃຫ້ດີຂຶ້ນ ໃຫ້ເຊື່ອໝັ້ນ ແລະ ໄວ້ວາງໃຈໃນການເຮັດວຽກ
-          </p>
-          <p className="text-sm md:text-base font-bold text-gray-700 leading-relaxed">
-            ເພາະພວກເຮົາມາຈາກປະຊາຊົນເພື່ອປະຊາຊົນ
-          </p>
-        </div>
+          <div className="text-center max-w-xl mx-auto py-6 space-y-1 mt-6">
+            <p className="text-sm md:text-base font-bold text-gray-700 leading-relaxed">
+              ຄວາມຄິດເຫັນຂອງທຸກທ່ານມີຄ່າທານພັດທະນາປັບປຸງການເຮັດ
+            </p>
+            <p className="text-sm md:text-base font-bold text-gray-700 leading-relaxed">
+              ວຽກໃຫ້ດີຂຶ້ນ ໃຫ້ເຊື່ອໝັ້ນ ແລະ ໄວ້ວາງໃຈໃນການເຮັດວຽກ
+            </p>
+            <p className="text-sm md:text-base font-bold text-gray-700 leading-relaxed">
+              ເພາະພວກເຮົາມາຈາກປະຊາຊົນເພື່ອປະຊາຊົນ
+            </p>
+          </div>
         )}
-
       </main>
 
       {/* 5. Footer (Solid Green Bar) */}
@@ -293,9 +319,18 @@ export default function Home() {
   );
 }
 
-const STATUS_CONFIG: Record<ReportStatus, { label: string; className: string }> = {
-  PENDING: { label: "ລໍຖ້າດຳເນີນການ", className: "bg-amber-100 text-amber-700" },
-  IN_PROGRESS: { label: "ກຳລັງດຳເນີນການ", className: "bg-blue-100 text-blue-700" },
+const STATUS_CONFIG: Record<
+  ReportStatus,
+  { label: string; className: string }
+> = {
+  PENDING: {
+    label: "ລໍຖ້າດຳເນີນການ",
+    className: "bg-amber-100 text-amber-700",
+  },
+  IN_PROGRESS: {
+    label: "ກຳລັງດຳເນີນການ",
+    className: "bg-blue-100 text-blue-700",
+  },
   APPROVED: { label: "ອະນຸມັດ", className: "bg-emerald-100 text-emerald-700" },
   REJECTED: { label: "ປະຕິເສດ", className: "bg-red-100 text-red-700" },
   CANCELLED: { label: "ຍົກເລີກ", className: "bg-gray-200 text-gray-600" },
@@ -315,11 +350,19 @@ function WelcomeBanner() {
             ຍິນດີຕ້ອນຮັບສູ່ ລະບົບ Bounmee
           </h3>
           <p className="text-sm md:text-base text-white/90 leading-relaxed font-medium">
-            ລະບົບ Bounmee ແມ່ນເວັບໄຊທ໌ບໍລິການປະຊາຊົນແບບອອນລາຍ ພາຍໃຕ້ການຄຸ້ມຄອງຂອງ ກະຊວງປ້ອງກັນຄວາມສະຫງົບ (Ministry of Public Security). ພັດທະນາຂຶ້ນເພື່ອເປັນຊ່ອງທາງໃຫ້ພົນລະເມືອງເຂົ້າເຖິງການບໍລິການຂອງລັດໄດ້ຢ່າງສະດວກ, ວ່ອງໄວ ແລະ ປອດໄພ.
+            ລະບົບ Bounmee ແມ່ນເວັບໄຊທ໌ບໍລິການປະຊາຊົນແບບອອນລາຍ
+            ພາຍໃຕ້ການຄຸ້ມຄອງຂອງ ກະຊວງປ້ອງກັນຄວາມສະຫງົບ (Ministry of Public
+            Security).
+            ພັດທະນາຂຶ້ນເພື່ອເປັນຊ່ອງທາງໃຫ້ພົນລະເມືອງເຂົ້າເຖິງການບໍລິການຂອງລັດໄດ້ຢ່າງສະດວກ,
+            ວ່ອງໄວ ແລະ ປອດໄພ.
           </p>
         </div>
         <div className="absolute right-0 bottom-0 top-0 opacity-10 flex items-center justify-center pointer-events-none pr-8">
-          <Image src="/assets/logo.png" alt="Decorative Logo" className="w-64 h-64 object-contain" />
+          <Image
+            src="/assets/logo.png"
+            alt="Decorative Logo"
+            className="w-64 h-64 object-contain"
+          />
         </div>
       </CardBody>
     </Card>
@@ -351,21 +394,37 @@ function CitizenReportOverview() {
 
   return (
     <div className="space-y-4">
-      <h4 className="text-lg font-bold text-gray-700">ການແຈ້ງຄວາມຫຼ້າສຸດຂອງທ່ານ</h4>
+      <h4 className="text-lg font-bold text-gray-700">
+        ການແຈ້ງຄວາມຫຼ້າສຸດຂອງທ່ານ
+      </h4>
 
       <Card className="shadow-sm border border-gray-100 rounded-3xl">
         <CardBody className="p-4 md:p-5 space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <ReportMiniCard report={report} onClick={() => navigate(`/report/${report.id}`)} />
+            <ReportMiniCard
+              report={report}
+              onClick={() => navigate(`/report/${report.id}`)}
+            />
             <InfoMiniCard
               icon={<HomeIcon size={22} className="text-[#075e3d]" />}
-              title={report.village?.nameLo ? `ບ້ານ${report.village.nameLo}` : "ບ້ານ —"}
+              title={
+                report.village?.nameLo
+                  ? `ບ້ານ${report.village.nameLo}`
+                  : "ບ້ານ —"
+              }
               lines={[report.location || "-", formatDate(report.createdAt)]}
             />
             <InfoMiniCard
               icon={<Building2 size={22} className="text-[#075e3d]" />}
-              title={report.district?.nameLo ? `ເມືອງ${report.district.nameLo}` : "ເມືອງ —"}
-              lines={[report.province?.nameLo || "ນະຄອນຫຼວງວຽງຈັນ", formatDate(report.createdAt)]}
+              title={
+                report.district?.nameLo
+                  ? `ເມືອງ${report.district.nameLo}`
+                  : "ເມືອງ —"
+              }
+              lines={[
+                report.province?.nameLo || "ນະຄອນຫຼວງວຽງຈັນ",
+                formatDate(report.createdAt),
+              ]}
             />
           </div>
 
@@ -376,7 +435,13 @@ function CitizenReportOverview() {
   );
 }
 
-function ReportMiniCard({ report, onClick }: { report: ReportItem; onClick: () => void }) {
+function ReportMiniCard({
+  report,
+  onClick,
+}: {
+  report: ReportItem;
+  onClick: () => void;
+}) {
   const st = STATUS_CONFIG[report.status] || STATUS_CONFIG.PENDING;
 
   return (
@@ -402,15 +467,21 @@ function ReportMiniCard({ report, onClick }: { report: ReportItem; onClick: () =
       </div>
       <div className="p-3 space-y-1">
         <div className="flex items-start justify-between gap-2">
-          <h5 className="font-bold text-sm text-gray-800 line-clamp-1">{report.title}</h5>
-          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap shrink-0 ${st.className}`}>
+          <h5 className="font-bold text-sm text-gray-800 line-clamp-1">
+            {report.title}
+          </h5>
+          <span
+            className={`text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap shrink-0 ${st.className}`}
+          >
             {st.label}
           </span>
         </div>
         <p className="text-xs text-gray-500 flex items-center gap-1 line-clamp-1">
           <MapPin size={11} className="shrink-0" /> {report.location}
         </p>
-        <p className="text-[10px] text-gray-400">{formatDate(report.createdAt)}</p>
+        <p className="text-[10px] text-gray-400">
+          {formatDate(report.createdAt)}
+        </p>
       </div>
     </button>
   );
@@ -460,7 +531,9 @@ function ReportProgress({ report }: { report: ReportItem }) {
     },
     {
       label: "ປກສ ເມືອງ",
-      sub: reached.has("DISTRICT_POLICE") ? "ກຳລັງດຳເນີນງານ" : "ບໍ່ໄດ້ຮັບແຈ້ງຄວາມ",
+      sub: reached.has("DISTRICT_POLICE")
+        ? "ກຳລັງດຳເນີນງານ"
+        : "ບໍ່ໄດ້ຮັບແຈ້ງຄວາມ",
       done: reached.has("DISTRICT_POLICE"),
     },
   ];
@@ -477,7 +550,9 @@ function ReportProgress({ report }: { report: ReportItem }) {
             >
               {s.done ? <Check size={16} /> : i + 1}
             </div>
-            <span className="text-sm font-bold text-gray-800 mt-1.5">{s.label}</span>
+            <span className="text-sm font-bold text-gray-800 mt-1.5">
+              {s.label}
+            </span>
             <span
               className={`text-[11px] font-bold ${
                 s.done ? "text-[#22a06b]" : "text-red-500"
