@@ -1,5 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Camera, ImagePlus, Loader2, User } from "lucide-react";
 import { Button } from "@heroui/react";
 import toast from "react-hot-toast";
@@ -23,6 +24,7 @@ const inputClass =
 
 export default function ProfileEdit() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { user: authData } = useAuth();
   const account = (authData as any)?.user;
   const userType = account?.userType as string | undefined;
@@ -101,6 +103,12 @@ export default function ProfileEdit() {
       if (isDistrict) await updatePd(payload);
       else if (isVillage) await updateVc(payload);
       toast.success("ບັນທຶກໂປຣໄຟລ໌ສຳເລັດ");
+      // Refresh anything that shows these office images (cards, reports, etc.)
+      queryClient.invalidateQueries({ queryKey: ["police-districts-and-reports"] });
+      queryClient.invalidateQueries({ queryKey: ["police-district-villages"] });
+      queryClient.invalidateQueries({ queryKey: ["reports"] });
+      queryClient.invalidateQueries({ queryKey: ["police-district"] });
+      queryClient.invalidateQueries({ queryKey: ["village-chief"] });
     } catch (err: any) {
       console.error("Save profile failed:", err);
       toast.error(err?.response?.data?.message || "ບັນທຶກບໍ່ສຳເລັດ");

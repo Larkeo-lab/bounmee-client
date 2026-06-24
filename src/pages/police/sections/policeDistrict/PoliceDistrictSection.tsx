@@ -10,7 +10,8 @@ export default function PoliceDistrictSection() {
   const [searchQuery, setSearchQuery] = React.useState("");
 
   // POLICE_DEPARTMENT view: all districts in the department's province
-  const { data: districts = [], isLoading } = useGetPoliceDepartmentsAndReports();
+  const { data: districts = [], isLoading } =
+    useGetPoliceDepartmentsAndReports();
 
   // Filter districts based on search query
   const filteredDistricts = districts.filter((d) =>
@@ -104,7 +105,7 @@ export default function PoliceDistrictSection() {
                 {/* Image Container */}
                 <div className="relative h-44 w-full overflow-hidden bg-slate-100 shrink-0">
                   <img
-                    src={getDisplayImageUrl(d.imageUrl) || "/assets/logo.png"}
+                    src={getDisplayImageUrl(d.bgImage)}
                     alt={d.districtName}
                     onError={(e) => {
                       e.currentTarget.src = "/assets/logo.png";
