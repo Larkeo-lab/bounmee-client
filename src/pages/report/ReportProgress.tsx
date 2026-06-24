@@ -31,6 +31,7 @@ import { getDisplayImageUrl, formatDate } from "@/lib/utils";
 import { uploadImage } from "@/services/storage";
 import ReportDetailView from "@/pages/police/sections/report/reportDetail";
 import { ShowImage } from "@/utils/showImage";
+import ReportAndMoreDetail from "@/pages/police/sections/report/reportAndMoreDetail";
 
 const STATUS_CONFIG: Record<ReportStatus, { label: string; className: string }> = {
   PENDING: { label: "ບໍ່ທັນແກ້ໄຂ", className: "bg-amber-100 text-amber-700" },
@@ -170,8 +171,9 @@ export default function ReportProgress() {
                 <p className="text-sm font-bold text-gray-500">ບໍ່ມີຂໍ້ມູນໃນໝວດນີ້</p>
               </CardBody>
             </Card>
-          ) : (tab === "history" || tab === "resolved") && selected ? (
-            // History and Resolved tabs: show the full read-only detail view
+          ) : tab === "resolved" && selected ? (
+            <ReportAndMoreDetail report={selected} onBack={() => setSelectedId(null)} />
+          ) : tab === "history" && selected ? (
             <ReportDetailView report={selected} onBack={() => setSelectedId(null)} />
           ) : (
             <>

@@ -1,3 +1,4 @@
+import React from "react";
 import {
   ArrowLeft,
   MapPin,
@@ -37,7 +38,7 @@ interface Props {
   forwardTo?: string | null;
   onForward?: () => void;
   onReceive?: () => void;
-  onResolve?: () => void;
+  onResolve?: (payload: { evidenceDetail: string; caseConclusion: string }) => void;
   isBusy?: boolean;
 }
 
@@ -52,6 +53,9 @@ export default function ReportAndMoreDetail({
   onResolve,
   isBusy = false,
 }: Props) {
+  const [evidenceDetail, setEvidenceDetail] = React.useState(report.evidenceDetail || "");
+  const [caseConclusion, setCaseConclusion] = React.useState(report.caseConclusion || "");
+
   const st = STATUS_CONFIG[report.status] || STATUS_CONFIG.PENDING;
   const place = [report.district?.nameLo, report.province?.nameLo]
     .filter(Boolean)
@@ -117,18 +121,30 @@ export default function ReportAndMoreDetail({
           </div>
         </div>
 
-        {/* Village card */}
+        {/* Village card — ນາຍບ້ານ image / bgImage */}
         <InfoCard
           icon={<HomeIcon size={20} className="text-[#075e3d]" />}
+          image={report.villageChiefInfo?.image}
+          bgImage={report.villageChiefInfo?.bgImage}
           title={report.village?.nameLo ? `ບ້ານ${report.village.nameLo}` : "ບ້ານ —"}
-          lines={[report.location || "-", formatDate(report.createdAt)]}
+          lines={[
+            report.villageChiefInfo?.chiefName || report.location || "-",
+            formatDate(report.createdAt),
+          ]}
         />
 
-        {/* District card */}
+        {/* District card — ປກສ ເມືອງ image / bgImage */}
         <InfoCard
           icon={<Building2 size={20} className="text-[#075e3d]" />}
+          image={report.policeDistrictInfo?.image}
+          bgImage={report.policeDistrictInfo?.bgImage}
           title={report.district?.nameLo ? `ເມືອງ${report.district.nameLo}` : "ເມືອງ —"}
-          lines={[report.province?.nameLo || "ນະຄອນຫຼວງວຽງຈັນ", formatDate(report.createdAt)]}
+          lines={[
+            report.policeDistrictInfo?.chiefName ||
+              report.province?.nameLo ||
+              "ນະຄອນຫຼວງວຽງຈັນ",
+            formatDate(report.createdAt),
+          ]}
         />
       </div>
 
@@ -279,6 +295,39 @@ export default function ReportAndMoreDetail({
         </Card>
       </div>
 
+      {/* Decision/Mediation Details Box */}
+      <Card className="shadow-sm border border-gray-100 rounded-2xl bg-white">
+        <CardBody className="p-6 space-y-4">
+          <h3 className="font-bold text-base text-gray-800 text-center">ຂໍ້ມູນຕັດສິນໄກ່ເກ່ຍຄະດີ</h3>
+          
+          <div className="space-y-4">
+            <div>
+              <h4 className="font-bold text-sm text-[#075e3d] mb-1.5">ຂໍ້ມູນຫຼັກຖານ</h4>
+              <textarea
+                value={evidenceDetail}
+                onChange={(e) => setEvidenceDetail(e.target.value)}
+                disabled={report.status === "APPROVED"}
+                placeholder="ໃສ່ຂໍ້ມູນຫຼັກຖານ..."
+                rows={4}
+                className="w-full bg-gray-100 rounded-xl p-4 text-xs md:text-sm text-gray-700 leading-relaxed text-center focus:outline-none focus:ring-2 focus:ring-[#075e3d]/40 focus:border-[#075e3d] transition resize-none border border-transparent disabled:opacity-80"
+              />
+            </div>
+
+            <div>
+              <h4 className="font-bold text-sm text-[#075e3d] mb-1.5">ສະຫຼຸບຄະດີ</h4>
+              <textarea
+                value={caseConclusion}
+                onChange={(e) => setCaseConclusion(e.target.value)}
+                disabled={report.status === "APPROVED"}
+                placeholder="ໃສ່ສະຫຼຸບຄະດີ..."
+                rows={4}
+                className="w-full bg-gray-100 rounded-xl p-4 text-xs md:text-sm text-gray-700 leading-relaxed text-center focus:outline-none focus:ring-2 focus:ring-[#075e3d]/40 focus:border-[#075e3d] transition resize-none border border-transparent disabled:opacity-80"
+              />
+            </div>
+          </div>
+        </CardBody>
+      </Card>
+
       {/* Action buttons */}
       <div className="flex flex-wrap justify-end gap-3">
         {onReceive && (
@@ -305,7 +354,7 @@ export default function ReportAndMoreDetail({
           <Button
             startContent={<CheckCircle2 size={16} />}
             isDisabled={isBusy}
-            onPress={onResolve}
+            onPress={() => onResolve({ evidenceDetail, caseConclusion })}
             className="bg-[#075e3d] text-white font-bold rounded-xl px-6"
           >
             ແກ້ໄຂສຳເລັດ
@@ -325,25 +374,52 @@ export default function ReportAndMoreDetail({
 
 function InfoCard({
   icon,
+  image,
+  bgImage,
   title,
   lines,
 }: {
   icon: React.ReactNode;
+  image?: string | null;
+  bgImage?: string | null;
   title: string;
   lines: string[];
 }) {
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-4 flex flex-col gap-2">
-      <div className="w-11 h-11 rounded-xl bg-[#075e3d]/10 flex items-center justify-center">
-        {icon}
+    <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden flex flex-col">
+      {/* Cover (bgImage) */}
+      <div className="relative h-20 bg-[#075e3d]/10">
+        {bgImage && (
+          <img
+            src={getDisplayImageUrl(bgImage)}
+            alt=""
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              e.currentTarget.style.display = "none";
+            }}
+          />
+        )}
+        {/* Avatar (image) / icon */}
+        <div className="absolute -bottom-5 left-4 w-11 h-11 rounded-xl overflow-hidden bg-white border-2 border-white shadow flex items-center justify-center">
+          {image ? (
+            <img src={getDisplayImageUrl(image)} alt="" className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full bg-[#075e3d]/10 flex items-center justify-center">
+              {icon}
+            </div>
+          )}
+        </div>
       </div>
-      <h5 className="font-bold text-sm text-gray-800 line-clamp-1">{title}</h5>
-      <div className="space-y-0.5">
-        {lines.map((l, i) => (
-          <p key={i} className="text-xs text-gray-500 font-medium line-clamp-1">
-            {l}
-          </p>
-        ))}
+
+      <div className="p-4 pt-7 flex flex-col gap-1">
+        <h5 className="font-bold text-sm text-gray-800 line-clamp-1">{title}</h5>
+        <div className="space-y-0.5">
+          {lines.map((l, i) => (
+            <p key={i} className="text-xs text-gray-500 font-medium line-clamp-1">
+              {l}
+            </p>
+          ))}
+        </div>
       </div>
     </div>
   );

@@ -132,9 +132,12 @@ export default function ReportsSection({
     }
   };
 
-  const doResolve = async (r: ReportItem) => {
+  const doResolve = async (
+    r: ReportItem,
+    payload?: { evidenceDetail?: string; caseConclusion?: string },
+  ) => {
     try {
-      await resolveReport(r.id);
+      await resolveReport({ id: r.id, payload });
       toast.success("ບັນທຶກການແກ້ໄຂສຳເລັດ");
       refresh();
       setSelected(null);
@@ -154,7 +157,7 @@ export default function ReportsSection({
         forwardTo={a.forward || null}
         onForward={() => doForward(liveSelected)}
         onReceive={a.receive ? () => doReceive(liveSelected) : undefined}
-        onResolve={a.resolve ? () => doResolve(liveSelected) : undefined}
+        onResolve={a.resolve ? (payload) => doResolve(liveSelected, payload) : undefined}
         isBusy={isBusy}
       />
     );

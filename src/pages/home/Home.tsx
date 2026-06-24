@@ -407,22 +407,31 @@ function CitizenReportOverview() {
             />
             <InfoMiniCard
               icon={<HomeIcon size={22} className="text-[#075e3d]" />}
+              image={report.villageChiefInfo?.image}
+              bgImage={report.villageChiefInfo?.bgImage}
               title={
                 report.village?.nameLo
                   ? `ບ້ານ${report.village.nameLo}`
                   : "ບ້ານ —"
               }
-              lines={[report.location || "-", formatDate(report.createdAt)]}
+              lines={[
+                report.villageChiefInfo?.chiefName || report.location || "-",
+                formatDate(report.createdAt),
+              ]}
             />
             <InfoMiniCard
               icon={<Building2 size={22} className="text-[#075e3d]" />}
+              image={report.policeDistrictInfo?.image}
+              bgImage={report.policeDistrictInfo?.bgImage}
               title={
                 report.district?.nameLo
                   ? `ເມືອງ${report.district.nameLo}`
                   : "ເມືອງ —"
               }
               lines={[
-                report.province?.nameLo || "ນະຄອນຫຼວງວຽງຈັນ",
+                report.policeDistrictInfo?.chiefName ||
+                  report.province?.nameLo ||
+                  "ນະຄອນຫຼວງວຽງຈັນ",
                 formatDate(report.createdAt),
               ]}
             />
@@ -489,25 +498,52 @@ function ReportMiniCard({
 
 function InfoMiniCard({
   icon,
+  image,
+  bgImage,
   title,
   lines,
 }: {
   icon: React.ReactNode;
+  image?: string | null;
+  bgImage?: string | null;
   title: string;
   lines: string[];
 }) {
   return (
-    <div className="rounded-2xl border border-gray-200 p-4 flex flex-col gap-2">
-      <div className="w-11 h-11 rounded-xl bg-[#075e3d]/10 flex items-center justify-center">
-        {icon}
+    <div className="rounded-2xl border border-gray-200 overflow-hidden flex flex-col">
+      {/* Cover (bgImage) */}
+      <div className="relative h-20 bg-[#075e3d]/10">
+        {bgImage && (
+          <img
+            src={getDisplayImageUrl(bgImage)}
+            alt=""
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              e.currentTarget.style.display = "none";
+            }}
+          />
+        )}
+        {/* Avatar (image) / icon */}
+        <div className="absolute -bottom-5 left-4 w-11 h-11 rounded-xl overflow-hidden bg-white border-2 border-white shadow flex items-center justify-center">
+          {image ? (
+            <img src={getDisplayImageUrl(image)} alt="" className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full bg-[#075e3d]/10 flex items-center justify-center">
+              {icon}
+            </div>
+          )}
+        </div>
       </div>
-      <h5 className="font-bold text-sm text-gray-800 line-clamp-1">{title}</h5>
-      <div className="space-y-0.5">
-        {lines.map((l, i) => (
-          <p key={i} className="text-xs text-gray-500 font-medium line-clamp-1">
-            {l}
-          </p>
-        ))}
+
+      <div className="p-4 pt-7 flex flex-col gap-1">
+        <h5 className="font-bold text-sm text-gray-800 line-clamp-1">{title}</h5>
+        <div className="space-y-0.5">
+          {lines.map((l, i) => (
+            <p key={i} className="text-xs text-gray-500 font-medium line-clamp-1">
+              {l}
+            </p>
+          ))}
+        </div>
       </div>
     </div>
   );

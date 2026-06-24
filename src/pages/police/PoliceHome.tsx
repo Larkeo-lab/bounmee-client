@@ -12,7 +12,11 @@ import { Card, CardBody } from "@heroui/react";
 import { useSearchParams } from "react-router-dom";
 
 import { useAuth } from "@/routes/AuthContext";
-import { useGetReports, ReportStatus, ReportItem } from "@/services/report/useReport";
+import {
+  useGetReports,
+  ReportStatus,
+  ReportItem,
+} from "@/services/report/useReport";
 import { policeSidebarItems, PoliceSection } from "@/config/sitebar";
 import NewsSection from "./sections/news/NewsSection";
 import ReportsSection from "./sections/report/ReportsSection";
@@ -45,7 +49,9 @@ export default function PoliceHome() {
   const account = (authData as any)?.user;
   const userType = account?.userType as string | undefined;
 
-  const [selectedReport, setSelectedReport] = React.useState<ReportItem | null>(null);
+  const [selectedReport, setSelectedReport] = React.useState<ReportItem | null>(
+    null,
+  );
 
   const visibleItems = policeSidebarItems.filter(
     (i) =>
@@ -110,7 +116,10 @@ export default function PoliceHome() {
           }}
         />
       ) : section === "reports" ? (
-        <ReportsSection selected={selectedReport} onSelect={setSelectedReport} />
+        <ReportsSection
+          selected={selectedReport}
+          onSelect={setSelectedReport}
+        />
       ) : section === "police-district" ? (
         <PoliceDistrictSection />
       ) : section === "my-village" ? (
@@ -190,17 +199,12 @@ function DashboardSection({
         <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard
-              label="ການແຈ້ງຄວາມທັງໝົດ"
-              value={counts.total}
-              icon={<FileText size={22} className="text-[#075e3d]" />}
-              color="bg-[#075e3d]/10"
-            />
-            <StatCard
               label="ເຂົ້າໃໝ່"
               value={counts.PENDING}
               icon={<Clock size={22} className="text-amber-600" />}
               color="bg-amber-100"
             />
+
             <StatCard
               label="ກຳລັງດຳເນີນການ"
               value={counts.IN_PROGRESS}
@@ -212,6 +216,12 @@ function DashboardSection({
               value={counts.APPROVED}
               icon={<CheckCircle2 size={22} className="text-emerald-600" />}
               color="bg-emerald-100"
+            />
+            <StatCard
+              label="ການແຈ້ງຄວາມທັງໝົດ"
+              value={counts.total}
+              icon={<FileText size={22} className="text-[#075e3d]" />}
+              color="bg-[#075e3d]/10"
             />
           </div>
 

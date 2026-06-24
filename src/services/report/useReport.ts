@@ -57,6 +57,19 @@ export interface ReportItem {
   } | null;
   history?: ReportHistoryItem[];
   reportMoreDetail?: ReportMoreDetailItem[];
+  evidenceDetail?: string | null;
+  caseConclusion?: string | null;
+  // Linked office images (ນາຍບ້ານ / ປກສ ເມືອງ) for the report cards
+  villageChiefInfo?: {
+    image?: string | null;
+    bgImage?: string | null;
+    chiefName?: string;
+  } | null;
+  policeDistrictInfo?: {
+    image?: string | null;
+    bgImage?: string | null;
+    chiefName?: string;
+  } | null;
 }
 
 export interface ReportFilters {
@@ -166,14 +179,28 @@ export const useReceiveReport = () => {
   return useMutation({ mutationFn: receiveReport });
 };
 
-export const resolveReport = async (id: string) => {
-  const response = await axiosInstance.put(API_ENDPOINTS.REPORT.RESOLVE(id));
+export const resolveReport = async (
+  id: string,
+  payload?: { evidenceDetail?: string; caseConclusion?: string },
+) => {
+  const response = await axiosInstance.put(
+    API_ENDPOINTS.REPORT.RESOLVE(id),
+    payload,
+  );
 
   return response.data?.data;
 };
 
 export const useResolveReport = () => {
-  return useMutation({ mutationFn: resolveReport });
+  return useMutation({
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: string;
+      payload?: { evidenceDetail?: string; caseConclusion?: string };
+    }) => resolveReport(id, payload),
+  });
 };
 
 export interface UpdateReportPayload {
